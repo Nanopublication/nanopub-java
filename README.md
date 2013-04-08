@@ -1,7 +1,9 @@
 nanopub-java
 ============
 
-This is a Java library for nanopublications based on Sesame. 
+This is a Java library for nanopublications based on Sesame.
+
+UNDER CONSTRUCTION...
 
 
 License
