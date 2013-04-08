@@ -27,17 +27,11 @@ import com.google.common.collect.ImmutableSet;
 public class NanopubImpl implements Nanopub {
 
 	private URI nanopubUri;
-	private URI headUri;
-	private Set<Statement> head = new HashSet<>();
-	private URI assertionUri;
-	private Set<Statement> assertion = new HashSet<>();
-	private URI provenanceUri;
-	private Set<Statement> provenance = new HashSet<>();
-	private URI pubinfoUri;
-	private Set<Statement> pubinfo = new HashSet<>();
+	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
+	private Set<Statement> head, assertion, provenance, pubinfo;
 
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
-		initStatements(statements);
+		init(statements);
 	}
 
 	private static final String nanopubViaSPARQLQuery =
@@ -53,10 +47,11 @@ public class NanopubImpl implements Nanopub {
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
 
-	public NanopubImpl(String sparqlEndpointURL, URI nanopubUri) throws MalformedNanopubException, RepositoryException {
+	public NanopubImpl(String sparqlEndpointUrl, URI nanopubUri)
+			throws MalformedNanopubException, RepositoryException {
 		List<Statement> statements = new ArrayList<Statement>();
 		try {
-			SPARQLRepository repo = new SPARQLRepository(sparqlEndpointURL);
+			SPARQLRepository repo = new SPARQLRepository(sparqlEndpointUrl);
 			repo.initialize();
 			RepositoryConnection connection = repo.getConnection();
 			try {
@@ -84,10 +79,10 @@ public class NanopubImpl implements Nanopub {
 		} catch (QueryEvaluationException ex) {
 			ex.printStackTrace();
 		}
-		initStatements(statements);
+		init(statements);
 	}
 
-	public void initStatements(Collection<Statement> statements) throws MalformedNanopubException {
+	public void init(Collection<Statement> statements) throws MalformedNanopubException {
 		collectNanopubUri(statements);
 		if (nanopubUri == null || headUri == null) {
 			throw new MalformedNanopubException("No nanopub URI found");
@@ -141,6 +136,10 @@ public class NanopubImpl implements Nanopub {
 	}
 
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
+		head = new HashSet<>();
+		assertion = new HashSet<>();
+		provenance = new HashSet<>();
+		pubinfo = new HashSet<>();
 		for (Statement st : statements) {
 			if (st.getContext().equals(headUri)) {
 				head.add(st);
@@ -160,8 +159,18 @@ public class NanopubImpl implements Nanopub {
 	}
 
 	@Override
+	public URI getHeadUri() {
+		return headUri;
+	}
+
+	@Override
 	public Set<Statement> getHead() {
 		return ImmutableSet.copyOf(head);
+	}
+
+	@Override
+	public URI getAssertionUri() {
+		return assertionUri;
 	}
 
 	@Override
@@ -170,8 +179,18 @@ public class NanopubImpl implements Nanopub {
 	}
 
 	@Override
+	public URI getProvenanceUri() {
+		return provenanceUri;
+	}
+
+	@Override
 	public Set<Statement> getProvenance() {
 		return ImmutableSet.copyOf(provenance);
+	}
+
+	@Override
+	public URI getPubinfoUri() {
+		return pubinfoUri;
 	}
 
 	@Override

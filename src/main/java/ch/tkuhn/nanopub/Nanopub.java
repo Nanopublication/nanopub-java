@@ -15,11 +15,19 @@ public interface Nanopub {
 
 	public URI getUri();
 
+	public URI getHeadUri();
+
 	public Set<Statement> getHead();
+
+	public URI getAssertionUri();
 
 	public Set<Statement> getAssertion();
 
+	public URI getProvenanceUri();
+
 	public Set<Statement> getProvenance();
+
+	public URI getPubinfoUri();
 
 	public Set<Statement> getPubinfo();
 
