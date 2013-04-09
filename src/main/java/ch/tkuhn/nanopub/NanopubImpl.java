@@ -1,11 +1,16 @@
 package ch.tkuhn.nanopub;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openrdf.OpenRDFException;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -21,6 +26,9 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.openrdf.rio.trig.TriGParser;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -82,7 +90,26 @@ public class NanopubImpl implements Nanopub {
 		init(statements);
 	}
 
-	public void init(Collection<Statement> statements) throws MalformedNanopubException {
+	public NanopubImpl(File trigFile) throws MalformedNanopubException, IOException {
+		final List<Statement> statements = new ArrayList<Statement>();
+		TriGParser p = new TriGParser();
+		p.setRDFHandler(new RDFHandlerBase() {
+			@Override
+			public void handleStatement(Statement st) throws RDFHandlerException {
+				statements.add(st);
+			}
+		});
+		InputStream in = new FileInputStream(trigFile);
+		try {
+			p.parse(in, "");
+		} catch (OpenRDFException ex) {
+			ex.printStackTrace();
+		}
+		in.close();
+		init(statements);
+	}
+
+	private void init(Collection<Statement> statements) throws MalformedNanopubException {
 		collectNanopubUri(statements);
 		if (nanopubUri == null || headUri == null) {
 			throw new MalformedNanopubException("No nanopub URI found");
@@ -94,7 +121,7 @@ public class NanopubImpl implements Nanopub {
 		if (provenanceUri == null) {
 			throw new MalformedNanopubException("No provenance URI found");
 		}
-		if (pubinfo == null) {
+		if (pubinfoUri == null) {
 			throw new MalformedNanopubException("No publication info URI found");
 		}
 		collectStatements(statements);
