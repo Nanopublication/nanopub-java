@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,7 +33,9 @@ import org.openrdf.rio.trig.TriGParser;
 
 import com.google.common.collect.ImmutableSet;
 
-public class NanopubImpl implements Nanopub {
+public class NanopubImpl implements Nanopub, Serializable {
+
+	private static final long serialVersionUID = -1514452524339132128L;
 
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
@@ -55,12 +58,10 @@ public class NanopubImpl implements Nanopub {
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
 
-	public NanopubImpl(String sparqlEndpointUrl, URI nanopubUri)
+	public NanopubImpl(SPARQLRepository repo, URI nanopubUri)
 			throws MalformedNanopubException, RepositoryException {
 		List<Statement> statements = new ArrayList<Statement>();
 		try {
-			SPARQLRepository repo = new SPARQLRepository(sparqlEndpointUrl);
-			repo.initialize();
 			RepositoryConnection connection = repo.getConnection();
 			try {
 				String q = nanopubViaSPARQLQuery.replaceAll("@", nanopubUri.toString());
@@ -90,7 +91,7 @@ public class NanopubImpl implements Nanopub {
 		init(statements);
 	}
 
-	public NanopubImpl(File trigFile) throws MalformedNanopubException, IOException {
+	public NanopubImpl(File trigFile) throws MalformedNanopubException, OpenRDFException, IOException {
 		final List<Statement> statements = new ArrayList<Statement>();
 		TriGParser p = new TriGParser();
 		p.setRDFHandler(new RDFHandlerBase() {
@@ -102,10 +103,9 @@ public class NanopubImpl implements Nanopub {
 		InputStream in = new FileInputStream(trigFile);
 		try {
 			p.parse(in, "");
-		} catch (OpenRDFException ex) {
-			ex.printStackTrace();
+		} finally {
+			in.close();
 		}
-		in.close();
 		init(statements);
 	}
 
