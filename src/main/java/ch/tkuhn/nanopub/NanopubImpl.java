@@ -17,6 +17,7 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.ContextStatementImpl;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
@@ -37,8 +38,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;
 
+	private static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
+
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
+	private Set<URI> assertionSubUris, provenanceSubUris, pubinfoSubUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
@@ -47,13 +51,19 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final String nanopubViaSPARQLQuery =
 			"prefix np: <http://www.nanopub.org/nschema#> " +
+			"prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> " +
 			"prefix this: <@> " +
 			"select ?G ?S ?P ?O where { " +
 			"  { " +
-			"    graph ?G { this: np:hasAssertion ?A } " +
+			"    graph ?G { this: a np:Nanopublication } " +
 			"  } union { " +
+			"    graph ?H { this: a np:Nanopublication } . " +
 			"    graph ?H { { this: np:hasAssertion ?G } union { this: np:hasProvenance ?G } " +
 			"        union { this: np:hasPublicationInfo ?G } } " +
+			"  } union { " +
+			"    graph ?H { this: a np:Nanopublication . ?G rdfg:subGraphOf ?I } . " +
+			"    graph ?H { { this: np:hasAssertion ?I } union { this: np:hasProvenance ?I } " +
+			"        union { this: np:hasPublicationInfo ?I } } " +
 			"  } " +
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
@@ -124,6 +134,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (pubinfoUri == null) {
 			throw new MalformedNanopubException("No publication info URI found");
 		}
+		collectSubGraphs(statements);
 		collectStatements(statements);
 	}
 
@@ -141,7 +152,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private void collectGraphs(Collection<Statement> statements) throws MalformedNanopubException {
 		for (Statement st : statements) {
-			if (st.getSubject().equals(nanopubUri)) {
+			if (st.getContext().equals(headUri) && st.getSubject().equals(nanopubUri)) {
 				if (st.getPredicate().equals(Nanopub.HAS_ASSERTION_URI)) {
 					if (assertionUri != null) {
 						throw new MalformedNanopubException("Two assertion URIs found");
@@ -162,19 +173,46 @@ public class NanopubImpl implements Nanopub, Serializable {
 		}
 	}
 
+	private void collectSubGraphs(Collection<Statement> statements) throws MalformedNanopubException {
+		assertionSubUris = new HashSet<>();
+		provenanceSubUris = new HashSet<>();
+		pubinfoSubUris = new HashSet<>();
+		for (Statement st : statements) {
+			if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
+				if (st.getObject().equals(assertionUri)) {
+					assertionSubUris.add((URI) st.getSubject());
+				} else if (st.getObject().equals(provenanceUri)) {
+					provenanceSubUris.add((URI) st.getSubject());
+				} else if (st.getObject().equals(pubinfoUri)) {
+					pubinfoSubUris.add((URI) st.getSubject());
+				}
+			}
+		}
+	}
+
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
 		head = new HashSet<>();
 		assertion = new HashSet<>();
 		provenance = new HashSet<>();
 		pubinfo = new HashSet<>();
 		for (Statement st : statements) {
-			if (st.getContext().equals(headUri)) {
+			Resource g = st.getContext();
+			if (g.equals(headUri)) {
 				head.add(st);
-			} else if (st.getContext().equals(assertionUri)) {
+			} else if (g.equals(assertionUri)) {
 				assertion.add(st);
-			} else if (st.getContext().equals(provenanceUri)) {
+			} else if (g.equals(provenanceUri)) {
 				provenance.add(st);
-			} else if (st.getContext().equals(pubinfoUri)) {
+			} else if (g.equals(pubinfoUri)) {
+				pubinfo.add(st);
+			}
+			if (assertionSubUris.contains(g)) {
+				assertion.add(st);
+			}
+			if (provenanceSubUris.contains(g)) {
+				provenance.add(st);
+			}
+			if (pubinfoSubUris.contains(g)) {
 				pubinfo.add(st);
 			}
 		}
