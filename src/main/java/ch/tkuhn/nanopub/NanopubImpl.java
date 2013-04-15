@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -102,6 +103,14 @@ public class NanopubImpl implements Nanopub, Serializable {
 	}
 
 	public NanopubImpl(File trigFile) throws MalformedNanopubException, OpenRDFException, IOException {
+		this(new FileInputStream(trigFile));
+	}
+
+	public NanopubImpl(URL trigFileUrl) throws MalformedNanopubException, OpenRDFException, IOException {
+		this(trigFileUrl.openConnection().getInputStream());
+	}
+
+	public NanopubImpl(InputStream in) throws MalformedNanopubException, OpenRDFException, IOException {
 		final List<Statement> statements = new ArrayList<Statement>();
 		TriGParser p = new TriGParser();
 		p.setRDFHandler(new RDFHandlerBase() {
@@ -110,7 +119,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 				statements.add(st);
 			}
 		});
-		InputStream in = new FileInputStream(trigFile);
 		try {
 			p.parse(in, "");
 		} finally {
