@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.activation.MimetypesFileTypeMap;
 
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Resource;
@@ -29,9 +32,11 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
-import org.openrdf.rio.trig.TriGParser;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -40,6 +45,8 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	private static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
+
+	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
@@ -102,17 +109,33 @@ public class NanopubImpl implements Nanopub, Serializable {
 		init(statements);
 	}
 
-	public NanopubImpl(File trigFile) throws MalformedNanopubException, OpenRDFException, IOException {
-		this(new FileInputStream(trigFile));
+	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
+		String n = file.getName();
+		RDFFormat format = RDFFormat.forMIMEType(mimeMap.getContentType(n));
+		if (format == null) {
+			format = RDFFormat.forFileName(n, RDFFormat.TRIG);
+		}
+		init(readStatements(new FileInputStream(file), format));
 	}
 
-	public NanopubImpl(URL trigFileUrl) throws MalformedNanopubException, OpenRDFException, IOException {
-		this(trigFileUrl.openConnection().getInputStream());
+	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
+		URLConnection conn = url.openConnection();
+		RDFFormat format = RDFFormat.forMIMEType(conn.getContentType());
+		if (format == null) {
+			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
+		}
+		init(readStatements(conn.getInputStream(), format));
 	}
 
-	public NanopubImpl(InputStream in) throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(InputStream in, RDFFormat format)
+			throws MalformedNanopubException, OpenRDFException, IOException {
+		init(readStatements(in, format));
+	}
+
+	private static List<Statement> readStatements(InputStream in, RDFFormat format)
+			throws MalformedNanopubException, OpenRDFException, IOException {
 		final List<Statement> statements = new ArrayList<Statement>();
-		TriGParser p = new TriGParser();
+		RDFParser p = Rio.createParser(format);
 		p.setRDFHandler(new RDFHandlerBase() {
 			@Override
 			public void handleStatement(Statement st) throws RDFHandlerException {
@@ -124,7 +147,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		} finally {
 			in.close();
 		}
-		init(statements);
+		return statements;
 	}
 
 	private void init(Collection<Statement> statements) throws MalformedNanopubException {
