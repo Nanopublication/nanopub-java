@@ -5,10 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openrdf.model.Statement;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.trig.TriGWriter;
+import org.openrdf.rio.RDFWriter;
+import org.openrdf.rio.RDFWriterRegistry;
+import org.openrdf.rio.Rio;
 
 public class NanopubUtils {
+
+	static {
+		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
+	}
 
 	private NanopubUtils() {}  // no instances allowed
 
@@ -21,13 +28,14 @@ public class NanopubUtils {
 		return s;
 	}
 
-	public static void writeAsTrigFile(Nanopub nanopub, OutputStream out)
+	public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		TriGWriter writer = new CustomTrigWriter(out);
+		RDFWriter writer = Rio.createWriter(format, out);
 		writer.startRDF();
 		String s = nanopub.getUri().toString();
 		writer.handleNamespace("this", s);
 		writer.handleNamespace("sub", s + ".");
+		writer.handleNamespace("blank", s + "..");
 		writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 		writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");

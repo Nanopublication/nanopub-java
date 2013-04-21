@@ -31,4 +31,6 @@ public interface Nanopub {
 
 	public Set<Statement> getPubinfo();
 
+	public Set<URI> getGraphUris();
+
 }

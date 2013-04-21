@@ -51,6 +51,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
 	private Set<URI> assertionSubUris, provenanceSubUris, pubinfoSubUris;
+	private Set<URI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
@@ -205,9 +206,9 @@ public class NanopubImpl implements Nanopub, Serializable {
 	}
 
 	private void collectSubGraphs(Collection<Statement> statements) throws MalformedNanopubException {
-		assertionSubUris = new HashSet<>();
-		provenanceSubUris = new HashSet<>();
-		pubinfoSubUris = new HashSet<>();
+		Set<URI> assertionSubUris = new HashSet<>();
+		Set<URI> provenanceSubUris = new HashSet<>();
+		Set<URI> pubinfoSubUris = new HashSet<>();
 		for (Statement st : statements) {
 			if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
 				if (st.getObject().equals(assertionUri)) {
@@ -219,13 +220,16 @@ public class NanopubImpl implements Nanopub, Serializable {
 				}
 			}
 		}
+		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
+		this.provenanceSubUris = ImmutableSet.copyOf(provenanceSubUris);
+		this.pubinfoSubUris = ImmutableSet.copyOf(pubinfoSubUris);
 	}
 
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
-		head = new HashSet<>();
-		assertion = new HashSet<>();
-		provenance = new HashSet<>();
-		pubinfo = new HashSet<>();
+		Set<Statement> head = new HashSet<>();
+		Set<Statement> assertion = new HashSet<>();
+		Set<Statement> provenance = new HashSet<>();
+		Set<Statement> pubinfo = new HashSet<>();
 		for (Statement st : statements) {
 			Resource g = st.getContext();
 			if (g.equals(headUri)) {
@@ -247,6 +251,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 				pubinfo.add(st);
 			}
 		}
+		this.head = ImmutableSet.copyOf(head);
+		this.assertion = ImmutableSet.copyOf(assertion);
+		this.provenance = ImmutableSet.copyOf(provenance);
+		this.pubinfo = ImmutableSet.copyOf(pubinfo);
 	}
 
 	@Override
@@ -261,7 +269,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	@Override
 	public Set<Statement> getHead() {
-		return ImmutableSet.copyOf(head);
+		return head;
 	}
 
 	@Override
@@ -271,7 +279,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	@Override
 	public Set<Statement> getAssertion() {
-		return ImmutableSet.copyOf(assertion);
+		return assertion;
 	}
 
 	@Override
@@ -281,7 +289,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	@Override
 	public Set<Statement> getProvenance() {
-		return ImmutableSet.copyOf(provenance);
+		return provenance;
 	}
 
 	@Override
@@ -291,7 +299,23 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	@Override
 	public Set<Statement> getPubinfo() {
-		return ImmutableSet.copyOf(pubinfo);
+		return pubinfo;
+	}
+
+	@Override
+	public Set<URI> getGraphUris() {
+		if (graphUris == null) {
+			Set<URI> s = new HashSet<>();
+			s.add(headUri);
+			s.add(assertionUri);
+			s.addAll(assertionSubUris);
+			s.add(provenanceUri);
+			s.addAll(provenanceSubUris);
+			s.add(pubinfoUri);
+			s.addAll(pubinfoSubUris);
+			graphUris = ImmutableSet.copyOf(s);
+		}
+		return graphUris;
 	}
 
 }
