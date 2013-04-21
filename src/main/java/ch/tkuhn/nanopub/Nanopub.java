@@ -1,5 +1,6 @@
 package ch.tkuhn.nanopub;
 
+import java.util.Calendar;
 import java.util.Set;
 
 import org.openrdf.model.Statement;
@@ -32,5 +33,11 @@ public interface Nanopub {
 	public Set<Statement> getPubinfo();
 
 	public Set<URI> getGraphUris();
+
+	public Calendar getCreationTime();
+
+	public Set<URI> getAuthors();
+
+	public Set<URI> getCreators();
 
 }

@@ -8,14 +8,17 @@ import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.xml.bind.DatatypeConverter;
 
 import org.openrdf.OpenRDFException;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -45,6 +48,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	private static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
+	private static final URI CREATION_TIME = new URIImpl("http://purl.org/dc/terms/created");
+	private static final URI DATETIME_TYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#dateTime");
+	private static final URI HAS_AUTHOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
+	private static final URI HAS_CREATOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
@@ -316,6 +323,46 @@ public class NanopubImpl implements Nanopub, Serializable {
 	@Override
 	public Set<URI> getGraphUris() {
 		return graphUris;
+	}
+
+	@Override
+	public Calendar getCreationTime() {
+		String s = null;
+		for (Statement st : pubinfo) {
+			if (!st.getSubject().equals(nanopubUri)) continue;
+			if (!st.getPredicate().equals(CREATION_TIME)) continue;
+			if (!(st.getObject() instanceof Literal)) continue;
+			Literal l = (Literal) st.getObject();
+			if (!l.getDatatype().equals(DATETIME_TYPE)) continue;
+			s = l.stringValue();
+			break;
+		}
+		if (s == null) return null;
+		return DatatypeConverter.parseDateTime(s);
+	}
+
+	@Override
+	public Set<URI> getAuthors() {
+		Set<URI> authors = new HashSet<>();
+		for (Statement st : pubinfo) {
+			if (!st.getSubject().equals(nanopubUri)) continue;
+			if (!st.getPredicate().equals(HAS_AUTHOR)) continue;
+			if (!(st.getObject() instanceof URI)) continue;
+			authors.add((URI) st.getObject());
+		}
+		return authors;
+	}
+
+	@Override
+	public Set<URI> getCreators() {
+		Set<URI> authors = new HashSet<>();
+		for (Statement st : pubinfo) {
+			if (!st.getSubject().equals(nanopubUri)) continue;
+			if (!st.getPredicate().equals(HAS_CREATOR)) continue;
+			if (!(st.getObject() instanceof URI)) continue;
+			authors.add((URI) st.getObject());
+		}
+		return authors;
 	}
 
 }
