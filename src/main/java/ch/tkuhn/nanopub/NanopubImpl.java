@@ -185,6 +185,9 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private void collectNanopubUri(Collection<Statement> statements) throws MalformedNanopubException {
 		for (Statement st : statements) {
+			if (st.getContext() == null) {
+				throw new MalformedNanopubException("Null value for context URI found.");
+			}
 			if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(Nanopub.NANOPUB_TYPE_URI)) {
 				if (nanopubUri != null) {
 					throw new MalformedNanopubException("Two nanopub URIs found");
