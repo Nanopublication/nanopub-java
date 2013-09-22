@@ -1,5 +1,6 @@
 package ch.tkuhn.nanopub;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -140,6 +141,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 		init(readStatements(in, format));
 	}
 
+	public NanopubImpl(String utf8, RDFFormat format)
+			throws MalformedNanopubException, OpenRDFException, IOException {
+		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
+	}
+
 	private static List<Statement> readStatements(InputStream in, RDFFormat format)
 			throws MalformedNanopubException, OpenRDFException, IOException {
 		final List<Statement> statements = new ArrayList<Statement>();
@@ -266,7 +272,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 			} else if (pubinfoSubUris.contains(g)) {
 				pubinfo.add(st);
 			} else {
-				throw new MalformedNanopubException("Disconnected statement found");
+				throw new MalformedNanopubException("Disconnected graph: " + g);
 			}
 		}
 		this.head = ImmutableSet.copyOf(head);
