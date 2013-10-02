@@ -11,8 +11,10 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -62,8 +64,13 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private Set<URI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
+	private List<Statement> statements = new ArrayList<>();
+	private List<String> nsPrefixes = new ArrayList<>();
+	private Map<String,String> ns = new HashMap<>();
+
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
-		init(statements);
+		this.statements.addAll(statements);
+		init();
 	}
 
 	private static final String nanopubViaSPARQLQuery =
@@ -87,7 +94,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	public NanopubImpl(SPARQLRepository repo, URI nanopubUri)
 			throws MalformedNanopubException, RepositoryException {
-		List<Statement> statements = new ArrayList<Statement>();
 		try {
 			RepositoryConnection connection = repo.getConnection();
 			try {
@@ -115,7 +121,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		} catch (QueryEvaluationException ex) {
 			ex.printStackTrace();
 		}
-		init(statements);
+		init();
 	}
 
 	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
@@ -124,7 +130,8 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (format == null) {
 			format = RDFFormat.forFileName(n, RDFFormat.TRIG);
 		}
-		init(readStatements(new FileInputStream(file), format));
+		readStatements(new FileInputStream(file), format);
+		init();
 	}
 
 	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
@@ -133,12 +140,14 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (format == null) {
 			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
 		}
-		init(readStatements(conn.getInputStream(), format));
+		readStatements(conn.getInputStream(), format);
+		init();
 	}
 
 	public NanopubImpl(InputStream in, RDFFormat format)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		init(readStatements(in, format));
+		readStatements(in, format);
+		init();
 	}
 
 	public NanopubImpl(String utf8, RDFFormat format)
@@ -146,25 +155,31 @@ public class NanopubImpl implements Nanopub, Serializable {
 		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
 	}
 
-	private static List<Statement> readStatements(InputStream in, RDFFormat format)
+	private void readStatements(InputStream in, RDFFormat format)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		final List<Statement> statements = new ArrayList<Statement>();
 		RDFParser p = Rio.createParser(format);
 		p.setRDFHandler(new RDFHandlerBase() {
+
+			@Override
+			public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+				nsPrefixes.add(prefix);
+				ns.put(prefix, uri);
+			}
+
 			@Override
 			public void handleStatement(Statement st) throws RDFHandlerException {
 				statements.add(st);
 			}
+
 		});
 		try {
 			p.parse(in, "");
 		} finally {
 			in.close();
 		}
-		return statements;
 	}
 
-	private void init(Collection<Statement> statements) throws MalformedNanopubException {
+	private void init() throws MalformedNanopubException {
 		collectNanopubUri(statements);
 		if (nanopubUri == null || headUri == null) {
 			throw new MalformedNanopubException("No nanopub URI found");
@@ -372,6 +387,14 @@ public class NanopubImpl implements Nanopub, Serializable {
 			authors.add((URI) st.getObject());
 		}
 		return authors;
+	}
+
+	public List<String> getNsPrefixes() {
+		return new ArrayList<>(nsPrefixes);
+	}
+
+	public String getNamespace(String prefix) {
+		return ns.get(prefix);
 	}
 
 }

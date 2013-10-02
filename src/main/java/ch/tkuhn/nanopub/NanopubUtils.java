@@ -33,17 +33,22 @@ public class NanopubUtils {
 		RDFWriter writer = Rio.createWriter(format, out);
 		writer.startRDF();
 		String s = nanopub.getUri().toString();
-		writer.handleNamespace("this", s);
-		writer.handleNamespace("sub", s + ".");
-		writer.handleNamespace("blank", s + "..");
-		writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-		writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-		writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-		writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-		writer.handleNamespace("dc", "http://purl.org/dc/terms/");
-		writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
-		writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
+		if (nanopub instanceof NanopubImpl && !((NanopubImpl) nanopub).getNsPrefixes().isEmpty()) {
+			NanopubImpl np = (NanopubImpl) nanopub;
+			for (String p : np.getNsPrefixes()) {
+				writer.handleNamespace(p, np.getNamespace(p));
+			}
+		} else {
+			writer.handleNamespace("this", s);
+			writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+			writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+			writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
+			writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
+			writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
+			writer.handleNamespace("dc", "http://purl.org/dc/terms/");
+			writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
+			writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
+		}
 		for (Statement st : getStatements(nanopub)) {
 			writer.handleStatement(st);
 		}
