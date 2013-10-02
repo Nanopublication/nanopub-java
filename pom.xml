@@ -27,22 +27,27 @@
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-trig</artifactId>
-      <version>2.7.0-beta1</version>
+      <version>2.7.7</version>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-trix</artifactId>
-      <version>2.7.0-beta1</version>
+      <version>2.7.7</version>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-nquads</artifactId>
-      <version>2.7.0-beta1</version>
+      <version>2.7.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-rdfjson</artifactId>
+      <version>2.7.7</version>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-repository-sparql</artifactId>
-      <version>2.7.0-beta1</version>
+      <version>2.7.7</version>
     </dependency>
     <dependency>
       <groupId>com.google.collections</groupId>
