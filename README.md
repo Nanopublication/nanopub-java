@@ -7,7 +7,7 @@ This is a Java library for nanopublications based on Sesame.
 Formal Structure of a Nanopub
 -----------------------------
 
-This library interprets the [official guidelines](https://github.com/Nanopublication/Guidelines),
+This library interprets the [official guidelines](http://nanopub.org/guidelines/working_draft/),
 which are still work in progress and sometimes vague, in a way that leads to the following
 well-formedness criteria:
 
