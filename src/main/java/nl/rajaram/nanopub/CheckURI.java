@@ -20,13 +20,15 @@ import org.openrdf.model.URI;
 public class CheckURI {
     
     /**
-     * Check for the shortcuts in URI's. 
-     * 
-     * Example
-     * ---------------------------------------------------------
-     * Valid URI        :   http://www.biosemantics.org#example
-     * Invalid URI      :   http://biosemantics.org#example
-     * ---------------------------------------------------------
+     * <p>
+     * Check for shortcuts in URI's. 
+     * <br>
+     * Example<br>
+     * ---------------------------------------------------------<br>
+     * Valid URI        :   http://www.biosemantics.org#example<br>
+     * Invalid URI      :   http://biosemantics.org#example<br>
+     * ---------------------------------------------------------<br>
+     * </p>
      * @param utf8  Nanopublication in string object format.
      * @throws MalformedNanopubException    Throws exception if the URI is 
      *                                      invalid.
@@ -44,20 +46,22 @@ public class CheckURI {
     }
     
     /**
-     * Check duplicates in URI's. 
-     * 
-     * Example
-     * ---------------------------------------------------------
-     * Valid URIs :
-     * ==========
-     * Assertion URI    = http://www.biosemantics.org#example1
-     * Provenance URI   = http://www.biosemantics.org#example2
-     * 
-     * Invalid URIs :
-     * ============
-     * Assertion URI    = http://www.biosemantics.org#example
-     * Provenance URI   = http://www.biosemantics.org#example
-     * ---------------------------------------------------------
+     * <p>
+     * Check duplicates in URI's.
+     * <br>
+     * Example<br>
+     * ---------------------------------------------------------<br>
+     * Valid URIs :<br>
+     * ==========<br>
+     * Assertion URI    = http://www.biosemantics.org#example1<br>
+     * Provenance URI   = http://www.biosemantics.org#example2<br>
+     * <br>
+     * Invalid URIs :<br>
+     * ============<br>
+     * Assertion URI    = http://www.biosemantics.org#example<br>
+     * Provenance URI   = http://www.biosemantics.org#example<br>
+     * ---------------------------------------------------------<br>
+     * </p>
      * @param URIs  List of graph URIs.
      * @throws MalformedNanopubException    Throws exception if same URI is 
      *                                      assigned to more than one graph.
@@ -78,6 +82,33 @@ public class CheckURI {
                 }
             }            
         }      
+    }
+    
+    /**
+     * <p>
+     * Check for the error in prefix's. 
+     * 
+     * Example
+     * ---------------------------------------------------------
+     * Valid URI        :   http://www.biosemantics.org#example
+     * Invalid URI      :   http://biosemantics.org#example
+     * ---------------------------------------------------------
+     * </p>
+     * @param utf8  Nanopublication in string object format.
+     * @throws MalformedNanopubException    Throws exception if the URI is 
+     *                                      invalid.
+     */
+    public static void checkPrefix (String utf8) throws 
+            MalformedNanopubException {
+        utf8 = utf8.toLowerCase();
+        String [] lines = utf8.split("\\n");
+        for (String line:lines) {
+            if (line.contains("http://") && line.contains("prefix")) {
+                throw new MalformedNanopubException("URI shortcut on line : "
+                        +line);
+            }
+        }
+                
     }
     
 }
