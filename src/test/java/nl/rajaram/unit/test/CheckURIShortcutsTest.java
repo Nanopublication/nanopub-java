@@ -1,4 +1,4 @@
-package nl.rajaram.test;
+package nl.rajaram.unit.test;
 
 /*
  * To change this template, choose Tools | Templates
@@ -7,10 +7,6 @@ package nl.rajaram.test;
 
 import ch.tkuhn.nanopub.MalformedNanopubException;
 import nl.rajaram.nanopub.CheckURI;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
