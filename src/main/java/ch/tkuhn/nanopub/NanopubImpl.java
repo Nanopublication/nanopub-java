@@ -43,6 +43,14 @@ import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import com.google.common.collect.ImmutableSet;
+import nl.rajaram.nanopub.CheckURI;
+import nl.rajaram.nanopub.URIs;
+
+/**
+ * 
+ * @author Tobias, Rajaram
+ * @version 1.1
+ */
 
 public class NanopubImpl implements Nanopub, Serializable {
 
@@ -61,6 +69,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private Set<URI> assertionSubUris, provenanceSubUris, pubinfoSubUris;
 	private Set<URI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
+        private List<URIs> uris = new ArrayList<URIs>();
 
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
 		init(statements);
@@ -168,7 +177,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		collectNanopubUri(statements);
 		if (nanopubUri == null || headUri == null) {
 			throw new MalformedNanopubException("No nanopub URI found");
-		}
+		}                
 		collectGraphs(statements);
 		if (assertionUri == null) {
 			throw new MalformedNanopubException("No assertion URI found");
@@ -176,9 +185,16 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (provenanceUri == null) {
 			throw new MalformedNanopubException("No provenance URI found");
 		}
+                
 		if (pubinfoUri == null) {
 			throw new MalformedNanopubException("No publication info URI found");
 		}
+                uris.add(new URIs(headUri, "Head uri"));
+                uris.add(new URIs(nanopubUri, "Nanopublication uri"));
+                uris.add(new URIs(assertionUri, "Assertion uri"));
+                uris.add(new URIs(provenanceUri, "Provenance uri"));
+                uris.add(new URIs(pubinfoUri, "Publication Info uri"));
+                CheckURI.checkDuplicates(uris);
 		collectSubGraphs(statements);
 		collectStatements(statements);
 	}
