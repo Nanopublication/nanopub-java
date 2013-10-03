@@ -16,7 +16,9 @@ import org.openrdf.model.impl.URIImpl;
 
 /**
  *
- * @author rkaliyaperumal
+ * @author Rajaram
+ * @since 03-10-2013
+ * @version 1.0
  */
 public class CheckURIDuplicatesTest {
     
