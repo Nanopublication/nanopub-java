@@ -63,7 +63,7 @@ public class CheckURI {
      * ---------------------------------------------------------<br>
      * </p>
      * @param URIs  List of graph URIs.
-     * @throws MalformedNanopubException    Throws exception if same URI is 
+     * @throws MalformedNanopubException    Throws exception if the same URI is 
      *                                      assigned to more than one graph.
      */
     public static void checkDuplicates (List<URIs> uris) 
