@@ -22,7 +22,7 @@ public class CheckURIShortcutsTest {
     }
     /**
      * <p>
-     * This URI has missing (www.), so this test is not excepted to throw
+     * This URI has missing "www.", so this test is expected to throw
      * MalformedNanopubException exception. 
      * </p>
      * @throws MalformedNanopubException 
@@ -35,7 +35,7 @@ public class CheckURIShortcutsTest {
     }
     /**
      * <p>
-     * This URI is valid, so the test is not excepted to throw
+     * This URI is valid, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
@@ -54,7 +54,7 @@ public class CheckURIShortcutsTest {
     
     /**
      * <p>
-     * This URI is valid, so the test is not excepted to throw
+     * This URI is valid, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
@@ -73,7 +73,7 @@ public class CheckURIShortcutsTest {
     
     /**
      * <p>
-     * This URI is valid, so the test is not excepted to throw
+     * This URI is valid, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
@@ -92,7 +92,7 @@ public class CheckURIShortcutsTest {
     
     /**
      * <p>
-     * This URI is valid URN, so the test is not excepted to throw
+     * This URI is valid URN, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
@@ -111,7 +111,7 @@ public class CheckURIShortcutsTest {
     
     /**
      * <p>
-     * This URI is valid, so the test is not excepted to throw
+     * This URI is valid, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
@@ -130,7 +130,7 @@ public class CheckURIShortcutsTest {
     
     /**
      * <p>
-     * This URI is valid, so the test is not excepted to throw
+     * This URI is valid, so the test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
