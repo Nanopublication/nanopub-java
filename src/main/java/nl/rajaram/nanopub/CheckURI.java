@@ -10,7 +10,7 @@ import org.openrdf.model.URI;
 
 /**
  * <p>
- * Checks the uri's of the nanopublication.
+ * Checks URI's of the nanopublication.
  * </p>
  * 
  * @author Rajaram
