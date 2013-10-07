@@ -84,31 +84,5 @@ public class CheckURI {
         }      
     }
     
-    /**
-     * <p>
-     * Check for the error in prefix's. 
-     * 
-     * Example
-     * ---------------------------------------------------------
-     * Valid URI        :   http://www.biosemantics.org#example
-     * Invalid URI      :   http://biosemantics.org#example
-     * ---------------------------------------------------------
-     * </p>
-     * @param utf8  Nanopublication in string object format.
-     * @throws MalformedNanopubException    Throws exception if the URI is 
-     *                                      invalid.
-     */
-    public static void checkPrefix (String utf8) throws 
-            MalformedNanopubException {
-        utf8 = utf8.toLowerCase();
-        String [] lines = utf8.split("\\n");
-        for (String line:lines) {
-            if (line.contains("http://") && line.contains("prefix")) {
-                throw new MalformedNanopubException("URI shortcut on line : "
-                        +line);
-            }
-        }
-                
-    }
     
 }
