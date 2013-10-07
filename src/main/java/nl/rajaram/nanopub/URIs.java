@@ -17,7 +17,7 @@ import org.openrdf.model.URI;
 public class URIs {
     // URI
     private URI uri;
-    // Name for uri.(Example: nanopublication, assertion)
+    // Name for the URI.(Example: nanopublication, assertion)
     private String uriName;
     
     public URIs(URI uri, String uriName) {
