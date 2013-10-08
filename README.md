@@ -24,6 +24,8 @@ well-formedness criteria:
 - Quads of the form '[S] rdfg:subgraphof [G] [H]' where [H] is the head URI and [G] is one
   of assertion, provenance, or publication info URI define a subgraph [S] of the respective
   graph
+- The URIs for head, assertion, provenance, publication info, and their subgraphs have to be all
+  different
 - All triples have to belong to head, assertion, provenance, publication info, or one of their
   subgraphs; triples that have a graph URI that is different from these are not allowed
 

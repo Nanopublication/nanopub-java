@@ -260,11 +260,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 	}
 
 	private void collectSubGraphs(Collection<Statement> statements) throws MalformedNanopubException {
-		Set<URI> graphUris = new HashSet<>();
-		graphUris.add(headUri);
-		graphUris.add(assertionUri);
-		graphUris.add(provenanceUri);
-		graphUris.add(pubinfoUri);
+		graphUris = new HashSet<>();
+		addGraphUri(headUri);
+		addGraphUri(assertionUri);
+		addGraphUri(provenanceUri);
+		addGraphUri(pubinfoUri);
 		Set<URI> assertionSubUris = new HashSet<>();
 		Set<URI> provenanceSubUris = new HashSet<>();
 		Set<URI> pubinfoSubUris = new HashSet<>();
@@ -272,15 +272,15 @@ public class NanopubImpl implements Nanopub, Serializable {
 			if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
 				if (st.getObject().equals(assertionUri)) {
 					URI g = (URI) st.getSubject();
-					graphUris.add(g);
+					addGraphUri(g);
 					assertionSubUris.add(g);
 				} else if (st.getObject().equals(provenanceUri)) {
 					URI g = (URI) st.getSubject();
-					graphUris.add(g);
+					addGraphUri(g);
 					provenanceSubUris.add(g);
 				} else if (st.getObject().equals(pubinfoUri)) {
 					URI g = (URI) st.getSubject();
-					graphUris.add(g);
+					addGraphUri(g);
 					pubinfoSubUris.add(g);
 				}
 			}
@@ -289,6 +289,13 @@ public class NanopubImpl implements Nanopub, Serializable {
 		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
 		this.provenanceSubUris = ImmutableSet.copyOf(provenanceSubUris);
 		this.pubinfoSubUris = ImmutableSet.copyOf(pubinfoSubUris);
+	}
+
+	private void addGraphUri(URI uri) throws MalformedNanopubException {
+		if (graphUris.contains(uri)) {
+			throw new MalformedNanopubException("Each (sub-)graph needs a separate URI");
+		}
+		graphUris.add(uri);
 	}
 
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
