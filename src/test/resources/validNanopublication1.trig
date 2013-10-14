@@ -1,0 +1,40 @@
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix rso: <http://rdf.biosemantics.org/ontologies/referencesequence#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix pav: <http://swan.mindinformatics.org/ontologies/1.2/pav/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://rdf.biosemantics.org/nanopubs/riken/fantom5/> {
+  <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5> a np:Nanopublication;
+     np:hasAssertion <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#assertion>;
+     np:hasProvenance <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#provenance>;
+     np:hasPublicationInfo <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#publicationInfo> .
+}
+
+<http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#assertion> {
+  <http://rdf.biosemantics.org/data/riken/fantom5/data#chr10:100013403..100013414,-> a <http://purl.org/obo/owl/SO#SO_0001917>;
+     rso:mapsTo <http://rdf.biosemantics.org/data/riken/fantom5/data#loc_chr10:100013403..100013414,-> .
+
+  <http://rdf.biosemantics.org/data/riken/fantom5/data#loc_chr10:100013403..100013414,-> a rso:SequenceLocation;
+     rso:end "100013414"^^xsd:int;
+     rso:hasOrientation rso:reverse;
+     rso:regionOf <http://rdf.biosemantics.org/data/genomeassemblies/hg19#chr10>;
+     rso:start "100013403"^^xsd:int .
+}
+
+<http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#provenance> {
+  <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#assertion> <http://purl.org/obo/owl/obo#RO_0003001> <http://rdf.biosemantics.org/data/riken/fantom5/experiment>;
+     prov:derivedFrom <http://rdf.biosemantics.org/dataset/riken/fantom5/void/row_5> .
+}
+
+<http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5#publicationInfo> {
+  <http://rdf.biosemantics.org/nanopubs/riken/fantom5/cage_clusters/5> dcterms:created "2013-10-03T08:02:58Z"^^xsd:dateTime;
+     dcterms:rights <http://creativecommons.org/licenses/by/3.0/>;
+     dcterms:rightsHolder <http://www.riken.jp/>;
+     pav:authoredBy <http://rdf.biosemantics.org/data/riken/fantom5/project>;
+     pav:createdBy "Andrew Gibson",
+       "Mark Thompson",
+       "Zuotian Tatum" .
+}

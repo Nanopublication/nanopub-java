@@ -6,11 +6,13 @@ package nl.rajaram.nanopub;
 
 import ch.tkuhn.nanopub.MalformedNanopubException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.openrdf.model.URI;
 
 /**
  * <p>
- * Checks the uri's of the nanopublication.
+ * Checks URI's of the nanopublication.
  * </p>
  * 
  * @author Rajaram
@@ -18,7 +20,7 @@ import org.openrdf.model.URI;
  * @version 1.0
  */
 public class CheckURI {
-    
+        
     /**
      * <p>
      * Check for shortcuts in URI's. 
@@ -38,7 +40,7 @@ public class CheckURI {
         String [] lines = utf8.split("\\n");
         for (String line:lines) {
             if (line.contains("http://") && !line.contains("www.")) {
-                throw new MalformedNanopubException("URI shortcut on line : "
+                throw new MalformedNanopubException("URI shortcut on line ==> "
                         +line);
             }
         }
@@ -63,7 +65,7 @@ public class CheckURI {
      * ---------------------------------------------------------<br>
      * </p>
      * @param URIs  List of graph URIs.
-     * @throws MalformedNanopubException    Throws exception if same URI is 
+     * @throws MalformedNanopubException    Throws exception if the same URI is 
      *                                      assigned to more than one graph.
      */
     public static void checkDuplicates (List<URIs> uris) 
@@ -86,16 +88,16 @@ public class CheckURI {
     
     /**
      * <p>
-     * Check for the error in prefix's. 
+     * Check for errors in prefix's. 
      * 
      * Example
      * ---------------------------------------------------------
-     * Valid URI        :   http://www.biosemantics.org#example
-     * Invalid URI      :   http://biosemantics.org#example
+     * Valid prefix        :   @prefix <http://www.biosemantics.org#>
+     * Invalid prefix      :   @prefix <http://www.biosemantics.org>
      * ---------------------------------------------------------
      * </p>
      * @param utf8  Nanopublication in string object format.
-     * @throws MalformedNanopubException    Throws exception if the URI is 
+     * @throws MalformedNanopubException    Throws exception if the prefix is 
      *                                      invalid.
      */
     public static void checkPrefix (String utf8) throws 
@@ -103,9 +105,24 @@ public class CheckURI {
         utf8 = utf8.toLowerCase();
         String [] lines = utf8.split("\\n");
         for (String line:lines) {
-            if (line.contains("http://") && line.contains("prefix")) {
-                throw new MalformedNanopubException("URI shortcut on line : "
-                        +line);
+            if (line.contains("prefix") && line.contains("http://")) {
+                // To take characters between '<' and '>'.
+                Pattern logEntry = Pattern.compile("\\<(.*?)\\>");
+                Matcher matchPattern = logEntry.matcher(line);
+
+                while(matchPattern.find()) {
+                    String link = matchPattern.group(1);
+                    //Checking the last character in the link. 
+                    if ((link.charAt(link.length()-1) == '#') ||
+                            (link.charAt(link.length()-1) == '/')){
+                        
+                    }
+                    else {
+                        throw new MalformedNanopubException("Invalid prefix: "
+                                + "The prefix link should end with either "
+                                + "'#' or '/' ==> "+line);
+                    }
+                }                
             }
         }
                 

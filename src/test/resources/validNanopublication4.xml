@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:err="http://www.w3.org/2005/xqt-errors#"
+     xmlns:fti="http://franz.com/ns/allegrograph/2.2/textindex/"
+     xmlns:fn="http://www.w3.org/2005/xpath-functions#"
+     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:dcterms="http://purl.org/dc/terms/"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:foaf="http://xmlns.com/foaf/0.1/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <Description rdf:about="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001">
+    <rdf:type rdf:resource="http://www.nanopub.org/nschema#Nanopublication"/>
+    <ns1:hasAssertion xmlns:ns1="http://www.nanopub.org/nschema#" rdf:resource="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001#assertion"/>
+    <ns1:hasProvenance xmlns:ns1="http://www.nanopub.org/nschema#" rdf:resource="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001#provenance"/>
+    <ns1:hasPublicationInfo xmlns:ns1="http://www.nanopub.org/nschema#" rdf:resource="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001#publicationInfo"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#altered_expression_000001">
+    <rdf:type rdf:resource="http://semanticscience.org/resource/SIO_001123"/>
+    <ns1:SIO_000628 xmlns:ns1="http://semanticscience.org/resource/" rdf:resource="http://bio2rdf.org/geneid:100133941"/>
+  </Description>
+  <Description rdf:about="http://bio2rdf.org/geneid:100133941">
+    <rdf:type rdf:resource="http://bio2rdf.org/ctd_vocabulary:Gene"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#altered_expression_000001">
+    <ns1:SIO_000628 xmlns:ns1="http://semanticscience.org/resource/" rdf:resource="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#huntington_disease_000001"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#huntington_disease_000001">
+    <rdf:type rdf:resource="http://www.ontology.neuinfo.org/NIF/Dysfunction/NIF-Dysfunction.owl#birnlex_12500"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001#assertion">
+    <ns1:SIO_000216 xmlns:ns1="http://semanticscience.org/resource/" rdf:resource="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#pvalue_000001"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#pvalue_000001">
+    <rdf:type rdf:resource="http://semanticscience.org/resource/SIO_000765"/>
+    <ns1:SIO_000300 xmlns:ns1="http://semanticscience.org/resource/" rdf:datatype="http://www.w3.org/2001/XMLSchema#float">8.929E-7</ns1:SIO_000300>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001#assertion">
+    <ns1:wasDerivedFrom xmlns:ns1="http://www.w3.org/ns/prov#" rdf:resource="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#output__diffexpgene_000001"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#output__diffexpgene_000001">
+    <rdf:seeAlso rdf:resource="http://sandbox.wf4ever-project.org/rodl/ROs/HD_chromatin_analysis/dummy_results.txt"/>
+    <rdf:type rdf:resource="http://www.w3.org/ns/prov#Entity"/>
+    <rdf:type rdf:resource="http://www.daml.org/services/owl-s/1.1/Process.owl#Output"/>
+    <ns1:wasGeneratedBy xmlns:ns1="http://www.w3.org/ns/prov#" rdf:resource="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#activity__diffexpgene_000001"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#activity__diffexpgene_000001">
+    <rdf:seeAlso rdf:resource="http://sandbox.wf4ever-project.org/rodl/ROs/HD_chromatin_analysis/"/>
+    <rdf:type rdf:resource="http://www.w3.org/ns/prov#Activity"/>
+    <ns1:used xmlns:ns1="http://www.w3.org/ns/prov#" rdf:resource="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#input1_diffexpgene_000001"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/data/eleni/diffexpressedgene/data#input1_diffexpgene_000001">
+    <rdf:seeAlso rdf:resource="http://sandbox.wf4ever-project.org/rodl/ROs/HD_chromatin_analysis/brain_data_assession_number.txt"/>
+    <rdf:type rdf:resource="http://www.daml.org/services/owl-s/1.1/Process.owl#Input"/>
+    <ns1:wasAttributedTo xmlns:ns1="http://www.w3.org/ns/prov#" rdf:resource="http://www.ncbi.nlm.nih.gov/geo/"/>
+  </Description>
+  <Description rdf:about="http://rdf.biosemantics.org/nanopubs/diffexpressedgene/000001">
+    <ns1:wasDerivedFrom xmlns:ns1="http://www.w3.org/ns/prov#" rdf:resource="http://www.creativecommons.org/licenses/by/3.0/"/>
+    <dcterms:rightsHolder rdf:resource="http://www.biosemantics.org"/>
+    <ns1:authoredBy xmlns:ns1="http://www.swan.mindinformatics.org/ontologies/1.2/pav/" rdf:resource="http://www.researcherid.com/rid/J-7846-2013"/>
+    <ns1:createdBy xmlns:ns1="http://www.swan.mindinformatics.org/ontologies/1.2/pav/" rdf:resource="http://www.researcherid.com/rid/J-7843-2013"/>
+    <ns1:createdBy xmlns:ns1="http://www.swan.mindinformatics.org/ontologies/1.2/pav/" rdf:resource="http://www.researcherid.com/rid/E-7370-2012"/>
+    <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-10-14T08:53:24Z</dcterms:created>
+    <dcterms:hasVersion rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1.0E0</dcterms:hasVersion>
+  </Description>
+</RDF>

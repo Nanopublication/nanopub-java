@@ -26,8 +26,8 @@ public class CheckURIDuplicatesTest {
     }
     /**
      * <p>
-     * Base and nanopublication URIs are same, so this test is excepted to 
-     * throws MalformedNanopubException exception.
+     * Base and nanopublication URIs are the same, so this test is expected to 
+     * throw MalformedNanopubException exception.
      * </p>
      * @throws MalformedNanopubException 
      */
@@ -52,7 +52,7 @@ public class CheckURIDuplicatesTest {
     
     /**
      * <p>
-     * No duplicates in the URIs list, so this test is not excepted to throw
+     * No duplicates in the URIs list, so this test is not expected to throw
      * MalformedNanopubException exception.
      * </p>
      */

@@ -8,23 +8,22 @@ import org.openrdf.model.URI;
 import org.openrdf.rio.trig.TriGWriter;
 
 public class CustomTrigWriter extends TriGWriter {
+    
+    public CustomTrigWriter(OutputStream out) {
+        super(out);
+    }
 
-	public CustomTrigWriter(OutputStream out) {
-		super(out);
+    public CustomTrigWriter(Writer writer) {
+        super(writer);
+    }
+
+    protected void writeURI(URI uri) throws IOException {
+        String prefix = namespaceTable.get(uri.toString());
+	if (prefix != null) {
+            writer.write(prefix);
+            writer.write(":");
+	} else {
+            super.writeURI(uri);
 	}
-
-	public CustomTrigWriter(Writer writer) {
-		super(writer);
-	}
-
-	protected void writeURI(URI uri) throws IOException {
-		String prefix = namespaceTable.get(uri.toString());
-		if (prefix != null) {
-			writer.write(prefix);
-			writer.write(":");
-		} else {
-			super.writeURI(uri);
-		}
-	}
-
+    }
 }
