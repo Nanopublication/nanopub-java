@@ -73,6 +73,13 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 
+	public NanopubImpl(Collection<Statement> statements, List<String> nsPrefixes, Map<String,String> ns) throws MalformedNanopubException {
+		this.statements.addAll(statements);
+		this.nsPrefixes.addAll(nsPrefixes);
+		this.ns.putAll(ns);
+		init();
+	}
+
 	public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
 		this.statements.addAll(statements);
 		init();
