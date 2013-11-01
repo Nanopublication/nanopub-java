@@ -35,6 +35,7 @@ import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
@@ -104,7 +105,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
 
-	public NanopubImpl(SPARQLRepository repo, URI nanopubUri)
+	public NanopubImpl(Repository repo, URI nanopubUri)
 			throws MalformedNanopubException, RepositoryException {
 		try {
 			RepositoryConnection connection = repo.getConnection();
