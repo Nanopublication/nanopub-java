@@ -12,6 +12,9 @@ import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.Rio;
 
+/**
+ * @author Tobias Kuhn
+ */
 public class NanopubUtils {
 
 	static {

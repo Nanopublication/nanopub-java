@@ -47,6 +47,9 @@ import org.openrdf.rio.helpers.RDFHandlerBase;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+/**
+ * @author Tobias Kuhn
+ */
 public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;

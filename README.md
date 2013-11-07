@@ -30,6 +30,12 @@ well-formedness criteria:
   subgraphs; triples that have a graph URI that is different from these are not allowed
 
 
+Developers
+----------
+
+- Tobias Kuhn (http://www.tkuhn.ch)
+
+
 License
 -------
 

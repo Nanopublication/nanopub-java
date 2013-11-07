@@ -6,6 +6,9 @@ import java.io.Writer;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.trig.TriGWriterFactory;
 
+/**
+ * @author Tobias Kuhn
+ */
 public class CustomTrigWriterFactory extends TriGWriterFactory {
 
 	public RDFWriter getWriter(OutputStream out) {

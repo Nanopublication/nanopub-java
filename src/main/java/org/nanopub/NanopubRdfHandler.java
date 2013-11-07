@@ -9,6 +9,9 @@ import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 
+/**
+ * @author Tobias Kuhn
+ */
 public class NanopubRdfHandler implements RDFHandler {
 
 	private List<Statement> statements = new ArrayList<>();

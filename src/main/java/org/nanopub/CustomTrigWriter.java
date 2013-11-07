@@ -7,6 +7,9 @@ import java.io.Writer;
 import org.openrdf.model.URI;
 import org.openrdf.rio.trig.TriGWriter;
 
+/**
+ * @author Tobias Kuhn
+ */
 public class CustomTrigWriter extends TriGWriter {
 
 	public CustomTrigWriter(OutputStream out) {
