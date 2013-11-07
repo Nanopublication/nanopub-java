@@ -1,4 +1,4 @@
-package ch.tkuhn.nanopub;
+package org.nanopub;
 
 import java.io.OutputStream;
 import java.util.ArrayList;

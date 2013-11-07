@@ -1,4 +1,4 @@
-package ch.tkuhn.nanopub;
+package org.nanopub;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,7 +38,6 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;

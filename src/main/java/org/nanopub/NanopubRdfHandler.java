@@ -1,4 +1,4 @@
-package ch.tkuhn.nanopub;
+package org.nanopub;
 
 import java.util.ArrayList;
 import java.util.HashMap;

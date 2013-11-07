@@ -1,4 +1,4 @@
-package ch.tkuhn.nanopub;
+package org.nanopub;
 
 import java.io.IOException;
 import java.io.OutputStream;
