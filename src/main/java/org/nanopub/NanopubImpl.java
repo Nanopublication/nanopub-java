@@ -38,6 +38,7 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.sparql.SPARQLRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * @author Tobias Kuhn
+ * @author Eelke van der Horst
  */
 public class NanopubImpl implements Nanopub, Serializable {
 
@@ -141,7 +143,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	public NanopubImpl(File file, RDFFormat format)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		readStatements(new FileInputStream(file), format);
+		readStatements(new FileInputStream(file), format, "");
 		init();
 	}
 
@@ -154,13 +156,13 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (unsuitableFormats.contains(format)) {
 			format = RDFFormat.TRIG;
 		}
-		readStatements(new FileInputStream(file), format);
+		readStatements(new FileInputStream(file), format, "");
 		init();
 	}
 
 	public NanopubImpl(URL url, RDFFormat format)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		readStatements(url.openConnection().getInputStream(), format);
+		readStatements(url.openConnection().getInputStream(), format, "");
 		init();
 	}
 
@@ -173,22 +175,22 @@ public class NanopubImpl implements Nanopub, Serializable {
 		if (unsuitableFormats.contains(format)) {
 			format = RDFFormat.TRIG;
 		}
-		readStatements(conn.getInputStream(), format);
+		readStatements(conn.getInputStream(), format, "");
 		init();
 	}
 
-	public NanopubImpl(InputStream in, RDFFormat format)
+	public NanopubImpl(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		readStatements(in, format);
+		readStatements(in, format, baseUri);
 		init();
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format)
+	public NanopubImpl(String utf8, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
+		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
 	}
 
-	private void readStatements(InputStream in, RDFFormat format)
+	private void readStatements(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
 		RDFParser p = Rio.createParser(format);
 		p.setRDFHandler(new RDFHandlerBase() {
@@ -206,7 +208,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 		});
 		try {
-			p.parse(in, "");
+			p.parse(in, baseUri);
 		} finally {
 			in.close();
 		}
