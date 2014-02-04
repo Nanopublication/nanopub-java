@@ -338,7 +338,8 @@ public class NanopubImpl implements Nanopub, Serializable {
 		this.head = ImmutableSet.copyOf(head);
 		this.assertion = ImmutableSet.copyOf(assertion);
 		this.provenance = ImmutableSet.copyOf(provenance);
-		this.pubinfo = ImmutableSet.copyOf(pubinfo);
+                //Added by Rajaram (Code is alterted OldLINE: "this.pubinfo = ImmutableSet.copyOf(pubinfo);")
+		this.pubinfo = pubinfo;
 	}
 
 	@Override
