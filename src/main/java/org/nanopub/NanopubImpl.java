@@ -38,7 +38,6 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
@@ -185,11 +184,22 @@ public class NanopubImpl implements Nanopub, Serializable {
 		init();
 	}
 
+	public NanopubImpl(InputStream in, RDFFormat format)
+			throws MalformedNanopubException, OpenRDFException, IOException {
+		this(in, format, "");
+	}
+
 	public NanopubImpl(String utf8, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
 		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
 	}
 
+	public NanopubImpl(String utf8, RDFFormat format)
+			throws MalformedNanopubException, OpenRDFException, IOException {
+		this(utf8, format, "");
+	}
+
+	// TODO Is the baseURI really needed? Shouldn't the input stream contain all needed data?
 	private void readStatements(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
 		RDFParser p = Rio.createParser(format);
@@ -337,7 +347,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		}
 		this.head = ImmutableSet.copyOf(head);
 		this.assertion = ImmutableSet.copyOf(assertion);
-		this.provenance = ImmutableSet.copyOf(provenance);                
+		this.provenance = ImmutableSet.copyOf(provenance);
 		this.pubinfo = ImmutableSet.copyOf(pubinfo);
 	}
 
