@@ -1,7 +1,9 @@
 package org.nanopub;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -26,6 +28,8 @@ public class NanopubCreator {
 	private List<Statement> assertion, provenance, pubinfo;
 
 	private List<Statement> statements;
+	private List<String> nsPrefixes;
+	private Map<String,String> ns;
 	private Nanopub nanopub;
 
 	private static final String headSuffix = "Head";
@@ -51,6 +55,9 @@ public class NanopubCreator {
 		assertion = new ArrayList<Statement>();
 		provenance = new ArrayList<Statement>();
 		pubinfo = new ArrayList<Statement>();
+
+		nsPrefixes = new ArrayList<String>();
+		ns = new HashMap<String,String>();
 	}
 
 	public void setNanopubUri(URI nanopubUri) {
@@ -126,13 +133,23 @@ public class NanopubCreator {
 		addPubinfoStatements(new StatementImpl(subj, pred, obj));
 	}
 
+	public void addNamespace(String prefix, String namespace) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		nsPrefixes.add(prefix);
+		ns.put(prefix, namespace);
+	}
+
+	public void addNamespace(String prefix, URI namespace) {
+		addNamespace(prefix, namespace.toString());
+	}
+
 	public Nanopub finalizeNanopub() throws MalformedNanopubException {
 		if (finalized) {
 			return nanopub;
 		}
 		if (nanopubUri == null) throw new MalformedNanopubException("No nanopub URI specified");
 		collectStatements();
-		nanopub = new NanopubImpl(statements);
+		nanopub = new NanopubImpl(statements, nsPrefixes, ns);
 		finalized = true;
 		return nanopub;
 	}
