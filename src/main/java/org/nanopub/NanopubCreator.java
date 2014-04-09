@@ -28,10 +28,10 @@ public class NanopubCreator {
 	private List<Statement> statements;
 	private Nanopub nanopub;
 
-	private static final String headSuffix = ".Head";
-	private static final String assertionSuffix = ".Ass";
-	private static final String provenanceSuffix = ".Prov";
-	private static final String pubinfoSuffix = ".Info";
+	private static final String headSuffix = "Head";
+	private static final String assertionSuffix = "Ass";
+	private static final String provenanceSuffix = "Prov";
+	private static final String pubinfoSuffix = "Info";
 
 	public NanopubCreator() {
 		init();
