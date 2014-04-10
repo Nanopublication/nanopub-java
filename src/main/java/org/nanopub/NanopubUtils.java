@@ -2,7 +2,10 @@ package org.nanopub;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
@@ -25,11 +28,25 @@ public class NanopubUtils {
 
 	public static List<Statement> getStatements(Nanopub nanopub) {
 		List<Statement> s = new ArrayList<>();
-		s.addAll(nanopub.getHead());
-		s.addAll(nanopub.getAssertion());
-		s.addAll(nanopub.getProvenance());
-		s.addAll(nanopub.getPubinfo());
+		s.addAll(getSortedList(nanopub.getHead()));
+		s.addAll(getSortedList(nanopub.getAssertion()));
+		s.addAll(getSortedList(nanopub.getProvenance()));
+		s.addAll(getSortedList(nanopub.getPubinfo()));
 		return s;
+	}
+
+	private static List<Statement> getSortedList(Set<Statement> s) {
+		List<Statement> l = new ArrayList<Statement>(s);
+		Collections.sort(l, new Comparator<Statement>() {
+
+			@Override
+			public int compare(Statement st1, Statement st2) {
+				// TODO better sorting
+				return st1.toString().compareTo(st2.toString());
+			}
+
+		});
+		return l;
 	}
 
 	public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format)
