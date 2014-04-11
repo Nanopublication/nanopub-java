@@ -55,11 +55,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;
 
-	private static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
-	private static final URI CREATION_TIME = new URIImpl("http://purl.org/dc/terms/created");
-	private static final URI DATETIME_TYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#dateTime");
-	private static final URI HAS_AUTHOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
-	private static final URI HAS_CREATOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
+	static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
+	static final URI CREATION_TIME = new URIImpl("http://purl.org/dc/terms/created");
+	static final URI DATETIME_TYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#dateTime");
+	static final URI HAS_AUTHOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
+	static final URI HAS_CREATOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 

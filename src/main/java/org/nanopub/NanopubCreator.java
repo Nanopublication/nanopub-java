@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.ContextStatementImpl;
 import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
 
 /**
@@ -25,12 +27,15 @@ public class NanopubCreator {
 
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
+	private boolean nanopubUriFixed, assertionUriFixed;
 	private List<Statement> assertion, provenance, pubinfo;
 
 	private List<Statement> statements;
 	private List<String> nsPrefixes;
 	private Map<String,String> ns;
 	private Nanopub nanopub;
+
+	private ValueFactoryImpl vf = new ValueFactoryImpl();
 
 	private static final String headSuffix = "Head";
 	private static final String assertionSuffix = "Ass";
@@ -62,6 +67,9 @@ public class NanopubCreator {
 
 	public void setNanopubUri(URI nanopubUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
+		if (nanopubUriFixed) {
+			throw new RuntimeException("Cannot change nanopublication URI anymore: has already been used");
+		}
 		this.nanopubUri = nanopubUri;
 		if (headUri == null) headUri = new URIImpl(nanopubUri + headSuffix);
 		if (assertionUri == null) assertionUri = new URIImpl(nanopubUri + assertionSuffix);
@@ -75,6 +83,9 @@ public class NanopubCreator {
 
 	public void setAssertionUri(URI assertionUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
+		if (assertionUriFixed) {
+			throw new RuntimeException("Cannot change assertion URI anymore: has already been used");
+		}
 		this.assertionUri = assertionUri;
 	}
 
@@ -122,6 +133,12 @@ public class NanopubCreator {
 		addProvenanceStatements(new StatementImpl(subj, pred, obj));
 	}
 
+	public void addProvenanceStatement(URI pred, Value obj) {
+		if (assertionUri == null) throw new RuntimeException("Assertion URI not yet set");
+		addProvenanceStatement(assertionUri, pred, obj);
+		assertionUriFixed = true;
+	}
+
 	public void addPubinfoStatements(Statement... statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
@@ -131,6 +148,16 @@ public class NanopubCreator {
 
 	public void addPubinfoStatement(Resource subj, URI pred, Value obj) {
 		addPubinfoStatements(new StatementImpl(subj, pred, obj));
+	}
+
+	public void addPubinfoStatement(URI pred, Value obj) {
+		if (nanopubUri == null) throw new RuntimeException("Nanopublication URI not yet set");
+		addPubinfoStatement(nanopubUri, pred, obj);
+		nanopubUriFixed = true;
+	}
+
+	public void addTimestamp(Date date) {
+		addPubinfoStatement(NanopubImpl.CREATION_TIME, vf.createLiteral(date));
 	}
 
 	public void addNamespace(String prefix, String namespace) {
@@ -144,10 +171,17 @@ public class NanopubCreator {
 	}
 
 	public Nanopub finalizeNanopub() throws MalformedNanopubException {
+		return finalizeNanopub(false);
+	}
+
+	public Nanopub finalizeNanopub(boolean addTimestamp) throws MalformedNanopubException {
 		if (finalized) {
 			return nanopub;
 		}
 		if (nanopubUri == null) throw new MalformedNanopubException("No nanopub URI specified");
+		if (addTimestamp) {
+			addTimestamp(new Date());
+		}
 		collectStatements();
 		nanopub = new NanopubImpl(statements, nsPrefixes, ns);
 		finalized = true;
