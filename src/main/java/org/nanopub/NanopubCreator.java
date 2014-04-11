@@ -160,6 +160,30 @@ public class NanopubCreator {
 		addPubinfoStatement(NanopubImpl.CREATION_TIME, vf.createLiteral(date));
 	}
 
+	public void addCreator(URI creator) {
+		addPubinfoStatement(NanopubImpl.HAS_CREATOR, creator);
+	}
+
+	public void addCreator(String orcidIdentifier) {
+		addCreator(getOrcidUri(orcidIdentifier));
+	}
+
+	public void addAuthor(URI author) {
+		addPubinfoStatement(NanopubImpl.HAS_AUTHOR, author);
+	}
+
+	public void addAuthor(String orcidIdentifier) {
+		addAuthor(getOrcidUri(orcidIdentifier));
+	}
+
+	private URI getOrcidUri(String orcid) {
+		if (!orcid.startsWith("http://orcid.org/")) {
+			orcid = "http://orcid.org/" + orcid;
+		}
+		return new URIImpl(orcid);
+		
+	}
+
 	public void addNamespace(String prefix, String namespace) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		nsPrefixes.add(prefix);
