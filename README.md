@@ -7,27 +7,32 @@ This is a Java library for nanopublications based on Sesame.
 Formal Structure of a Nanopub
 -----------------------------
 
-This library interprets the [official guidelines](http://nanopub.org/guidelines/working_draft/),
-which are still work in progress and sometimes vague, in a way that leads to the following
-well-formedness criteria:
+According to the [official guidelines](http://nanopub.org/guidelines/working_draft/),
+which are still work in progress, these are the well-formedness criteria for nanopublications:
 
-- A nanopub consists of a set of RDF quads (i.e. triples with a context URI)
-- The context (i.e. graph) of each triple has to be specified (no null values)
-- There is exactly one quad of the form '[N] rdf:type np:Nanopublication [H]', whereby [N] is
-  identified as the nanopub URI and [H] as the head URI (these two may be the same URI)
-- There is exactly one quad of the form '[N] hasAssertion [A] [H]', where [N] and [H] are the
-  nanopub and head URIs, respectively, and whereby [A] is identified as the assertion URI
-- In the same way, there is exactly one quad of the form '[N] hasProvenance [P] [H]', whereby
-  [P] is identified as the provenance URI
-- In the same way, there is exactly one quad of the form '[N] hasPublicationInfo [I] [H]',
-  whereby [I] is identified as the publication info URI
-- Quads of the form '[S] rdfg:subgraphof [G] [H]' where [H] is the head URI and [G] is one
-  of assertion, provenance, or publication info URI define a subgraph [S] of the respective
-  graph
-- The URIs for head, assertion, provenance, publication info, and their subgraphs have to be all
-  different
-- All triples have to belong to head, assertion, provenance, publication info, or one of their
-  subgraphs; triples that have a graph URI that is different from these are not allowed
+1.  A nanopublication consists of a set of RDF quads (i.e. subject-predicate-object + context)
+2.  The context (i.e. graph) of each triple has to be specified as a valid URI (i.e. no null
+    values)
+3.  There is exactly one quad of the form '[N] rdf:type np:Nanopublication [H]', where [N] is the
+    nanopublication URI, and [H] is the head URI
+4.  There is exactly one quad of the form '[N] np:hasAssertion [A] [H]', where [N] is the
+    nanopublication URI, [A] is the assertion URI, and [H] is the head URI
+5.  There is exactly one quad of the form '[N] np:hasProvenance [P] [H]', where [N] is the
+    nanopublication URI, [P] is the provenance URI, and [H] is the head URI
+6.  There is exactly one quad of the form '[N] np:hasPublicationInfo [I] [H]', [N] is the
+    nanopublication URI, [I] is the nanopublication information URI, and [H] is the head URI
+7.  There are zero or more quads of the form '[S] rdfg:subGraphOf [G] [H]' introducing a
+    super-graph [G], where [H] is the head URI and [S] is one of [H] or [A] or [P] or [I]
+8.  There are zero or more quads of the form '[G] rdfg:subGraphOf [S] [H]' introducing a sub-graph
+    [G], where [H] is the head URI and [S] is one of [A] or [P] or [I]
+9.  There are no other quads in the context [H]
+10. The URIs for [N] and [H] may be the same.
+11. The URIs for [H], [A], [P], [I], and the introduced sub-graphs must all be different
+12. Triples must be placed in one of [H] or [A] or [P] or [I] or one of the introduced sub-graphs
+13. Triples in [P] must refer to [A] or a supergraph of [A].
+14. Triples in [I] must refer to [N] or a supergraph of [N].
+
+This library does not yet take point 7 into account, and does currently not check points 13 and 14.
 
 
 Developers
