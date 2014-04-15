@@ -83,6 +83,10 @@ public class NanopubCreator {
 		setNanopubUri(new URIImpl(nanopubUri));
 	}
 
+	public URI getNanopubUri() {
+		return nanopubUri;
+	}
+
 	public void setAssertionUri(URI assertionUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		if (assertionUriFixed) {
@@ -95,6 +99,10 @@ public class NanopubCreator {
 		setAssertionUri(new URIImpl(assertionUri));
 	}
 
+	public URI getAssertionUri() {
+		return assertionUri;
+	}
+
 	public void setProvenanceUri(URI provenanceUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		this.provenanceUri = provenanceUri;
@@ -104,6 +112,10 @@ public class NanopubCreator {
 		setProvenanceUri(new URIImpl(provenanceUri));
 	}
 
+	public URI getProvenanceUri() {
+		return provenanceUri;
+	}
+
 	public void setPubinfoUri(URI pubinfoUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		this.pubinfoUri = pubinfoUri;
@@ -111,6 +123,10 @@ public class NanopubCreator {
 
 	public void setPubinfoUri(String pubinfoUri) {
 		setPubinfoUri(new URIImpl(pubinfoUri));
+	}
+
+	public URI getPubinfoUri() {
+		return pubinfoUri;
 	}
 
 	public void addAssertionStatements(Statement... statements) {
