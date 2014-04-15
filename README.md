@@ -35,6 +35,26 @@ which are still work in progress, these are the well-formedness criteria for nan
 This library does not yet take point 7 into account, and does currently not check points 13 and 14.
 
 
+Dependencies
+------------
+
+Maven has to be installed.
+
+Installation of trustyuri-java:
+
+    $ git clone git@github.com:trustyuri/trustyuri-java.git
+    $ cd trustyuri-java
+    $ mvn install
+
+
+Compilation and Execution
+-------------------------
+
+Compile and package with Maven:
+
+    $ mvn clean package
+
+
 Developers
 ----------
 
