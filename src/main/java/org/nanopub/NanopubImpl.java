@@ -70,6 +70,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
 	private Set<URI> assertionSubUris, provenanceSubUris, pubinfoSubUris;
+	private Set<URI> headSuperUris, assertionSuperUris, provenanceSuperUris, pubinfoSuperUris;
 	private Set<URI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
@@ -290,6 +291,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> assertionSubUris = new HashSet<>();
 		Set<URI> provenanceSubUris = new HashSet<>();
 		Set<URI> pubinfoSubUris = new HashSet<>();
+		Set<URI> headSuperUris = new HashSet<>();
+		Set<URI> assertionSuperUris = new HashSet<>();
+		Set<URI> provenanceSuperUris = new HashSet<>();
+		Set<URI> pubinfoSuperUris = new HashSet<>();
 		for (Statement st : statements) {
 			if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
 				if (st.getObject().equals(assertionUri)) {
@@ -304,6 +309,20 @@ public class NanopubImpl implements Nanopub, Serializable {
 					URI g = (URI) st.getSubject();
 					addGraphUri(g);
 					pubinfoSubUris.add(g);
+				} else if (st.getSubject().equals(headUri)) {
+					URI g = (URI) st.getObject();
+					headSuperUris.add(g);
+				} else if (st.getSubject().equals(assertionUri)) {
+					URI g = (URI) st.getObject();
+					assertionSuperUris.add(g);
+				} else if (st.getSubject().equals(provenanceUri)) {
+					URI g = (URI) st.getObject();
+					provenanceSuperUris.add(g);
+				} else if (st.getSubject().equals(pubinfoUri)) {
+					URI g = (URI) st.getObject();
+					pubinfoSuperUris.add(g);
+				} else {
+					throw new MalformedNanopubException("Invalid subgraph statement in head: " + st);
 				}
 			}
 		}
@@ -311,11 +330,15 @@ public class NanopubImpl implements Nanopub, Serializable {
 		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
 		this.provenanceSubUris = ImmutableSet.copyOf(provenanceSubUris);
 		this.pubinfoSubUris = ImmutableSet.copyOf(pubinfoSubUris);
+		this.headSuperUris = ImmutableSet.copyOf(headSuperUris);
+		this.assertionSuperUris = ImmutableSet.copyOf(assertionSuperUris);
+		this.provenanceSuperUris = ImmutableSet.copyOf(provenanceSuperUris);
+		this.pubinfoSuperUris = ImmutableSet.copyOf(pubinfoSuperUris);
 	}
 
 	private void addGraphUri(URI uri) throws MalformedNanopubException {
 		if (graphUris.contains(uri)) {
-			throw new MalformedNanopubException("Each (sub-)graph needs a separate URI");
+			throw new MalformedNanopubException("Each (sub-)graph needs a separate URI: " + uri);
 		}
 		graphUris.add(uri);
 	}
@@ -362,6 +385,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 	}
 
 	@Override
+	public Set<URI> getHeadSuperGraphs() {
+		return headSuperUris;
+	}
+
+	@Override
 	public Set<Statement> getHead() {
 		return head;
 	}
@@ -369,6 +397,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 	@Override
 	public URI getAssertionUri() {
 		return assertionUri;
+	}
+
+	@Override
+	public Set<URI> getAssertionSuperGraphs() {
+		return assertionSuperUris;
 	}
 
 	@Override
@@ -382,6 +415,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 	}
 
 	@Override
+	public Set<URI> getProvenanceSuperGraphs() {
+		return provenanceSuperUris;
+	}
+
+	@Override
 	public Set<Statement> getProvenance() {
 		return provenance;
 	}
@@ -389,6 +427,11 @@ public class NanopubImpl implements Nanopub, Serializable {
 	@Override
 	public URI getPubinfoUri() {
 		return pubinfoUri;
+	}
+
+	@Override
+	public Set<URI> getPubinfoSuperGraphs() {
+		return pubinfoSuperUris;
 	}
 
 	@Override

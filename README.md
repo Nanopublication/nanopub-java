@@ -32,7 +32,7 @@ which are still work in progress, these are the well-formedness criteria for nan
 13. Triples in [P] must refer to [A] or a supergraph of [A].
 14. Triples in [I] must refer to [N] or a supergraph of [N].
 
-This library does not yet take point 7 into account, and does currently not check points 13 and 14.
+This library does not currently check points 9, 13, and 14.
 
 
 Dependencies
