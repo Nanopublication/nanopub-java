@@ -44,7 +44,6 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -62,10 +61,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 	static final URI HAS_CREATOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
-
-	// Unsuitable formats because context URIs are not supported:
-	private static List<RDFFormat> unsuitableFormats = ImmutableList.of(RDFFormat.NTRIPLES,
-			RDFFormat.N3, RDFFormat.TURTLE);
 
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
@@ -150,10 +145,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
 		String n = file.getName();
 		RDFFormat format = RDFFormat.forMIMEType(mimeMap.getContentType(n));
-		if (format == null || unsuitableFormats.contains(format)) {
+		if (format == null || NanopubUtils.isUnsuitableFormat(format)) {
 			format = RDFFormat.forFileName(n, RDFFormat.TRIG);
 		}
-		if (unsuitableFormats.contains(format)) {
+		if (NanopubUtils.isUnsuitableFormat(format)) {
 			format = RDFFormat.TRIG;
 		}
 		readStatements(new FileInputStream(file), format, "");
@@ -169,10 +164,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
 		URLConnection conn = url.openConnection();
 		RDFFormat format = RDFFormat.forMIMEType(conn.getContentType());
-		if (format == null || unsuitableFormats.contains(format)) {
+		if (format == null || NanopubUtils.isUnsuitableFormat(format)) {
 			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
 		}
-		if (unsuitableFormats.contains(format)) {
+		if (NanopubUtils.isUnsuitableFormat(format)) {
 			format = RDFFormat.TRIG;
 		}
 		readStatements(conn.getInputStream(), format, "");
