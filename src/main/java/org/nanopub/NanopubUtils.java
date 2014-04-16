@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +54,14 @@ public class NanopubUtils {
 			throws RDFHandlerException {
 		RDFWriter writer = Rio.createWriter(format, out);
 		propagateToHandler(nanopub, writer);
+	}
+
+	public static String writeToString(Nanopub nanopub, RDFFormat format)
+			throws RDFHandlerException {
+		StringWriter sw = new StringWriter();
+		RDFWriter writer = Rio.createWriter(format, sw);
+		propagateToHandler(nanopub, writer);
+		return sw.toString();
 	}
 
 	public static void propagateToHandler(Nanopub nanopub, RDFHandler handler)
