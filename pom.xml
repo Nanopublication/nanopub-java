@@ -8,6 +8,11 @@
   <name>nanopub</name>
   <description>Java library for nanopublications based on Sesame</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
   <licenses>
     <license>
       <name>MIT license</name>
