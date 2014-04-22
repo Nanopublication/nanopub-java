@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.trustyuri.rdf.TransformNanopub;
-
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -233,6 +231,9 @@ public class NanopubCreator {
 	/**
 	 * Finalizes the nanopub and gives it a trusty URI. See http://arxiv.org/abs/1401.5775 and
 	 * https://github.com/trustyuri/trustyuri-java
+	 * 
+	 * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+	 * uncomment the entry in the pom file.
 	 */
 	public Nanopub finalizeTrustyNanopub() throws Exception {
 		return finalizeTrustyNanopub(false);
@@ -241,9 +242,14 @@ public class NanopubCreator {
 	/**
 	 * Finalizes the nanopub and gives it a trusty URI. See http://arxiv.org/abs/1401.5775 and
 	 * https://github.com/trustyuri/trustyuri-java
+	 * 
+	 * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+	 * uncomment the entry in the pom file.
 	 */
 	public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
-		return TransformNanopub.transform(finalizeNanopub(addTimestamp));
+		Nanopub preNanopub = finalizeNanopub(addTimestamp);
+		Class<?> c = Class.forName("net.trustyuri.rdf.TransformNanopub");
+		return (Nanopub) c.getMethod("transform", Nanopub.class).invoke(null, preNanopub);
 	}
 
 	private void collectStatements() {
