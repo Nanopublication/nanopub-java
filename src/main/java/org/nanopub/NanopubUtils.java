@@ -16,8 +16,6 @@ import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.Rio;
 
-import com.google.common.collect.ImmutableList;
-
 /**
  * @author Tobias Kuhn
  */
@@ -26,10 +24,6 @@ public class NanopubUtils {
 	static {
 		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
 	}
-
-	// Unsuitable formats because context URIs are not supported:
-	private static List<RDFFormat> unsuitableFormats = ImmutableList.of(RDFFormat.NTRIPLES,
-			RDFFormat.N3, RDFFormat.TURTLE);
 
 	private NanopubUtils() {}  // no instances allowed
 
@@ -94,10 +88,6 @@ public class NanopubUtils {
 			handler.handleStatement(st);
 		}
 		handler.endRDF();
-	}
-
-	public static boolean isUnsuitableFormat(RDFFormat format) {
-		return unsuitableFormats.contains(format);
 	}
 
 }

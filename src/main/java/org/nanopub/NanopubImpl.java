@@ -145,10 +145,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
 		String n = file.getName();
 		RDFFormat format = RDFFormat.forMIMEType(mimeMap.getContentType(n));
-		if (format == null || NanopubUtils.isUnsuitableFormat(format)) {
+		if (format == null || !format.supportsContexts()) {
 			format = RDFFormat.forFileName(n, RDFFormat.TRIG);
 		}
-		if (NanopubUtils.isUnsuitableFormat(format)) {
+		if (!format.supportsContexts()) {
 			format = RDFFormat.TRIG;
 		}
 		readStatements(new FileInputStream(file), format, "");
@@ -164,10 +164,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
 		URLConnection conn = url.openConnection();
 		RDFFormat format = RDFFormat.forMIMEType(conn.getContentType());
-		if (format == null || NanopubUtils.isUnsuitableFormat(format)) {
+		if (format == null || !format.supportsContexts()) {
 			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
 		}
-		if (NanopubUtils.isUnsuitableFormat(format)) {
+		if (!format.supportsContexts()) {
 			format = RDFFormat.TRIG;
 		}
 		readStatements(conn.getInputStream(), format, "");
