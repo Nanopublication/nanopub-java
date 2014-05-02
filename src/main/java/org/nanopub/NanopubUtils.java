@@ -81,7 +81,7 @@ public class NanopubUtils {
 			handler.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
 			handler.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
 			handler.handleNamespace("dc", "http://purl.org/dc/terms/");
-			handler.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
+			handler.handleNamespace("pav", "http://purl.org/pav/");
 			handler.handleNamespace("np", "http://www.nanopub.org/nschema#");
 		}
 		for (Statement st : getStatements(nanopub)) {
