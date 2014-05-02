@@ -173,11 +173,11 @@ public class NanopubCreator {
 	}
 
 	public void addTimestamp(Date date) {
-		addPubinfoStatement(NanopubImpl.CREATION_TIME, vf.createLiteral(date));
+		addPubinfoStatement(NanopubVocab.CREATION_TIME, vf.createLiteral(date));
 	}
 
 	public void addCreator(URI creator) {
-		addPubinfoStatement(NanopubImpl.HAS_CREATOR, creator);
+		addPubinfoStatement(NanopubVocab.HAS_CREATOR, creator);
 	}
 
 	public void addCreator(String orcidIdentifier) {
@@ -185,7 +185,7 @@ public class NanopubCreator {
 	}
 
 	public void addAuthor(URI author) {
-		addPubinfoStatement(NanopubImpl.HAS_AUTHOR, author);
+		addPubinfoStatement(NanopubVocab.HAS_AUTHOR, author);
 	}
 
 	public void addAuthor(String orcidIdentifier) {

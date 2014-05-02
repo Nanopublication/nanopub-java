@@ -27,7 +27,6 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
@@ -53,12 +52,6 @@ import com.google.common.collect.ImmutableSet;
 public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;
-
-	static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
-	static final URI CREATION_TIME = new URIImpl("http://purl.org/dc/terms/created");
-	static final URI DATETIME_TYPE = new URIImpl("http://www.w3.org/2001/XMLSchema#dateTime");
-	static final URI HAS_AUTHOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
-	static final URI HAS_CREATOR = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
@@ -444,10 +437,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 		String s = null;
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(CREATION_TIME)) continue;
+			if (!st.getPredicate().equals(NanopubVocab.CREATION_TIME)) continue;
 			if (!(st.getObject() instanceof Literal)) continue;
 			Literal l = (Literal) st.getObject();
-			if (!l.getDatatype().equals(DATETIME_TYPE)) continue;
+			if (!l.getDatatype().equals(NanopubVocab.DATETIME_TYPE)) continue;
 			s = l.stringValue();
 			break;
 		}
@@ -460,7 +453,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> authors = new HashSet<>();
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(HAS_AUTHOR)) continue;
+			if (!st.getPredicate().equals(NanopubVocab.HAS_AUTHOR)) continue;
 			if (!(st.getObject() instanceof URI)) continue;
 			authors.add((URI) st.getObject());
 		}
@@ -472,7 +465,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> authors = new HashSet<>();
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(HAS_CREATOR)) continue;
+			if (!st.getPredicate().equals(NanopubVocab.HAS_CREATOR)) continue;
 			if (!(st.getObject() instanceof URI)) continue;
 			authors.add((URI) st.getObject());
 		}
