@@ -249,22 +249,30 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private void collectGraphs(Collection<Statement> statements) throws MalformedNanopubException {
 		for (Statement st : statements) {
-			if (st.getContext().equals(headUri) && st.getSubject().equals(nanopubUri)) {
-				if (st.getPredicate().equals(Nanopub.HAS_ASSERTION_URI)) {
+			if (st.getContext().equals(headUri)) {
+				Resource s = st.getSubject();
+				URI p = st.getPredicate();
+				if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_ASSERTION_URI)) {
 					if (assertionUri != null) {
 						throw new MalformedNanopubException("Two assertion URIs found");
 					}
 					assertionUri = (URI) st.getObject();
-				} else if (st.getPredicate().equals(Nanopub.HAS_PROVENANCE_URI)) {
+				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PROVENANCE_URI)) {
 					if (provenanceUri != null) {
 						throw new MalformedNanopubException("Two provenance URIs found");
 					}
 					provenanceUri = (URI) st.getObject();
-				} else if (st.getPredicate().equals(Nanopub.HAS_PUBINFO_URI)) {
+				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PUBINFO_URI)) {
 					if (pubinfoUri != null) {
 						throw new MalformedNanopubException("Two publication info URIs found");
 					}
 					pubinfoUri = (URI) st.getObject();
+				} else if (s.equals(nanopubUri) && p.equals(RDF.TYPE) && st.getObject().equals(Nanopub.NANOPUB_TYPE_URI)) {
+					// OK. Nothing to do.
+				} else if (p.equals(SUB_GRAPH_OF)) {
+					// OK. Nothing to do. (Sub-graphs/super-graphs are checked later)
+				} else {
+					throw new MalformedNanopubException("Invalid statement in head: " + st);
 				}
 			}
 		}
