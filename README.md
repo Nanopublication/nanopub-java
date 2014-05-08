@@ -45,7 +45,7 @@ these are the well-formedness criteria for nanopublications:
 13. Triples in [I] must refer to [N] or one of the introduced super-graph/sub-graph of [N].
 
 
-This library does not currently check points 9, 12, and 13.
+This library does not currently check points 12 and 13.
 
 
 Compilation and Dependencies
