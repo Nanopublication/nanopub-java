@@ -437,10 +437,10 @@ public class NanopubImpl implements Nanopub, Serializable {
 		String s = null;
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(NanopubVocab.CREATION_TIME)) continue;
+			if (!NanopubVocab.isCreationTimeProperty(st.getPredicate())) continue;
 			if (!(st.getObject() instanceof Literal)) continue;
 			Literal l = (Literal) st.getObject();
-			if (!l.getDatatype().equals(NanopubVocab.DATETIME_TYPE)) continue;
+			if (!l.getDatatype().equals(NanopubVocab.XSD_DATETIME)) continue;
 			s = l.stringValue();
 			break;
 		}
@@ -453,7 +453,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> authors = new HashSet<>();
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(NanopubVocab.HAS_AUTHOR)) continue;
+			if (!NanopubVocab.isAuthorProperty(st.getPredicate())) continue;
 			if (!(st.getObject() instanceof URI)) continue;
 			authors.add((URI) st.getObject());
 		}
@@ -465,7 +465,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> authors = new HashSet<>();
 		for (Statement st : pubinfo) {
 			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!st.getPredicate().equals(NanopubVocab.HAS_CREATOR)) continue;
+			if (!NanopubVocab.isCreatorProperty(st.getPredicate())) continue;
 			if (!(st.getObject() instanceof URI)) continue;
 			authors.add((URI) st.getObject());
 		}
