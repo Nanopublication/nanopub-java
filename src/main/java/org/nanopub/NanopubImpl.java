@@ -314,6 +314,9 @@ public class NanopubImpl implements Nanopub, Serializable {
 				}
 			}
 		}
+		if (graphUris.contains(nanopubUri)) {
+			throw new MalformedNanopubException("Nanopub URI cannot be identical to one of the (sub-/super-)graph URIs: " + nanopubUri);
+		}
 		this.graphUris = ImmutableSet.copyOf(graphUris);
 		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
 		this.provenanceSubUris = ImmutableSet.copyOf(provenanceSubUris);
@@ -326,7 +329,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private void addGraphUri(URI uri) throws MalformedNanopubException {
 		if (graphUris.contains(uri)) {
-			throw new MalformedNanopubException("Each (sub-)graph needs a separate URI: " + uri);
+			throw new MalformedNanopubException("Each (sub-/super-)graph needs a separate URI: " + uri);
 		}
 		graphUris.add(uri);
 	}
