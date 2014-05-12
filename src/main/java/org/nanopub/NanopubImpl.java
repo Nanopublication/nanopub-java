@@ -229,6 +229,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 		}
 		collectSubGraphs(statements);
 		collectStatements(statements);
+		checkAssertion();
 		checkProvenance();
 		checkPubinfo();
 	}
@@ -352,6 +353,12 @@ public class NanopubImpl implements Nanopub, Serializable {
 		this.assertion = ImmutableSet.copyOf(assertion);
 		this.provenance = ImmutableSet.copyOf(provenance);
 		this.pubinfo = ImmutableSet.copyOf(pubinfo);
+	}
+
+	private void checkAssertion() throws MalformedNanopubException {
+		if (assertion.isEmpty()) {
+			throw new MalformedNanopubException("Empty assertion graph");
+		}
 	}
 
 	private void checkProvenance() throws MalformedNanopubException {
