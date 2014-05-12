@@ -25,25 +25,17 @@ public interface Nanopub {
 
 	public URI getHeadUri();
 
-	public Set<URI> getHeadSuperGraphs();
-
 	public Set<Statement> getHead();
 
 	public URI getAssertionUri();
-
-	public Set<URI> getAssertionSuperGraphs();
 
 	public Set<Statement> getAssertion();
 
 	public URI getProvenanceUri();
 
-	public Set<URI> getProvenanceSuperGraphs();
-
 	public Set<Statement> getProvenance();
 
 	public URI getPubinfoUri();
-
-	public Set<URI> getPubinfoSuperGraphs();
 
 	public Set<Statement> getPubinfo();
 

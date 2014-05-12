@@ -34,18 +34,16 @@ these are the well-formedness criteria for nanopublications:
 6.  Given the nanopublication URI [N] and its head URI [H], there is exactly one quad of the form
     '[N] np:hasPublicationInfo [I] [H]', which identifies [I] as the publication information URI
 7.  Given the head URI [H], there are zero or more quads of the form '[S] rdfg:subGraphOf [G] [H]'
-    introducing a super-graph [G], where [S] is one of [H] or [A] or [P] or [I]
-8.  Given the head URI [H], there are zero or more quads of the form '[G] rdfg:subGraphOf [S] [H]'
-    introducing a sub-graph [G], where [S] is one of [A] or [P] or [I]
-9.  There are no other quads in the context [H]
-10. The URIs for [N], [H], [A], [P], [I], and the introduced sub-graphs must all be different
-11. All triples must be placed in one of [H] or [A] or [P] or [I] or one of the introduced
+    introducing a sub-graph [S], where [G] is one of [A] or [P] or [I]
+8.  There are no other quads in the context [H]
+9.  The URIs for [N], [H], [A], [P], [I], and the introduced sub-graphs must all be different
+10. All triples must be placed in one of [H] or [A] or [P] or [I] or one of the introduced
     sub-graphs
-12. Triples in [P] must refer to [A] or one of the introduced super-graph/sub-graph of [A].
-13. Triples in [I] must refer to [N] or one of the introduced super-graph/sub-graph of [N].
+11. Triples in [P] must refer to [A]
+12. Triples in [I] must refer to [N]
 
 
-This library does not currently check points 12 and 13.
+All these criteria are checked by this library.
 
 
 Compilation and Dependencies
