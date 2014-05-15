@@ -6,22 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerBase;
 
 /**
  * @author Tobias Kuhn
  */
-public class NanopubRdfHandler implements RDFHandler {
+public class NanopubRdfHandler extends RDFHandlerBase {
 
 	private List<Statement> statements = new ArrayList<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 
 	private boolean finished = false;
-
-	@Override
-	public void startRDF() throws RDFHandlerException {}
 
 	@Override
 	public void endRDF() throws RDFHandlerException {
@@ -38,9 +35,6 @@ public class NanopubRdfHandler implements RDFHandler {
 	public void handleStatement(Statement st) throws RDFHandlerException {
 		statements.add(st);
 	}
-
-	@Override
-	public void handleComment(String comment) throws RDFHandlerException {}
 
 	public Nanopub getNanopub() throws MalformedNanopubException {
 		if (!finished) {
