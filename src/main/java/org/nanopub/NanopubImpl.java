@@ -42,6 +42,7 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.openrdf.rio.helpers.RDFaParserSettings;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -191,6 +192,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private void readStatements(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
 		RDFParser p = Rio.createParser(format);
+		p.getParserConfig().set(RDFaParserSettings.FAIL_ON_RDFA_UNDEFINED_PREFIXES, true);
 		p.setRDFHandler(new RDFHandlerBase() {
 
 			@Override
