@@ -40,9 +40,7 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
-import org.openrdf.rio.helpers.RDFaParserSettings;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -191,8 +189,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 	// TODO Is the baseURI really needed? Shouldn't the input stream contain all needed data?
 	private void readStatements(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		RDFParser p = Rio.createParser(format);
-		p.getParserConfig().set(RDFaParserSettings.FAIL_ON_RDFA_UNDEFINED_PREFIXES, true);
+		RDFParser p = NanopubUtils.getParser(format);
 		p.setRDFHandler(new RDFHandlerBase() {
 
 			@Override

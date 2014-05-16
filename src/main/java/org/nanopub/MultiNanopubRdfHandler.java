@@ -1,5 +1,15 @@
 package org.nanopub;
 
+import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
+import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
+import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
+import static org.nanopub.Nanopub.SUB_GRAPH_OF;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,10 +17,11 @@ import java.util.Map;
 
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
-
-import static org.nanopub.Nanopub.*;
 
 /**
  * Handles files or streams with a sequence of nanopubs.
@@ -18,6 +29,23 @@ import static org.nanopub.Nanopub.*;
  * @author Tobias Kuhn
  */
 public class MultiNanopubRdfHandler extends RDFHandlerBase {
+
+	public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException {
+		RDFParser p = NanopubUtils.getParser(format);
+		p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
+		try {
+			p.parse(in, "");
+		} finally {
+			in.close();
+		}
+	}
+
+	public static void process(RDFFormat format, File file, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException {
+		InputStream in = new BufferedInputStream(new FileInputStream(file));
+		process(format, in, npHandler);
+	}
 
 	private NanopubHandler npHandler;
 
@@ -38,7 +66,8 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 			if (headUri == null) {
 				headUri = (URI) st.getContext();
 				graphs.put(headUri, true);
-			} else if (headUri.equals(st.getContext())) {
+			}
+			if (headUri.equals(st.getContext())) {
 				URI p = st.getPredicate();
 				if (p.equals(HAS_ASSERTION_URI) || p.equals(HAS_PROVENANCE_URI) || p.equals(HAS_PUBINFO_URI)) {
 					graphs.put((URI) st.getObject(), true);

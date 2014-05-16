@@ -12,9 +12,11 @@ import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.Rio;
+import org.openrdf.rio.helpers.RDFaParserSettings;
 
 /**
  * @author Tobias Kuhn
@@ -88,6 +90,12 @@ public class NanopubUtils {
 			handler.handleStatement(st);
 		}
 		handler.endRDF();
+	}
+
+	public static RDFParser getParser(RDFFormat format) {
+		RDFParser p = Rio.createParser(format);
+		p.getParserConfig().set(RDFaParserSettings.FAIL_ON_RDFA_UNDEFINED_PREFIXES, true);
+		return p;
 	}
 
 }
