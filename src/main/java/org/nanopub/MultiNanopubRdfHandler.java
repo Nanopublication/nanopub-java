@@ -56,6 +56,9 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 
+	private List<String> newNsPrefixes = new ArrayList<>();
+	private List<String> newNs = new ArrayList<>();
+
 	public MultiNanopubRdfHandler(NanopubHandler npHandler) {
 		this.npHandler = npHandler;
 	}
@@ -82,15 +85,27 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 			finishNanopub();
 			handleStatement(st);
 		} else {
+			addNamespaces();
 			statements.add(st);
 		}
 	}
 
 	@Override
 	public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-		nsPrefixes.remove(prefix);
-		nsPrefixes.add(prefix);
-		ns.put(prefix, uri);
+		newNs.add(uri);
+		newNsPrefixes.add(prefix);
+	}
+
+	public void addNamespaces() throws RDFHandlerException {
+		for (int i = 0 ; i < newNs.size() ; i++) {
+			String prefix = newNsPrefixes.get(i);
+			String nsUri = newNs.get(i);
+			nsPrefixes.remove(prefix);
+			nsPrefixes.add(prefix);
+			ns.put(prefix, nsUri);
+		}
+		newNs.clear();
+		newNsPrefixes.clear();
 	}
 
 	@Override
