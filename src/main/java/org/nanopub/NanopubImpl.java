@@ -45,6 +45,8 @@ import org.openrdf.rio.helpers.RDFHandlerBase;
 import com.google.common.collect.ImmutableSet;
 
 /**
+ * Implementation of the Nanopub interface.
+ *
  * @author Tobias Kuhn
  * @author Eelke van der Horst
  */
@@ -53,6 +55,23 @@ public class NanopubImpl implements Nanopub, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
+
+	private static boolean subgraphsAllowed = true;
+
+	public static boolean areSubgraphsAllowed() {
+		return subgraphsAllowed;
+	}
+
+	/**
+	 * By default, this implementation allows subgraphs of the assertion, provenance, and pubinfo
+	 * graphs when defined with rdfg:subGraphOf in the head of the nanopub. This is not part of
+	 * the current nanopub specification but compliant with it.
+	 *
+	 * @param subgraphsAllowed
+	 */
+	public static void setSubgraphsAllowed(boolean subgraphsAllowed) {
+		NanopubImpl.subgraphsAllowed = subgraphsAllowed;
+	}
 
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
@@ -268,12 +287,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 						throw new MalformedNanopubException("Two publication info URIs found");
 					}
 					pubinfoUri = (URI) st.getObject();
-				} else if (s.equals(nanopubUri) && p.equals(RDF.TYPE) && st.getObject().equals(Nanopub.NANOPUB_TYPE_URI)) {
-					// OK. Nothing to do.
-				} else if (p.equals(SUB_GRAPH_OF)) {
-					// OK. Nothing to do. (Sub-graphs/super-graphs are checked later)
-				} else {
-					throw new MalformedNanopubException("Invalid statement in head: " + st);
 				}
 			}
 		}
@@ -288,27 +301,29 @@ public class NanopubImpl implements Nanopub, Serializable {
 		Set<URI> assertionSubUris = new HashSet<>();
 		Set<URI> provenanceSubUris = new HashSet<>();
 		Set<URI> pubinfoSubUris = new HashSet<>();
-		for (Statement st : statements) {
-			if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
-				if (st.getObject().equals(assertionUri)) {
-					URI g = (URI) st.getSubject();
-					addGraphUri(g);
-					assertionSubUris.add(g);
-				} else if (st.getObject().equals(provenanceUri)) {
-					URI g = (URI) st.getSubject();
-					addGraphUri(g);
-					provenanceSubUris.add(g);
-				} else if (st.getObject().equals(pubinfoUri)) {
-					URI g = (URI) st.getSubject();
-					addGraphUri(g);
-					pubinfoSubUris.add(g);
-				} else {
-					throw new MalformedNanopubException("Invalid subgraph statement in head: " + st);
+		if (subgraphsAllowed) {
+			for (Statement st : statements) {
+				if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
+					if (st.getObject().equals(assertionUri)) {
+						URI g = (URI) st.getSubject();
+						addGraphUri(g);
+						assertionSubUris.add(g);
+					} else if (st.getObject().equals(provenanceUri)) {
+						URI g = (URI) st.getSubject();
+						addGraphUri(g);
+						provenanceSubUris.add(g);
+					} else if (st.getObject().equals(pubinfoUri)) {
+						URI g = (URI) st.getSubject();
+						addGraphUri(g);
+						pubinfoSubUris.add(g);
+					} else {
+						throw new MalformedNanopubException("Invalid subgraph statement in head: " + st);
+					}
 				}
 			}
 		}
 		if (graphUris.contains(nanopubUri)) {
-			throw new MalformedNanopubException("Nanopub URI cannot be identical to one of the (sub-/super-)graph URIs: " + nanopubUri);
+			throw new MalformedNanopubException("Nanopub URI cannot be identical to one of the graph URIs: " + nanopubUri);
 		}
 		this.graphUris = ImmutableSet.copyOf(graphUris);
 		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
@@ -318,7 +333,7 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private void addGraphUri(URI uri) throws MalformedNanopubException {
 		if (graphUris.contains(uri)) {
-			throw new MalformedNanopubException("Each (sub-/super-)graph needs a separate URI: " + uri);
+			throw new MalformedNanopubException("Each graph needs a unique URI: " + uri);
 		}
 		graphUris.add(uri);
 	}
