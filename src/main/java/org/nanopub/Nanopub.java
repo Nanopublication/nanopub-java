@@ -18,9 +18,6 @@ public interface Nanopub {
 	public static final URI HAS_PROVENANCE_URI = new URIImpl("http://www.nanopub.org/nschema#hasProvenance");
 	public static final URI HAS_PUBINFO_URI = new URIImpl("http://www.nanopub.org/nschema#hasPublicationInfo");
 
-	// URIs from third-party namespaces:
-	public static final URI SUB_GRAPH_OF = new URIImpl("http://www.w3.org/2004/03/trix/rdfg-1/subGraphOf");
-
 	public URI getUri();
 
 	public URI getHeadUri();

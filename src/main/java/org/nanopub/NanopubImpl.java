@@ -56,26 +56,8 @@ public class NanopubImpl implements Nanopub, Serializable {
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
-	private static boolean subgraphsAllowed = true;
-
-	public static boolean areSubgraphsAllowed() {
-		return subgraphsAllowed;
-	}
-
-	/**
-	 * By default, this implementation allows subgraphs of the assertion, provenance, and pubinfo
-	 * graphs when defined with rdfg:subGraphOf in the head of the nanopub. This is not part of
-	 * the current nanopub specification but compliant with it.
-	 *
-	 * @param subgraphsAllowed
-	 */
-	public static void setSubgraphsAllowed(boolean subgraphsAllowed) {
-		NanopubImpl.subgraphsAllowed = subgraphsAllowed;
-	}
-
 	private URI nanopubUri;
 	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
-	private Set<URI> assertionSubUris, provenanceSubUris, pubinfoSubUris;
 	private Set<URI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
@@ -106,10 +88,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 			"    graph ?H { this: a np:Nanopublication } . " +
 			"    graph ?H { { this: np:hasAssertion ?G } union { this: np:hasProvenance ?G } " +
 			"        union { this: np:hasPublicationInfo ?G } } " +
-			"  } union { " +
-			"    graph ?H { this: a np:Nanopublication . ?G rdfg:subGraphOf ?I } . " +
-			"    graph ?H { { this: np:hasAssertion ?I } union { this: np:hasProvenance ?I } " +
-			"        union { this: np:hasPublicationInfo ?I } } " +
 			"  } " +
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
@@ -236,16 +214,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 			throw new MalformedNanopubException("No nanopub URI found");
 		}
 		collectGraphs(statements);
-		if (assertionUri == null) {
-			throw new MalformedNanopubException("No assertion URI found");
-		}
-		if (provenanceUri == null) {
-			throw new MalformedNanopubException("No provenance URI found");
-		}
-		if (pubinfoUri == null) {
-			throw new MalformedNanopubException("No publication info URI found");
-		}
-		collectSubGraphs(statements);
 		collectStatements(statements);
 		checkAssertion();
 		checkProvenance();
@@ -290,45 +258,24 @@ public class NanopubImpl implements Nanopub, Serializable {
 				}
 			}
 		}
-	}
-
-	private void collectSubGraphs(Collection<Statement> statements) throws MalformedNanopubException {
+		if (assertionUri == null) {
+			throw new MalformedNanopubException("No assertion URI found");
+		}
+		if (provenanceUri == null) {
+			throw new MalformedNanopubException("No provenance URI found");
+		}
+		if (pubinfoUri == null) {
+			throw new MalformedNanopubException("No publication info URI found");
+		}
 		graphUris = new HashSet<>();
 		addGraphUri(headUri);
 		addGraphUri(assertionUri);
 		addGraphUri(provenanceUri);
 		addGraphUri(pubinfoUri);
-		Set<URI> assertionSubUris = new HashSet<>();
-		Set<URI> provenanceSubUris = new HashSet<>();
-		Set<URI> pubinfoSubUris = new HashSet<>();
-		if (subgraphsAllowed) {
-			for (Statement st : statements) {
-				if (st.getContext().equals(headUri) && st.getPredicate().equals(SUB_GRAPH_OF)) {
-					if (st.getObject().equals(assertionUri)) {
-						URI g = (URI) st.getSubject();
-						addGraphUri(g);
-						assertionSubUris.add(g);
-					} else if (st.getObject().equals(provenanceUri)) {
-						URI g = (URI) st.getSubject();
-						addGraphUri(g);
-						provenanceSubUris.add(g);
-					} else if (st.getObject().equals(pubinfoUri)) {
-						URI g = (URI) st.getSubject();
-						addGraphUri(g);
-						pubinfoSubUris.add(g);
-					} else {
-						throw new MalformedNanopubException("Invalid subgraph statement in head: " + st);
-					}
-				}
-			}
-		}
 		if (graphUris.contains(nanopubUri)) {
 			throw new MalformedNanopubException("Nanopub URI cannot be identical to one of the graph URIs: " + nanopubUri);
 		}
 		this.graphUris = ImmutableSet.copyOf(graphUris);
-		this.assertionSubUris = ImmutableSet.copyOf(assertionSubUris);
-		this.provenanceSubUris = ImmutableSet.copyOf(provenanceSubUris);
-		this.pubinfoSubUris = ImmutableSet.copyOf(pubinfoSubUris);
 	}
 
 	private void addGraphUri(URI uri) throws MalformedNanopubException {
@@ -352,12 +299,6 @@ public class NanopubImpl implements Nanopub, Serializable {
 			} else if (g.equals(provenanceUri)) {
 				provenance.add(st);
 			} else if (g.equals(pubinfoUri)) {
-				pubinfo.add(st);
-			} else if (assertionSubUris.contains(g)) {
-				assertion.add(st);
-			} else if (provenanceSubUris.contains(g)) {
-				provenance.add(st);
-			} else if (pubinfoSubUris.contains(g)) {
 				pubinfo.add(st);
 			} else {
 				throw new MalformedNanopubException("Disconnected graph: " + g);

@@ -3,7 +3,6 @@ package org.nanopub;
 import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
 import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
 import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
-import static org.nanopub.Nanopub.SUB_GRAPH_OF;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -74,8 +73,6 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				URI p = st.getPredicate();
 				if (p.equals(HAS_ASSERTION_URI) || p.equals(HAS_PROVENANCE_URI) || p.equals(HAS_PUBINFO_URI)) {
 					graphs.put((URI) st.getObject(), true);
-				} else if (p.equals(SUB_GRAPH_OF)) {
-					graphs.put((URI) st.getSubject(), true);
 				}
 			} else {
 				headComplete = true;
