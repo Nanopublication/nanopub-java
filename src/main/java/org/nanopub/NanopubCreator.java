@@ -38,9 +38,9 @@ public class NanopubCreator {
 	private ValueFactoryImpl vf = new ValueFactoryImpl();
 
 	private static final String headSuffix = "Head";
-	private static final String assertionSuffix = "Assert";
-	private static final String provenanceSuffix = "Prov";
-	private static final String pubinfoSuffix = "Info";
+	private static final String assertionSuffix = "assertion";
+	private static final String provenanceSuffix = "provenance";
+	private static final String pubinfoSuffix = "pubinfo";
 
 	public NanopubCreator() {
 		init();
