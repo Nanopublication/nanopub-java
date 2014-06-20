@@ -35,14 +35,46 @@ public class CustomTrigWriter extends TriGWriter {
 
 		prefix = null;
 
-		int splitIdxNorm = TurtleUtil.findURISplitIndex(uriString);
-		// Do also split at dots:
-		int splitIdxDot = uriString.lastIndexOf(".") + 1;
-		if (uriString.length() == splitIdxDot) splitIdxDot = -1;
-		int splitIdx = Math.max(splitIdxNorm, splitIdxDot);
+		int splitIdx  = TurtleUtil.findURISplitIndex(uriString);
 		if (splitIdx > 0) {
 			String namespace = uriString.substring(0, splitIdx);
 			prefix = namespaceTable.get(namespace);
+		}
+
+		// Do also split at dots:
+		int splitIdxDot = uriString.lastIndexOf(".") + 1;
+		if (uriString.length() == splitIdxDot) splitIdxDot = -1;
+		if (splitIdxDot > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxDot);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxDot;
+				prefix = p;
+			}
+		}
+
+		// ... and colons:
+		int splitIdxColon = uriString.lastIndexOf(":") + 1;
+		if (uriString.length() == splitIdxColon) splitIdxColon = -1;
+		if (splitIdxColon > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxColon);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxColon;
+				prefix = p;
+			}
+		}
+
+		// ... and underscores:
+		int splitIdxUnderscore = uriString.lastIndexOf("_") + 1;
+		if (uriString.length() == splitIdxUnderscore) splitIdxUnderscore = -1;
+		if (splitIdxUnderscore > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxUnderscore);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxUnderscore;
+				prefix = p;
+			}
 		}
 
 		if (prefix != null) {
