@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableSet;
  * @author Tobias Kuhn
  * @author Eelke van der Horst
  */
-public class NanopubImpl implements Nanopub, Serializable {
+public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;
 
@@ -428,10 +428,12 @@ public class NanopubImpl implements Nanopub, Serializable {
 		return authors;
 	}
 
+	@Override
 	public List<String> getNsPrefixes() {
 		return new ArrayList<>(nsPrefixes);
 	}
 
+	@Override
 	public String getNamespace(String prefix) {
 		return ns.get(prefix);
 	}

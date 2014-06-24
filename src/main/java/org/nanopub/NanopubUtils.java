@@ -70,8 +70,8 @@ public class NanopubUtils {
 			throws RDFHandlerException {
 		handler.startRDF();
 		String s = nanopub.getUri().toString();
-		if (nanopub instanceof NanopubImpl && !((NanopubImpl) nanopub).getNsPrefixes().isEmpty()) {
-			NanopubImpl np = (NanopubImpl) nanopub;
+		if (nanopub instanceof NanopubWithNs && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
+			NanopubWithNs np = (NanopubWithNs) nanopub;
 			for (String p : np.getNsPrefixes()) {
 				handler.handleNamespace(p, np.getNamespace(p));
 			}
