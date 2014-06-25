@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -51,7 +53,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 	private URI headUri = null;
 	private boolean headComplete = false;
 	private Map<URI,Boolean> graphs = new HashMap<>();
-	private List<Statement> statements = new ArrayList<>();
+	private Set<Statement> statements = new HashSet<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 

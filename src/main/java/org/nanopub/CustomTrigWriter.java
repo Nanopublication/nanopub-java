@@ -77,6 +77,10 @@ public class CustomTrigWriter extends TriGWriter {
 			}
 		}
 
+		if (uriString.endsWith(".")) {
+			prefix = null;
+		}
+
 		if (prefix != null) {
 			// Namespace is mapped to a prefix; write abbreviated URI
 			writer.write(prefix);
