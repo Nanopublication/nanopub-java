@@ -209,6 +209,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	private void init() throws MalformedNanopubException {
+		if (statements.isEmpty()) {
+			throw new MalformedNanopubException("No content received for nanopub");
+		}
 		collectNanopubUri(statements);
 		if (nanopubUri == null || headUri == null) {
 			throw new MalformedNanopubException("No nanopub URI found");
