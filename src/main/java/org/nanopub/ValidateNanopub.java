@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.openrdf.OpenRDFException;
 
 import com.beust.jcommander.JCommander;
@@ -16,8 +17,6 @@ import com.beust.jcommander.ParameterException;
  * @author Tobias Kuhn
  */
 public class ValidateNanopub {
-
-	// TODO support files with multiple nanopubs
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
 	private List<File> inputFiles = new ArrayList<File>();
@@ -39,11 +38,23 @@ public class ValidateNanopub {
 		}
 	}
 
+	private int count;
+
 	private void run() throws IOException {
 		for (File f : inputFiles) {
+			count = 0;
 			try {
-				new NanopubImpl(f);
-				System.out.println("Valid nanopub: " + f);
+				MultiNanopubRdfHandler.process(f, new NanopubHandler() {
+					@Override
+					public void handleNanopub(Nanopub np) {
+						count++;
+					}
+				});
+				if (count > 0) {
+					System.out.println(count + " valid nanopub(s): " + f);
+				} else {
+					System.out.println("NO NANOPUB FOUND: " + f);
+				}
 			} catch (OpenRDFException ex) {
 				System.out.println("INVALID RDF: " + f);
 				ex.printStackTrace(System.err);

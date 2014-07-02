@@ -32,20 +32,31 @@ import org.openrdf.rio.helpers.RDFHandlerBase;
 public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
-			throws IOException, RDFParseException, RDFHandlerException {
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		RDFParser p = NanopubUtils.getParser(format);
 		p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
 		try {
 			p.parse(in, "");
+		} catch (RuntimeException ex) {
+			if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&
+					ex.getCause() instanceof MalformedNanopubException) {
+				throw (MalformedNanopubException) ex.getCause();
+			}
 		} finally {
 			in.close();
 		}
 	}
 
 	public static void process(RDFFormat format, File file, NanopubHandler npHandler)
-			throws IOException, RDFParseException, RDFHandlerException {
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		InputStream in = new BufferedInputStream(new FileInputStream(file));
 		process(format, in, npHandler);
+	}
+
+	public static void process(File file, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		RDFFormat format = RDFFormat.forFileName(file.getName(), RDFFormat.TRIG);
+		process(format, file, npHandler);
 	}
 
 	private NanopubHandler npHandler;
@@ -116,7 +127,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		try {
 			npHandler.handleNanopub(new NanopubImpl(statements, nsPrefixes, ns));
 		} catch (MalformedNanopubException ex) {
-			throw new RuntimeException(ex);
+			throw new RuntimeException("wrapped MalformedNanopubException", ex);
 		}
 		headUri = null;
 		headComplete = false;
