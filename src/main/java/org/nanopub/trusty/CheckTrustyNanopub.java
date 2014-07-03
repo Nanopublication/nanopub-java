@@ -11,22 +11,29 @@ import net.trustyuri.rdf.RdfPreprocessor;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.NanopubImpl;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Statement;
+import org.openrdf.model.impl.URIImpl;
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.sparql.SPARQLRepository;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
 public class CheckTrustyNanopub {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-	private List<File> inputFiles = new ArrayList<File>();
+	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
+	private List<String> inputNanopubs = new ArrayList<String>();
 
-	@com.beust.jcommander.Parameter(names = "-v", description = "verbose")
+	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
+
+	@com.beust.jcommander.Parameter(names = "-s", description = "Load nanopubs from given SPARQL endpoint")
+	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
 		CheckTrustyNanopub obj = new CheckTrustyNanopub();
@@ -45,51 +52,70 @@ public class CheckTrustyNanopub {
 		}
 	}
 
-	private List<Nanopub> nanopubs = new ArrayList<Nanopub>();
 	private int valid, invalid, error;
+	private int count;
+	private SPARQLRepository sparqlRepo;
 
 	private void run() throws IOException {
 		valid = 0;
 		invalid = 0;
 		error = 0;
-		for (File f : inputFiles) {
-			nanopubs.clear();
+		for (String s : inputNanopubs) {
+			count = 0;
 			try {
-				System.out.println("Reading file: " + f);
-				MultiNanopubRdfHandler.process(f, new NanopubHandler() {
-					@Override
-					public void handleNanopub(Nanopub np) {
-						nanopubs.add(np);
+				if (sparqlEndpointUrl != null) {
+					if (sparqlRepo == null) {
+						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
+						sparqlRepo.initialize();
 					}
-				});
-				for (Nanopub np : nanopubs) {
-					if (isValid(np)) {
-						if (verbose) {
-							System.out.println("Valid trusty nanopub: " + np.getUri());
+					Nanopub np = new NanopubImpl(sparqlRepo, new URIImpl(s));
+					check(np);
+				} else {
+					System.out.println("Reading file: " + s);
+					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
+						@Override
+						public void handleNanopub(Nanopub np) {
+							count++;
+							check(np);
 						}
-						valid++;
-					} else {
-						System.out.println("NOT A VALID TRUSTY NANOPUB: " + np.getUri());
-						invalid++;
+					});
+					if (count == 0) {
+						System.out.println("NO NANOPUB FOUND: " + s);
+						error++;
 					}
-				}
-				if (nanopubs.isEmpty()) {
-					System.out.println("NO NANOPUB FOUND: " + f);
-					error++;
 				}
 			} catch (OpenRDFException ex) {
-				System.out.println("INVALID RDF: " + f);
+				System.out.println("INVALID RDF: " + s);
 				ex.printStackTrace(System.err);
 				error++;
 			} catch (MalformedNanopubException ex) {
-				System.out.println("INVALID NANOPUB: " + f);
+				System.out.println("INVALID NANOPUB: " + s);
 				ex.printStackTrace(System.err);
 				error++;
 			}
 		}
 		System.out.println("Summary: " + valid + " valid | " + invalid + " invalid | " + error + " errors");
+		if (sparqlRepo != null) {
+			try {
+				sparqlRepo.shutDown();
+			} catch (RepositoryException ex) {
+				ex.printStackTrace();
+			}
+		}
 	}
-	
+
+	private void check(Nanopub np) {
+		if (isValid(np)) {
+			if (verbose) {
+				System.out.println("Valid trusty nanopub: " + np.getUri());
+			}
+			valid++;
+		} else {
+			System.out.println("NOT A VALID TRUSTY NANOPUB: " + np.getUri());
+			invalid++;
+		}
+	}
+
 	public static boolean isValid(Nanopub nanopub) {
 		String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 		if (artifactCode == null) return false;
