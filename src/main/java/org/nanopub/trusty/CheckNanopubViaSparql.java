@@ -25,7 +25,7 @@ public class CheckNanopubViaSparql {
 			System.out.println("Nanopub not found");
 			System.exit(1);
 		}
-		if (CheckNanopub.isValid(nanopub)) {
+		if (CheckTrustyNanopub.isValid(nanopub)) {
 			System.out.println("Correct hash: " + TrustyUriUtils.getArtifactCode(uriString));
 		} else {
 			System.out.println("*** INCORRECT HASH ***");
