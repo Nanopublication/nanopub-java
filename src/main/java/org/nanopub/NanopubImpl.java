@@ -40,6 +40,7 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +54,10 @@ import com.google.common.collect.ImmutableSet;
 public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private static final long serialVersionUID = -1514452524339132128L;
+
+	static {
+		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
+	}
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 

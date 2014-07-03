@@ -85,7 +85,7 @@ public class CustomTrigWriter extends TriGWriter {
 			// Namespace is mapped to a prefix; write abbreviated URI
 			writer.write(prefix);
 			writer.write(":");
-			writer.write(uriString.substring(splitIdx));
+			writer.write(uriString.substring(splitIdx).replaceAll(":", "%3A").replaceAll("\\.", "%2E"));
 		} else {
 			// Write full URI
 			writer.write("<");
