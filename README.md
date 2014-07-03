@@ -48,8 +48,7 @@ Maven has to be installed to compile the code:
 
     $ mvn clean package
 
-To use the Trusty-URI features, trustyuri-java has to be installed (loaded dynamically). Either
-uncomment the respective dependency in the pom.xml file, or manually install the latest version:
+Snapshot versions of this code might require the latest snapshot of the trustyuri library:
 
     $ git clone git@github.com:trustyuri/trustyuri-java.git
     $ cd trustyuri-java
