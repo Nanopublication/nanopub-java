@@ -77,7 +77,6 @@
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
       <version>1.2-SNAPSHOT</version>
-      <optional>true</optional>
     </dependency>
   </dependencies>
   <scm>

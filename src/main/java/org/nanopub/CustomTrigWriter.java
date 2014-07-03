@@ -35,7 +35,7 @@ public class CustomTrigWriter extends TriGWriter {
 
 		prefix = null;
 
-		int splitIdx  = TurtleUtil.findURISplitIndex(uriString);
+		int splitIdx = TurtleUtil.findURISplitIndex(uriString);
 		if (splitIdx > 0) {
 			String namespace = uriString.substring(0, splitIdx);
 			prefix = namespaceTable.get(namespace);
@@ -44,7 +44,7 @@ public class CustomTrigWriter extends TriGWriter {
 		// Do also split at dots:
 		int splitIdxDot = uriString.lastIndexOf(".") + 1;
 		if (uriString.length() == splitIdxDot) splitIdxDot = -1;
-		if (splitIdxDot > splitIdx) {
+		if (splitIdx > 0 && splitIdxDot > splitIdx) {
 			String namespace = uriString.substring(0, splitIdxDot);
 			String p = namespaceTable.get(namespace);
 			if (p != null) {
@@ -56,7 +56,7 @@ public class CustomTrigWriter extends TriGWriter {
 		// ... and colons:
 		int splitIdxColon = uriString.lastIndexOf(":") + 1;
 		if (uriString.length() == splitIdxColon) splitIdxColon = -1;
-		if (splitIdxColon > splitIdx) {
+		if (splitIdx > 0 && splitIdxColon > splitIdx) {
 			String namespace = uriString.substring(0, splitIdxColon);
 			String p = namespaceTable.get(namespace);
 			if (p != null) {
@@ -68,7 +68,7 @@ public class CustomTrigWriter extends TriGWriter {
 		// ... and underscores:
 		int splitIdxUnderscore = uriString.lastIndexOf("_") + 1;
 		if (uriString.length() == splitIdxUnderscore) splitIdxUnderscore = -1;
-		if (splitIdxUnderscore > splitIdx) {
+		if (splitIdx > 0 && splitIdxUnderscore > splitIdx) {
 			String namespace = uriString.substring(0, splitIdxUnderscore);
 			String p = namespaceTable.get(namespace);
 			if (p != null) {
@@ -85,7 +85,7 @@ public class CustomTrigWriter extends TriGWriter {
 			// Namespace is mapped to a prefix; write abbreviated URI
 			writer.write(prefix);
 			writer.write(":");
-			writer.write(uriString.substring(splitIdx).replaceAll(":", "%3A").replaceAll("\\.", "%2E"));
+			writer.write(uriString.substring(splitIdx));
 		} else {
 			// Write full URI
 			writer.write("<");

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.nanopub.trusty.TransformNanopub;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -248,8 +249,7 @@ public class NanopubCreator {
 	 */
 	public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
 		Nanopub preNanopub = finalizeNanopub(addTimestamp);
-		Class<?> c = Class.forName("net.trustyuri.rdf.TransformNanopub");
-		return (Nanopub) c.getMethod("transform", Nanopub.class).invoke(null, preNanopub);
+		return TransformNanopub.transform(preNanopub);
 	}
 
 	private void collectStatements() {
