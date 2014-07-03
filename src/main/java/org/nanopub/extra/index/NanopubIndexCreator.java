@@ -57,9 +57,8 @@ public abstract class NanopubIndexCreator {
 		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_ALL_URI, npcUri);
 	}
 
-	public void finalize() {
+	public void finalizeNanopub() {
 		if (finalized) throw new RuntimeException("Already finalized");
-		finalized = true;
 		enrichCompleteIndex(npCreator);
 		try {
 			Nanopub np = npCreator.finalizeTrustyNanopub(true);
@@ -68,6 +67,7 @@ public abstract class NanopubIndexCreator {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+		finalized = true;
 	}
 
 	public URI getCompleteIndexUri() {

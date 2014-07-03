@@ -45,12 +45,13 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 
 	@Override
 	public void enrichIncompleteIndex(NanopubCreator npCreator) {
-		npCreator.addPubinfoStatement(DC.TITLE, new LiteralImpl(title));
+		if (title != null) {
+			npCreator.addPubinfoStatement(DC.TITLE, new LiteralImpl(title));
+		}
 		for (String creator : creators) {
 			if (creator.indexOf("://") > 0) {
 				npCreator.addCreator(new URIImpl(creator));
-			} else if (creator.matches("[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}")) {
-				// TODO Check format of ORCID IDs
+			} else if (creator.matches("[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]")) {
 				npCreator.addCreator(creator);
 			} else {
 				throw new IllegalArgumentException("Author has to be URI or ORCID: " + creator);
@@ -61,7 +62,9 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	@Override
 	public void enrichCompleteIndex(NanopubCreator npCreator) {
 		enrichIncompleteIndex(npCreator);
-		npCreator.addPubinfoStatement(DC.DESCRIPTION, new LiteralImpl(description));
+		if (description != null) {
+			npCreator.addPubinfoStatement(DC.DESCRIPTION, new LiteralImpl(description));
+		}
 	}
 
 }
