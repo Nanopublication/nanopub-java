@@ -11,9 +11,9 @@ public interface NanopubIndex extends Nanopub {
 	public static final URI NANOPUB_INDEX_URI = new URIImpl("http://purl.org/nanopub/x/NanopubIndex");
 	public static final URI INCOMPLETE_INDEX_URI = new URIImpl("http://purl.org/nanopub/x/IncompleteIndex");
 	public static final URI INDEX_ASSERTION_URI = new URIImpl("http://purl.org/nanopub/x/IndexAssertion");
-	public static final URI INCLUDES_URI = new URIImpl("http://purl.org/nanopub/x/includes");
-	public static final URI INCLUDES_ALL_URI = new URIImpl("http://purl.org/nanopub/x/includesAll");
-	public static final URI APPENDS_URI = new URIImpl("http://purl.org/nanopub/x/appends");
+	public static final URI INCLUDES_ELEMENT_URI = new URIImpl("http://purl.org/nanopub/x/includesElement");
+	public static final URI INCLUDES_SUBINDEX_URI = new URIImpl("http://purl.org/nanopub/x/includesSubindex");
+	public static final URI APPENDS_INDEX_URI = new URIImpl("http://purl.org/nanopub/x/appendsIndex");
 
 	public static final int MAX_SIZE = 1000;
 

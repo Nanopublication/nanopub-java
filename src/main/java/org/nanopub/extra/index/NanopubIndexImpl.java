@@ -36,7 +36,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		Set<URI> subIndexSet = new HashSet<URI>();
 		for (Statement st : np.getAssertion()) {
 			if (!st.getSubject().equals(np.getUri())) continue;
-			if (st.getPredicate().equals(NanopubIndex.APPENDS_URI)) {
+			if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {
 				if (appendedIndex != null) {
 					throw new MalformedNanopubException("Multiple appends-statements found for index");
 				}
@@ -44,12 +44,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 					throw new MalformedNanopubException("URI expected for object of appends-statement");
 				}
 				appendedIndex = (URI) st.getObject();
-			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_URI)) {
+			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_ELEMENT_URI)) {
 				if (!(st.getObject() instanceof URI)) {
 					throw new MalformedNanopubException("Element has to be a URI");
 				}
 				elementSet.add((URI) st.getObject());
-			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_ALL_URI)) {
+			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_SUBINDEX_URI)) {
 				if (!(st.getObject() instanceof URI)) {
 					throw new MalformedNanopubException("Sub-index has to be a URI");
 				}

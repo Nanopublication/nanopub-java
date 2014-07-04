@@ -32,7 +32,7 @@ public abstract class NanopubIndexCreator {
 			newNpCreator();
 		}
 		itemCount++;
-		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_URI, npUri);
+		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_ELEMENT_URI, npUri);
 		int nsSplit = TurtleUtil.findURISplitIndex(npUri.toString());
 		if (nsSplit > 0) {
 			String ns = npUri.toString().substring(0, nsSplit);
@@ -54,7 +54,7 @@ public abstract class NanopubIndexCreator {
 			newNpCreator();
 		}
 		itemCount++;
-		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_ALL_URI, npcUri);
+		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_SUBINDEX_URI, npcUri);
 	}
 
 	public void finalizeNanopub() {
@@ -114,7 +114,7 @@ public abstract class NanopubIndexCreator {
 		npCreator.addProvenanceStatement(RDF.TYPE, NanopubIndex.INDEX_ASSERTION_URI);
 		npCreator.addPubinfoStatement(RDF.TYPE, NanopubIndex.NANOPUB_INDEX_URI);
 		if (previousIndexUri != null) {
-			npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.APPENDS_URI, previousIndexUri);
+			npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.APPENDS_INDEX_URI, previousIndexUri);
 		}
 	}
 
