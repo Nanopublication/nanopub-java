@@ -22,6 +22,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <sesame.version>2.7.12</sesame.version>
   </properties>
   <dependencies>
     <dependency>
@@ -33,30 +34,24 @@
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-trig</artifactId>
-      <version>2.7.7</version>
+      <version>${sesame.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-trix</artifactId>
-      <version>2.7.7</version>
+      <version>${sesame.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-nquads</artifactId>
-      <version>2.7.7</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-rdfjson</artifactId>
-      <version>2.7.7</version>
+      <version>${sesame.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-repository-sparql</artifactId>
-      <version>2.7.7</version>
+      <version>${sesame.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.collections</groupId>
