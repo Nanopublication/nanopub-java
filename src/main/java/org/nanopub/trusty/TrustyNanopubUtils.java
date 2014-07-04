@@ -1,7 +1,11 @@
 package org.nanopub.trusty;
 
 import java.io.OutputStream;
+import java.util.List;
 
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
 import net.trustyuri.rdf.UriTransformConfig;
 
 import org.nanopub.Nanopub;
@@ -39,6 +43,15 @@ public class TrustyNanopubUtils {
 			writer.handleStatement(st);
 		}
 		writer.endRDF();
+	}
+
+	public static boolean isValidTrustyNanopub(Nanopub nanopub) {
+		String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+		if (artifactCode == null) return false;
+		List<Statement> statements = NanopubUtils.getStatements(nanopub);
+		statements = RdfPreprocessor.run(statements, artifactCode);
+		String ac = RdfHasher.makeArtifactCode(statements);
+		return ac.equals(artifactCode);
 	}
 
 }

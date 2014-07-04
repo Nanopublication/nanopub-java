@@ -1,4 +1,4 @@
-package org.nanopub.trusty;
+package org.nanopub;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,17 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
 
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.NanopubImpl;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubUtils;
+import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
-import org.openrdf.model.Statement;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sparql.SPARQLRepository;
@@ -24,7 +17,7 @@ import org.openrdf.repository.sparql.SPARQLRepository;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
-public class CheckTrustyNanopub {
+public class CheckNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<String> inputNanopubs = new ArrayList<String>();
@@ -36,7 +29,7 @@ public class CheckTrustyNanopub {
 	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
-		CheckTrustyNanopub obj = new CheckTrustyNanopub();
+		CheckNanopub obj = new CheckNanopub();
 		JCommander jc = new JCommander(obj);
 		try {
 			jc.parse(args);
@@ -52,12 +45,13 @@ public class CheckTrustyNanopub {
 		}
 	}
 
-	private int valid, invalid, error;
+	private int valid, notTrusty, invalid, error;
 	private int count;
 	private SPARQLRepository sparqlRepo;
 
 	private void run() throws IOException {
 		valid = 0;
+		notTrusty = 0;
 		invalid = 0;
 		error = 0;
 		for (String s : inputNanopubs) {
@@ -85,16 +79,17 @@ public class CheckTrustyNanopub {
 					}
 				}
 			} catch (OpenRDFException ex) {
-				System.out.println("INVALID RDF: " + s);
+				System.out.println("RDF ERROR: " + s);
 				ex.printStackTrace(System.err);
 				error++;
 			} catch (MalformedNanopubException ex) {
 				System.out.println("INVALID NANOPUB: " + s);
 				ex.printStackTrace(System.err);
-				error++;
+				invalid++;
 			}
 		}
-		System.out.println("Summary: " + valid + " valid | " + invalid + " invalid | " + error + " errors");
+		System.out.println("Summary: " + valid + " valid and trusty | " + notTrusty + " valid but not trusty | " +
+				invalid + " invalid | " + error + " errors");
 		if (sparqlRepo != null) {
 			try {
 				sparqlRepo.shutDown();
@@ -105,24 +100,20 @@ public class CheckTrustyNanopub {
 	}
 
 	private void check(Nanopub np) {
-		if (isValid(np)) {
+		if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
 			if (verbose) {
-				System.out.println("Valid trusty nanopub: " + np.getUri());
+				System.out.println("Nanopub is valid and trusty: " + np.getUri());
 			}
 			valid++;
+		} else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
+			System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
+			notTrusty++;
 		} else {
-			System.out.println("NOT A VALID TRUSTY NANOPUB: " + np.getUri());
-			invalid++;
+			if (verbose) {
+				System.out.println("Nanopub is valid BUT NOT TRUSTY: " + np.getUri());
+			}
+			notTrusty++;
 		}
-	}
-
-	public static boolean isValid(Nanopub nanopub) {
-		String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
-		if (artifactCode == null) return false;
-		List<Statement> statements = NanopubUtils.getStatements(nanopub);
-		statements = RdfPreprocessor.run(statements, artifactCode);
-		String ac = RdfHasher.makeArtifactCode(statements);
-		return ac.equals(artifactCode);
 	}
 
 }
