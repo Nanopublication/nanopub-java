@@ -39,7 +39,7 @@ public class CustomTrigWriter extends TriGWriter {
 
 		// Sesame bug for URIs that end with a period.
 		// Port fix from https://bitbucket.org/openrdf/sesame/pull-request/301/ses-2086-fix-turtlewriter-writing/diff
-		if (!TurtleUtil.isNameEndChar(uriString.charAt(uriString.length()))) {
+		if (!TurtleUtil.isNameEndChar(uriString.charAt(uriString.length() - 1))) {
 			splitIdx = -1;
 		}
 
