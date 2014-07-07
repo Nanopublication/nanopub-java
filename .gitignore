@@ -1,4 +1,6 @@
 *~
 /.*
 /target
+/scratch
 /classpath.txt
+*.bak
