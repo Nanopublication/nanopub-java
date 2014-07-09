@@ -59,7 +59,6 @@ public class GetNanopub {
 
 	static {
 		// Hard-coded server instances:
-		serverBootstrapList.add("http://example.org/");
 		serverBootstrapList.add("http://np.inn.ac/");
 		// more to come...
 	}
