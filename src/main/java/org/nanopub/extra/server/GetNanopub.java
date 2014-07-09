@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfModule;
@@ -53,35 +55,17 @@ public class GetNanopub {
 		}
 	}
 
-	private static final List<String> nanopubServers = new ArrayList<>();
+	private static final List<String> serverBootstrapList = new ArrayList<>();
 
 	static {
 		// Hard-coded server instances:
-		nanopubServers.add("http://np.inn.ac/");
+		serverBootstrapList.add("http://example.org/");
+		serverBootstrapList.add("http://np.inn.ac/");
 		// more to come...
 	}
 
-	public static Nanopub getNanopub(String uriOrArtifactCode) {
-		String ac = getArtifactCode(uriOrArtifactCode);
-		if (!ac.startsWith(RdfModule.MODULE_ID)) {
-			throw new IllegalArgumentException("Not a trusty URI of type RA");
-		}
-		for (String nps : nanopubServers) {
-			try {
-				URL url = new URL(nps + ac);
-				Nanopub nanopub = new NanopubImpl(url);
-				if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
-					return nanopub;
-				}
-			} catch (IOException ex) {
-				// ignore
-			} catch (OpenRDFException ex) {
-				// ignore
-			} catch (MalformedNanopubException ex) {
-				// ignore
-			}
-		}
-		return null;
+	public static Nanopub get(String uriOrArtifactCode) {
+		return new GetNanopub().getNanopub(uriOrArtifactCode);
 	}
 
 	private static String getArtifactCode(String uriOrArtifactCode) {
@@ -99,6 +83,16 @@ public class GetNanopub {
 		}
 	}
 
+	private List<String> serversToContact = new ArrayList<>();
+	private List<String> serversToGetPeers = new ArrayList<>();
+	private Map<String,Boolean> serversContacted = new HashMap<>();
+	private Map<String,Boolean> serversPeersGot = new HashMap<>();
+
+	public GetNanopub() {
+		serversToContact.addAll(serverBootstrapList);
+		serversToGetPeers.addAll(serverBootstrapList);
+	}
+
 	private void run() throws IOException, RDFHandlerException {
 		for (String nanopubId : nanopubIds) {
 			Nanopub np = getNanopub(nanopubId);
@@ -113,6 +107,59 @@ public class GetNanopub {
 				out.close();
 			}
 		}
+	}
+
+	public Nanopub getNanopub(String uriOrArtifactCode) {
+		String ac = getArtifactCode(uriOrArtifactCode);
+		if (!ac.startsWith(RdfModule.MODULE_ID)) {
+			throw new IllegalArgumentException("Not a trusty URI of type RA");
+		}
+		String npsUrl;
+		while ((npsUrl = getNextServerUrl()) != null) {
+			try {
+				URL url = new URL(npsUrl + ac);
+				Nanopub nanopub = new NanopubImpl(url);
+				if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
+					return nanopub;
+				}
+			} catch (IOException ex) {
+				// ignore
+			} catch (OpenRDFException ex) {
+				// ignore
+			} catch (MalformedNanopubException ex) {
+				// ignore
+			}
+		}
+		return null;
+	}
+
+	private String getNextServerUrl() {
+		while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
+			if (!serversToContact.isEmpty()) {
+				String url = serversToContact.remove(0);
+				if (serversContacted.containsKey(url)) continue;
+				serversContacted.put(url, true);
+				return url;
+			}
+			if (!serversToGetPeers.isEmpty()) {
+				String url = serversToGetPeers.remove(0);
+				if (serversPeersGot.containsKey(url)) continue;
+				serversPeersGot.put(url, true);
+				try {
+					for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
+						if (!serversContacted.containsKey(peerUrl)) {
+							serversToContact.add(peerUrl);
+						}
+						if (!serversPeersGot.containsKey(peerUrl)) {
+							serversToGetPeers.add(peerUrl);
+						}
+					}
+				} catch (IOException ex) {
+					// ignore
+				}
+			}
+		}
+		return null;
 	}
 
 }
