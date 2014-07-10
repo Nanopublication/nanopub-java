@@ -5,10 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfModule;
@@ -55,14 +52,6 @@ public class GetNanopub {
 		}
 	}
 
-	private static final List<String> serverBootstrapList = new ArrayList<>();
-
-	static {
-		// Hard-coded server instances:
-		serverBootstrapList.add("http://np.inn.ac/");
-		// more to come...
-	}
-
 	public static Nanopub get(String uriOrArtifactCode) {
 		return new GetNanopub().getNanopub(uriOrArtifactCode);
 	}
@@ -82,14 +71,9 @@ public class GetNanopub {
 		}
 	}
 
-	private List<String> serversToContact = new ArrayList<>();
-	private List<String> serversToGetPeers = new ArrayList<>();
-	private Map<String,Boolean> serversContacted = new HashMap<>();
-	private Map<String,Boolean> serversPeersGot = new HashMap<>();
+	private ServerIterator serverIterator = new ServerIterator();
 
 	public GetNanopub() {
-		serversToContact.addAll(serverBootstrapList);
-		serversToGetPeers.addAll(serverBootstrapList);
 	}
 
 	private void run() throws IOException, RDFHandlerException {
@@ -113,8 +97,8 @@ public class GetNanopub {
 		if (!ac.startsWith(RdfModule.MODULE_ID)) {
 			throw new IllegalArgumentException("Not a trusty URI of type RA");
 		}
-		String npsUrl;
-		while ((npsUrl = getNextServerUrl()) != null) {
+		while (serverIterator.hasNext()) {
+			String npsUrl = serverIterator.next();
 			try {
 				URL url = new URL(npsUrl + ac);
 				Nanopub nanopub = new NanopubImpl(url);
@@ -127,35 +111,6 @@ public class GetNanopub {
 				// ignore
 			} catch (MalformedNanopubException ex) {
 				// ignore
-			}
-		}
-		return null;
-	}
-
-	private String getNextServerUrl() {
-		while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
-			if (!serversToContact.isEmpty()) {
-				String url = serversToContact.remove(0);
-				if (serversContacted.containsKey(url)) continue;
-				serversContacted.put(url, true);
-				return url;
-			}
-			if (!serversToGetPeers.isEmpty()) {
-				String url = serversToGetPeers.remove(0);
-				if (serversPeersGot.containsKey(url)) continue;
-				serversPeersGot.put(url, true);
-				try {
-					for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
-						if (!serversContacted.containsKey(peerUrl)) {
-							serversToContact.add(peerUrl);
-						}
-						if (!serversPeersGot.containsKey(peerUrl)) {
-							serversToGetPeers.add(peerUrl);
-						}
-					}
-				} catch (IOException ex) {
-					// ignore
-				}
 			}
 		}
 		return null;

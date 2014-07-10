@@ -44,4 +44,16 @@ public class NanopubServerUtils {
 		return list;
 	}
 
+	private static final List<String> bootstrapServerList = new ArrayList<>();
+
+	static {
+		// Hard-coded server instances:
+		bootstrapServerList.add("http://np.inn.ac/");
+		// more to come...
+	}
+
+	public static List<String> getBootstrapServerList() {
+		return bootstrapServerList;
+	}
+
 }
