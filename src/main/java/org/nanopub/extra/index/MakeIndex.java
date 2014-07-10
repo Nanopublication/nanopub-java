@@ -20,11 +20,11 @@ public class MakeIndex {
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
 	private List<File> inputFiles = new ArrayList<File>();
 
-	@com.beust.jcommander.Parameter(names = "-o", description = "Output file", required = true)
-	private File outputFile;
+	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+	private File outputFile = new File("index.trig");
 
-	@com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs", required = true)
-	private String baseUri;
+	@com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
+	private String baseUri = "http://np.inn.ac/";
 
 	@com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
 	private String iTitle;

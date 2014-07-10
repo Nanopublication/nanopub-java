@@ -65,7 +65,9 @@ public class CheckNanopub {
 					Nanopub np = new NanopubImpl(sparqlRepo, new URIImpl(s));
 					check(np);
 				} else {
-					System.out.println("Reading file: " + s);
+					if (verbose) {
+						System.out.println("Reading file: " + s);
+					}
 					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
 						@Override
 						public void handleNanopub(Nanopub np) {
@@ -102,7 +104,7 @@ public class CheckNanopub {
 	private void check(Nanopub np) {
 		if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
 			if (verbose) {
-				System.out.println("Nanopub is valid and trusty: " + np.getUri());
+				System.out.println("Valid and trusty: " + np.getUri());
 			}
 			valid++;
 		} else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
@@ -110,7 +112,7 @@ public class CheckNanopub {
 			notTrusty++;
 		} else {
 			if (verbose) {
-				System.out.println("Nanopub is valid BUT NOT TRUSTY: " + np.getUri());
+				System.out.println("Valid BUT NOT TRUSTY: " + np.getUri());
 			}
 			notTrusty++;
 		}

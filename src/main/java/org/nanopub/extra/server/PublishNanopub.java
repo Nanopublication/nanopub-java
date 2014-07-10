@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.trustyuri.TrustyUriUtils;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -88,7 +90,9 @@ public class PublishNanopub {
 						failed = true;
 					}
 				} else {
-					System.out.println("Reading file: " + s);
+					if (verbose) {
+						System.out.println("Reading file: " + s);
+					}
 					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
 						@Override
 						public void handleNanopub(Nanopub np) {
@@ -158,6 +162,9 @@ public class PublishNanopub {
 				if (code >= 200 && code < 300) {
 					if (!usedServers.contains(serverUrl)) {
 						usedServers.add(serverUrl);
+					}
+					if (verbose) {
+						System.out.println("Published: " + TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
 					}
 					return;
 				}
