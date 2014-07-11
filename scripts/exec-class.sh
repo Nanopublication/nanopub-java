@@ -9,7 +9,7 @@
 WORKINGDIR=`pwd`
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
-cd ..
+cd -P ..
 
 PROJECTDIR=`pwd`
 # for Cygwin:

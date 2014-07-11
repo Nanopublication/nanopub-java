@@ -3,7 +3,9 @@ package org.nanopub.extra.server;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.trustyuri.TrustyUriUtils;
 
@@ -63,8 +65,8 @@ public class PublishNanopub {
 
 	private ServerIterator serverIterator = null;
 	private String serverUrl = null;
-	private List<String> usedServers = new ArrayList<>();
-	private int count, published;
+	private Map<String,Integer> usedServers = new HashMap<>();
+	private int count;
 	private boolean failed;
 	private SPARQLRepository sparqlRepo;
 
@@ -72,7 +74,6 @@ public class PublishNanopub {
 	}
 
 	private void run() throws IOException {
-		published = 0;
 		failed = false;
 		for (String s : nanopubs) {
 			count = 0;
@@ -85,7 +86,6 @@ public class PublishNanopub {
 					Nanopub np = new NanopubImpl(sparqlRepo, new URIImpl(s));
 					try {
 						publishNanopub(np);
-						published++;
 					} catch (IOException ex) {
 						failed = true;
 					}
@@ -100,7 +100,6 @@ public class PublishNanopub {
 							if (failed) return;
 							try {
 								publishNanopub(np);
-								published++;
 							} catch (IOException ex) {
 								failed = true;
 							}
@@ -125,9 +124,9 @@ public class PublishNanopub {
 				break;
 			}
 		}
-		System.out.println(published + " nanopubs published at:");
-		for (String s : usedServers) {
-			System.out.println("- " + s);
+		for (String s : usedServers.keySet()) {
+			int c = usedServers.get(s);
+			System.out.println(c + " nanopub" + (c==1?"":"s") + " published at " + s);
 		}
 		if (sparqlRepo != null) {
 			try {
@@ -160,8 +159,10 @@ public class PublishNanopub {
 				HttpResponse response = HttpClientBuilder.create().build().execute(post);
 				int code = response.getStatusLine().getStatusCode();
 				if (code >= 200 && code < 300) {
-					if (!usedServers.contains(serverUrl)) {
-						usedServers.add(serverUrl);
+					if (usedServers.containsKey(serverUrl)) {
+						usedServers.put(serverUrl, usedServers.get(serverUrl) + 1);
+					} else {
+						usedServers.put(serverUrl, 1);
 					}
 					if (verbose) {
 						System.out.println("Published: " + TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));

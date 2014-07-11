@@ -12,14 +12,12 @@ import java.util.List;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.rdf.RdfFileContent;
-import net.trustyuri.rdf.RdfUtils;
 import net.trustyuri.rdf.TransformRdf;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.openrdf.rio.RDFFormat;
@@ -35,9 +33,6 @@ public class MakeTrustyNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<File> inputNanopubs = new ArrayList<File>();
-
-	@com.beust.jcommander.Parameter(names = "-m", description = "Multi mode (for files containing multiple nanopubs)")
-	private boolean multiMode = false;
 
 	public static void main(String[] args) {
 		MakeTrustyNanopub obj = new MakeTrustyNanopub();
@@ -59,27 +54,11 @@ public class MakeTrustyNanopub {
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
 		for (File inputFile : inputNanopubs) {
-			if (multiMode) {
-				String path = "";
-				if (inputFile.getParent() != null) {
-					path = inputFile.getParent() + "/";
-				}
-				OutputStream out = new FileOutputStream(path + "trusty." + inputFile.getName());
-				TrustyUriResource r = new TrustyUriResource(inputFile);
-				RDFFormat format = r.getFormat(RDFFormat.TRIG);
-				transformMultiNanopub(format, inputFile, out);
-			} else {
-				TrustyUriResource r = new TrustyUriResource(inputFile);
-				RdfFileContent content = RdfUtils.load(r);
-				Nanopub nanopub = null;
-				try {
-					nanopub = new NanopubImpl(content.getStatements());
-				} catch (MalformedNanopubException ex) {
-					System.out.println("ERROR: Malformed nanopub: " + ex.getMessage());
-					System.exit(1);
-				}
-				TransformRdf.transform(content, inputFile.getParent(), nanopub.getUri().toString());
-			}
+			File outFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
+			OutputStream out = new FileOutputStream(outFile);
+			TrustyUriResource r = new TrustyUriResource(inputFile);
+			RDFFormat format = r.getFormat(RDFFormat.TRIG);
+			transformMultiNanopub(format, inputFile, out);
 		}
 	}
 
