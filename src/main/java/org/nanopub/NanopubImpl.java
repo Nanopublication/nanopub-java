@@ -3,11 +3,11 @@ package org.nanopub;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -20,6 +20,10 @@ import java.util.Set;
 import javax.activation.MimetypesFileTypeMap;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -148,23 +152,41 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		init();
 	}
 
-	public NanopubImpl(URL url, RDFFormat format)
-			throws MalformedNanopubException, OpenRDFException, IOException {
-		readStatements(url.openConnection().getInputStream(), format, "");
+	public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, OpenRDFException, IOException {
+		HttpResponse response = getNanopub(url);
+		readStatements(response.getEntity().getContent(), format, "");
 		init();
 	}
 
 	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
-		URLConnection conn = url.openConnection();
-		RDFFormat format = RDFFormat.forMIMEType(conn.getContentType());
+		HttpResponse response = getNanopub(url);
+		Header contentTypeHeader = response.getFirstHeader("Content-Type");
+		RDFFormat format = RDFFormat.TRIG;
+		if (contentTypeHeader != null) {
+			format = RDFFormat.forMIMEType(contentTypeHeader.getValue());
+		}
 		if (format == null || !format.supportsContexts()) {
 			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
 		}
 		if (!format.supportsContexts()) {
 			format = RDFFormat.TRIG;
 		}
-		readStatements(conn.getInputStream(), format, "");
+		readStatements(response.getEntity().getContent(), format, "");
 		init();
+	}
+
+	private HttpResponse getNanopub(URL url) throws IOException {
+		HttpGet get = new HttpGet(url.toString());
+		get.setHeader("Accept", "application/trig, text/x-nquads, application/trix");
+		HttpResponse response = HttpClientBuilder.create().build().execute(get);
+		int statusCode = response.getStatusLine().getStatusCode();
+		if (statusCode == 404 || statusCode == 410) {
+			throw new FileNotFoundException(response.getStatusLine().getReasonPhrase());
+		}
+		if (statusCode < 200 || statusCode > 299) {
+			throw new IOException("HTTP error " + statusCode + ": " + response.getStatusLine().getReasonPhrase());
+		}
+		return response;
 	}
 
 	public NanopubImpl(InputStream in, RDFFormat format, String baseUri)

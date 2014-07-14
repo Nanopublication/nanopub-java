@@ -13,7 +13,7 @@ public class ServerInfo {
 
 	public static ServerInfo load(String serverUrl) throws IOException {
 		HttpGet get = new HttpGet(serverUrl);
-		get.setHeader("Content-Type", "application/json");
+		get.setHeader("Accept", "application/json");
 	    InputStream in = HttpClientBuilder.create().build().execute(get).getEntity().getContent();
 		return new Gson().fromJson(new InputStreamReader(in), ServerInfo.class);
 	}

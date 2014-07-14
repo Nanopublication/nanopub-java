@@ -53,10 +53,46 @@ public class GetNanopub {
 	}
 
 	public static Nanopub get(String uriOrArtifactCode) {
-		return new GetNanopub().getNanopub(uriOrArtifactCode);
+		return get(uriOrArtifactCode, (ServerIterator) null);
 	}
 
-	private static String getArtifactCode(String uriOrArtifactCode) {
+	public static Nanopub get(String uriOrArtifactCode, ServerIterator serverIterator) {
+		if (serverIterator == null) {
+			serverIterator = new ServerIterator();
+		}
+		String ac = getArtifactCode(uriOrArtifactCode);
+		if (!ac.startsWith(RdfModule.MODULE_ID)) {
+			throw new IllegalArgumentException("Not a trusty URI of type RA");
+		}
+		while (serverIterator.hasNext()) {
+			String serverUrl = serverIterator.next();
+			try {
+				Nanopub np = get(ac, serverUrl);
+				if (np != null) {
+					return np;
+				}
+			} catch (IOException ex) {
+				// ignore
+			} catch (OpenRDFException ex) {
+				// ignore
+			} catch (MalformedNanopubException ex) {
+				// ignore
+			}
+		}
+		return null;
+	}
+
+	public static Nanopub get(String artifactCode, String serverUrl)
+			throws IOException, OpenRDFException, MalformedNanopubException {
+		URL url = new URL(serverUrl + artifactCode);
+		Nanopub nanopub = new NanopubImpl(url);
+		if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
+			return nanopub;
+		}
+		return null;
+	}
+
+	public static String getArtifactCode(String uriOrArtifactCode) {
 		if (uriOrArtifactCode.indexOf(":") > 0) {
 			URI uri = new URIImpl(uriOrArtifactCode);
 			if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
@@ -93,27 +129,7 @@ public class GetNanopub {
 	}
 
 	public Nanopub getNanopub(String uriOrArtifactCode) {
-		String ac = getArtifactCode(uriOrArtifactCode);
-		if (!ac.startsWith(RdfModule.MODULE_ID)) {
-			throw new IllegalArgumentException("Not a trusty URI of type RA");
-		}
-		while (serverIterator.hasNext()) {
-			String npsUrl = serverIterator.next();
-			try {
-				URL url = new URL(npsUrl + ac);
-				Nanopub nanopub = new NanopubImpl(url);
-				if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
-					return nanopub;
-				}
-			} catch (IOException ex) {
-				// ignore
-			} catch (OpenRDFException ex) {
-				// ignore
-			} catch (MalformedNanopubException ex) {
-				// ignore
-			}
-		}
-		return null;
+		return get(uriOrArtifactCode, serverIterator);
 	}
 
 }
