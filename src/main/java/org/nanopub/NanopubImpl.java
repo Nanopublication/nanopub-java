@@ -73,6 +73,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private List<Statement> statements = new ArrayList<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
+	private boolean unusedPrefixesRemoved = false;
 
 	public NanopubImpl(Collection<Statement> statements, List<String> nsPrefixes, Map<String,String> ns) throws MalformedNanopubException {
 		this.statements.addAll(statements);
@@ -466,6 +467,19 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	@Override
 	public String getNamespace(String prefix) {
 		return ns.get(prefix);
+	}
+
+	@Override
+	public void removeUnusedPrefixes() {
+		if (unusedPrefixesRemoved) return;
+		Set<String> usedPrefixes = NanopubUtils.getUsedPrefixes(this);
+		for (String prefix : new ArrayList<>(nsPrefixes)) {
+			if (!usedPrefixes.contains(prefix)) {
+				nsPrefixes.remove(prefix);
+				ns.remove(prefix);
+			}
+		}
+		unusedPrefixesRemoved = true;
 	}
 
 }

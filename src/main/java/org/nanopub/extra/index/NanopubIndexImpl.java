@@ -196,4 +196,11 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		return null;
 	}
 
+	@Override
+	public void removeUnusedPrefixes() {
+		if (np instanceof NanopubWithNs) {
+			((NanopubWithNs) np).removeUnusedPrefixes();
+		}
+	}
+
 }

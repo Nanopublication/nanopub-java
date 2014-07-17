@@ -13,4 +13,6 @@ public interface NanopubWithNs extends Nanopub {
 
 	public String getNamespace(String prefix);
 
+	public void removeUnusedPrefixes();
+
 }

@@ -20,6 +20,7 @@ import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
+import org.nanopub.NanopubWithNs;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -64,6 +65,9 @@ public class MakeTrustyNanopub {
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
 		Nanopub np;
+		if (nanopub instanceof NanopubWithNs) {
+			((NanopubWithNs) nanopub).removeUnusedPrefixes();
+		}
 		try {
 			RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
 			NanopubUtils.propagateToHandler(nanopub, r);

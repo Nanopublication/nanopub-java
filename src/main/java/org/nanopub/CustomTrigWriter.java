@@ -3,7 +3,9 @@ package org.nanopub;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.util.Set;
 
+import org.apache.commons.io.output.NullOutputStream;
 import org.openrdf.model.URI;
 import org.openrdf.rio.trig.TriGWriter;
 import org.openrdf.rio.turtle.TurtleUtil;
@@ -13,12 +15,29 @@ import org.openrdf.rio.turtle.TurtleUtil;
  */
 public class CustomTrigWriter extends TriGWriter {
 
+	private Set<String> usedPrefixes;
+
 	public CustomTrigWriter(OutputStream out) {
 		super(out);
 	}
 
 	public CustomTrigWriter(Writer writer) {
 		super(writer);
+	}
+
+	public CustomTrigWriter(OutputStream out, Set<String> usedPrefixes) {
+		super(out);
+		this.usedPrefixes = usedPrefixes;
+	}
+
+	public CustomTrigWriter(Writer writer, Set<String> usedPrefixes) {
+		super(writer);
+		this.usedPrefixes = usedPrefixes;
+	}
+
+	public CustomTrigWriter(Set<String> usedPrefixes) {
+		super(NullOutputStream.NULL_OUTPUT_STREAM);
+		this.usedPrefixes = usedPrefixes;
 	}
 
 	@Override
@@ -30,6 +49,9 @@ public class CustomTrigWriter extends TriGWriter {
 			// Exact match: no suffix required
 			writer.write(prefix);
 			writer.write(":");
+			if (usedPrefixes != null) {
+				usedPrefixes.add(prefix);
+			}
 			return;
 		}
 
@@ -93,6 +115,9 @@ public class CustomTrigWriter extends TriGWriter {
 			writer.write(prefix);
 			writer.write(":");
 			writer.write(uriString.substring(splitIdx));
+			if (usedPrefixes != null) {
+				usedPrefixes.add(prefix);
+			}
 		} else {
 			// Write full URI
 			writer.write("<");

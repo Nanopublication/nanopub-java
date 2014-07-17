@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -91,6 +92,18 @@ public class NanopubUtils {
 		RDFParser p = Rio.createParser(format);
 		p.getParserConfig().set(RDFaParserSettings.FAIL_ON_RDFA_UNDEFINED_PREFIXES, true);
 		return p;
+	}
+
+	public static Set<String> getUsedPrefixes(NanopubWithNs np) {
+		Set<String> usedPrefixes = new HashSet<String>();
+		CustomTrigWriter writer = new CustomTrigWriter(usedPrefixes);
+		try {
+			NanopubUtils.propagateToHandler(np, writer);
+		} catch (RDFHandlerException ex) {
+			ex.printStackTrace();
+			return usedPrefixes;
+		}
+		return usedPrefixes;
 	}
 
 }
