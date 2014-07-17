@@ -14,6 +14,8 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.URI;
@@ -35,6 +37,12 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(names = "-d", description = "Save as file(s) in the given directory")
 	private File outputDir;
 
+	@com.beust.jcommander.Parameter(names = "-i", description = "Retrieve the index for the given index nanopub")
+	private boolean getIndex;
+
+	@com.beust.jcommander.Parameter(names = "-c", description = "Retrieve the content of the given index")
+	private boolean getIndexContent;
+
 	public static void main(String[] args) {
 		GetNanopub obj = new GetNanopub();
 		JCommander jc = new JCommander(obj);
@@ -53,13 +61,7 @@ public class GetNanopub {
 	}
 
 	public static Nanopub get(String uriOrArtifactCode) {
-		return get(uriOrArtifactCode, (ServerIterator) null);
-	}
-
-	public static Nanopub get(String uriOrArtifactCode, ServerIterator serverIterator) {
-		if (serverIterator == null) {
-			serverIterator = new ServerIterator();
-		}
+		ServerIterator serverIterator = new ServerIterator();
 		String ac = getArtifactCode(uriOrArtifactCode);
 		if (!ac.startsWith(RdfModule.MODULE_ID)) {
 			throw new IllegalArgumentException("Not a trusty URI of type RA");
@@ -107,29 +109,59 @@ public class GetNanopub {
 		}
 	}
 
-	private ServerIterator serverIterator = new ServerIterator();
+	private RDFFormat rdfFormat;
 
 	public GetNanopub() {
 	}
 
-	private void run() throws IOException, RDFHandlerException {
+	private void run() throws IOException, RDFHandlerException, MalformedNanopubException {
+		rdfFormat = RDFFormat.forFileName("file." + format);
 		for (String nanopubId : nanopubIds) {
-			Nanopub np = getNanopub(nanopubId);
-			if (np == null) {
-				System.err.println("NOT FOUND: " + nanopubId);
-			} else if (outputDir == null) {
-				NanopubUtils.writeToStream(np, System.out, RDFFormat.forFileName("file." + format));
-				System.out.print("\n\n");
+			Nanopub np = get(nanopubId);
+			if (getIndex || getIndexContent) {
+				processIndex(nanopubId, np);
 			} else {
-				OutputStream out = new FileOutputStream(new File(outputDir, getArtifactCode(nanopubId) + "." + format));
-				NanopubUtils.writeToStream(np, out, RDFFormat.forFileName("file." + format));
-				out.close();
+				outputNanopub(nanopubId, np);
 			}
 		}
 	}
 
-	public Nanopub getNanopub(String uriOrArtifactCode) {
-		return get(uriOrArtifactCode, serverIterator);
+	private void processIndex(String nanopubId, Nanopub np) throws IOException, RDFHandlerException, MalformedNanopubException {
+		if (!IndexUtils.isIndex(np)) {
+			System.err.println("NOT AN INDEX: " + nanopubId);
+			return;
+		}
+		NanopubIndex npi = IndexUtils.castToIndex(np);
+		if (getIndex) {
+			outputNanopub(nanopubId, npi);
+		}
+		if (getIndexContent) {
+			for (URI elementUri : npi.getElements()) {
+				Nanopub element = get(elementUri.toString());
+				outputNanopub(elementUri.toString(), element);
+			}
+		}
+		for (URI subIndexUri : npi.getSubIndexes()) {
+			Nanopub subIndex = get(subIndexUri.toString());
+			processIndex(subIndexUri.toString(), subIndex);
+		}
+		if (npi.getAppendedIndex() != null) {
+			Nanopub appendedIndex = get(npi.getAppendedIndex().toString());
+			processIndex(npi.getAppendedIndex().toString(), appendedIndex);
+		}
+	}
+
+	private void outputNanopub(String nanopubId, Nanopub np) throws IOException, RDFHandlerException {
+		if (np == null) {
+			System.err.println("NOT FOUND: " + nanopubId);
+		} else if (outputDir == null) {
+			NanopubUtils.writeToStream(np, System.out, rdfFormat);
+			System.out.print("\n\n");
+		} else {
+			OutputStream out = new FileOutputStream(new File(outputDir, getArtifactCode(nanopubId) + "." + format));
+			NanopubUtils.writeToStream(np, out, rdfFormat);
+			out.close();
+		}
 	}
 
 }
