@@ -35,6 +35,9 @@ public class MakeTrustyNanopub {
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<File> inputNanopubs = new ArrayList<File>();
 
+	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
+	private boolean verbose = false;
+
 	public static void main(String[] args) {
 		MakeTrustyNanopub obj = new MakeTrustyNanopub();
 		JCommander jc = new JCommander(obj);
@@ -56,10 +59,27 @@ public class MakeTrustyNanopub {
 			MalformedNanopubException, TrustyUriException {
 		for (File inputFile : inputNanopubs) {
 			File outFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
-			OutputStream out = new FileOutputStream(outFile);
-			TrustyUriResource r = new TrustyUriResource(inputFile);
-			RDFFormat format = r.getFormat(RDFFormat.TRIG);
-			transformMultiNanopub(format, inputFile, out);
+			final OutputStream out = new FileOutputStream(outFile);
+			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
+			InputStream in = new FileInputStream(inputFile);
+			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
+
+				@Override
+				public void handleNanopub(Nanopub np) {
+					try {
+						np = writeAsTrustyNanopub(np, format, out);
+						if (verbose) {
+							System.out.println("Nanopub URI: " + np.getUri());
+						}
+					} catch (RDFHandlerException ex) {
+						throw new RuntimeException(ex);
+					} catch (TrustyUriException ex) {
+						throw new RuntimeException(ex);
+					}
+				}
+
+			});
+			out.close();
 		}
 	}
 
@@ -95,9 +115,7 @@ public class MakeTrustyNanopub {
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
-					np = MakeTrustyNanopub.transform(np);
-					RDFWriter w = Rio.createWriter(format, out);
-					NanopubUtils.propagateToHandler(np, w);
+					writeAsTrustyNanopub(np, format, out);
 				} catch (RDFHandlerException ex) {
 					throw new RuntimeException(ex);
 				} catch (TrustyUriException ex) {
@@ -107,6 +125,14 @@ public class MakeTrustyNanopub {
 
 		});
 		out.close();
+	}
+
+	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out)
+			throws RDFHandlerException, TrustyUriException {
+		np = MakeTrustyNanopub.transform(np);
+		RDFWriter w = Rio.createWriter(format, out);
+		NanopubUtils.propagateToHandler(np, w);
+		return np;
 	}
 
 }
