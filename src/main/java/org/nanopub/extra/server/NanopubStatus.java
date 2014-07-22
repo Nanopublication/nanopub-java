@@ -9,6 +9,8 @@ import net.trustyuri.rdf.RdfModule;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -24,6 +26,9 @@ public class NanopubStatus {
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
+
+	@com.beust.jcommander.Parameter(names = "-r", description = "Recursive (check entire content of index)")
+	private boolean recursive = false;
 
 	public static void main(String[] args) {
 		NanopubStatus obj = new NanopubStatus();
@@ -62,47 +67,98 @@ public class NanopubStatus {
 		}
 	}
 
-	private ServerIterator serverIterator = new ServerIterator();
-
-	private int count;
+	private int contentNpCount, indexNpCount;
+	private int minCount = -1;
 
 	public NanopubStatus() {
 	}
 
 	private void run() throws IOException, RDFHandlerException {
-		count = 0;
-		String nanopubId = nanopubIds.get(0);
+		checkNanopub(nanopubIds.get(0), recursive);
+		if (recursive) {
+			System.out.print(indexNpCount + " index nanopub" + (indexNpCount!=1?"s":"") + "; ");
+			System.out.println(contentNpCount + " content nanopub" + (contentNpCount!=1?"s":""));
+			System.out.println("Each found on at least " + minCount + " nanopub server" + (minCount!=1?"s":"") + ".");
+		}
+	}
+
+	private void checkNanopub(String nanopubId, boolean checkIndexContent) {
 		String ac = getArtifactCode(nanopubId);
 		if (!ac.startsWith(RdfModule.MODULE_ID)) {
-			throw new IllegalArgumentException("Not a trusty URI of type RA");
+			System.err.println("ERROR. Not a trusty URI of type RA: " + nanopubId);
+			System.exit(1);
 		}
+		int count = 0;
+		ServerIterator serverIterator = new ServerIterator();
+		Nanopub nanopub = null;
 		while (serverIterator.hasNext()) {
 			String serverUrl = serverIterator.next();
 			try {
 				Nanopub np = GetNanopub.get(ac, serverUrl);
 				if (np != null) {
-					System.out.println(serverUrl + ac);
+					if (checkIndexContent && !IndexUtils.isIndex(np)) {
+						System.err.println("ERROR. Not an index: " + nanopubId);
+						System.exit(1);
+					}
+					if (nanopub == null) nanopub = np;
+					if (!recursive || verbose) {
+						System.out.println("URL: " + serverUrl + ac);
+					}
 					count++;
 				}
 			} catch (FileNotFoundException ex) {
-				if (verbose) {
+				if (verbose && !recursive) {
 					System.out.println("NOT FOUND ON: " + serverUrl);
 				}
 			} catch (IOException ex) {
-				if (verbose) {
+				if (verbose && !recursive) {
 					System.out.println("CONNECTION ERROR: " + serverUrl);
 				}
 			} catch (OpenRDFException ex) {
-				if (verbose) {
+				if (verbose && !recursive) {
 					System.out.println("VALIDATION ERROR: " + serverUrl);
 				}
 			} catch (MalformedNanopubException ex) {
-				if (verbose) {
+				if (verbose && !recursive) {
 					System.out.println("VALIDATION ERROR: " + serverUrl);
 				}
 			}
 		}
-		System.out.println("Found on " + count + " nanopub server" + (count!=1?"s":"") + ".");
+		String text = "Found on " + count + " nanopub server" + (count!=1?"s":"");
+		if (!recursive) {
+			System.out.println(text + ".");
+		} else if (verbose) {
+			System.out.println(text + ": " + ac);
+		}
+		if (minCount < 0 || minCount > count) {
+			minCount = count;
+		}
+		if (nanopub != null) {
+			if (checkIndexContent) {
+				indexNpCount++;
+				NanopubIndex npi = null;
+				try {
+					npi = IndexUtils.castToIndex(nanopub);
+				} catch (MalformedNanopubException ex) {
+					ex.printStackTrace();
+					System.exit(1);
+				}
+				for (URI elementUri : npi.getElements()) {
+					checkNanopub(elementUri.toString(), false);
+				}
+				for (URI subIndexUri : npi.getSubIndexes()) {
+					checkNanopub(subIndexUri.toString(), true);
+				}
+				if (npi.getAppendedIndex() != null) {
+					checkNanopub(npi.getAppendedIndex().toString(), true);
+				}
+			} else {
+				contentNpCount++;
+			}
+		}
+		if ((indexNpCount+contentNpCount) % 100 == 0) {
+			System.out.print((indexNpCount+contentNpCount) + " nanopubs...\r");
+		}
 	}
 
 }

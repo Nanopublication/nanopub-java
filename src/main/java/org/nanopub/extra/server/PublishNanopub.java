@@ -83,12 +83,7 @@ public class PublishNanopub {
 						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
 						sparqlRepo.initialize();
 					}
-					Nanopub np = new NanopubImpl(sparqlRepo, new URIImpl(s));
-					try {
-						publishNanopub(np);
-					} catch (IOException ex) {
-						failed = true;
-					}
+					processNanopub(new NanopubImpl(sparqlRepo, new URIImpl(s)));
 				} else {
 					if (verbose) {
 						System.out.println("Reading file: " + s);
@@ -98,11 +93,7 @@ public class PublishNanopub {
 						public void handleNanopub(Nanopub np) {
 							count++;
 							if (failed) return;
-							try {
-								publishNanopub(np);
-							} catch (IOException ex) {
-								failed = true;
-							}
+							processNanopub(np);
 						}
 					});
 					if (count == 0) {
@@ -134,6 +125,18 @@ public class PublishNanopub {
 			} catch (RepositoryException ex) {
 				ex.printStackTrace();
 			}
+		}
+	}
+
+	private void processNanopub(Nanopub nanopub) {
+		try {
+			publishNanopub(nanopub);
+			count++;
+			if (count % 100 == 0) {
+				System.out.print(count + " nanopubs...\r");
+			}
+		} catch (IOException ex) {
+			failed = true;
 		}
 	}
 
