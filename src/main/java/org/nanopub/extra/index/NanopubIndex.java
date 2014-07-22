@@ -29,4 +29,6 @@ public interface NanopubIndex extends Nanopub {
 
 	public String getDescription();
 
+	public Set<URI> getSeeAlsoUris();
+
 }

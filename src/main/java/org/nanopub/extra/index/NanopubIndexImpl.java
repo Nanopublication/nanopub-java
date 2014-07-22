@@ -14,6 +14,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.vocabulary.DC;
 import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -194,6 +195,17 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 			return ((Literal) st.getObject()).getLabel();
 		}
 		return null;
+	}
+
+	public Set<URI> getSeeAlsoUris() {
+		Set<URI> seeAlsoUris = new HashSet<>();
+		for (Statement st : getPubinfo()) {
+			if (!st.getSubject().equals(getUri())) continue;
+			if (!st.getPredicate().equals(RDFS.SEEALSO)) continue;
+			if (!(st.getObject() instanceof URI)) continue;
+			seeAlsoUris.add((URI) st.getObject());
+		}
+		return seeAlsoUris;
 	}
 
 	@Override

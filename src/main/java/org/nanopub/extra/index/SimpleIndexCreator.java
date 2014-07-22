@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.nanopub.NanopubCreator;
+import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.RDFS;
 
 public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 
@@ -14,6 +16,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	private String title;
 	private String description;
 	private List<String> creators = new ArrayList<>();
+	private List<URI> seeAlsoUris = new ArrayList<>();
 
 	public SimpleIndexCreator() {
 	}
@@ -38,6 +41,10 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		creators.add(creatorUriOrOrcid);
 	}
 
+	public void addSeeAlsoUri(URI seeAlsoUri) {
+		seeAlsoUris.add(seeAlsoUri);
+	}
+
 	@Override
 	public String getBaseUri() {
 		return baseUri;
@@ -56,6 +63,9 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 			} else {
 				throw new IllegalArgumentException("Author has to be URI or ORCID: " + creator);
 			}
+		}
+		for (URI seeAlsoUri : seeAlsoUris) {
+			npCreator.addPubinfoStatement(RDFS.SEEALSO, seeAlsoUri);
 		}
 	}
 

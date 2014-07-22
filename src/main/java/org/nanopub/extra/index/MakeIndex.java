@@ -11,6 +11,7 @@ import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
 
 import com.beust.jcommander.JCommander;
@@ -36,6 +37,9 @@ public class MakeIndex {
 	@com.beust.jcommander.Parameter(names = "-c", description = "Creator of index")
 	private List<String> iCreators = new ArrayList<>();
 
+	@com.beust.jcommander.Parameter(names = "-a", description = "'See also' resources")
+	private List<String> seeAlso = new ArrayList<>();
+
 	@com.beust.jcommander.Parameter(names = "-s", description = "Add index nanopubs as sub-indexes (instead of elements)")
 	private boolean useSubindexes = false;
 
@@ -59,11 +63,13 @@ public class MakeIndex {
 	private SimpleIndexCreator indexCreator;
 	private FileWriter writer;
 	private RDFFormat outFormat;
+	private int count;
 
 	private MakeIndex() {
 	}
 
 	private void init() throws IOException {
+		count = 0;
 		outFormat = RDFFormat.forFileName(outputFile.getName());
 		writer = new FileWriter(outputFile);
 
@@ -100,6 +106,9 @@ public class MakeIndex {
 		for (String creator : iCreators) {
 			indexCreator.addCreator(creator);
 		}
+		for (String sa : seeAlso) {
+			indexCreator.addSeeAlsoUri(new URIImpl(sa));
+		}
 	}
 
 	private void run() throws Exception {
@@ -117,6 +126,10 @@ public class MakeIndex {
 						}
 					} else {
 						indexCreator.addElement(np);
+					}
+					count++;
+					if (count % 100 == 0) {
+						System.out.print(count + " nanopubs...\r");
 					}
 				}
 			});
