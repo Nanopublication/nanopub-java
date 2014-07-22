@@ -30,6 +30,9 @@ public class NanopubStatus {
 	@com.beust.jcommander.Parameter(names = "-r", description = "Recursive (check entire content of index)")
 	private boolean recursive = false;
 
+	@com.beust.jcommander.Parameter(names = "-a", description = "Check all servers (do not stop after the first successful one)")
+	private boolean checkAllServers = false;
+
 	public static void main(String[] args) {
 		NanopubStatus obj = new NanopubStatus();
 		JCommander jc = new JCommander(obj);
@@ -78,7 +81,9 @@ public class NanopubStatus {
 		if (recursive) {
 			System.out.print(indexNpCount + " index nanopub" + (indexNpCount!=1?"s":"") + "; ");
 			System.out.println(contentNpCount + " content nanopub" + (contentNpCount!=1?"s":""));
-			System.out.println("Each found on at least " + minCount + " nanopub server" + (minCount!=1?"s":"") + ".");
+			if (checkAllServers) {
+				System.out.println("Each found on at least " + minCount + " nanopub server" + (minCount!=1?"s":"") + ".");
+			}
 		}
 	}
 
@@ -104,7 +109,11 @@ public class NanopubStatus {
 					if (!recursive || verbose) {
 						System.out.println("URL: " + serverUrl + ac);
 					}
-					count++;
+					if (checkAllServers) {
+						count++;
+					} else {
+						break;
+					}
 				}
 			} catch (FileNotFoundException ex) {
 				if (verbose && !recursive) {
@@ -124,14 +133,16 @@ public class NanopubStatus {
 				}
 			}
 		}
-		String text = "Found on " + count + " nanopub server" + (count!=1?"s":"");
-		if (!recursive) {
-			System.out.println(text + ".");
-		} else if (verbose) {
-			System.out.println(text + ": " + ac);
-		}
-		if (minCount < 0 || minCount > count) {
-			minCount = count;
+		if (checkAllServers) {
+			String text = "Found on " + count + " nanopub server" + (count!=1?"s":"");
+			if (!recursive) {
+				System.out.println(text + ".");
+			} else if (verbose) {
+				System.out.println(text + ": " + ac);
+			}
+			if (minCount < 0 || minCount > count) {
+				minCount = count;
+			}
 		}
 		if (nanopub != null) {
 			if (checkIndexContent) {
