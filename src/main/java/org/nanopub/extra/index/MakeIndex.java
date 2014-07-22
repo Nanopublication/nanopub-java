@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
@@ -34,6 +35,9 @@ public class MakeIndex {
 
 	@com.beust.jcommander.Parameter(names = "-c", description = "Creator of index")
 	private List<String> iCreators = new ArrayList<>();
+
+	@com.beust.jcommander.Parameter(names = "-s", description = "Add index nanopubs as sub-indexes (instead of elements)")
+	private boolean useSubindexes = false;
 
 	public static void main(String[] args) throws IOException {
 		MakeIndex obj = new MakeIndex();
@@ -105,7 +109,15 @@ public class MakeIndex {
 			MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
 				@Override
 				public void handleNanopub(Nanopub np) {
-					indexCreator.addElement(np);
+					if (useSubindexes && IndexUtils.isIndex(np)) {
+						try {
+							indexCreator.addSubIndex(IndexUtils.castToIndex(np));
+						} catch (MalformedNanopubException ex) {
+							throw new RuntimeException(ex);
+						}
+					} else {
+						indexCreator.addElement(np);
+					}
 				}
 			});
 		}
