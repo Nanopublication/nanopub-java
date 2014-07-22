@@ -34,8 +34,8 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(names = "-f", description = "Format of the nanopub: trig, nq, trix, ...")
 	private String format = "trig";
 
-	@com.beust.jcommander.Parameter(names = "-d", description = "Save as file(s) in the given directory")
-	private File outputDir;
+	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+	private File outputFile;
 
 	@com.beust.jcommander.Parameter(names = "-i", description = "Retrieve the index for the given index nanopub")
 	private boolean getIndex;
@@ -59,6 +59,9 @@ public class GetNanopub {
 			System.exit(1);
 		}
 	}
+
+	private OutputStream outputStream = null;
+	private int count;
 
 	public static Nanopub get(String uriOrArtifactCode) {
 		ServerIterator serverIterator = new ServerIterator();
@@ -116,6 +119,9 @@ public class GetNanopub {
 
 	private void run() throws IOException, RDFHandlerException, MalformedNanopubException {
 		rdfFormat = RDFFormat.forFileName("file." + format);
+		if (outputFile != null) {
+			outputStream = new FileOutputStream(outputFile);
+		}
 		for (String nanopubId : nanopubIds) {
 			Nanopub np = get(nanopubId);
 			if (getIndex || getIndexContent) {
@@ -123,6 +129,10 @@ public class GetNanopub {
 			} else {
 				outputNanopub(nanopubId, np);
 			}
+		}
+		if (outputStream != null) {
+			outputStream.close();
+			System.out.println(count + " nanopubs retrieved and saved in " + outputFile);
 		}
 	}
 
@@ -152,15 +162,17 @@ public class GetNanopub {
 	}
 
 	private void outputNanopub(String nanopubId, Nanopub np) throws IOException, RDFHandlerException {
+		count++;
 		if (np == null) {
 			System.err.println("NOT FOUND: " + nanopubId);
-		} else if (outputDir == null) {
+		} else if (outputStream == null) {
 			NanopubUtils.writeToStream(np, System.out, rdfFormat);
 			System.out.print("\n\n");
 		} else {
-			OutputStream out = new FileOutputStream(new File(outputDir, getArtifactCode(nanopubId) + "." + format));
-			NanopubUtils.writeToStream(np, out, rdfFormat);
-			out.close();
+			NanopubUtils.writeToStream(np, outputStream, rdfFormat);
+			if (count % 100 == 0) {
+				System.out.print(count + " nanopubs...\r");
+			}
 		}
 	}
 
