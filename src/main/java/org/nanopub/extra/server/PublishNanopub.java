@@ -91,7 +91,6 @@ public class PublishNanopub {
 					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
 						@Override
 						public void handleNanopub(Nanopub np) {
-							count++;
 							if (failed) return;
 							processNanopub(np);
 						}
