@@ -178,7 +178,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private HttpResponse getNanopub(URL url) throws IOException {
 		HttpGet get = new HttpGet(url.toString());
-		get.setHeader("Accept", "application/trig, text/x-nquads, application/trix");
+		get.setHeader("Accept", "application/trig; q=1, application/x-trig; q=1, text/x-nquads; q=0.1, application/trix; q=0.1");
 		HttpResponse response = HttpClientBuilder.create().build().execute(get);
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == 404 || statusCode == 410) {
