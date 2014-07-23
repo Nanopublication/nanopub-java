@@ -196,18 +196,21 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		init();
 	}
 
-	public NanopubImpl(InputStream in, RDFFormat format)
-			throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, OpenRDFException, IOException {
 		this(in, format, "");
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format, String baseUri)
-			throws MalformedNanopubException, OpenRDFException, IOException {
-		this(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
+	public NanopubImpl(String utf8, RDFFormat format, String baseUri) throws MalformedNanopubException, OpenRDFException {
+		try {
+			readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
+		} catch (IOException ex) {
+			// We do not expect an IOException here (no file system IO taking place)
+			throw new RuntimeException("Unexptected IOException", ex);
+		}
+		init();
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format)
-			throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, OpenRDFException {
 		this(utf8, format, "");
 	}
 
