@@ -135,6 +135,10 @@ public class PublishNanopub {
 				System.out.print(count + " nanopubs...\r");
 			}
 		} catch (IOException ex) {
+			if (verbose) {
+				System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
+				System.out.println("---");
+			}
 			failed = true;
 		}
 	}
@@ -148,10 +152,18 @@ public class PublishNanopub {
 			}
 			serverUrl = serverIterator.next();
 		}
+		String ac = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+		if (verbose) {
+			System.out.println("---");
+			System.out.println("Trying to publish nanopub: " + ac);
+		}
 		while (serverUrl != null) {
 			if (!ServerInfo.load(serverUrl).isPostNanopubsEnabled()) {
 				serverUrl = serverIterator.next();
 				continue;
+			}
+			if (verbose) {
+				System.out.println("Trying server: " + serverUrl);
 			}
 			try {
 				HttpPost post = new HttpPost(serverUrl);
@@ -167,14 +179,22 @@ public class PublishNanopub {
 						usedServers.put(serverUrl, 1);
 					}
 					if (verbose) {
-						System.out.println("Published: " + TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
+						System.out.println("Published: " + ac);
 					}
 					return;
+				} else {
+					if (verbose) {
+						System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
+					}
 				}
 			} catch (IOException ex) {
-				// ignore
+				if (verbose) {
+					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
+				}
 			} catch (OpenRDFException ex) {
-				// ignore
+				if (verbose) {
+					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
+				}
 			}
 			serverUrl = serverIterator.next();
 		}
