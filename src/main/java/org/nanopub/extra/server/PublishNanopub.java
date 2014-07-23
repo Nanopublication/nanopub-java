@@ -128,9 +128,9 @@ public class PublishNanopub {
 	}
 
 	private void processNanopub(Nanopub nanopub) {
+		count++;
 		try {
 			publishNanopub(nanopub);
-			count++;
 			if (count % 100 == 0) {
 				System.out.print(count + " nanopubs...\r");
 			}
