@@ -3,6 +3,8 @@ package org.nanopub.extra.server;
 import java.io.IOException;
 import java.util.List;
 
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
@@ -28,7 +30,7 @@ public class GetServerInfo {
 		}
 	}
 
-	private void run() throws IOException {
+	private void run() throws ServerInfoException, IOException {
 		for (String url : serverUrls) {
 			ServerInfo si = ServerInfo.load(url);
 			System.out.println("Server URL:    " + si.getPublicUrl());

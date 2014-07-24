@@ -16,6 +16,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
@@ -158,7 +159,12 @@ public class PublishNanopub {
 			System.out.println("Trying to publish nanopub: " + ac);
 		}
 		while (serverUrl != null) {
-			if (!ServerInfo.load(serverUrl).isPostNanopubsEnabled()) {
+			try {
+				if (!ServerInfo.load(serverUrl).isPostNanopubsEnabled()) {
+					serverUrl = serverIterator.next();
+					continue;
+				}
+			} catch (ServerInfoException ex) {
 				serverUrl = serverIterator.next();
 				continue;
 			}

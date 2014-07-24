@@ -1,6 +1,5 @@
 package org.nanopub.extra.server;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -11,11 +10,34 @@ import com.google.gson.Gson;
 
 public class ServerInfo {
 
-	public static ServerInfo load(String serverUrl) throws IOException {
+	public static class ServerInfoException extends Exception {
+
+		private static final long serialVersionUID = 3903673740899289181L;
+
+		public ServerInfoException(String serverUrl) {
+			super(serverUrl);
+		}
+
+	}
+
+	public static ServerInfo load(String serverUrl) throws ServerInfoException {
+		return load(serverUrl, ServerInfo.class);
+	}
+
+	protected static ServerInfo load(String serverUrl, Class<? extends ServerInfo> serverInfoClass) throws ServerInfoException {
 		HttpGet get = new HttpGet(serverUrl);
 		get.setHeader("Accept", "application/json");
-	    InputStream in = HttpClientBuilder.create().build().execute(get).getEntity().getContent();
-		return new Gson().fromJson(new InputStreamReader(in), ServerInfo.class);
+		ServerInfo si = null;
+		try {
+		    InputStream in = HttpClientBuilder.create().build().execute(get).getEntity().getContent();
+			si = new Gson().fromJson(new InputStreamReader(in), serverInfoClass);
+		} catch (Exception ex) {
+			throw new ServerInfoException(serverUrl);
+		}
+		if (!si.getPublicUrl().equals(serverUrl)) {
+			throw new ServerInfoException("Server URL does not match its declared public URL");
+		}
+		return si;
 	}
 
 	protected String publicUrl;
