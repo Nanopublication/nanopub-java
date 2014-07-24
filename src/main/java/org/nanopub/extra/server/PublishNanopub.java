@@ -168,7 +168,7 @@ public class PublishNanopub {
 			try {
 				HttpPost post = new HttpPost(serverUrl);
 				String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
-				post.setEntity(new StringEntity(nanopubString));
+				post.setEntity(new StringEntity(nanopubString, "UTF-8"));
 				post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
 				HttpResponse response = HttpClientBuilder.create().build().execute(post);
 				int code = response.getStatusLine().getStatusCode();

@@ -54,8 +54,7 @@ public class NanopubUtils {
 		propagateToHandler(nanopub, writer);
 	}
 
-	public static String writeToString(Nanopub nanopub, RDFFormat format)
-			throws RDFHandlerException {
+	public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException {
 		StringWriter sw = new StringWriter();
 		RDFWriter writer = Rio.createWriter(format, sw);
 		propagateToHandler(nanopub, writer);
