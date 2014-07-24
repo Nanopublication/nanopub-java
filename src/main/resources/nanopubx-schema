@@ -1,0 +1,165 @@
+# Nanopub-X: Experimental Extensions of the Nanopublication Model
+# ===============================================================
+#
+# This model defines inofficial experimental extensions to the standard
+# nanopublication schema. These definitions may change.
+
+@prefix npx: <http://purl.org/nanopub/x/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+
+
+# Example Nanopubs
+# ----------------
+#
+# Example nanopubs are created and published for testing. Their content should
+# not be taken seriously.
+
+npx:ExampleNanopub rdfs:subClassOf np:Nanopublication .
+
+
+# Meta-Nanopublications
+# ---------------------
+
+npx:MetaNanopub rdfs:subClassOf np:Nanopublication .
+
+
+# Indexes
+# -------
+
+npx:NanopubIndex rdfs:subClassOf npx:MetaNanopub .
+npx:IncompleteIndex rdfs:subClassOf np:Nanopublication .
+npx:IndexAssertion rdfs:subClassOf np:Assertion .
+
+npx:includesElement rdf:type rdf:Property .
+npx:includesElement rdfs:domain npx:NanopubIndex .
+npx:includesElement rdfs:range np:Nanopublication .
+
+npx:includesSubindex rdf:type rdf:Property .
+npx:includesSubindex rdfs:domain npx:NanopubIndex .
+npx:includesSubindex rdfs:range npx:NanopubIndex .
+
+npx:appendsIndex rdf:type owl:FunctionalProperty .
+npx:appendsIndex rdfs:domain npx:NanopubIndex .
+npx:appendsIndex rdfs:range npx:NanopubIndex .
+
+
+# Semi-formal and Informal Statements
+# -----------------------------------
+
+npx:Statement rdf:type rdfs:Class .
+npx:Formula rdfs:subClassOf npx:Statement .
+npx:Formula rdfs:subClassOf rdfg:Graph .
+npx:Sentence rdfs:subClassOf npx:Statement .
+npx:AIDA-Sentence rdfs:subClassOf npx:Sentence .
+
+npx:asFormula rdf:type rdf:Property .
+npx:asFormula rdfs:domain np:Assertion .
+npx:asFormula rdfs:range npx:Formula .
+
+npx:asSentence rdf:type rdf:Property .
+npx:asSentence rdfs:domain np:Assertion .
+npx:asSentence rdfs:range npx:Sentence .
+
+npx:UnderspecifiedAssertion rdfs:subClassOf np:Assertion .
+
+
+# Relations among Statements
+# --------------------------
+
+npx:hasInconsistentMeaning rdfs:subClassOf npx:Statement .
+
+npx:hasTautologicalMeaning rdfs:subClassOf npx:Statement .
+
+npx:hasSameMeaning rdf:type rdf:Property .
+npx:hasSameMeaning rdfs:domain npx:Statement .
+npx:hasSameMeaning rdfs:range npx:Statement .
+
+npx:hasDifferentMeaning rdf:type rdf:Property .
+npx:hasDifferentMeaning rdfs:domain npx:Statement .
+npx:hasDifferentMeaning rdfs:range npx:Statement .
+
+npx:hasOppositeMeaning rdf:type rdf:Property .
+npx:hasOppositeMeaning rdfs:domain npx:Statement .
+npx:hasOppositeMeaning rdfs:range npx:Statement .
+
+npx:hasNonoppositeMeaning rdf:type rdf:Property .
+npx:hasNonoppositeMeaning rdfs:domain npx:Statement .
+npx:hasNonoppositeMeaning rdfs:range npx:Statement .
+
+npx:hasConflictingMeaning rdf:type rdf:Property .
+npx:hasConflictingMeaning rdfs:domain npx:Statement .
+npx:hasConflictingMeaning rdfs:range npx:Statement .
+
+npx:hasConsistentMeaning rdf:type rdf:Property .
+npx:hasConsistentMeaning rdfs:domain npx:Statement .
+npx:hasConsistentMeaning rdfs:range npx:Statement .
+
+npx:hasMoreGeneralMeaningThan rdf:type rdf:Property .
+npx:hasMoreGeneralMeaningThan rdfs:domain npx:Statement .
+npx:hasMoreGeneralMeaningThan rdfs:range npx:Statement .
+
+npx:hasMoreSpecificMeaningThan rdf:type rdf:Property .
+npx:hasMoreSpecificMeaningThan rdfs:domain npx:Statement .
+npx:hasMoreSpecificMeaningThan rdfs:range npx:Statement .
+
+npx:hasRelatedMeaning rdf:type rdf:Property .
+npx:hasRelatedMeaning rdfs:domain npx:Statement .
+npx:hasRelatedMeaning rdfs:range npx:Statement .
+
+npx:hasUnrelatedMeaning rdf:type rdf:Property .
+npx:hasUnrelatedMeaning rdfs:domain npx:Statement .
+npx:hasUnrelatedMeaning rdfs:range npx:Statement .
+
+npx:isImprovedVersionOf rdfs:subPropertyOf npx:hasSameMeaning .
+npx:isImprovedVersionOf rdfs:domain npx:Statement .
+npx:isImprovedVersionOf rdfs:range npx:Statement .
+
+
+# Opinions
+# --------
+
+npx:Opinion rdf:type rdfs:Class .
+npx:Agreement rdfs:subClassOf npx:Opinion .
+npx:Disagreement rdfs:subClassOf npx:Opinion .
+npx:NullOpinion rdfs:subClassOf npx:Opinion .
+
+npx:Agreement owl:disjointWith npx:NullOpinion .
+npx:Agreement owl:disjointWith npx:Disagreement .
+npx:Disagreement owl:disjointWith npx:NullOpinion .
+
+npx:hasOpinion rdf:type owl:InverseFunctionalProperty .
+npx:hasOpinion rdfs:domain foaf:Agent .
+npx:hasOpinion rdfs:range npx:Opinion .
+
+npx:opinionOn rdf:type owl:FunctionalProperty .
+npx:opinionOn rdfs:domain npx:Opinion .
+npx:opinionOn rdfs:range npx:Statement .
+
+
+# Introductions
+# -------------
+#
+# Introduction nanopubs are meta-nanopublications introducing a new object or
+# agent.
+
+npx:IntroNanopub rdfs:subClassOf np:Nanopublication .
+
+npx:introduces rdf:type owl:FunctionalProperty .
+npx:introduces rdfs:domain npx:IntroNanopub .
+npx:introduces rdfs:range owl:Thing .
+
+
+# Bots
+# ----
+
+npx:Bot rdfs:subClassOf foaf:Agent .
+
+npx:commands rdf:type rdf:Property .
+npx:commands rdfs:domain foaf:Agent .
+npx:commands rdfs:range npx:Bot .
