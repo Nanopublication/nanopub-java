@@ -70,6 +70,7 @@ public class PublishNanopub {
 	private int count;
 	private boolean failed;
 	private SPARQLRepository sparqlRepo;
+	private String artifactCode;
 
 	public PublishNanopub() {
 	}
@@ -153,10 +154,10 @@ public class PublishNanopub {
 			}
 			serverUrl = serverIterator.next();
 		}
-		String ac = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+		artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 		if (verbose) {
 			System.out.println("---");
-			System.out.println("Trying to publish nanopub: " + ac);
+			System.out.println("Trying to publish nanopub: " + artifactCode);
 		}
 		while (serverUrl != null) {
 			try {
@@ -185,7 +186,7 @@ public class PublishNanopub {
 						usedServers.put(serverUrl, 1);
 					}
 					if (verbose) {
-						System.out.println("Published: " + ac);
+						System.out.println("Published: " + artifactCode);
 					}
 					return;
 				} else {
@@ -204,7 +205,19 @@ public class PublishNanopub {
 			}
 			serverUrl = serverIterator.next();
 		}
+		serverUrl = null;
 		throw new IOException("Failed to publish the nanopub");
+	}
+
+	public String getUsedServerUrl() {
+		return serverUrl;
+	}
+
+	public String getPublishedNanopubUrl() {
+		if (serverUrl == null || artifactCode == null) {
+			return null;
+		}
+		return serverUrl + artifactCode;
 	}
 
 }
