@@ -19,8 +19,20 @@ import com.beust.jcommander.ParameterException;
 
 public class MakeIndex {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
+	@com.beust.jcommander.Parameter(description = "input-nanopub-files")
 	private List<File> inputFiles = new ArrayList<File>();
+
+	@com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
+			"as sub-indexes (instead of elements)")
+	private boolean useSubindexes = false;
+
+	@com.beust.jcommander.Parameter(names = "-e", description = "Add given URIs as elements " +
+			"(in addition to the ones from the input files)")
+	private List<String> elements = new ArrayList<>();
+
+	@com.beust.jcommander.Parameter(names = "-s", description = "Add given URIs as sub indexes " +
+			"(in addition to the ones from the input files, if given)")
+	private List<String> subindexes = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile = new File("index.trig");
@@ -39,9 +51,6 @@ public class MakeIndex {
 
 	@com.beust.jcommander.Parameter(names = "-a", description = "'See also' resources")
 	private List<String> seeAlso = new ArrayList<>();
-
-	@com.beust.jcommander.Parameter(names = "-s", description = "Add index nanopubs as sub-indexes (instead of elements)")
-	private boolean useSubindexes = false;
 
 	public static void main(String[] args) throws IOException {
 		MakeIndex obj = new MakeIndex();
@@ -133,6 +142,12 @@ public class MakeIndex {
 					}
 				}
 			});
+		}
+		for (String e : elements) {
+			indexCreator.addElement(new URIImpl(e));
+		}
+		for (String s : subindexes) {
+			indexCreator.addSubIndex(new URIImpl(s));
 		}
 		indexCreator.finalizeNanopub();
 		writer.close();
