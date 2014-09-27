@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
 
 import sun.misc.BASE64Encoder;
 
@@ -14,7 +15,7 @@ import com.beust.jcommander.ParameterException;
 public class MakeKeys {
 
 	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name of key files")
-	private String keyFilename = "~/.nanopub/id_rsa";
+	private String keyFilename = "~/.nanopub/id_dsa";
 
 	public static void main(String[] args) throws IOException {
 		MakeKeys obj = new MakeKeys();
@@ -61,8 +62,9 @@ public class MakeKeys {
 		privateKeyFile.setWritable(true, true);
 
 		// Creating and writing keys
-		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-		keyPairGenerator.initialize(1024);
+		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA", "SUN");
+		SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+		keyPairGenerator.initialize(1024, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
 		BASE64Encoder encoder = new BASE64Encoder();
 		FileOutputStream outPublic = new FileOutputStream(publicKeyFile);
