@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
@@ -59,10 +60,14 @@ public class MakeTrustyNanopub {
 			MalformedNanopubException, TrustyUriException {
 		for (File inputFile : inputNanopubs) {
 			File outFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
-			final OutputStream out = new FileOutputStream(outFile);
+			final OutputStream out;
+			if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
+				out = new GZIPOutputStream(new FileOutputStream(outFile));
+			} else {
+				out = new FileOutputStream(outFile);
+			}
 			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-			InputStream in = new FileInputStream(inputFile);
-			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
+			MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
 
 				@Override
 				public void handleNanopub(Nanopub np) {

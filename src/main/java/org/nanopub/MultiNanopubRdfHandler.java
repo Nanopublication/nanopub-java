@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -33,6 +34,28 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		process(format, in, null, npHandler);
+	}
+
+	public static void process(RDFFormat format, File file, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		InputStream in;
+		if (file.getName().matches(".*\\.(gz|gzip)")) {
+			in = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)));
+		} else {
+			in = new BufferedInputStream(new FileInputStream(file));
+		}
+		process(format, in, file, npHandler);
+	}
+
+	public static void process(File file, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		RDFFormat format = RDFFormat.forFileName(file.getName(), RDFFormat.TRIG);
+		process(format, file, npHandler);
+	}
+
+	private static void process(RDFFormat format, InputStream in, File file, NanopubHandler npHandler)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		RDFParser p = NanopubUtils.getParser(format);
 		p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
 		try {
@@ -45,18 +68,6 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		} finally {
 			in.close();
 		}
-	}
-
-	public static void process(RDFFormat format, File file, NanopubHandler npHandler)
-			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		InputStream in = new BufferedInputStream(new FileInputStream(file));
-		process(format, in, npHandler);
-	}
-
-	public static void process(File file, NanopubHandler npHandler)
-			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		RDFFormat format = RDFFormat.forFileName(file.getName(), RDFFormat.TRIG);
-		process(format, file, npHandler);
 	}
 
 	private NanopubHandler npHandler;

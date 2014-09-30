@@ -67,12 +67,22 @@ public class MakeKeys {
 		keyPairGenerator.initialize(1024, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
 		BASE64Encoder encoder = new BASE64Encoder();
+		
 		FileOutputStream outPublic = new FileOutputStream(publicKeyFile);
 		outPublic.write((encoder.encode(keyPair.getPublic().getEncoded()) + "\n").getBytes());
 		outPublic.close();
 		FileOutputStream outPrivate = new FileOutputStream(privateKeyFile);
 		outPrivate.write((encoder.encode(keyPair.getPrivate().getEncoded()) + "\n").getBytes());
 		outPrivate.close();
+
+//		BASE64Decoder decoder = new BASE64Decoder();
+//		byte[] keybytes = decoder.decodeBuffer(new FileInputStream(privateKeyFile));
+//		KeySpec privateSpec = new PKCS8EncodedKeySpec(keybytes);
+//		KeyFactory kf = KeyFactory.getInstance("DSA");
+//		PrivateKey privateKey = kf.generatePrivate(privateSpec);
+//		Signature dsa = Signature.getInstance("SHA1withDSA", "SUN");
+//		dsa.initSign(privateKey);
+//		// ...
 	}
 
 }
