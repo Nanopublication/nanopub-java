@@ -2,13 +2,16 @@ package org.nanopub.extra.server;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.gson.Gson;
 
-public class ServerInfo {
+public class ServerInfo implements Serializable {
+
+	private static final long serialVersionUID = 5893051633759794791L;
 
 	public static class ServerInfoException extends Exception {
 
