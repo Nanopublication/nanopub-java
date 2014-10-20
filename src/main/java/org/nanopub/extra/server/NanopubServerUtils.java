@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -34,7 +35,12 @@ public class NanopubServerUtils {
 		List<String> list = new ArrayList<String>();
 		HttpGet get = new HttpGet(url);
 		get.setHeader("Content-Type", "text/plain");
-		InputStream in = HttpClientBuilder.create().build().execute(get).getEntity().getContent();
+		CloseableHttpResponse resp = HttpClientBuilder.create().build().execute(get);
+		int code = resp.getStatusLine().getStatusCode();
+		if (code < 200 || code > 299) {
+			throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
+		}
+		InputStream in = resp.getEntity().getContent();
 	    BufferedReader r = new BufferedReader(new InputStreamReader(in));
 	    String line = null;
 	    while ((line = r.readLine()) != null) {
