@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfModule;
@@ -31,8 +32,8 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(description = "nanopub-uris-or-artifact-codes", required = true)
 	private List<String> nanopubIds;
 
-	@com.beust.jcommander.Parameter(names = "-f", description = "Format of the nanopub: trig, nq, trix, ...")
-	private String format = "trig";
+	@com.beust.jcommander.Parameter(names = "-f", description = "Format of the nanopub: trig, nq, trix, trig.gz, ...")
+	private String format;
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -118,9 +119,18 @@ public class GetNanopub {
 	}
 
 	private void run() throws IOException, RDFHandlerException, MalformedNanopubException {
-		rdfFormat = RDFFormat.forFileName("file." + format);
-		if (outputFile != null) {
-			outputStream = new FileOutputStream(outputFile);
+		if (outputFile == null) {
+			if (format == null) {
+				format = "trig";
+			}
+			rdfFormat = RDFFormat.forFileName("file." + format);
+		} else {
+			rdfFormat = RDFFormat.forFileName(outputFile.getName());
+			if (outputFile.getName().endsWith(".gz")) {
+				outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+			} else {
+				outputStream = new FileOutputStream(outputFile);
+			}
 		}
 		for (String nanopubId : nanopubIds) {
 			Nanopub np = get(nanopubId);

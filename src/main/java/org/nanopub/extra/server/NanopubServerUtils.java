@@ -55,6 +55,7 @@ public class NanopubServerUtils {
 	static {
 		// Hard-coded server instances:
 		bootstrapServerList.add("http://np.inn.ac/");
+		bootstrapServerList.add("http://nanopub-server.ops.labs.vu.nl/");
 		// more to come...
 	}
 
