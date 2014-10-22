@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -12,6 +14,10 @@ import com.google.gson.Gson;
 public class ServerInfo implements Serializable {
 
 	private static final long serialVersionUID = 5893051633759794791L;
+
+	static {
+		
+	}
 
 	public static class ServerInfoException extends Exception {
 
@@ -32,7 +38,9 @@ public class ServerInfo implements Serializable {
 		get.setHeader("Accept", "application/json");
 		ServerInfo si = null;
 		try {
-		    InputStream in = HttpClientBuilder.create().build().execute(get).getEntity().getContent();
+			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5 * 1000).build();
+			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+		    InputStream in = c.execute(get).getEntity().getContent();
 			si = new Gson().fromJson(new InputStreamReader(in), serverInfoClass);
 		} catch (Exception ex) {
 			throw new ServerInfoException(serverUrl);
