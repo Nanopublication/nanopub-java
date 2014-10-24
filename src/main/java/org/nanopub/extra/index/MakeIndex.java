@@ -1,10 +1,13 @@
 package org.nanopub.extra.index;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
@@ -70,7 +73,7 @@ public class MakeIndex {
 	}
 
 	private SimpleIndexCreator indexCreator;
-	private FileWriter writer;
+	private OutputStreamWriter writer;
 	private RDFFormat outFormat;
 	private int count;
 
@@ -80,7 +83,11 @@ public class MakeIndex {
 	private void init() throws IOException {
 		count = 0;
 		outFormat = RDFFormat.forFileName(outputFile.getName());
-		writer = new FileWriter(outputFile);
+		if (outputFile.getName().endsWith(".gz")) {
+			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)));
+		} else {
+			writer = new FileWriter(outputFile);
+		}
 
 		indexCreator = new SimpleIndexCreator() {
 
