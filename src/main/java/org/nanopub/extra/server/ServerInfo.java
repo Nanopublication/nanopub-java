@@ -15,10 +15,6 @@ public class ServerInfo implements Serializable {
 
 	private static final long serialVersionUID = 5893051633759794791L;
 
-	static {
-		
-	}
-
 	public static class ServerInfoException extends Exception {
 
 		private static final long serialVersionUID = 3903673740899289181L;
@@ -53,6 +49,8 @@ public class ServerInfo implements Serializable {
 
 	protected String publicUrl;
 	protected String admin;
+	protected String protocolVersion = NanopubServerUtils.protocolVersion;
+	protected String description;
 	protected boolean postNanopubsEnabled;
 	protected boolean postPeersEnabled;
 
@@ -89,6 +87,14 @@ public class ServerInfo implements Serializable {
 
 	public long getJournalId() {
 		return journalId;
+	}
+
+	public String getProtocolVersion() {
+		return protocolVersion;
+	}
+
+	public String getDescription() {
+		return description;
 	}
 
 	public String asJson() {

@@ -13,6 +13,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class NanopubServerUtils {
 
+	public static final String protocolVersion = "0.1";
+
 	private NanopubServerUtils() {}  // no instances allowed
 
 	public static List<String> loadPeerList(String serverUrl) throws IOException {
@@ -55,7 +57,6 @@ public class NanopubServerUtils {
 	static {
 		// Hard-coded server instances:
 		bootstrapServerList.add("http://np.inn.ac/");
-		bootstrapServerList.add("http://nanopub-server.ops.labs.vu.nl/");
 		// more to come...
 	}
 
