@@ -57,7 +57,8 @@ public class NanopubServerUtils {
 	static {
 		// Hard-coded server instances:
 		bootstrapServerList.add("http://np.inn.ac/");
-		// more to come...
+		bootstrapServerList.add("http://s1.semanticscience.org:8080/nanopub-server/");
+		bootstrapServerList.add("http://ristretto.med.yale.edu:8080/nanopub-server/");
 	}
 
 	public static List<String> getBootstrapServerList() {
