@@ -163,3 +163,27 @@ npx:Bot rdfs:subClassOf foaf:Agent .
 npx:commands rdf:type rdf:Property .
 npx:commands rdfs:domain foaf:Agent .
 npx:commands rdfs:range npx:Bot .
+
+
+# Signatures
+# ----------
+
+npx:NanopubSignatureElement rdf:type rdfs:Class .
+
+npx:hasSignatureElement rdf:type rdf:Property .
+npx:hasSignatureElement rdf:type owl:InverseFunctionalProperty .
+npx:hasSignatureElement rdfs:domain np:Nanopublication .
+npx:hasSignatureElement rdfs:range npx:NanopubSignatureElement .
+
+npx:hasPublicKey rdf:type owl:DatatypeProperty .
+npx:hasPublicKey rdf:type owl:FunctionalProperty .
+npx:hasPublicKey rdfs:domain npx:NanopubSignatureElement .
+npx:hasPublicKey rdfs:range xsd:string .
+
+npx:hasSignature rdf:type owl:DatatypeProperty .
+npx:hasSignature rdf:type owl:FunctionalProperty .
+npx:hasSignature rdfs:domain npx:NanopubSignatureElement .
+
+npx:signedBy rdf:type rdf:Property .
+npx:signedBy rdfs:domain npx:NanopubSignatureElement .
+npx:signedBy rdfs:range foaf:Agent .
