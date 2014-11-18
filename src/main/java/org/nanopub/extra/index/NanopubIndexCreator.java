@@ -74,15 +74,59 @@ public abstract class NanopubIndexCreator {
 		return completeIndexUri;
 	}
 
+	/**
+	 * This method should return the base URI of the nanopublication index. This should ideally
+	 * be the URL of a nanopub server, such as http://np.inn.ac/, which makes the resulting
+	 * trusty URIs resolvable.
+	 *
+	 * @return The base URI as a string.
+	 */
 	public abstract String getBaseUri();
 
+	/**
+	 * This method gives access to the creation of "incomplete" index nanopublications before they
+	 * are finalized (and thereby made immutable). This method is useful to add publication info
+	 * and provenance triples. Incomplete indexes are the ones that are appended by other indexes,
+	 * and for that reason do not stand for a meaningful set on their own. Provenance and
+	 * publication information is less important for incomplete indexes than for complete ones,
+	 * and this method can also be ignored completely (i.e. left empty).
+	 *
+	 * @param npCreator Access to a partially created incomplete nanopublication in the form of
+	 *     a NanopubCreator object.
+	 */
 	public abstract void enrichIncompleteIndex(NanopubCreator npCreator);
 
+	/**
+	 * This method gives access to the creation of the "complete" index nanopublications before it
+	 * is finalized (and thereby made immutable). This method is useful to add publication info
+	 * and provenance triples. Complete indexes are the ones that stand for a meaningful set on
+	 * their own and are typically not appended by other indexes. As the nanopublications
+	 * themselves have their own provenance and publication information, it can be sufficient
+	 * give only minimal additional information here.
+	 *
+	 * @param npCreator Access to the partially created complete nanopublication in the form of
+	 *     a NanopubCreator object.
+	 */
 	public abstract void enrichCompleteIndex(NanopubCreator npCreator);
 
-	public abstract void handleIncompleteIndex(NanopubIndex npc);
+	/**
+	 * With this method, newly created "incomplete" nanopublication indexes are announced.
+	 * Incomplete indexes are appended by other (incomplete or complete) indexes. This method
+	 * can forward them or write them to a file.
+	 *
+	 * @param npi The newly created incomplete nanopublication index.
+	 */
+	public abstract void handleIncompleteIndex(NanopubIndex npi);
 
-	public abstract void handleCompleteIndex(NanopubIndex npc);
+	/**
+	 * With this method, the newly created "complete" nanopublication indexe is announced.
+	 * This complete index is the final one standing for the entire set. This method can forward
+	 * it or write it to a file. Note that all incomplete indexes need to be available in order
+	 * to make sense of a complete index.
+	 *
+	 * @param npi The newly created complete nanopublication index.
+	 */
+	public abstract void handleCompleteIndex(NanopubIndex npi);
 
 	private void newNpCreator() {
 		// Finalize existing index nanopub:
