@@ -2,7 +2,7 @@ package org.nanopub.extra.security;
 
 import static org.nanopub.extra.security.NanopubSignature.HAS_PUBLIC_KEY;
 import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE;
-import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE_ELEMENT_URI;
+import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE_ELEMENT;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -156,7 +156,7 @@ public class SignNanopub {
 			content = RdfPreprocessor.run(content, nanopub.getUri());
 
 			RdfFileContent contentWithoutSignature = new RdfFileContent(RDFFormat.TRIG);
-			content.propagate(new SignatureRemover(contentWithoutSignature));
+			content.propagate(new SignatureRemover(contentWithoutSignature, nanopub.getPubinfoUri()));
 			MessageDigest digest = RdfHasher.digest(contentWithoutSignature.getStatements());
 			dsa.update(digest.digest());
 			byte[] signatureBytes = dsa.sign();
@@ -169,7 +169,7 @@ public class SignNanopub {
 			signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
 			URI npUri = nanopub.getUri();
 			URI piUri = nanopub.getPubinfoUri();
-			signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT_URI, signatureElUri, piUri));
+			signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
 			String publicKeyString = encoder.encode(key.getPublic().getEncoded()).replaceAll("\\s", "");
 			Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
 			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
