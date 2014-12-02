@@ -22,7 +22,7 @@ import com.beust.jcommander.ParameterException;
 
 public class MakeIndex {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopub-files")
+	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
 	private List<File> inputFiles = new ArrayList<File>();
 
 	@com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
