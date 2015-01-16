@@ -369,7 +369,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			if (nanopubUri.equals(st.getSubject())) return;
 			if (nanopubUri.equals(st.getObject())) return;
 		}
-		throw new MalformedNanopubException("Provenance does not refer to assertion");
+		throw new MalformedNanopubException("Publication info does not refer to nanopublication URI");
 	}
 
 	@Override
