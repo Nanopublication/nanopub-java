@@ -102,8 +102,10 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
 
-	public NanopubImpl(Repository repo, URI nanopubUri)
+	public NanopubImpl(Repository repo, URI nanopubUri, List<String> nsPrefixes, Map<String,String> ns)
 			throws MalformedNanopubException, RepositoryException {
+		if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);
+		if (ns != null) this.ns.putAll(ns);
 		try {
 			RepositoryConnection connection = repo.getConnection();
 			try {
@@ -132,6 +134,11 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			ex.printStackTrace();
 		}
 		init();
+	}
+
+	public NanopubImpl(Repository repo, URI nanopubUri)
+			throws MalformedNanopubException, RepositoryException {
+		this(repo, nanopubUri, null, null);
 	}
 
 	public NanopubImpl(File file, RDFFormat format)
