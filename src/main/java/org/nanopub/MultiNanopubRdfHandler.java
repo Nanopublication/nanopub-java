@@ -23,6 +23,7 @@ import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 /**
@@ -50,7 +51,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	public static void process(File file, NanopubHandler npHandler)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		RDFFormat format = RDFFormat.forFileName(file.getName(), RDFFormat.TRIG);
+		RDFFormat format = Rio.getParserFormatForFileName(file.getName(), RDFFormat.TRIG);
 		process(format, file, npHandler);
 	}
 

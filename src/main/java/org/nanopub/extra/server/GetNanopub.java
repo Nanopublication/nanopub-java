@@ -23,6 +23,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -123,9 +124,9 @@ public class GetNanopub {
 			if (format == null) {
 				format = "trig";
 			}
-			rdfFormat = RDFFormat.forFileName("file." + format);
+			rdfFormat = Rio.getParserFormatForFileName("file." + format);
 		} else {
-			rdfFormat = RDFFormat.forFileName(outputFile.getName());
+			rdfFormat = Rio.getParserFormatForFileName(outputFile.getName());
 			if (outputFile.getName().endsWith(".gz")) {
 				outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
 			} else {

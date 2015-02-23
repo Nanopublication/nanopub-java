@@ -45,6 +45,7 @@ import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriterRegistry;
+import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import com.google.common.collect.ImmutableSet;
@@ -149,9 +150,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
 		String n = file.getName();
-		RDFFormat format = RDFFormat.forMIMEType(mimeMap.getContentType(n));
+		RDFFormat format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));
 		if (format == null || !format.supportsContexts()) {
-			format = RDFFormat.forFileName(n, RDFFormat.TRIG);
+			format = Rio.getParserFormatForFileName(n, RDFFormat.TRIG);
 		}
 		if (!format.supportsContexts()) {
 			format = RDFFormat.TRIG;
@@ -171,10 +172,10 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		Header contentTypeHeader = response.getFirstHeader("Content-Type");
 		RDFFormat format = RDFFormat.TRIG;
 		if (contentTypeHeader != null) {
-			format = RDFFormat.forMIMEType(contentTypeHeader.getValue());
+			format = Rio.getParserFormatForMIMEType(contentTypeHeader.getValue());
 		}
 		if (format == null || !format.supportsContexts()) {
-			format = RDFFormat.forFileName(url.toString(), RDFFormat.TRIG);
+			format = Rio.getParserFormatForFileName(url.toString(), RDFFormat.TRIG);
 		}
 		if (!format.supportsContexts()) {
 			format = RDFFormat.TRIG;

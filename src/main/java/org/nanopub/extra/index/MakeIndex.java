@@ -16,6 +16,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -86,7 +87,7 @@ public class MakeIndex {
 
 	private void init() throws IOException {
 		count = 0;
-		outFormat = RDFFormat.forFileName(outputFile.getName());
+		outFormat = Rio.getParserFormatForFileName(outputFile.getName());
 		if (outputFile.getName().endsWith(".gz")) {
 			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)));
 		} else {
@@ -134,7 +135,7 @@ public class MakeIndex {
 	private void run() throws Exception {
 		init();
 		for (File f : inputFiles) {
-			RDFFormat format = RDFFormat.forFileName(f.getName());
+			RDFFormat format = Rio.getParserFormatForFileName(f.getName());
 			MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
 				@Override
 				public void handleNanopub(Nanopub np) {
