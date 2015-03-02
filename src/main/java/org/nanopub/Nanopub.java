@@ -44,4 +44,8 @@ public interface Nanopub {
 
 	public Set<URI> getCreators();
 
+	public int getTripleCount();
+
+	public long getByteCount();
+
 }

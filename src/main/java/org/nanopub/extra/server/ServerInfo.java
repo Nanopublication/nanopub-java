@@ -62,8 +62,8 @@ public class ServerInfo implements Serializable {
 	protected long journalId = -1;
 
 	protected Integer maxNanopubTriples;
-	protected Integer maxNanopubBytes;
-	protected Integer maxNanopubs;
+	protected Long maxNanopubBytes;
+	protected Long maxNanopubs;
 
 	public ServerInfo() {
 	}
@@ -112,11 +112,11 @@ public class ServerInfo implements Serializable {
 		return maxNanopubTriples;
 	}
 
-	public Integer getMaxNanopubBytes() {
+	public Long getMaxNanopubBytes() {
 		return maxNanopubBytes;
 	}
 
-	public Integer getMaxNanopubs() {
+	public Long getMaxNanopubs() {
 		return maxNanopubs;
 	}
 

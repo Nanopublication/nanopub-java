@@ -138,6 +138,16 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
+	public int getTripleCount() {
+		return np.getTripleCount();
+	}
+
+	@Override
+	public long getByteCount() {
+		return np.getByteCount();
+	};
+
+	@Override
 	public Set<URI> getElements() {
 		return elementSet;
 	}

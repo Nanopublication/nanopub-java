@@ -76,6 +76,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private Map<String,String> ns = new HashMap<>();
 	private boolean unusedPrefixesRemoved = false;
 
+	private int tripleCount;
+	private long byteCount;
+
 	public NanopubImpl(Collection<Statement> statements, List<String> nsPrefixes, Map<String,String> ns) throws MalformedNanopubException {
 		this.statements.addAll(statements);
 		this.nsPrefixes.addAll(nsPrefixes);
@@ -328,6 +331,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
+		tripleCount = 0;
+		byteCount = 0;
 		Set<Statement> head = new HashSet<>();
 		Set<Statement> assertion = new HashSet<>();
 		Set<Statement> provenance = new HashSet<>();
@@ -345,6 +350,13 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			} else {
 				throw new MalformedNanopubException("Disconnected graph: " + g);
 			}
+			tripleCount++;
+			byteCount += st.getContext().stringValue().length();
+			byteCount += st.getSubject().stringValue().length();
+			byteCount += st.getPredicate().stringValue().length();
+			byteCount += st.getObject().stringValue().length();
+			if (tripleCount < 0) tripleCount = Integer.MAX_VALUE;
+			if (byteCount < 0) byteCount = Long.MAX_VALUE;
 		}
 		this.head = ImmutableSet.copyOf(head);
 		this.assertion = ImmutableSet.copyOf(assertion);
@@ -491,6 +503,16 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			}
 		}
 		unusedPrefixesRemoved = true;
+	}
+
+	@Override
+	public int getTripleCount() {
+		return tripleCount;
+	}
+
+	@Override
+	public long getByteCount() {
+		return byteCount;
 	}
 
 }
