@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+
 public class ServerIterator implements Iterator<String> {
 
 	private List<String> serversToContact = new ArrayList<>();
@@ -14,22 +16,20 @@ public class ServerIterator implements Iterator<String> {
 	private Map<String,Boolean> serversContacted = new HashMap<>();
 	private Map<String,Boolean> serversPeersGot = new HashMap<>();
 	private String next = null;
+	private Map<String,ServerInfo> serverInfos = new HashMap<>();
 
 	public ServerIterator() {
 		serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
-		serversToGetPeers.addAll(NanopubServerUtils.getBootstrapServerList());
 	}
 
 	public ServerIterator(String... bootstrapServers) {
 		for (String s : bootstrapServers) {
 			serversToContact.add(s);
-			serversToGetPeers.add(s);
 		}
 	}
 
 	public ServerIterator(List<String> bootstrapServers) {
 		serversToContact.addAll(bootstrapServers);
-		serversToGetPeers.addAll(bootstrapServers);
 	}
 
 	@Override
@@ -61,6 +61,9 @@ public class ServerIterator implements Iterator<String> {
 				String url = serversToContact.remove(0);
 				if (serversContacted.containsKey(url)) continue;
 				serversContacted.put(url, true);
+				ServerInfo info = getServerInfo(url);
+				if (info == null) continue;
+				serversToGetPeers.add(url);
 				return url;
 			}
 			if (!serversToGetPeers.isEmpty()) {
@@ -82,6 +85,17 @@ public class ServerIterator implements Iterator<String> {
 			}
 		}
 		return null;
+	}
+
+	private ServerInfo getServerInfo(String url) {
+		if (!serverInfos.containsKey(url)) {
+			try {
+				serverInfos.put(url, ServerInfo.load(url));
+			} catch (ServerInfoException ex) {
+				// ignore
+			}
+		}
+		return serverInfos.get(url);
 	}
 
 }

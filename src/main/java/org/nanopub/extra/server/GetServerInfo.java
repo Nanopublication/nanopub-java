@@ -33,14 +33,19 @@ public class GetServerInfo {
 	private void run() throws ServerInfoException, IOException {
 		for (String url : serverUrls) {
 			ServerInfo si = ServerInfo.load(url);
-			System.out.println("Server URL:    " + si.getPublicUrl());
+			System.out.println("Server URL:          " + si.getPublicUrl());
+			System.out.println("Protocol version:    " + si.getProtocolVersion());
+			System.out.println("Description:         " + si.getDescription());
 			String ad = si.getAdmin();
-			System.out.println("Admin:         " + (ad == null || ad.isEmpty() ? "(unknown)" : ad));
-			System.out.println("Journal ID:    " + si.getJournalId());
-			System.out.println("Journal size:  " + si.getNextNanopubNo());
-			System.out.println("Page size:     " + si.getPageSize());
-			System.out.println("Post peers:    " + (si.isPostPeersEnabled() ? "enabled" : "disabled"));
-			System.out.println("Post nanopubs: " + (si.isPostNanopubsEnabled() ? "enabled" : "disabled"));
+			System.out.println("Admin:               " + (ad == null || ad.isEmpty() ? "(unknown)" : ad));
+			System.out.println("Journal ID:          " + si.getJournalId());
+			System.out.println("Page size:           " + si.getPageSize());
+			System.out.println("Post peers:          " + (si.isPostPeersEnabled() ? "enabled" : "disabled"));
+			System.out.println("Post nanopubs:       " + (si.isPostNanopubsEnabled() ? "enabled" : "disabled"));
+			System.out.println("Nanopub count:       " + (si.getNextNanopubNo()-1));
+			System.out.println("Max nanopubs:        " + (si.getMaxNanopubs() == null ? "unrestricted" : si.getMaxNanopubs()));
+			System.out.println("Max triples/nanopub: " + (si.getMaxNanopubTriples() == null ? "unrestricted" : si.getMaxNanopubTriples()));
+			System.out.println("Max bytes/nanopub:   " + (si.getMaxNanopubBytes() == null ? "unrestricted" : si.getMaxNanopubBytes()));
 			System.out.println();
 		}
 	}

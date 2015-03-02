@@ -44,12 +44,15 @@ public class ServerInfo implements Serializable {
 		if (!si.getPublicUrl().equals(serverUrl)) {
 			throw new ServerInfoException("Server URL does not match its declared public URL");
 		}
+		if (si.getProtocolVersionValue() < NanopubServerUtils.requiredProtocolVersionValue) {
+			throw new ServerInfoException("Protocol version of server is too old: " + si.getProtocolVersion());
+		}
 		return si;
 	}
 
 	protected String publicUrl;
 	protected String admin;
-	protected String protocolVersion = NanopubServerUtils.protocolVersion;
+	protected String protocolVersion = "0.0";
 	protected String description;
 	protected boolean postNanopubsEnabled;
 	protected boolean postPeersEnabled;
@@ -57,6 +60,10 @@ public class ServerInfo implements Serializable {
 	protected int pageSize = -1;
 	protected long nextNanopubNo = -1;
 	protected long journalId = -1;
+
+	protected Integer maxNanopubTriples;
+	protected Integer maxNanopubBytes;
+	protected Integer maxNanopubs;
 
 	public ServerInfo() {
 	}
@@ -93,8 +100,24 @@ public class ServerInfo implements Serializable {
 		return protocolVersion;
 	}
 
+	public float getProtocolVersionValue() {
+		return NanopubServerUtils.getVersionValue(protocolVersion);
+	}
+
 	public String getDescription() {
 		return description;
+	}
+
+	public Integer getMaxNanopubTriples() {
+		return maxNanopubTriples;
+	}
+
+	public Integer getMaxNanopubBytes() {
+		return maxNanopubBytes;
+	}
+
+	public Integer getMaxNanopubs() {
+		return maxNanopubs;
 	}
 
 	public String asJson() {
