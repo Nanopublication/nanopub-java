@@ -72,9 +72,9 @@ public class GetNanopub {
 			throw new IllegalArgumentException("Not a trusty URI of type RA");
 		}
 		while (serverIterator.hasNext()) {
-			String serverUrl = serverIterator.next();
+			ServerInfo serverInfo = serverIterator.next();
 			try {
-				Nanopub np = get(ac, serverUrl);
+				Nanopub np = get(ac, serverInfo);
 				if (np != null) {
 					return np;
 				}
@@ -87,6 +87,11 @@ public class GetNanopub {
 			}
 		}
 		return null;
+	}
+
+	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
+			throws IOException, OpenRDFException, MalformedNanopubException {
+		return get(artifactCode, serverInfo.getPublicUrl());
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl)

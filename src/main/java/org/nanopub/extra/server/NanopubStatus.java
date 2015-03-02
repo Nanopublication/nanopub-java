@@ -97,7 +97,8 @@ public class NanopubStatus {
 		ServerIterator serverIterator = new ServerIterator();
 		Nanopub nanopub = null;
 		while (serverIterator.hasNext()) {
-			String serverUrl = serverIterator.next();
+			ServerInfo serverInfo = serverIterator.next();
+			String serverUrl = serverInfo.getPublicUrl();
 			try {
 				Nanopub np = GetNanopub.get(ac, serverUrl);
 				if (np != null) {

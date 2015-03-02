@@ -65,7 +65,7 @@ public class PublishNanopub {
 	}
 
 	private ServerIterator serverIterator = null;
-	private String serverUrl = null;
+	private ServerInfo serverInfo = null;
 	private Map<String,Integer> usedServers = new HashMap<>();
 	private int count;
 	private boolean failed;
@@ -146,27 +146,28 @@ public class PublishNanopub {
 	}
 
 	public void publishNanopub(Nanopub nanopub) throws IOException {
-		if (serverUrl == null) {
+		if (serverInfo == null) {
 			if (serverUrls == null || serverUrls.isEmpty()) {
 				serverIterator = new ServerIterator();
 			} else {
 				serverIterator = new ServerIterator(serverUrls);
 			}
-			serverUrl = serverIterator.next();
+			serverInfo = serverIterator.next();
 		}
 		artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 		if (verbose) {
 			System.out.println("---");
 			System.out.println("Trying to publish nanopub: " + artifactCode);
 		}
-		while (serverUrl != null) {
+		while (serverInfo != null) {
+			String serverUrl = serverInfo.getPublicUrl();
 			try {
 				if (!ServerInfo.load(serverUrl).isPostNanopubsEnabled()) {
-					serverUrl = serverIterator.next();
+					serverInfo = serverIterator.next();
 					continue;
 				}
 			} catch (ServerInfoException ex) {
-				serverUrl = serverIterator.next();
+				serverInfo = serverIterator.next();
 				continue;
 			}
 			if (verbose) {
@@ -203,21 +204,21 @@ public class PublishNanopub {
 					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				}
 			}
-			serverUrl = serverIterator.next();
+			serverInfo = serverIterator.next();
 		}
-		serverUrl = null;
+		serverInfo = null;
 		throw new IOException("Failed to publish the nanopub");
 	}
 
-	public String getUsedServerUrl() {
-		return serverUrl;
+	public ServerInfo getUsedServer() {
+		return serverInfo;
 	}
 
 	public String getPublishedNanopubUrl() {
-		if (serverUrl == null || artifactCode == null) {
+		if (serverInfo == null || artifactCode == null) {
 			return null;
 		}
-		return serverUrl + artifactCode;
+		return serverInfo.getPublicUrl() + artifactCode;
 	}
 
 }

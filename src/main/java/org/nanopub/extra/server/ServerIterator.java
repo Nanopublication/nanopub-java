@@ -9,13 +9,13 @@ import java.util.Map;
 
 import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
-public class ServerIterator implements Iterator<String> {
+public class ServerIterator implements Iterator<ServerInfo> {
 
 	private List<String> serversToContact = new ArrayList<>();
 	private List<String> serversToGetPeers = new ArrayList<>();
 	private Map<String,Boolean> serversContacted = new HashMap<>();
 	private Map<String,Boolean> serversPeersGot = new HashMap<>();
-	private String next = null;
+	private ServerInfo next = null;
 	private Map<String,ServerInfo> serverInfos = new HashMap<>();
 
 	public ServerIterator() {
@@ -35,19 +35,19 @@ public class ServerIterator implements Iterator<String> {
 	@Override
 	public boolean hasNext() {
 		if (next == null) {
-			next = getNextServerUrl();
+			next = getNextServer();
 		}
 		return next != null;
 	}
 
 	@Override
-	public String next() {
-		String r = next;
+	public ServerInfo next() {
+		ServerInfo n = next;
 		next = null;
-		if (r == null) {
-			r = getNextServerUrl();
+		if (n == null) {
+			n = getNextServer();
 		}
-		return r;
+		return n;
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class ServerIterator implements Iterator<String> {
 		throw new UnsupportedOperationException();
 	}
 
-	private String getNextServerUrl() {
+	private ServerInfo getNextServer() {
 		while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
 			if (!serversToContact.isEmpty()) {
 				String url = serversToContact.remove(0);
@@ -64,7 +64,7 @@ public class ServerIterator implements Iterator<String> {
 				ServerInfo info = getServerInfo(url);
 				if (info == null) continue;
 				serversToGetPeers.add(url);
-				return url;
+				return info;
 			}
 			if (!serversToGetPeers.isEmpty()) {
 				String url = serversToGetPeers.remove(0);
