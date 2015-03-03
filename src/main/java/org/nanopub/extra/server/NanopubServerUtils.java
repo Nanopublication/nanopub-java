@@ -15,7 +15,7 @@ public class NanopubServerUtils {
 
 	public static final String protocolVersion = "0.2";
 	public static final float protocolVersionValue = getVersionValue(protocolVersion);
-	public static final String requiredProtocolVersion = "0.1";
+	public static final String requiredProtocolVersion = "0.2";
 	public static final float requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
 
 	private NanopubServerUtils() {}  // no instances allowed
