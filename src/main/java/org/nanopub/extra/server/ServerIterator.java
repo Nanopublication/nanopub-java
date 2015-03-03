@@ -11,12 +11,15 @@ import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 public class ServerIterator implements Iterator<ServerInfo> {
 
+	private static Map<String,ServerInfo> serverInfos = new HashMap<>();
+	private static long serverInfoRefreshed = System.currentTimeMillis();
+	private static final long serverInfoRefreshInterval = 60 * 60 * 1000;
+
 	private List<String> serversToContact = new ArrayList<>();
 	private List<String> serversToGetPeers = new ArrayList<>();
 	private Map<String,Boolean> serversContacted = new HashMap<>();
 	private Map<String,Boolean> serversPeersGot = new HashMap<>();
 	private ServerInfo next = null;
-	private Map<String,ServerInfo> serverInfos = new HashMap<>();
 
 	public ServerIterator() {
 		serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
@@ -88,6 +91,10 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	}
 
 	private ServerInfo getServerInfo(String url) {
+		if (System.currentTimeMillis() - serverInfoRefreshed > serverInfoRefreshInterval) {
+			serverInfos.clear();
+			serverInfoRefreshed = System.currentTimeMillis();
+		}
 		if (!serverInfos.containsKey(url)) {
 			try {
 				serverInfos.put(url, ServerInfo.load(url));
