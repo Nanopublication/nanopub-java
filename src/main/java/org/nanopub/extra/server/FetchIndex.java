@@ -31,6 +31,7 @@ public class FetchIndex {
 	private List<ServerInfo> servers;
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
 	private int nanopubCount;
+	private ProgressListener progressListener;
 
 	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {
 		this.out = out;
@@ -116,11 +117,18 @@ public class FetchIndex {
 
 	private void writeNanopub(Nanopub np) throws RDFHandlerException {
 		nanopubCount++;
+		if (progressListener != null && nanopubCount % 100 == 0) {
+			progressListener.progress(nanopubCount);
+		}
 		NanopubUtils.writeToStream(np, out, format);
 	}
 
 	public int getNanopubCount() {
 		return nanopubCount;
+	}
+
+	public void setProgressListener(ProgressListener l) {
+		progressListener = l;
 	}
 
 	private void assignTask(final FetchNanopubTask task, final String serverUrl) {
@@ -195,6 +203,13 @@ public class FetchIndex {
 				running = false;
 			}
 		}
+
+	}
+
+
+	public static interface ProgressListener {
+
+		public void progress(int count);
 
 	}
 

@@ -148,6 +148,14 @@ public class GetNanopub {
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
 				FetchIndex fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+				fetchIndex.setProgressListener(new FetchIndex.ProgressListener() {
+
+					@Override
+					public void progress(int count) {
+						System.out.print(count + " nanopubs...\r");
+					}
+
+				});
 				fetchIndex.run();
 				count = fetchIndex.getNanopubCount();
 			} else {
