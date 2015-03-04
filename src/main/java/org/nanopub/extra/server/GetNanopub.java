@@ -4,13 +4,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfModule;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
@@ -96,8 +100,13 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, String serverUrl)
 			throws IOException, OpenRDFException, MalformedNanopubException {
-		URL url = new URL(serverUrl + artifactCode);
-		Nanopub nanopub = new NanopubImpl(url);
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5 * 1000).build();
+		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+		HttpGet get = new HttpGet(serverUrl + artifactCode);
+		get.setHeader("Accept", "application/trig");
+		HttpResponse resp = c.execute(get);
+		if (!wasSuccessful(resp)) return null;
+		Nanopub nanopub = new NanopubImpl(resp.getEntity().getContent(), RDFFormat.TRIG);
 		if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
 			return nanopub;
 		}
@@ -190,6 +199,11 @@ public class GetNanopub {
 				System.out.print(count + " nanopubs...\r");
 			}
 		}
+	}
+
+	private static boolean wasSuccessful(HttpResponse resp) {
+		int c = resp.getStatusLine().getStatusCode();
+		return c >= 200 && c < 300;
 	}
 
 }
