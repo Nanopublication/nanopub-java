@@ -72,6 +72,9 @@ public class CheckNanopub {
 						@Override
 						public void handleNanopub(Nanopub np) {
 							count++;
+							if (count % 100 == 0) {
+								System.out.print(count + " nanopubs...\r");
+							}
 							check(np);
 						}
 					});

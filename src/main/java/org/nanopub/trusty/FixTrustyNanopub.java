@@ -57,6 +57,8 @@ public class FixTrustyNanopub {
 		}
 	}
 
+	private int count;
+
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
 		for (File inputFile : inputNanopubs) {
@@ -74,8 +76,13 @@ public class FixTrustyNanopub {
 				public void handleNanopub(Nanopub np) {
 					try {
 						np = writeAsFixedNanopub(np, format, out);
+						count++;
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
+						} else {
+							if (count % 100 == 0) {
+								System.out.print(count + " nanopubs...\r");
+							}
 						}
 					} catch (RDFHandlerException ex) {
 						throw new RuntimeException(ex);

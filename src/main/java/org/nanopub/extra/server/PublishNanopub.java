@@ -131,11 +131,11 @@ public class PublishNanopub {
 
 	private void processNanopub(Nanopub nanopub) {
 		count++;
+		if (count % 100 == 0) {
+			System.out.print(count + " nanopubs...\r");
+		}
 		try {
 			publishNanopub(nanopub);
-			if (count % 100 == 0) {
-				System.out.print(count + " nanopubs...\r");
-			}
 		} catch (IOException ex) {
 			if (verbose) {
 				System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
