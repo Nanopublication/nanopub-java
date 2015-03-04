@@ -19,8 +19,6 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
-import org.nanopub.extra.index.IndexUtils;
-import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.URI;
@@ -65,9 +63,6 @@ public class GetNanopub {
 			System.exit(1);
 		}
 	}
-
-	private OutputStream outputStream = null;
-	private int count;
 
 	public static Nanopub get(String uriOrArtifactCode) {
 		ServerIterator serverIterator = new ServerIterator();
@@ -128,6 +123,9 @@ public class GetNanopub {
 		}
 	}
 
+	private OutputStream outputStream = null;
+	private int count;
+
 	private RDFFormat rdfFormat;
 
 	public GetNanopub() {
@@ -148,41 +146,17 @@ public class GetNanopub {
 			}
 		}
 		for (String nanopubId : nanopubIds) {
-			Nanopub np = get(nanopubId);
 			if (getIndex || getIndexContent) {
-				processIndex(nanopubId, np);
+				FetchIndex fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+				fetchIndex.run();
+				count = fetchIndex.getNanopubCount();
 			} else {
-				outputNanopub(nanopubId, np);
+				outputNanopub(nanopubId, get(nanopubId));
 			}
 		}
 		if (outputStream != null) {
 			outputStream.close();
 			System.out.println(count + " nanopubs retrieved and saved in " + outputFile);
-		}
-	}
-
-	private void processIndex(String nanopubId, Nanopub np) throws IOException, RDFHandlerException, MalformedNanopubException {
-		if (!IndexUtils.isIndex(np)) {
-			System.err.println("NOT AN INDEX: " + nanopubId);
-			return;
-		}
-		NanopubIndex npi = IndexUtils.castToIndex(np);
-		if (getIndex) {
-			outputNanopub(nanopubId, npi);
-		}
-		if (getIndexContent) {
-			for (URI elementUri : npi.getElements()) {
-				Nanopub element = get(elementUri.toString());
-				outputNanopub(elementUri.toString(), element);
-			}
-		}
-		for (URI subIndexUri : npi.getSubIndexes()) {
-			Nanopub subIndex = get(subIndexUri.toString());
-			processIndex(subIndexUri.toString(), subIndex);
-		}
-		if (npi.getAppendedIndex() != null) {
-			Nanopub appendedIndex = get(npi.getAppendedIndex().toString());
-			processIndex(npi.getAppendedIndex().toString(), appendedIndex);
 		}
 	}
 
