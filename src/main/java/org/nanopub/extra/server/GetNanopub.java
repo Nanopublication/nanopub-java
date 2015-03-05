@@ -95,7 +95,7 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, String serverUrl)
 			throws IOException, OpenRDFException, MalformedNanopubException {
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5 * 1000).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		HttpGet get = new HttpGet(serverUrl + artifactCode);
 		get.setHeader("Accept", "application/trig");

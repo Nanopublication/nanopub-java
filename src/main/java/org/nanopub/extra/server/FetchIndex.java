@@ -56,6 +56,9 @@ public class FetchIndex {
 		running = true;
 		while (!fetchTasks.isEmpty()) {
 			checkTasks();
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException ex) {}
 		}
 	}
 
@@ -69,7 +72,7 @@ public class FetchIndex {
 			}
 			if (task.getNanopub() == null) {
 				if (task.getTriedServersCount() == servers.size()) {
-					throw new RuntimeException("Nanopub not found: " + task.getNanopubUri());
+					throw new RuntimeException("Failed to fetch nanopub: " + task.getNanopubUri());
 				}
 				List<ServerInfo> shuffledServers = new ArrayList<>(servers);
 				Collections.shuffle(shuffledServers);
