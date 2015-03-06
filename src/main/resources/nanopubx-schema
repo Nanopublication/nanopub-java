@@ -1,7 +1,7 @@
 # Nanopub-X: Experimental Extensions of the Nanopublication Model
 # ===============================================================
 #
-# This model defines inofficial experimental extensions to the standard
+# This model defines unofficial experimental extensions to the standard
 # nanopublication schema. These definitions may change.
 
 @prefix npx: <http://purl.org/nanopub/x/> .
