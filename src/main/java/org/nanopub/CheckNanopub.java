@@ -8,6 +8,7 @@ import java.util.List;
 import net.trustyuri.TrustyUriUtils;
 
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.extra.security.CheckSignature;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.impl.URIImpl;
@@ -45,13 +46,15 @@ public class CheckNanopub {
 		}
 	}
 
-	private int valid, notTrusty, invalid, error;
+	private int signed, trusty, notTrusty, invalidSignature, invalid, error;
 	private int count;
 	private SPARQLRepository sparqlRepo;
 
 	private void run() throws IOException {
-		valid = 0;
+		signed = 0;
+		trusty = 0;
 		notTrusty = 0;
+		invalidSignature = 0;
 		invalid = 0;
 		error = 0;
 		for (String s : inputNanopubs) {
@@ -93,8 +96,14 @@ public class CheckNanopub {
 				invalid++;
 			}
 		}
-		System.out.println("Summary: " + valid + " valid and trusty | " + notTrusty + " valid but not trusty | " +
-				invalid + " invalid | " + error + " errors");
+		System.out.print("Summary:");
+		if (signed > 0) System.out.print(" " + signed + " signed and trusty;");
+		if (trusty > 0) System.out.print(" " + trusty + " unsigned but trusty;");
+		if (notTrusty > 0) System.out.print(" " + notTrusty + " valid but not trusty;");
+		if (invalidSignature > 0) System.out.print(" " + invalidSignature + " invalid signature;");
+		if (invalid > 0) System.out.print(" " + invalid + " invalid nanopubs;");
+		if (error > 0) System.out.print(" " + error + " errors;");
+		System.out.println();
 		if (sparqlRepo != null) {
 			try {
 				sparqlRepo.shutDown();
@@ -106,10 +115,22 @@ public class CheckNanopub {
 
 	private void check(Nanopub np) {
 		if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
-			if (verbose) {
-				System.out.println("Valid and trusty: " + np.getUri());
+			if (CheckSignature.hasSignature(np)) {
+				if (CheckSignature.hasValidSignatures(np)) {
+					if (verbose) {
+						System.out.println("Signed: " + np.getUri());
+					}
+					signed++;
+				} else {
+					System.out.println("INVALID SIGNATURE: " + np.getUri());
+					invalidSignature++;
+				}
+			} else {
+				if (verbose) {
+					System.out.println("Valid and trusty: " + np.getUri());
+				}
+				trusty++;
 			}
-			valid++;
 		} else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
 			System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
 			notTrusty++;

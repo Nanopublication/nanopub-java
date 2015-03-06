@@ -94,7 +94,7 @@ public class SignNanopub {
 	}
 
 	private void run() throws Exception {
-		loadKey();
+		key = loadKey(keyFilename);
 		for (File inputFile : inputNanopubs) {
 			File outFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
 			final OutputStream out;
@@ -234,7 +234,7 @@ public class SignNanopub {
 		return np;
 	}
 
-	private void loadKey() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+	public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
 		keyFilename = keyFilename.replaceFirst("^~", System.getProperty("user.home"));
 		BASE64Decoder decoder = new BASE64Decoder();
 		KeyFactory kf = KeyFactory.getInstance("DSA");
@@ -244,7 +244,7 @@ public class SignNanopub {
 		byte[] publicKeyBytes = decoder.decodeBuffer(new FileInputStream(keyFilename + ".pub"));
 		KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
 		PublicKey publicKey = kf.generatePublic(publicSpec);
-		key = new KeyPair(publicKey, privateKey);
+		return new KeyPair(publicKey, privateKey);
 	}
 
 }

@@ -64,6 +64,10 @@ public class CheckSignature {
 				@Override
 				public void handleNanopub(Nanopub np) {
 					boolean npIsGood = false;
+					if (!hasSignature(np)) {
+						System.out.println("Nanopub has no signature");
+						return;
+					}
 					try {
 						npIsGood = hasValidSignatures(np);
 					} catch (Exception ex) {
@@ -79,6 +83,13 @@ public class CheckSignature {
 
 			});
 		}
+	}
+
+	public static boolean hasSignature(Nanopub nanopub) {
+		for (Statement st : nanopub.getPubinfo()) {
+			if (st.getPredicate().equals(NanopubSignature.HAS_SIGNATURE_ELEMENT)) return true;
+		}
+		return false;
 	}
 
 	public static boolean hasValidSignatures(Nanopub nanopub) {
