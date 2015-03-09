@@ -6,7 +6,7 @@ import java.util.List;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.UriTransformConfig;
+import net.trustyuri.rdf.RdfUtils;
 
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
@@ -22,14 +22,13 @@ public class TrustyNanopubUtils {
 
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		UriTransformConfig c = UriTransformConfig.getDefault();
 		RDFWriter writer = Rio.createWriter(format, out);
 		writer.startRDF();
 		String s = nanopub.getUri().toString();
 		writer.handleNamespace("this", s);
-		writer.handleNamespace("sub", s + c.getPostHashChar());
-		if (!(c.getBnodeChar() + "").matches("[A-Za-z0-9\\-_]")) {
-			writer.handleNamespace("node", s + c.getPostHashChar() + c.getBnodeChar());
+		writer.handleNamespace("sub", s + RdfUtils.postAcChar);
+		if (!(RdfUtils.bnodeChar + "").matches("[A-Za-z0-9\\-_]")) {
+			writer.handleNamespace("node", s + RdfUtils.postAcChar + RdfUtils.bnodeChar);
 		}
 		writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");

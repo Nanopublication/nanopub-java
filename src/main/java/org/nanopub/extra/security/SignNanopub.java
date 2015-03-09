@@ -3,6 +3,7 @@ package org.nanopub.extra.security;
 import static org.nanopub.extra.security.NanopubSignature.HAS_PUBLIC_KEY;
 import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE;
 import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE_ELEMENT;
+import static org.nanopub.extra.security.NanopubSignature.SIGNED_BY;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -133,8 +134,13 @@ public class SignNanopub {
 		}
 	}
 
-	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key) throws TrustyUriException, InvalidKeyException,
-			SignatureException {
+	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key)
+			throws TrustyUriException, InvalidKeyException, SignatureException {
+		return signAndTransform(nanopub, key, null);
+	}
+
+	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key, URI signer)
+			throws TrustyUriException, InvalidKeyException, SignatureException {
 		Nanopub np;
 		Signature dsa;
 		try {
@@ -174,6 +180,9 @@ public class SignNanopub {
 			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
 			Literal signatureLiteral = new LiteralImpl(signature);
 			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+			if (signer != null) {
+				signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
+			}
 			signatureContent.endRDF();
 			signatureContent = RdfPreprocessor.run(signatureContent, nanopub.getUri());
 
