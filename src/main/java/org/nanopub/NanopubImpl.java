@@ -381,7 +381,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 				new java.net.URI(uriString);
 			}
 		} catch (URISyntaxException ex) {
-			throw new MalformedNanopubException("Malformed URI:" + uriString);
+			throw new MalformedNanopubException("Malformed URI: " + uriString);
 		}
 	}
 

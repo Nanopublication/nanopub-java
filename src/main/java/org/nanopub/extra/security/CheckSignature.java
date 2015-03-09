@@ -20,13 +20,14 @@ import net.trustyuri.rdf.RdfPreprocessor;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -103,21 +104,27 @@ public class CheckSignature {
 
 		// Remove signature and get public key
 		URI pubinfoUri = new URIImpl(nanopub.getPubinfoUri().toString().replace(ac, " "));
-		NanopubRdfHandler npHander = new NanopubRdfHandler();
-		SignatureRemover sigRemover = new SignatureRemover(npHander, pubinfoUri);
+		final List<Statement> statementsWithoutSig = new ArrayList<>();
+		SignatureRemover sigRemover = new SignatureRemover(new RDFHandlerBase() {
+
+			@Override
+			public void handleStatement(Statement st) throws RDFHandlerException {
+				statementsWithoutSig.add(st);
+			}
+
+		}, pubinfoUri);
 		try {
 			sigRemover.startRDF();
 			for (Statement st : statements) {
 				sigRemover.handleStatement(st);
 			}
 			sigRemover.endRDF();
-			statements = NanopubUtils.getStatements(npHander.getNanopub());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new RuntimeException(ex);
 		}
 
-		MessageDigest digest = RdfHasher.digest(statements);
+		MessageDigest digest = RdfHasher.digest(statementsWithoutSig);
 
 		if (sigRemover.getSignatureElements().isEmpty()) {
 			return false;

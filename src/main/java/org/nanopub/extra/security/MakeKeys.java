@@ -9,7 +9,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 
-import sun.misc.BASE64Encoder;
+import javax.xml.bind.DatatypeConverter;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -78,13 +78,12 @@ public class MakeKeys {
 		}
 		keyPairGenerator.initialize(1024, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
-		BASE64Encoder encoder = new BASE64Encoder();
-		
+
 		FileOutputStream outPublic = new FileOutputStream(publicKeyFile);
-		outPublic.write((encoder.encode(keyPair.getPublic().getEncoded()) + "\n").getBytes());
+		outPublic.write(DatatypeConverter.printBase64Binary(keyPair.getPublic().getEncoded()).getBytes());
 		outPublic.close();
 		FileOutputStream outPrivate = new FileOutputStream(privateKeyFile);
-		outPrivate.write((encoder.encode(keyPair.getPrivate().getEncoded()) + "\n").getBytes());
+		outPrivate.write(DatatypeConverter.printBase64Binary(keyPair.getPrivate().getEncoded()).getBytes());
 		outPrivate.close();
 	}
 

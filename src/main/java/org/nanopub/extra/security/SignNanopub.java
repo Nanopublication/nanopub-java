@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import javax.xml.bind.DatatypeConverter;
+
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
@@ -36,6 +38,7 @@ import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
 import net.trustyuri.rdf.TransformRdf;
 
+import org.apache.commons.io.IOUtils;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -53,9 +56,6 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -137,7 +137,6 @@ public class SignNanopub {
 			SignatureException {
 		Nanopub np;
 		Signature dsa;
-		BASE64Encoder encoder = new BASE64Encoder();
 		try {
 			dsa = Signature.getInstance("SHA1withDSA", "SUN");
 			dsa.initSign(key.getPrivate());
@@ -160,7 +159,7 @@ public class SignNanopub {
 			MessageDigest digest = RdfHasher.digest(contentWithoutSignature.getStatements());
 			dsa.update(digest.digest());
 			byte[] signatureBytes = dsa.sign();
-			String signature = encoder.encode(signatureBytes);
+			String signature = DatatypeConverter.printBase64Binary(signatureBytes);
 			String signatureShort = TrustyUriUtils.getBase64(signatureBytes).substring(0, 16);
 
 			RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
@@ -170,7 +169,7 @@ public class SignNanopub {
 			URI npUri = nanopub.getUri();
 			URI piUri = nanopub.getPubinfoUri();
 			signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
-			String publicKeyString = encoder.encode(key.getPublic().getEncoded()).replaceAll("\\s", "");
+			String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
 			Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
 			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
 			Literal signatureLiteral = new LiteralImpl(signature);
@@ -236,12 +235,11 @@ public class SignNanopub {
 
 	public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
 		keyFilename = keyFilename.replaceFirst("^~", System.getProperty("user.home"));
-		BASE64Decoder decoder = new BASE64Decoder();
 		KeyFactory kf = KeyFactory.getInstance("DSA");
-		byte[] privateKeyBytes = decoder.decodeBuffer(new FileInputStream(keyFilename));
+		byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
 		KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
 		PrivateKey privateKey = kf.generatePrivate(privateSpec);
-		byte[] publicKeyBytes = decoder.decodeBuffer(new FileInputStream(keyFilename + ".pub"));
+		byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), "UTF-8"));
 		KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
 		PublicKey publicKey = kf.generatePublic(publicSpec);
 		return new KeyPair(publicKey, privateKey);

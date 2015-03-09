@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -19,14 +21,11 @@ import org.openrdf.rio.RDFHandlerException;
 
 import com.google.common.collect.ImmutableList;
 
-import sun.misc.BASE64Decoder;
-
 public class SignatureRemover implements RDFHandler {
 
 	private RDFHandler handler;
 	private URI graph;
 
-	private static BASE64Decoder decoder;
 	private static KeyFactory kf;
 
 	private List<Resource> signatureElements = new ArrayList<>();
@@ -37,7 +36,6 @@ public class SignatureRemover implements RDFHandler {
 		this.handler = handler;
 		this.graph = graph;
 
-		decoder = new BASE64Decoder();
 		try {
 			kf = KeyFactory.getInstance("DSA");
 		} catch (NoSuchAlgorithmException ex) {
@@ -83,7 +81,7 @@ public class SignatureRemover implements RDFHandler {
 					throw new RDFHandlerException("Object of " + NanopubSignature.HAS_PUBLIC_KEY + " has to be a literal");
 				}
 				try {
-					byte[] publicKeyBytes = decoder.decodeBuffer(((Literal) st.getObject()).getLabel());
+					byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(((Literal) st.getObject()).getLabel());
 					KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
 					publicKeys.put(st.getSubject(), kf.generatePublic(publicSpec));
 				} catch (Exception ex) {
@@ -100,7 +98,7 @@ public class SignatureRemover implements RDFHandler {
 					throw new RDFHandlerException("Object of " + NanopubSignature.HAS_SIGNATURE + " has to be a literal");
 				}
 				try {
-					byte[] signature = decoder.decodeBuffer(((Literal) st.getObject()).getLabel());
+					byte[] signature = DatatypeConverter.parseBase64Binary(((Literal) st.getObject()).getLabel());
 					signatures.put(st.getSubject(), signature);
 				} catch (Exception ex) {
 					ex.printStackTrace();
