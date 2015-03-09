@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -338,6 +339,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		Set<Statement> provenance = new HashSet<>();
 		Set<Statement> pubinfo = new HashSet<>();
 		for (Statement st : statements) {
+			checkStatement(st);
 			Resource g = st.getContext();
 			if (g.equals(headUri)) {
 				head.add(st);
@@ -362,6 +364,25 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		this.assertion = ImmutableSet.copyOf(assertion);
 		this.provenance = ImmutableSet.copyOf(provenance);
 		this.pubinfo = ImmutableSet.copyOf(pubinfo);
+	}
+
+	private void checkStatement(Statement st) throws MalformedNanopubException {
+		String uriString = null;
+		try {
+			// Throw exceptions if not well-formed:
+			uriString = st.getContext().stringValue();
+			new java.net.URI(uriString);
+			uriString = st.getSubject().stringValue();
+			new java.net.URI(uriString);
+			uriString = st.getPredicate().stringValue();
+			new java.net.URI(uriString);
+			if (st.getObject() instanceof URI) {
+				uriString = st.getObject().stringValue();
+				new java.net.URI(uriString);
+			}
+		} catch (URISyntaxException ex) {
+			throw new MalformedNanopubException("Malformed URI:" + uriString);
+		}
 	}
 
 	private void checkAssertion() throws MalformedNanopubException {
