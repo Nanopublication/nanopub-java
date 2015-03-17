@@ -91,7 +91,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.4</version>
+      <version>1.5-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <scm>
