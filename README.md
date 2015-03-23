@@ -13,7 +13,7 @@ Repository. Just include the following lines in your `pom.xml` file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.3</version>
+      <version>1.5</version>
     </dependency>
 
 
