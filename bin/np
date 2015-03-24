@@ -1,0 +1,23 @@
+#!/bin/bash
+
+NANOPUBJAR=`find /usr/share/java/ -maxdepth 1 -name "nanopub-*-jar-with-dependencies.jar" | sort -n | tail -1`
+
+if [ ! -z "$NANOPUBJAR" ]; then
+  exec java -jar $NANOPUBJAR "$@"
+fi
+
+WORKINGDIR=`pwd`
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd -P ..
+PROJECTDIR=`pwd`
+# for Cygwin:
+PROJECTDIR=${PROJECTDIR#/cygdrive/?}
+cd $WORKINGDIR
+
+NANOPUBJAR=`find $PROJECTDIR/target/ -maxdepth 1 -name "nanopub-*-jar-with-dependencies.jar" | sort -n | tail -1`
+
+if [ ! -z "$NANOPUBJAR" ]; then
+  exec java -jar $NANOPUBJAR "$@"
+fi
+
+echo "ERROR: nanopub-*-jar-with-dependencies.jar not found"
