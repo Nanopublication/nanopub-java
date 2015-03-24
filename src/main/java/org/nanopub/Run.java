@@ -11,6 +11,7 @@ import org.nanopub.extra.server.GetServerInfo;
 import org.nanopub.extra.server.NanopubStatus;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.trusty.FixTrustyNanopub;
+import org.nanopub.trusty.MakeTrustyNanopub;
 import org.openrdf.OpenRDFException;
 
 public class Run {
@@ -36,6 +37,8 @@ public class Run {
 			PublishNanopub.main(cmdArgs);
 		} else if (cmd.equals("SignNanopub") || cmd.equals("sign")) {
 			SignNanopub.main(cmdArgs);
+		} else if (cmd.equals("MakeTrustyNanopub") || cmd.equals("mktrusty")) {
+			MakeTrustyNanopub.main(cmdArgs);
 		} else if (cmd.equals("FixTrustyNanopub") || cmd.equals("fix")) {
 			FixTrustyNanopub.main(cmdArgs);
 		} else if (cmd.equals("NanopubStatus") || cmd.equals("status")) {
