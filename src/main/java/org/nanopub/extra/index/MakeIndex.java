@@ -34,7 +34,7 @@ public class MakeIndex {
 			"(in addition to the ones from the input files)")
 	private List<String> elements = new ArrayList<>();
 
-	@com.beust.jcommander.Parameter(names = "-s", description = "Add given URIs as sub indexes " +
+	@com.beust.jcommander.Parameter(names = "-s", description = "Add given URIs as sub-indexes " +
 			"(in addition to the ones from the input files, if given)")
 	private List<String> subindexes = new ArrayList<>();
 
