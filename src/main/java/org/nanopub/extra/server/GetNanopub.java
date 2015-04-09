@@ -123,7 +123,7 @@ public class GetNanopub {
 		}
 	}
 
-	private OutputStream outputStream = null;
+	private OutputStream outputStream = System.out;
 	private int count;
 
 	private RDFFormat rdfFormat;
@@ -162,7 +162,7 @@ public class GetNanopub {
 				outputNanopub(nanopubId, get(nanopubId));
 			}
 		}
-		if (outputStream != null) {
+		if (outputStream != System.out) {
 			outputStream.close();
 			System.out.println(count + " nanopubs retrieved and saved in " + outputFile);
 		}
@@ -172,7 +172,7 @@ public class GetNanopub {
 		count++;
 		if (np == null) {
 			System.err.println("NOT FOUND: " + nanopubId);
-		} else if (outputStream == null) {
+		} else if (outputStream == System.out) {
 			NanopubUtils.writeToStream(np, System.out, rdfFormat);
 			System.out.print("\n\n");
 		} else {
