@@ -3,6 +3,7 @@ package org.nanopub.extra.server;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -99,11 +100,17 @@ public class GetNanopub {
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		HttpGet get = new HttpGet(serverUrl + artifactCode);
 		get.setHeader("Accept", "application/trig");
-		HttpResponse resp = c.execute(get);
-		if (!wasSuccessful(resp)) return null;
-		Nanopub nanopub = new NanopubImpl(resp.getEntity().getContent(), RDFFormat.TRIG);
-		if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
-			return nanopub;
+		InputStream in = null;
+		try {
+			HttpResponse resp = c.execute(get);
+			if (!wasSuccessful(resp)) return null;
+			in = resp.getEntity().getContent();
+			Nanopub nanopub = new NanopubImpl(in, RDFFormat.TRIG);
+			if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
+				return nanopub;
+			}
+		} finally {
+			if (in != null) in.close();
 		}
 		return null;
 	}

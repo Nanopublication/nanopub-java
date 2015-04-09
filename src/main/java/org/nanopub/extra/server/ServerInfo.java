@@ -1,5 +1,6 @@
 package org.nanopub.extra.server;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -33,13 +34,22 @@ public class ServerInfo implements Serializable {
 		HttpGet get = new HttpGet(serverUrl);
 		get.setHeader("Accept", "application/json");
 		ServerInfo si = null;
+		InputStream in = null;
 		try {
 			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5 * 1000).build();
 			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-		    InputStream in = c.execute(get).getEntity().getContent();
+		    in = c.execute(get).getEntity().getContent();
 			si = new Gson().fromJson(new InputStreamReader(in), serverInfoClass);
 		} catch (Exception ex) {
 			throw new ServerInfoException(serverUrl);
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException ex) {
+					throw new ServerInfoException("Could not close stream: " + ex.getMessage());
+				}
+			}
 		}
 		if (!si.getPublicUrl().equals(serverUrl)) {
 			throw new ServerInfoException("Server URL does not match its declared public URL");

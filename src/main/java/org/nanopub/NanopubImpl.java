@@ -229,22 +229,22 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	// TODO Is the baseURI really needed? Shouldn't the input stream contain all needed data?
 	private void readStatements(InputStream in, RDFFormat format, String baseUri)
 			throws MalformedNanopubException, OpenRDFException, IOException {
-		RDFParser p = NanopubUtils.getParser(format);
-		p.setRDFHandler(new RDFHandlerBase() {
-
-			@Override
-			public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-				nsPrefixes.add(prefix);
-				ns.put(prefix, uri);
-			}
-
-			@Override
-			public void handleStatement(Statement st) throws RDFHandlerException {
-				statements.add(st);
-			}
-
-		});
 		try {
+			RDFParser p = NanopubUtils.getParser(format);
+			p.setRDFHandler(new RDFHandlerBase() {
+	
+				@Override
+				public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+					nsPrefixes.add(prefix);
+					ns.put(prefix, uri);
+				}
+	
+				@Override
+				public void handleStatement(Statement st) throws RDFHandlerException {
+					statements.add(st);
+				}
+	
+			});
 			p.parse(in, baseUri);
 		} finally {
 			in.close();

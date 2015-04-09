@@ -40,18 +40,22 @@ public class NanopubServerUtils {
 		List<String> list = new ArrayList<String>();
 		HttpGet get = new HttpGet(url);
 		get.setHeader("Content-Type", "text/plain");
-		CloseableHttpResponse resp = HttpClientBuilder.create().build().execute(get);
-		int code = resp.getStatusLine().getStatusCode();
-		if (code < 200 || code > 299) {
-			throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
+		BufferedReader r = null;
+		try {
+			CloseableHttpResponse resp = HttpClientBuilder.create().build().execute(get);
+			int code = resp.getStatusLine().getStatusCode();
+			if (code < 200 || code > 299) {
+				throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
+			}
+			InputStream in = resp.getEntity().getContent();
+			r = new BufferedReader(new InputStreamReader(in));
+			String line = null;
+			while ((line = r.readLine()) != null) {
+				list.add(line.trim());
+			}
+		} finally {
+			if (r != null) r.close();
 		}
-		InputStream in = resp.getEntity().getContent();
-	    BufferedReader r = new BufferedReader(new InputStreamReader(in));
-	    String line = null;
-	    while ((line = r.readLine()) != null) {
-	    	list.add(line.trim());
-	    }
-	    r.close();
 		return list;
 	}
 
