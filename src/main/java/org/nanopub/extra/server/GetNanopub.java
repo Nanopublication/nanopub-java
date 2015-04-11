@@ -98,11 +98,16 @@ public class GetNanopub {
 			throws IOException, OpenRDFException, MalformedNanopubException {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+		return get(artifactCode, serverUrl, c);
+	}
+
+	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)
+			throws IOException, OpenRDFException, MalformedNanopubException {
 		HttpGet get = new HttpGet(serverUrl + artifactCode);
 		get.setHeader("Accept", "application/trig");
 		InputStream in = null;
 		try {
-			HttpResponse resp = c.execute(get);
+			HttpResponse resp = httpClient.execute(get);
 			if (!wasSuccessful(resp)) return null;
 			in = resp.getEntity().getContent();
 			Nanopub nanopub = new NanopubImpl(in, RDFFormat.TRIG);

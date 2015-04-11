@@ -11,6 +11,10 @@ import java.util.Set;
 
 import net.trustyuri.TrustyUriUtils;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
@@ -32,6 +36,7 @@ public class FetchIndex {
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
 	private int nanopubCount;
 	private ProgressListener progressListener;
+	private HttpClient httpClient;
 
 	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {
 		this.out = out;
@@ -49,6 +54,12 @@ public class FetchIndex {
 			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
 		}
 		nanopubCount = 0;
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
+		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+		connManager.setDefaultMaxPerRoute(10);
+		connManager.setMaxTotal(1000);
+		httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
+				.setConnectionManager(connManager).build();
 	}
 
 	public void run() {
@@ -199,7 +210,7 @@ public class FetchIndex {
 
 		public void tryServer(String serverUrl) {
 			try {
-				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl);
+				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl, httpClient);
 			} catch (Exception ex) {
 				// ignore
 			} finally {
