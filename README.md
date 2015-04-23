@@ -34,7 +34,13 @@ Maven has to be installed to compile and install the library:
     $ mvn clean install
 
 The library features can then be accessed using the scripts in the `scripts/`
-directory or using the command `np` in `bin/`.
+directory or using the command `np` in `bin/`. For example:
+
+    $ np check nanopubfile.trig
+
+One can also directly use the JAR file (as generated in `target/`):
+
+    $ java -jar nanopub-1.6-jar-with-dependencies.jar check nanopubfile.trig
 
 
 Developers
