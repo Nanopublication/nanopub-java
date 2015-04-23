@@ -15,7 +15,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.5</version>
+      <version>1.6</version>
     </dependency>
 
 
@@ -38,7 +38,8 @@ directory or using the command `np` in `bin/`. For example:
 
     $ np check nanopubfile.trig
 
-One can also directly use the JAR file (as generated in `target/`):
+One can also directly use the JAR file (as generated in `target/`) or [download
+a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
 
     $ java -jar nanopub-1.6-jar-with-dependencies.jar check nanopubfile.trig
 

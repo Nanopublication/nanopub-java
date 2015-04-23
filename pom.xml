@@ -3,7 +3,7 @@
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
   <packaging>jar</packaging>
-  <version>1.6-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <name>nanopub</name>
   <description>Java library for nanopublications based on Sesame</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
@@ -91,7 +91,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.5-SNAPSHOT</version>
+      <version>1.5</version>
     </dependency>
   </dependencies>
   <scm>
