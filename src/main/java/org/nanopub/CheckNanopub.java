@@ -98,8 +98,8 @@ public class CheckNanopub {
 		}
 		System.out.print("Summary:");
 		if (signed > 0) System.out.print(" " + signed + " signed and trusty;");
-		if (trusty > 0) System.out.print(" " + trusty + " unsigned but trusty;");
-		if (notTrusty > 0) System.out.print(" " + notTrusty + " valid but not trusty;");
+		if (trusty > 0) System.out.print(" " + trusty + " trusty (unsigned);");
+		if (notTrusty > 0) System.out.print(" " + notTrusty + " valid (not trusty);");
 		if (invalidSignature > 0) System.out.print(" " + invalidSignature + " invalid signature;");
 		if (invalid > 0) System.out.print(" " + invalid + " invalid nanopubs;");
 		if (error > 0) System.out.print(" " + error + " errors;");
@@ -118,7 +118,7 @@ public class CheckNanopub {
 			if (CheckSignature.hasSignature(np)) {
 				if (CheckSignature.hasValidSignatures(np)) {
 					if (verbose) {
-						System.out.println("Signed: " + np.getUri());
+						System.out.println("Signed and trusty: " + np.getUri());
 					}
 					signed++;
 				} else {
@@ -127,7 +127,7 @@ public class CheckNanopub {
 				}
 			} else {
 				if (verbose) {
-					System.out.println("Valid and trusty: " + np.getUri());
+					System.out.println("Trusty: " + np.getUri());
 				}
 				trusty++;
 			}
@@ -136,7 +136,7 @@ public class CheckNanopub {
 			notTrusty++;
 		} else {
 			if (verbose) {
-				System.out.println("Valid BUT NOT TRUSTY: " + np.getUri());
+				System.out.println("Valid (but not trusty): " + np.getUri());
 			}
 			notTrusty++;
 		}
