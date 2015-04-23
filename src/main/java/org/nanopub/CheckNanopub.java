@@ -2,6 +2,7 @@ package org.nanopub;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,24 +40,37 @@ public class CheckNanopub {
 			System.exit(1);
 		}
 		try {
-			obj.run();
+			obj.setLogPrintStream(System.out);
+			Report report = obj.check();
+			System.out.println("Summary: " + report.getSummary());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	private int signed, trusty, notTrusty, invalidSignature, invalid, error;
+	private Report report;
 	private int count;
 	private SPARQLRepository sparqlRepo;
+	private PrintStream logOut;
 
-	private void run() throws IOException {
-		signed = 0;
-		trusty = 0;
-		notTrusty = 0;
-		invalidSignature = 0;
-		invalid = 0;
-		error = 0;
+	public CheckNanopub(List<String> inputNanopubFiles) {
+		this.inputNanopubs = inputNanopubFiles;
+	}
+
+	public CheckNanopub(String...  inputNanopubFiles) {
+		for (String i : inputNanopubFiles) {
+			this.inputNanopubs.add(i);
+		}
+	}
+
+	public CheckNanopub(String sparqlEndpointUrl, List<String> inputNanopubIds) {
+		this.inputNanopubs = inputNanopubIds;
+		this.sparqlEndpointUrl = sparqlEndpointUrl;
+	}
+
+	public Report check() throws IOException {
+		report = new Report();
 		for (String s : inputNanopubs) {
 			count = 0;
 			try {
@@ -69,41 +83,33 @@ public class CheckNanopub {
 					check(np);
 				} else {
 					if (verbose) {
-						System.out.println("Reading file: " + s);
+						log("Reading file: " + s + "\n");
 					}
 					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
 						@Override
 						public void handleNanopub(Nanopub np) {
 							count++;
 							if (count % 100 == 0) {
-								System.out.print(count + " nanopubs...\r");
+								log(count + " nanopubs...\r");
 							}
 							check(np);
 						}
 					});
 					if (count == 0) {
-						System.out.println("NO NANOPUB FOUND: " + s);
-						error++;
+						log("NO NANOPUB FOUND: " + s + "\n");
+						report.countError();
 					}
 				}
 			} catch (OpenRDFException ex) {
-				System.out.println("RDF ERROR: " + s);
-				ex.printStackTrace(System.err);
-				error++;
+				log("RDF ERROR: " + s + "\n");
+				if (logOut != null) ex.printStackTrace(logOut);
+				report.countError();
 			} catch (MalformedNanopubException ex) {
-				System.out.println("INVALID NANOPUB: " + s);
-				ex.printStackTrace(System.err);
-				invalid++;
+				log("INVALID NANOPUB: " + s + "\n");
+				if (logOut != null) ex.printStackTrace(logOut);
+				report.countInvalid();
 			}
 		}
-		System.out.print("Summary:");
-		if (signed > 0) System.out.print(" " + signed + " signed and trusty;");
-		if (trusty > 0) System.out.print(" " + trusty + " trusty (unsigned);");
-		if (notTrusty > 0) System.out.print(" " + notTrusty + " valid (not trusty);");
-		if (invalidSignature > 0) System.out.print(" " + invalidSignature + " invalid signature;");
-		if (invalid > 0) System.out.print(" " + invalid + " invalid nanopubs;");
-		if (error > 0) System.out.print(" " + error + " errors;");
-		System.out.println();
 		if (sparqlRepo != null) {
 			try {
 				sparqlRepo.shutDown();
@@ -111,6 +117,7 @@ public class CheckNanopub {
 				ex.printStackTrace();
 			}
 		}
+		return report;
 	}
 
 	private void check(Nanopub np) {
@@ -120,25 +127,121 @@ public class CheckNanopub {
 					if (verbose) {
 						System.out.println("Signed and trusty: " + np.getUri());
 					}
-					signed++;
+					report.countSigned();
 				} else {
 					System.out.println("INVALID SIGNATURE: " + np.getUri());
-					invalidSignature++;
+					report.countInvalidSignature();
 				}
 			} else {
 				if (verbose) {
 					System.out.println("Trusty: " + np.getUri());
 				}
-				trusty++;
+				report.countTrusty();
 			}
 		} else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
 			System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
-			notTrusty++;
+			report.countNotTrusty();
 		} else {
 			if (verbose) {
 				System.out.println("Valid (but not trusty): " + np.getUri());
 			}
+			report.countNotTrusty();
+		}
+	}
+
+	public void setLogPrintStream(PrintStream logOut) {
+		this.logOut = logOut;
+	}
+
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
+	}
+
+	private void log(String message) {
+		if (logOut != null) {
+			logOut.print(message);
+		}
+	}
+
+
+	public class Report {
+
+		private int signed, trusty, notTrusty, invalidSignature, invalid, error;
+
+		private Report() {
+		}
+
+		private void countSigned() {
+			signed++;
+		}
+
+		public int getSignedCount() {
+			return signed;
+		}
+
+		private void countTrusty() {
+			trusty++;
+		}
+
+		public int getTrustyCount() {
+			return trusty;
+		}
+
+		private void countNotTrusty() {
 			notTrusty++;
+		}
+
+		public int getNotTrustyCount() {
+			return notTrusty;
+		}
+
+		private void countInvalidSignature() {
+			invalidSignature++;
+		}
+
+		public int getInvalidSignatureCount() {
+			return invalidSignature;
+		}
+
+		private void countInvalid() {
+			invalid++;
+		}
+
+		public int getInvalidCount() {
+			return invalid;
+		}
+
+		private void countError() {
+			error++;
+		}
+
+		public int getErrorCount() {
+			return error;
+		}
+
+		public int getAllValidCount() {
+			return signed + trusty + notTrusty;
+		}
+
+		public int getAllInvalidCount() {
+			return invalidSignature + invalid + error;
+		}
+
+		public boolean areAllValid() {
+			return getAllInvalidCount() == 0;
+		}
+
+
+		public String getSummary() {
+			String s = "";
+			if (signed > 0) s += " " + signed + " signed and trusty;";
+			if (trusty > 0) s += " " + trusty + " trusty (unsigned);";
+			if (notTrusty > 0) s += " " + notTrusty + " valid (not trusty);";
+			if (invalidSignature > 0) s += " " + invalidSignature + " invalid signature;";
+			if (invalid > 0) s += " " + invalid + " invalid nanopubs;";
+			if (error > 0) s += " " + error + " errors;";
+			s = s.replaceFirst("^ ", "");
+			return s;
 		}
 	}
 
