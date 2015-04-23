@@ -261,6 +261,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		}
 		// clear assertion graph:
 		collAssertionStatements.clear();
+		members.get(nanopubAssertionSetUri).remove(nanopubCollAssertionUri);
 	}
 
 	private void clearAll() {
