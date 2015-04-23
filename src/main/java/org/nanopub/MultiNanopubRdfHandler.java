@@ -37,7 +37,8 @@ import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 /**
- * Handles files or streams with a sequence of nanopubs.
+ * Handles files or streams with a sequence of nanopubs. This class also handles nanopublication
+ * collections (they are on the fly transformed to proper nanopubs).
  *
  * @author Tobias Kuhn
  */
@@ -75,6 +76,8 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 			if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&
 					ex.getCause() instanceof MalformedNanopubException) {
 				throw (MalformedNanopubException) ex.getCause();
+			} else {
+				throw ex;
 			}
 		} finally {
 			in.close();
@@ -92,7 +95,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 	private URI nanopubCollPubInfoUri = null;
 	private boolean headComplete = false;
 	private Map<URI,Boolean> graphs = new HashMap<>();
-	private Map<URI,Boolean> assertionSet = new HashMap<>();
+	private Map<URI,Map<URI,Boolean>> members = new HashMap<>();
 	private Set<Statement> statements = new HashSet<>();
 	private Set<Statement> collAssertionStatements = new HashSet<>();
 	private List<String> nsPrefixes = new ArrayList<>();
@@ -132,17 +135,17 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				if (p.equals(HAS_COLLPUBINFO_URI)) {
 					nanopubCollPubInfoUri = (URI) st.getObject();
 				}
-				if (p.equals(HAS_MEMBER) && nanopubAssertionSetUri != null) {
-					// Only works when assertion set is introduced before its members...
-					if (st.getSubject().equals(nanopubAssertionSetUri)) {
-						addAssertionMember((URI) st.getObject());
-					}
+				if (p.equals(HAS_MEMBER)) {
+					addMember((URI) st.getSubject(), (URI) st.getObject());
 				}
 			} else {
 				if (nanopubUri == null && nanopubCollUri == null) {
 					throwMalformed("No nanopub (collection) URI found");
 				} else if (nanopubUri != null && nanopubCollUri != null) {
 					throwMalformed("Nanopub URI and nanopub collection URI found");
+				}
+				if (nanopubCollUri != null && nanopubAssertionSetUri == null) {
+					throwMalformed("No assertion set found for nanopub collection");
 				}
 				headComplete = true;
 			}
@@ -158,7 +161,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				}
 			} else if (nanopubCollUri != null) {
 				URI c = (URI) st.getContext();
-				if (assertionSet.containsKey(c)) {
+				if (members.get(nanopubAssertionSetUri).containsKey(c)) {
 					if (nanopubCollAssertionUri != null && !c.equals(nanopubCollAssertionUri)) {
 						finishNanopubFromCollection();
 					}
@@ -220,7 +223,11 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	private void finishNanopubFromCollection() {
 		List<Statement> l = new ArrayList<>();
-		String s = nanopubCollAssertionUri.toString().replaceFirst("assertion$", "").replaceFirst("a$", "");
+		String s = nanopubCollAssertionUri.toString();
+		if (!s.matches(".*[^a-zA-Z]a") && !s.matches(".*[^a-zA-Z]assertion")) {
+			throwMalformed("Invalid assertion set member URI: " + s);
+		}
+		s = s.replaceFirst("assertion$", "").replaceFirst("a$", "");
 		URI npUri = new URIImpl(s.replaceFirst("(#|\\.)$", ""));
 		URI head = new URIImpl(s + "head");
 		URI prov = new URIImpl(s + "prov");
@@ -263,17 +270,18 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		nanopubCollAssertionUri = null;
 		headComplete = false;
 		graphs.clear();
-		assertionSet.clear();
+		members.clear();
 		statements.clear();
 		collAssertionStatements.clear();
 	}
 
-	private void addAssertionMember(URI a) {
-		String s = a.toString();
-		if (!s.matches(".*[^a-zA-Z]a") && !s.matches(".*[^a-zA-Z]assertion")) {
-			throwMalformed("Invalid assertion set member URI: " + s);
+	private void addMember(URI container, URI memberUri) {
+		Map<URI,Boolean> m = members.get(container);
+		if (m == null) {
+			m = new HashMap<URI,Boolean>();
+			members.put(container, m);
 		}
-		assertionSet.put(a, true);
+		m.put(memberUri, true);
 	}
 
 	private void throwMalformed(MalformedNanopubException ex) {
