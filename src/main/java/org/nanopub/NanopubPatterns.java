@@ -3,6 +3,7 @@ package org.nanopub;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.nanopub.extra.index.NanopubIndexPattern;
 import org.nanopub.trusty.TrustyNanopubPattern;
 
 public class NanopubPatterns {
@@ -11,6 +12,7 @@ public class NanopubPatterns {
 
 	static {
 		addPattern(new TrustyNanopubPattern());
+		addPattern(new NanopubIndexPattern());
 	}
 
 	private NanopubPatterns() {}  // no instances allowed
