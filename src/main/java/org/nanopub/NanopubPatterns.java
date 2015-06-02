@@ -11,6 +11,8 @@ public class NanopubPatterns {
 	private static List<NanopubPattern> patterns = new ArrayList<>();
 
 	static {
+		addPattern(new SimpleTimestampPattern());
+		addPattern(new SimpleCreatorPattern());
 		addPattern(new TrustyNanopubPattern());
 		addPattern(new NanopubIndexPattern());
 	}

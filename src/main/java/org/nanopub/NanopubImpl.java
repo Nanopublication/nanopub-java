@@ -19,14 +19,12 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.openrdf.OpenRDFException;
-import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -465,42 +463,17 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	@Override
 	public Calendar getCreationTime() {
-		String s = null;
-		for (Statement st : pubinfo) {
-			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!NanopubVocab.isCreationTimeProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof Literal)) continue;
-			Literal l = (Literal) st.getObject();
-			if (!l.getDatatype().equals(NanopubVocab.XSD_DATETIME)) continue;
-			s = l.stringValue();
-			break;
-		}
-		if (s == null) return null;
-		return DatatypeConverter.parseDateTime(s);
+		return SimpleTimestampPattern.getCreationTime(this);
 	}
 
 	@Override
 	public Set<URI> getAuthors() {
-		Set<URI> authors = new HashSet<>();
-		for (Statement st : pubinfo) {
-			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!NanopubVocab.isAuthorProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof URI)) continue;
-			authors.add((URI) st.getObject());
-		}
-		return authors;
+		return SimpleCreatorPattern.getAuthors(this);
 	}
 
 	@Override
 	public Set<URI> getCreators() {
-		Set<URI> authors = new HashSet<>();
-		for (Statement st : pubinfo) {
-			if (!st.getSubject().equals(nanopubUri)) continue;
-			if (!NanopubVocab.isCreatorProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof URI)) continue;
-			authors.add((URI) st.getObject());
-		}
-		return authors;
+		return SimpleCreatorPattern.getCreators(this);
 	}
 
 	@Override

@@ -45,6 +45,9 @@ public interface Nanopub {
 
 	public Set<URI> getGraphUris();
 
+	// TODO: Now that we have SimpleCreatorPattern and SimpleTimestampPattern,
+	// we might not need the following three methods anymore...
+
 	public Calendar getCreationTime();
 
 	public Set<URI> getAuthors();
