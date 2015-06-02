@@ -21,20 +21,23 @@ public interface NanopubPattern extends Serializable {
 	public String getName();
 
 	/**
-	 * This method should return true if the given nanopublication uses or
-	 * seems to use this pattern (but not necessarily in a correct manner).
+	 * This method should return true if this pattern applies to the given
+	 * nanopublication. This can be because the creators of the pattern think
+	 * that the given nanopublication should use it, or because the
+	 * nanopublication seems to be using the pattern, but not necessarily in a
+	 * correct and valid manner.
 	 *
 	 * @param nanopub The nanopublication
-	 * @return true if the nanopublication seems to use the pattern
+	 * @return true if the pattern applies to the nanopublication
 	 */
-	public boolean isUsedBy(Nanopub nanopub);
+	public boolean appliesTo(Nanopub nanopub);
 
 	/**
 	 * This method should return true if the given nanopublication uses this
-	 * pattern in a correct manner.
+	 * pattern in a correct and valid manner.
 	 *
 	 * @param nanopub The nanopublication
-	 * @return true if this pattern is used in a correct manner
+	 * @return true if this pattern is used in a valid manner
 	 */
 	public boolean isCorrectlyUsedBy(Nanopub nanopub);
 
@@ -50,8 +53,8 @@ public interface NanopubPattern extends Serializable {
 	public String getDescriptionFor(Nanopub nanopub);
 
 	/**
-	 * This method can optionally return a URL with additional information
-	 * about the given pattern.
+	 * This method should return a URL with additional information about the
+	 * given pattern.
 	 *
 	 * @return A URL with additional information
 	 */

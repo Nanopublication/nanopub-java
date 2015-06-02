@@ -20,7 +20,7 @@ public class NanopubIndexPattern implements NanopubPattern {
 	}
 
 	@Override
-	public boolean isUsedBy(Nanopub nanopub) {
+	public boolean appliesTo(Nanopub nanopub) {
 		return IndexUtils.isIndex(nanopub);
 	}
 

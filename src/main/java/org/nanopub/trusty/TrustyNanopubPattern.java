@@ -21,7 +21,7 @@ public class TrustyNanopubPattern implements NanopubPattern {
 	}
 
 	@Override
-	public boolean isUsedBy(Nanopub nanopub) {
+	public boolean appliesTo(Nanopub nanopub) {
 		return TrustyUriUtils.isPotentialTrustyUri(nanopub.getUri());
 	}
 
