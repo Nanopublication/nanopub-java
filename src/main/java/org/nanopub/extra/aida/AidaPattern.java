@@ -1,10 +1,12 @@
-package org.nanopub;
+package org.nanopub.extra.aida;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubPattern;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;

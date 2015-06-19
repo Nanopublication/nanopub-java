@@ -3,6 +3,7 @@ package org.nanopub;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.nanopub.extra.aida.AidaPattern;
 import org.nanopub.extra.index.NanopubIndexPattern;
 import org.nanopub.trusty.TrustyNanopubPattern;
 
