@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.nanopub.extra.aida.AidaPattern;
 import org.nanopub.extra.index.NanopubIndexPattern;
+import org.nanopub.extra.security.DigitalSignaturePattern;
 import org.nanopub.trusty.TrustyNanopubPattern;
 
 public class NanopubPatterns {
@@ -17,6 +18,7 @@ public class NanopubPatterns {
 		addPattern(new TrustyNanopubPattern());
 		addPattern(new NanopubIndexPattern());
 		addPattern(new AidaPattern());
+		addPattern(new DigitalSignaturePattern());
 	}
 
 	private NanopubPatterns() {}  // no instances allowed
