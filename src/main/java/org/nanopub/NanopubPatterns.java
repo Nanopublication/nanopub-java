@@ -15,6 +15,7 @@ public class NanopubPatterns {
 		addPattern(new SimpleCreatorPattern());
 		addPattern(new TrustyNanopubPattern());
 		addPattern(new NanopubIndexPattern());
+		addPattern(new AidaPattern());
 	}
 
 	private NanopubPatterns() {}  // no instances allowed
