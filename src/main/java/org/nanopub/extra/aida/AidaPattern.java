@@ -31,20 +31,13 @@ public class AidaPattern implements NanopubPattern {
 	@Override
 	public boolean isCorrectlyUsedBy(Nanopub nanopub) {
 		URI aidaUri = getAidaUri(nanopub);
-		return aidaUri != null && aidaUri.toString().startsWith("http://purl.org/aida/");
+		return aidaUri != null && aidaUri.toString().startsWith(AIDA_URI_PREFIX);
 	}
 
 	@Override
 	public String getDescriptionFor(Nanopub nanopub) {
 		if (isCorrectlyUsedBy(nanopub)) {
-			URI aidaUri = getAidaUri(nanopub);
-			String aidaSentence = aidaUri.toString().substring("http://purl.org/aida/".length());
-			try {
-				aidaSentence = URLDecoder.decode(aidaSentence, "UTF-8");
-			} catch (UnsupportedEncodingException ex) {
-				ex.printStackTrace();
-			}
-			return "AIDA sentence: " + aidaSentence;
+			return "AIDA sentence: " + getAidaText(getAidaUri(nanopub));
 		} else {
 			return "Not a valid AIDA nanopublication";
 		}
@@ -75,6 +68,19 @@ public class AidaPattern implements NanopubPattern {
 		return aidaUri;
 	}
 
+	public static String getAidaText(URI aidaUri) {
+		if (aidaUri == null) return null;
+		if (!aidaUri.toString().startsWith(AIDA_URI_PREFIX)) return null;
+		String aidaSentence = aidaUri.toString().substring(AIDA_URI_PREFIX.length());
+		try {
+			aidaSentence = URLDecoder.decode(aidaSentence, "UTF-8");
+		} catch (UnsupportedEncodingException ex) {
+			ex.printStackTrace();
+		}
+		return aidaSentence;
+	}
+
+	public static final String AIDA_URI_PREFIX = "http://purl.org/aida/";
 	public static final URI AS_SENTENCE = new URIImpl("http://purl.org/nanopub/x/asSentence");
 
 }
