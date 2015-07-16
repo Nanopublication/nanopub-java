@@ -105,6 +105,9 @@ public class FixTrustyNanopub {
 			RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
 			NanopubUtils.propagateToHandler(nanopub, r);
 			NanopubRdfHandler h = new NanopubRdfHandler();
+			if (!TrustyUriUtils.isPotentialTrustyUri(nanopub.getUri())) {
+				throw new TrustyUriException("Not a (broken) trusty URI: " + nanopub.getUri());
+			}
 			String oldArtifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 			RdfUtils.fixTrustyRdf(r, oldArtifactCode, h);
 			np = h.getNanopub();
