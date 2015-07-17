@@ -35,7 +35,8 @@ public class TrustyNanopubUtils {
 		writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
 		writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
 		writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-		writer.handleNamespace("dc", "http://purl.org/dc/terms/");
+		writer.handleNamespace("dct", "http://purl.org/dc/terms/");
+		writer.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
 		writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
 		writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
 		for (Statement st : NanopubUtils.getStatements(nanopub)) {

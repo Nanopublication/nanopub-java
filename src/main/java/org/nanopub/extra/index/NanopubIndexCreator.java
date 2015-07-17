@@ -151,7 +151,8 @@ public abstract class NanopubIndexCreator {
 		npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 		npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
 		npCreator.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-		npCreator.addNamespace("dc", "http://purl.org/dc/terms/");
+		npCreator.addNamespace("dct", "http://purl.org/dc/terms/");
+		npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
 		npCreator.addNamespace("pav", "http://purl.org/pav/");
 		npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
 		npCreator.addNamespace("npx", "http://purl.org/nanopub/x/");

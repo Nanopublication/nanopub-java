@@ -77,7 +77,8 @@ public class NanopubUtils {
 			handler.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
 			handler.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
 			handler.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-			handler.handleNamespace("dc", "http://purl.org/dc/terms/");
+			handler.handleNamespace("dct", "http://purl.org/dc/terms/");
+			handler.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
 			handler.handleNamespace("pav", "http://purl.org/pav/");
 			handler.handleNamespace("np", "http://www.nanopub.org/nschema#");
 		}
