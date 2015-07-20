@@ -54,7 +54,8 @@ public class FetchIndex {
 			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
 		}
 		nanopubCount = 0;
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
+				.setConnectionRequestTimeout(10000).setSocketTimeout(10000).build();
 		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxTotal(1000);
