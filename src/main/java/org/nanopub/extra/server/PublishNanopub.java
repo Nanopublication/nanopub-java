@@ -132,14 +132,14 @@ public class PublishNanopub {
 	private void processNanopub(Nanopub nanopub) {
 		count++;
 		if (count % 100 == 0) {
-			System.out.print(count + " nanopubs...\r");
+			System.err.print(count + " nanopubs...\r");
 		}
 		try {
 			publishNanopub(nanopub);
 		} catch (IOException ex) {
 			if (verbose) {
-				System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
-				System.out.println("---");
+				System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+				System.err.println("---");
 			}
 			failed = true;
 		}

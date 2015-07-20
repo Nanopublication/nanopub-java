@@ -150,7 +150,7 @@ public class MakeIndex {
 					}
 					count++;
 					if (count % 100 == 0) {
-						System.out.print(count + " nanopubs...\r");
+						System.err.print(count + " nanopubs...\r");
 					}
 				}
 			});

@@ -165,7 +165,7 @@ public class GetNanopub {
 
 					@Override
 					public void progress(int count) {
-						System.out.print(count + " nanopubs...\r");
+						System.err.print(count + " nanopubs...\r");
 					}
 
 				});
@@ -177,7 +177,7 @@ public class GetNanopub {
 		}
 		if (outputStream != System.out) {
 			outputStream.close();
-			System.out.println(count + " nanopubs retrieved and saved in " + outputFile);
+			System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
 		}
 	}
 
@@ -191,7 +191,7 @@ public class GetNanopub {
 		} else {
 			NanopubUtils.writeToStream(np, outputStream, rdfFormat);
 			if (count % 100 == 0) {
-				System.out.print(count + " nanopubs...\r");
+				System.err.print(count + " nanopubs...\r");
 			}
 		}
 	}

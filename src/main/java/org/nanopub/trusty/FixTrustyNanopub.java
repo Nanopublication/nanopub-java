@@ -81,7 +81,7 @@ public class FixTrustyNanopub {
 							System.out.println("Nanopub URI: " + np.getUri());
 						} else {
 							if (count % 100 == 0) {
-								System.out.print(count + " nanopubs...\r");
+								System.err.print(count + " nanopubs...\r");
 							}
 						}
 					} catch (RDFHandlerException ex) {

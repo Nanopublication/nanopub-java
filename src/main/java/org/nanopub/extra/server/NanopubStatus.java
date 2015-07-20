@@ -169,7 +169,7 @@ public class NanopubStatus {
 			}
 		}
 		if ((indexNpCount+contentNpCount) % 100 == 0) {
-			System.out.print((indexNpCount+contentNpCount) + " nanopubs...\r");
+			System.err.print((indexNpCount+contentNpCount) + " nanopubs...\r");
 		}
 	}
 
