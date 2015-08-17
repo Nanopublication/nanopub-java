@@ -54,3 +54,20 @@ License
 -------
 
 nanopub-java is free software under the MIT License. See LICENSE.txt.
+
+
+Usage Tracking
+--------------
+
+This is an incomplete list of software projects using this library:
+
+- https://github.com/Nanopublication/nanopub-store-api
+- https://github.com/Nanopublication/landmark-publication-tool
+- https://github.com/ISA-tools/NanoMaton
+- https://github.com/tkuhn/bel2nanopub
+- https://github.com/tkuhn/nanobrowser
+- https://github.com/tkuhn/nanolytics
+- https://github.com/tkuhn/nanopub-validator
+- https://github.com/tkuhn/nanopub-server
+- https://github.com/tkuhn/bio2rdf2nanopub
+- https://github.com/tkuhn/nanopub-monitor
