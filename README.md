@@ -15,7 +15,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.6</version>
+      <version>1.7</version>
     </dependency>
 
 
