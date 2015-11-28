@@ -14,7 +14,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class NanopubServerUtils {
 
 	public static final String requiredProtocolVersion = "0.2";
-	public static final float requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
+	public static final int requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
 
 	protected NanopubServerUtils() {
 		throw new RuntimeException("no instances allowed");
@@ -72,13 +72,13 @@ public class NanopubServerUtils {
 		return bootstrapServerList;
 	}
 
-	public static float getVersionValue(String versionString) {
+	public static int getVersionValue(String versionString) {
 		try {
 			int major = Integer.parseInt(versionString.split("\\.")[0]);
 			int minor = Integer.parseInt(versionString.split("\\.")[1]);
-			return (float) (major + 0.001*minor);
+			return (major * 1000) + minor;
 		} catch (Exception ex) {
-			return 0.0f;
+			return 0;
 		}
 	}
 

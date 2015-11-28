@@ -115,7 +115,7 @@ public class ServerInfo implements Serializable {
 		return protocolVersion;
 	}
 
-	public float getProtocolVersionValue() {
+	public int getProtocolVersionValue() {
 		return NanopubServerUtils.getVersionValue(protocolVersion);
 	}
 
