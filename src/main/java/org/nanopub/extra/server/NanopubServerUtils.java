@@ -13,6 +13,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class NanopubServerUtils {
 
+	// Version numbers have the form MAJOR.MINOR (for example, 0.12 is a newer version than 0.9!)
 	public static final String requiredProtocolVersion = "0.2";
 	public static final int requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
 
