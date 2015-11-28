@@ -46,6 +46,8 @@ public class GetServerInfo {
 			System.out.println("Max nanopubs:        " + (si.getMaxNanopubs() == null ? "unrestricted" : si.getMaxNanopubs()));
 			System.out.println("Max triples/nanopub: " + (si.getMaxNanopubTriples() == null ? "unrestricted" : si.getMaxNanopubTriples()));
 			System.out.println("Max bytes/nanopub:   " + (si.getMaxNanopubBytes() == null ? "unrestricted" : si.getMaxNanopubBytes()));
+			System.out.println("URI pattern:         " + (si.getUriPattern() == null ? "(everything)" : si.getUriPattern()));
+			System.out.println("Hash pattern:        " + (si.getHashPattern() == null ? "(everything)" : si.getHashPattern()));
 			System.out.println();
 		}
 	}

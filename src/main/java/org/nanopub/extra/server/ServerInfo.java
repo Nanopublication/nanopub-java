@@ -76,6 +76,10 @@ public class ServerInfo implements Serializable {
 	protected Long maxNanopubBytes;
 	protected Long maxNanopubs;
 
+	// TODO Use these fields when getting nanopubs:
+	protected String uriPattern;
+	protected String hashPattern;
+
 	public ServerInfo() {
 	}
 
@@ -129,6 +133,14 @@ public class ServerInfo implements Serializable {
 
 	public Long getMaxNanopubs() {
 		return maxNanopubs;
+	}
+
+	public String getUriPattern() {
+		return uriPattern;
+	}
+
+	public String getHashPattern() {
+		return hashPattern;
 	}
 
 	public String asJson() {

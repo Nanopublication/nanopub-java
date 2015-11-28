@@ -13,12 +13,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class NanopubServerUtils {
 
-	public static final String protocolVersion = "0.2";
-	public static final float protocolVersionValue = getVersionValue(protocolVersion);
 	public static final String requiredProtocolVersion = "0.2";
 	public static final float requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
 
-	private NanopubServerUtils() {}  // no instances allowed
+	protected NanopubServerUtils() {
+		throw new RuntimeException("no instances allowed");
+	}
 
 	public static List<String> loadPeerList(String serverUrl) throws IOException {
 		return loadList(serverUrl + "peers");
