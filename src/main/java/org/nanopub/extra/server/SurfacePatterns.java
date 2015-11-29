@@ -3,12 +3,12 @@ package org.nanopub.extra.server;
 import net.trustyuri.TrustyUriUtils;
 
 // TODO Make pattern processing more efficient
-public class NanopubPatterns {
+public class SurfacePatterns {
 
 	private final String[] uriPattern;
 	private final String[] hashPattern;
 
-	public NanopubPatterns(String uriPattern, String hashPattern) {
+	public SurfacePatterns(String uriPattern, String hashPattern) {
 		if (uriPattern.isEmpty()) {
 			this.uriPattern = null;
 		} else {
@@ -21,7 +21,7 @@ public class NanopubPatterns {
 		}
 	}
 
-	public NanopubPatterns(ServerInfo serverInfo) {
+	public SurfacePatterns(ServerInfo serverInfo) {
 		this(serverInfo.getUriPattern(), serverInfo.getHashPattern());
 	}
 
