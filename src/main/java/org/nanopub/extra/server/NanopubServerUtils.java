@@ -7,8 +7,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -83,41 +81,6 @@ public class NanopubServerUtils {
 		} catch (Exception ex) {
 			return 0;
 		}
-	}
-
-	public boolean matchesPatterns(String uri, ServerInfo serverInfo) {
-		return matchesPatterns(uri, serverInfo.getUriPattern(), serverInfo.getHashPattern());
-	}
-
-	public boolean matchesPatterns(String uri, String uriPattern, String hashPattern) {
-		// TODO Try to make pattern matching more efficient
-		if (!matchesHashPattern(TrustyUriUtils.getArtifactCode(uri), hashPattern)) {
-			return false;
-		}
-		if (uriPattern.isEmpty()) return true;
-		boolean match = false;
-		String[] parts = uriPattern.split(" ");
-		for (String p : parts) {
-			if (uri.startsWith(p)) {
-				match = true;
-				break;
-			}
-		}
-		return match;
-	}
-
-	public boolean matchesHashPattern(String artifactCode, String hashPattern) {
-		if (hashPattern.isEmpty()) return true;
-		boolean match = false;
-		String[] parts = hashPattern.split(" ");
-		String hash = TrustyUriUtils.getDataPart(artifactCode);
-		for (String p : parts) {
-			if (hash.startsWith(p)) {
-				match = true;
-				break;
-			}
-		}
-		return match;
 	}
 
 }

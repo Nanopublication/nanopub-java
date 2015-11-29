@@ -1,14 +1,14 @@
 package org.nanopub;
 
-import static org.nanopub.Nanopub.NANOPUB_TYPE_URI;
-import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
-import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
-import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
-import static org.nanopub.Nanopub.NANOPUBCOLL_TYPE_URI;
 import static org.nanopub.Nanopub.HAS_ASSERTIONSET_URI;
+import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
 import static org.nanopub.Nanopub.HAS_COLLPROVENANCE_URI;
 import static org.nanopub.Nanopub.HAS_COLLPUBINFO_URI;
 import static org.nanopub.Nanopub.HAS_MEMBER;
+import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
+import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
+import static org.nanopub.Nanopub.NANOPUBCOLL_TYPE_URI;
+import static org.nanopub.Nanopub.NANOPUB_TYPE_URI;
 
 import java.io.BufferedInputStream;
 import java.io.File;
