@@ -9,12 +9,12 @@ public class NanopubSurfacePattern {
 	private final String[] hashPattern;
 
 	public NanopubSurfacePattern(String uriPattern, String hashPattern) {
-		if (uriPattern.isEmpty()) {
+		if (uriPattern == null || uriPattern.isEmpty()) {
 			this.uriPattern = null;
 		} else {
 			this.uriPattern = uriPattern.split(" ");
 		}
-		if (hashPattern.isEmpty()) {
+		if (hashPattern == null || hashPattern.isEmpty()) {
 			this.hashPattern = null;
 		} else {
 			this.hashPattern = hashPattern.split(" ");
