@@ -3,12 +3,12 @@ package org.nanopub.extra.server;
 import net.trustyuri.TrustyUriUtils;
 
 // TODO Make pattern processing more efficient
-public class SurfacePatterns {
+public class NanopubSurfacePattern {
 
 	private final String[] uriPattern;
 	private final String[] hashPattern;
 
-	public SurfacePatterns(String uriPattern, String hashPattern) {
+	public NanopubSurfacePattern(String uriPattern, String hashPattern) {
 		if (uriPattern.isEmpty()) {
 			this.uriPattern = null;
 		} else {
@@ -21,7 +21,7 @@ public class SurfacePatterns {
 		}
 	}
 
-	public SurfacePatterns(ServerInfo serverInfo) {
+	public NanopubSurfacePattern(ServerInfo serverInfo) {
 		this(serverInfo.getUriPattern(), serverInfo.getHashPattern());
 	}
 
@@ -53,7 +53,7 @@ public class SurfacePatterns {
 		return match;
 	}
 
-	public boolean overlapsWith(SurfacePatterns other) {
+	public boolean overlapsWith(NanopubSurfacePattern other) {
 		// TODO This is inefficient: improve!
 		if (uriPattern != null && other.uriPattern != null) {
 			boolean overlapEncountered = false;
@@ -85,19 +85,19 @@ public class SurfacePatterns {
 	}
 
 	public static boolean matchesUri(String uri, String uriPattern, String hashPattern) {
-		return new SurfacePatterns(uriPattern, hashPattern).matchesUri(uri);
+		return new NanopubSurfacePattern(uriPattern, hashPattern).matchesUri(uri);
 	}
 
 	public static boolean matchesUri(String uri, ServerInfo serverInfo) {
-		return new SurfacePatterns(serverInfo).matchesUri(uri);
+		return new NanopubSurfacePattern(serverInfo).matchesUri(uri);
 	}
 
 	public static boolean matchesHash(String artifactCode, String uriPattern, String hashPattern) {
-		return new SurfacePatterns(uriPattern, hashPattern).matchesHash(artifactCode);
+		return new NanopubSurfacePattern(uriPattern, hashPattern).matchesHash(artifactCode);
 	}
 
 	public static boolean matchesHash(String artifactCode, ServerInfo serverInfo) {
-		return new SurfacePatterns(serverInfo).matchesHash(artifactCode);
+		return new NanopubSurfacePattern(serverInfo).matchesHash(artifactCode);
 	}
 
 }
