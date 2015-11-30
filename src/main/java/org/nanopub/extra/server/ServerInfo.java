@@ -80,6 +80,8 @@ public class ServerInfo implements Serializable {
 	protected String uriPattern;
 	protected String hashPattern;
 
+	private transient NanopubSurfacePattern pattern;
+
 	public ServerInfo() {
 	}
 
@@ -141,6 +143,13 @@ public class ServerInfo implements Serializable {
 
 	public String getHashPattern() {
 		return hashPattern;
+	}
+
+	public NanopubSurfacePattern getNanopubSurfacePattern() {
+		if (pattern == null) {
+			pattern = new NanopubSurfacePattern(this);
+		}
+		return pattern;
 	}
 
 	public String asJson() {
