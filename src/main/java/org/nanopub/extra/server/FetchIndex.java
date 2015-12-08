@@ -34,6 +34,7 @@ public class FetchIndex {
 	private List<FetchNanopubTask> fetchTasks;
 	private List<ServerInfo> servers;
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
+	private Map<String,NanopubSurfacePattern> serverPatterns;
 	private int nanopubCount;
 	private ProgressListener progressListener;
 	private HttpClient httpClient;
@@ -47,15 +48,17 @@ public class FetchIndex {
 		fetchTasks.add(new FetchNanopubTask(indexUri, true));
 		servers = new ArrayList<>();
 		serverLoad = new HashMap<>();
+		serverPatterns = new HashMap<>();
 		ServerIterator serverIterator = new ServerIterator();
 		while (serverIterator.hasNext()) {
 			ServerInfo serverInfo = serverIterator.next();
 			servers.add(serverInfo);
 			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
+			serverPatterns.put(serverInfo.getPublicUrl(), new NanopubSurfacePattern(serverInfo));
 		}
 		nanopubCount = 0;
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-				.setConnectionRequestTimeout(10000).setSocketTimeout(10000).build();
+				.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
 		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxTotal(1000);
@@ -91,6 +94,7 @@ public class FetchIndex {
 				for (ServerInfo serverInfo : shuffledServers) {
 					String serverUrl = serverInfo.getPublicUrl();
 					if (task.hasServerBeenTried(serverUrl)) continue;
+					if (!serverPatterns.get(serverUrl).matchesUri(task.getNanopubUri())) continue;
 					int load = serverLoad.get(serverUrl).size();
 					if (load >= maxParallelRequestsPerServer) continue;
 					assignTask(task, serverUrl);
