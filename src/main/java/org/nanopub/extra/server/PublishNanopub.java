@@ -44,6 +44,7 @@ public class PublishNanopub {
 	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		PublishNanopub obj = new PublishNanopub();
 		JCommander jc = new JCommander(obj);
 		try {

@@ -23,6 +23,7 @@ public class Run {
 	private Run() {}  // no instances allowed
 
 	public static void main(String[] args) throws IOException, OpenRDFException {
+		NanopubImpl.ensureLoaded();
 		run(args);
 	}
 

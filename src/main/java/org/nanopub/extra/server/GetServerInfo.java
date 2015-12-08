@@ -3,6 +3,7 @@ package org.nanopub.extra.server;
 import java.io.IOException;
 import java.util.List;
 
+import org.nanopub.NanopubImpl;
 import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 import com.beust.jcommander.JCommander;
@@ -14,6 +15,7 @@ public class GetServerInfo {
 	private List<String> serverUrls;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		GetServerInfo obj = new GetServerInfo();
 		JCommander jc = new JCommander(obj);
 		try {

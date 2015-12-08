@@ -11,6 +11,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.NanopubImpl;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
@@ -57,6 +58,7 @@ public class MakeIndex {
 	private List<String> seeAlso = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException {
+		NanopubImpl.ensureLoaded();
 		MakeIndex obj = new MakeIndex();
 		JCommander jc = new JCommander(obj);
 		try {

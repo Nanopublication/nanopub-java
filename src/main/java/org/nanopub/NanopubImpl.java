@@ -43,9 +43,15 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RDFParserRegistry;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.openrdf.rio.nquads.NQuadsParserFactory;
+import org.openrdf.rio.nquads.NQuadsWriterFactory;
+import org.openrdf.rio.trig.TriGParserFactory;
+import org.openrdf.rio.trix.TriXParserFactory;
+import org.openrdf.rio.trix.TriXWriterFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -60,7 +66,16 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	static {
+		RDFParserRegistry.getInstance().add(new TriGParserFactory());
+		RDFParserRegistry.getInstance().add(new NQuadsParserFactory());
+		RDFParserRegistry.getInstance().add(new TriXParserFactory());
 		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
+		RDFWriterRegistry.getInstance().add(new NQuadsWriterFactory());
+		RDFWriterRegistry.getInstance().add(new TriXWriterFactory());
+	}
+
+	public static void ensureLoaded() {
+		// ensure class is loaded; nothing left to be done
 	}
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();

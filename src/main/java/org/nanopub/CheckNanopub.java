@@ -31,6 +31,7 @@ public class CheckNanopub {
 	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		CheckNanopub obj = new CheckNanopub();
 		JCommander jc = new JCommander(obj);
 		try {

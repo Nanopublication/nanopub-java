@@ -11,6 +11,8 @@ import java.security.SecureRandom;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.nanopub.NanopubImpl;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
@@ -20,6 +22,7 @@ public class MakeKeys {
 	private String pathAndFilename = "~/.nanopub/id_dsa";
 
 	public static void main(String[] args) throws IOException {
+		NanopubImpl.ensureLoaded();
 		MakeKeys obj = new MakeKeys();
 		JCommander jc = new JCommander(obj);
 		try {

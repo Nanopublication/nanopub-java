@@ -20,6 +20,7 @@ import net.trustyuri.rdf.RdfPreprocessor;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -38,6 +39,7 @@ public class CheckSignature {
 	private List<File> inputNanopubs = new ArrayList<File>();
 
 	public static void main(String[] args) throws IOException {
+		NanopubImpl.ensureLoaded();
 		CheckSignature obj = new CheckSignature();
 		JCommander jc = new JCommander(obj);
 		try {

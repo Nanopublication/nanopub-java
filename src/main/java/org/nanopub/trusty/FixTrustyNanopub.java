@@ -20,6 +20,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
@@ -41,6 +42,7 @@ public class FixTrustyNanopub {
 	private boolean verbose = false;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		FixTrustyNanopub obj = new FixTrustyNanopub();
 		JCommander jc = new JCommander(obj);
 		try {

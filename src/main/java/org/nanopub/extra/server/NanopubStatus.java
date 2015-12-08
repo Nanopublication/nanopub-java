@@ -9,6 +9,7 @@ import net.trustyuri.rdf.RdfModule;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.openrdf.OpenRDFException;
@@ -34,6 +35,7 @@ public class NanopubStatus {
 	private boolean checkAllServers = false;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		NanopubStatus obj = new NanopubStatus();
 		JCommander jc = new JCommander(obj);
 		try {

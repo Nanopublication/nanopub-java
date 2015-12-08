@@ -49,6 +49,7 @@ public class GetNanopub {
 	private boolean getIndexContent;
 
 	public static void main(String[] args) {
+		NanopubImpl.ensureLoaded();
 		GetNanopub obj = new GetNanopub();
 		JCommander jc = new JCommander(obj);
 		try {
