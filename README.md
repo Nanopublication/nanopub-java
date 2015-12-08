@@ -5,6 +5,14 @@ This is a Java library for nanopublications (see http://nanopub.org) based on
 Sesame.
 
 
+Publication
+-----------
+
+- Tobias Kuhn.  [nanopub-java: A Java Library for
+  Nanopublications](http://arxiv.org/pdf/1508.04977.pdf). In Proceedings of the
+  5th Workshop on Linked Science (LISC 2015). 2015.
+
+
 Usage
 -----
 
@@ -47,7 +55,7 @@ a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
 Developers
 ----------
 
-- Tobias Kuhn (http://www.tkuhn.ch)
+- Tobias Kuhn (http://www.tkuhn.org)
 
 
 License
