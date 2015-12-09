@@ -23,7 +23,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.8</version>
+      <version>1.9</version>
     </dependency>
 
 
@@ -49,7 +49,7 @@ directory or using the command `np` in `bin/`. For example:
 One can also directly use the JAR file (as generated in `target/`) or [download
 a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
 
-    $ java -jar nanopub-1.6-jar-with-dependencies.jar check nanopubfile.trig
+    $ java -jar nanopub-1.9-jar-with-dependencies.jar check nanopubfile.trig
 
 
 Developers
