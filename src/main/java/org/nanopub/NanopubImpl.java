@@ -43,15 +43,12 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RDFParserFactory;
 import org.openrdf.rio.RDFParserRegistry;
+import org.openrdf.rio.RDFWriterFactory;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
-import org.openrdf.rio.nquads.NQuadsParserFactory;
-import org.openrdf.rio.nquads.NQuadsWriterFactory;
-import org.openrdf.rio.trig.TriGParserFactory;
-import org.openrdf.rio.trix.TriXParserFactory;
-import org.openrdf.rio.trix.TriXWriterFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -66,12 +63,34 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	static {
-		RDFParserRegistry.getInstance().add(new TriGParserFactory());
-		RDFParserRegistry.getInstance().add(new NQuadsParserFactory());
-		RDFParserRegistry.getInstance().add(new TriXParserFactory());
+		tryToLoadParserFactory("org.openrdf.rio.trig.TriGParserFactory");
 		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
-		RDFWriterRegistry.getInstance().add(new NQuadsWriterFactory());
-		RDFWriterRegistry.getInstance().add(new TriXWriterFactory());
+		tryToLoadParserFactory("org.openrdf.rio.nquads.NQuadsParserFactory");
+		tryToLoadWriterFactory("org.openrdf.rio.nquads.NQuadsWriterFactory");
+		tryToLoadParserFactory("org.openrdf.rio.trix.TriXParserFactory");
+		tryToLoadWriterFactory("org.openrdf.rio.trix.TriXWriterFactory");
+		tryToLoadParserFactory("org.openrdf.rio.jsonld.JSONLDParserFactory;");
+		tryToLoadWriterFactory("org.openrdf.rio.jsonld.JSONLDWriterFactory");
+	}
+
+	private static void tryToLoadParserFactory(String className) {
+		try {
+			RDFParserFactory pf = (RDFParserFactory) Class.forName(className).newInstance();
+			RDFParserRegistry.getInstance().add(pf);
+		} catch (ClassNotFoundException ex) {
+		} catch (IllegalAccessException ex) {
+		} catch (InstantiationException ex) {
+		};
+	}
+
+	private static void tryToLoadWriterFactory(String className) {
+		try {
+			RDFWriterFactory wf = (RDFWriterFactory) Class.forName(className).newInstance();
+			RDFWriterRegistry.getInstance().add(wf);
+		} catch (ClassNotFoundException ex) {
+		} catch (IllegalAccessException ex) {
+		} catch (InstantiationException ex) {
+		};
 	}
 
 	public static void ensureLoaded() {
