@@ -79,20 +79,22 @@ public class SimpleCreatorPattern implements NanopubPattern {
 
 	public static final URI PAV_CREATEDBY = new URIImpl("http://purl.org/pav/createdBy");
 	public static final URI PAV_CREATEDBY_1 = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
+	public static final URI PAV_CREATEDBY_2 = new URIImpl("http://purl.org/pav/2.0/createdBy");
 	public static final URI DCT_CREATOR = new URIImpl("http://purl.org/dc/terms/creator");
 	public static final URI DCE_CREATOR = new URIImpl("http://purl.org/dc/elements/1.1/creator");
 	public static final URI PROV_WASATTRIBUTEDTO = new URIImpl("http://www.w3.org/ns/prov#wasAttributedTo");
 
 	public static final URI PAV_AUTHOREDBY = new URIImpl("http://purl.org/pav/authoredBy");
 	public static final URI PAV_AUTHOREDBY_1 = new URIImpl("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
+	public static final URI PAV_AUTHOREDBY_2 = new URIImpl("http://purl.org/pav/2.0/authoredBy");
 
 	public static boolean isCreatorProperty(URI uri) {
-		return uri.equals(PAV_CREATEDBY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(DCT_CREATOR) || uri.equals(DCE_CREATOR)
-				|| uri.equals(PROV_WASATTRIBUTEDTO);
+		return uri.equals(PAV_CREATEDBY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV_CREATEDBY_2)
+				|| uri.equals(DCT_CREATOR) || uri.equals(DCE_CREATOR) || uri.equals(PROV_WASATTRIBUTEDTO);
 	}
 
 	public static boolean isAuthorProperty(URI uri) {
-		return uri.equals(PAV_AUTHOREDBY) || uri.equals(PAV_AUTHOREDBY_1);
+		return uri.equals(PAV_AUTHOREDBY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV_AUTHOREDBY_2);
 	}
 
 }
