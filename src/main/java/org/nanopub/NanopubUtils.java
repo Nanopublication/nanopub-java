@@ -1,7 +1,9 @@
 package org.nanopub;
 
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +52,7 @@ public class NanopubUtils {
 
 	public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		RDFWriter writer = Rio.createWriter(format, out);
+		RDFWriter writer = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		propagateToHandler(nanopub, writer);
 	}
 

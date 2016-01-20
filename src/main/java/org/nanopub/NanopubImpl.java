@@ -6,9 +6,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -277,7 +279,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 				}
 	
 			});
-			p.parse(in, baseUri);
+			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")), baseUri);
 		} finally {
 			in.close();
 		}

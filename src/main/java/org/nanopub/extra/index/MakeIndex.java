@@ -2,18 +2,18 @@ package org.nanopub.extra.index;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.NanopubImpl;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
@@ -91,9 +91,9 @@ public class MakeIndex {
 		count = 0;
 		outFormat = Rio.getParserFormatForFileName(outputFile.getName());
 		if (outputFile.getName().endsWith(".gz")) {
-			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)));
+			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), Charset.forName("UTF-8"));
 		} else {
-			writer = new FileWriter(outputFile);
+			writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF-8"));
 		}
 
 		indexCreator = new SimpleIndexCreator() {

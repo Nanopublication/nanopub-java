@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,7 +73,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		RDFParser p = NanopubUtils.getParser(format);
 		p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
 		try {
-			p.parse(in, "");
+			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")), "");
 		} catch (RuntimeException ex) {
 			if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&
 					ex.getCause() instanceof MalformedNanopubException) {

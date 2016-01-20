@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -239,7 +241,7 @@ public class SignNanopub {
 	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, KeyPair key, OutputStream out)
 			throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
 		np = signAndTransform(np, key);
-		RDFWriter w = Rio.createWriter(format, out);
+		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;
 	}

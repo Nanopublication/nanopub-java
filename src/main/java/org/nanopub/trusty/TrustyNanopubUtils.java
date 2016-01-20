@@ -1,6 +1,8 @@
 package org.nanopub.trusty;
 
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import net.trustyuri.TrustyUriUtils;
@@ -22,7 +24,7 @@ public class TrustyNanopubUtils {
 
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		RDFWriter writer = Rio.createWriter(format, out);
+		RDFWriter writer = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		writer.startRDF();
 		String s = nanopub.getUri().toString();
 		writer.handleNamespace("this", s);

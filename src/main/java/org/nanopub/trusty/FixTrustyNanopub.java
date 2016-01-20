@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -149,7 +151,7 @@ public class FixTrustyNanopub {
 	public static Nanopub writeAsFixedNanopub(Nanopub np, RDFFormat format, OutputStream out)
 			throws RDFHandlerException, TrustyUriException {
 		np = FixTrustyNanopub.fix(np);
-		RDFWriter w = Rio.createWriter(format, out);
+		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;
 	}

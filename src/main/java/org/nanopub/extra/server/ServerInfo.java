@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -40,7 +41,7 @@ public class ServerInfo implements Serializable {
 					.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
 			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		    in = c.execute(get).getEntity().getContent();
-			si = new Gson().fromJson(new InputStreamReader(in), serverInfoClass);
+			si = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);
 		} catch (Exception ex) {
 			throw new ServerInfoException(serverUrl);
 		} finally {
