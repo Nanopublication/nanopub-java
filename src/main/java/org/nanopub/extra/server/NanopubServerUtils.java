@@ -8,15 +8,20 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 public class NanopubServerUtils {
 
 	// Version numbers have the form MAJOR.MINOR (for example, 0.12 is a newer version than 0.9!)
 	public static final String requiredProtocolVersion = "0.2";
 	public static final int requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
+
+	private static HttpClient httpClient;
 
 	protected NanopubServerUtils() {
 		throw new RuntimeException("no instances allowed");
@@ -44,7 +49,16 @@ public class NanopubServerUtils {
 		get.setHeader("Content-Type", "text/plain");
 		BufferedReader r = null;
 		try {
-			CloseableHttpResponse resp = HttpClientBuilder.create().build().execute(get);
+			if (httpClient == null) {
+				RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
+						.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
+				PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+				connManager.setDefaultMaxPerRoute(10);
+				connManager.setMaxTotal(1000);
+				httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
+						.setConnectionManager(connManager).build();
+			}
+			HttpResponse resp = httpClient.execute(get);
 			int code = resp.getStatusLine().getStatusCode();
 			if (code < 200 || code > 299) {
 				throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
@@ -66,8 +80,8 @@ public class NanopubServerUtils {
 	static {
 		// Hard-coded server instances:
 		bootstrapServerList.add("http://np.inn.ac/");
-		bootstrapServerList.add("http://s1.semanticscience.org:8080/nanopub-server/");
-		bootstrapServerList.add("http://ristretto.med.yale.edu:8080/nanopub-server/");
+		bootstrapServerList.add("http://nanopubs.semanticscience.org/");
+		bootstrapServerList.add("http://nanopubs.stanford.edu/nanopub-server/");
 	}
 
 	public static List<String> getBootstrapServerList() {
