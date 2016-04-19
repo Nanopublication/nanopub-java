@@ -66,6 +66,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 				serversContacted.put(url, true);
 				ServerInfo info = getServerInfo(url);
 				if (info == null) continue;
+				if (!info.getPublicUrl().equals(url)) continue;
 				serversToGetPeers.add(url);
 				return info;
 			}
