@@ -36,7 +36,7 @@ public class FetchIndex {
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
 	private Map<String,NanopubSurfacePattern> serverPatterns;
 	private int nanopubCount;
-	private ProgressListener progressListener;
+	private Listener listener;
 	private HttpClient httpClient;
 
 	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {
@@ -56,6 +56,9 @@ public class FetchIndex {
 			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
 			serverPatterns.put(serverInfo.getPublicUrl(), new NanopubSurfacePattern(serverInfo));
 		}
+		try {
+			ServerIterator.writeCachedServers(servers);
+		} catch (Exception ex) {}
 		nanopubCount = 0;
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
@@ -136,8 +139,8 @@ public class FetchIndex {
 
 	private void writeNanopub(Nanopub np) throws RDFHandlerException {
 		nanopubCount++;
-		if (progressListener != null && nanopubCount % 100 == 0) {
-			progressListener.progress(nanopubCount);
+		if (listener != null && nanopubCount % 100 == 0) {
+			listener.progress(nanopubCount);
 		}
 		NanopubUtils.writeToStream(np, out, format);
 	}
@@ -146,8 +149,8 @@ public class FetchIndex {
 		return nanopubCount;
 	}
 
-	public void setProgressListener(ProgressListener l) {
-		progressListener = l;
+	public void setProgressListener(Listener l) {
+		listener = l;
 	}
 
 	private void assignTask(final FetchNanopubTask task, final String serverUrl) {
@@ -217,7 +220,7 @@ public class FetchIndex {
 			try {
 				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl, httpClient);
 			} catch (Exception ex) {
-				// ignore
+				if (listener != null) listener.exceptionHappened(ex);
 			} finally {
 				running = false;
 			}
@@ -226,9 +229,11 @@ public class FetchIndex {
 	}
 
 
-	public static interface ProgressListener {
+	public static interface Listener {
 
 		public void progress(int count);
+
+		public void exceptionHappened(Exception ex);
 
 	}
 

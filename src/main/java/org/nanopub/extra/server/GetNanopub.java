@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -47,6 +48,9 @@ public class GetNanopub {
 
 	@com.beust.jcommander.Parameter(names = "-c", description = "Retrieve the content of the given index")
 	private boolean getIndexContent;
+
+	@com.beust.jcommander.Parameter(names = "-r", description = "Show a report in the end")
+	private boolean showReport;
 
 	public static void main(String[] args) {
 		NanopubImpl.ensureLoaded();
@@ -110,16 +114,18 @@ public class GetNanopub {
 		InputStream in = null;
 		try {
 			HttpResponse resp = httpClient.execute(get);
-			if (!wasSuccessful(resp)) return null;
+			if (!wasSuccessful(resp)) {
+				throw new IOException(resp.getStatusLine().toString());
+			}
 			in = resp.getEntity().getContent();
 			Nanopub nanopub = new NanopubImpl(in, RDFFormat.TRIG);
-			if (TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
-				return nanopub;
+			if (!TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
+				throw new MalformedNanopubException("Nanopub is not trusty");
 			}
+			return nanopub;
 		} finally {
 			if (in != null) in.close();
 		}
-		return null;
 	}
 
 	public static String getArtifactCode(String uriOrArtifactCode) {
@@ -139,6 +145,7 @@ public class GetNanopub {
 
 	private OutputStream outputStream = System.out;
 	private int count;
+	private List<Exception> exceptions;
 
 	private RDFFormat rdfFormat;
 
@@ -146,6 +153,9 @@ public class GetNanopub {
 	}
 
 	private void run() throws IOException, RDFHandlerException, MalformedNanopubException {
+		if (showReport) {
+			exceptions = new ArrayList<>();
+		}
 		if (outputFile == null) {
 			if (format == null) {
 				format = "trig";
@@ -162,11 +172,18 @@ public class GetNanopub {
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
 				FetchIndex fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
-				fetchIndex.setProgressListener(new FetchIndex.ProgressListener() {
+				fetchIndex.setProgressListener(new FetchIndex.Listener() {
 
 					@Override
 					public void progress(int count) {
 						System.err.print(count + " nanopubs...\r");
+					}
+
+					@Override
+					public void exceptionHappened(Exception ex) {
+						if (showReport) {
+							exceptions.add(ex);
+						}
 					}
 
 				});
@@ -179,6 +196,9 @@ public class GetNanopub {
 		if (outputStream != System.out) {
 			outputStream.close();
 			System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
+		}
+		if (showReport) {
+			System.err.println("Number of exceptions: " + exceptions.size());
 		}
 	}
 

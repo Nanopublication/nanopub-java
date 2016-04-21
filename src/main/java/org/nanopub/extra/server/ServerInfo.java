@@ -77,7 +77,6 @@ public class ServerInfo implements Serializable {
 	protected Long maxNanopubBytes;
 	protected Long maxNanopubs;
 
-	// TODO Use these fields when getting nanopubs:
 	protected String uriPattern;
 	protected String hashPattern;
 

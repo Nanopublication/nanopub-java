@@ -1,6 +1,11 @@
 package org.nanopub.extra.server;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,8 +18,9 @@ public class ServerIterator implements Iterator<ServerInfo> {
 
 	private static Map<String,ServerInfo> serverInfos = new HashMap<>();
 	private static long serverInfoRefreshed = System.currentTimeMillis();
-	private static final long serverInfoRefreshInterval = 60 * 60 * 1000;
+	private static final long serverInfoRefreshInterval = 24 * 60 * 60 * 1000;
 
+	private List<ServerInfo> cachedServers = null;
 	private List<String> serversToContact = new ArrayList<>();
 	private List<String> serversToGetPeers = new ArrayList<>();
 	private Map<String,Boolean> serversContacted = new HashMap<>();
@@ -22,7 +28,19 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	private ServerInfo next = null;
 
 	public ServerIterator() {
-		serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
+		this(false);
+	}
+
+	public ServerIterator(boolean forceServerReload) {
+		if (!forceServerReload) {
+			try {
+				loadCachedServers();
+			} catch (Exception ex) {
+			}
+		}
+		if (cachedServers == null) {
+			serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
+		}
 	}
 
 	public ServerIterator(String... bootstrapServers) {
@@ -59,32 +77,37 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	}
 
 	private ServerInfo getNextServer() {
-		while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
-			if (!serversToContact.isEmpty()) {
-				String url = serversToContact.remove(0);
-				if (serversContacted.containsKey(url)) continue;
-				serversContacted.put(url, true);
-				ServerInfo info = getServerInfo(url);
-				if (info == null) continue;
-				if (!info.getPublicUrl().equals(url)) continue;
-				serversToGetPeers.add(url);
-				return info;
-			}
-			if (!serversToGetPeers.isEmpty()) {
-				String url = serversToGetPeers.remove(0);
-				if (serversPeersGot.containsKey(url)) continue;
-				serversPeersGot.put(url, true);
-				try {
-					for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
-						if (!serversContacted.containsKey(peerUrl)) {
-							serversToContact.add(peerUrl);
+		if (cachedServers != null) {
+			if (cachedServers.isEmpty()) return null;
+			return cachedServers.remove(0);
+		} else {
+			while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
+				if (!serversToContact.isEmpty()) {
+					String url = serversToContact.remove(0);
+					if (serversContacted.containsKey(url)) continue;
+					serversContacted.put(url, true);
+					ServerInfo info = getServerInfo(url);
+					if (info == null) continue;
+					if (!info.getPublicUrl().equals(url)) continue;
+					serversToGetPeers.add(url);
+					return info;
+				}
+				if (!serversToGetPeers.isEmpty()) {
+					String url = serversToGetPeers.remove(0);
+					if (serversPeersGot.containsKey(url)) continue;
+					serversPeersGot.put(url, true);
+					try {
+						for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
+							if (!serversContacted.containsKey(peerUrl)) {
+								serversToContact.add(peerUrl);
+							}
+							if (!serversPeersGot.containsKey(peerUrl)) {
+								serversToGetPeers.add(peerUrl);
+							}
 						}
-						if (!serversPeersGot.containsKey(peerUrl)) {
-							serversToGetPeers.add(peerUrl);
-						}
+					} catch (IOException ex) {
+						// ignore
 					}
-				} catch (IOException ex) {
-					// ignore
 				}
 			}
 		}
@@ -104,6 +127,36 @@ public class ServerIterator implements Iterator<ServerInfo> {
 			}
 		}
 		return serverInfos.get(url);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void loadCachedServers() throws Exception {
+		File serverListFile = getServerListFile();
+		if (serverListFile.exists()) {
+			long now = System.currentTimeMillis();
+			long fileTime = serverListFile.lastModified();
+			if (fileTime > now || now - fileTime > 1000 * 60 * 60 * 24) {
+				return;
+			}
+			FileInputStream fin = new FileInputStream(serverListFile);
+			ObjectInputStream oin = new ObjectInputStream(fin);
+			cachedServers = (List<ServerInfo>) oin.readObject();
+			oin.close();
+		}
+	}
+
+	public static void writeCachedServers(List<ServerInfo> cachedServers) throws IOException {
+		if (cachedServers.size() < 5) return;
+		File serverListFile = getServerListFile();
+		serverListFile.getParentFile().mkdir();
+		FileOutputStream fout = new FileOutputStream(serverListFile);
+		ObjectOutputStream oos = new ObjectOutputStream(fout);
+		oos.writeObject(cachedServers);
+		oos.close();
+	}
+
+	private static File getServerListFile() {
+		return new File(System.getProperty("user.home") + "/.nanopub/cachedservers");
 	}
 
 }
