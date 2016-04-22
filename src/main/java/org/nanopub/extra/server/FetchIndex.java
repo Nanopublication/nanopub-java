@@ -60,8 +60,8 @@ public class FetchIndex {
 			ServerIterator.writeCachedServers(servers);
 		} catch (Exception ex) {}
 		nanopubCount = 0;
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
+				.setConnectionRequestTimeout(100).setSocketTimeout(5000).build();
 		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxTotal(1000);
@@ -74,39 +74,40 @@ public class FetchIndex {
 		running = true;
 		while (!fetchTasks.isEmpty()) {
 			checkTasks();
-			try {
-				Thread.sleep(5);
-			} catch (InterruptedException ex) {}
 		}
 	}
 
 	private void checkTasks() {
-		int count = 0;
 		for (FetchNanopubTask task : new ArrayList<>(fetchTasks)) {
-			count++;
 			if (task.isRunning()) continue;
 			if (task.getLastServerUrl() != null) {
 				serverLoad.get(task.getLastServerUrl()).remove(task);
 			}
 			if (task.getNanopub() == null) {
 				if (task.getTriedServersCount() == servers.size()) {
-					throw new RuntimeException("Failed to fetch nanopub: " + task.getNanopubUri());
+					task.resetServers();
 				}
 				List<ServerInfo> shuffledServers = new ArrayList<>(servers);
 				Collections.shuffle(shuffledServers);
 				for (ServerInfo serverInfo : shuffledServers) {
 					String serverUrl = serverInfo.getPublicUrl();
 					if (task.hasServerBeenTried(serverUrl)) continue;
-					if (!serverPatterns.get(serverUrl).matchesUri(task.getNanopubUri())) continue;
+					if (!serverPatterns.get(serverUrl).matchesUri(task.getNanopubUri())) {
+						task.ignoreServer(serverUrl);
+						continue;
+					}
 					int load = serverLoad.get(serverUrl).size();
-					if (load >= maxParallelRequestsPerServer) continue;
+					if (load >= maxParallelRequestsPerServer) {
+						task.ignoreServer(serverUrl);
+						continue;
+					}
 					assignTask(task, serverUrl);
 					break;
 				}
-			} else if (count == 1) {
-				Nanopub np = task.getNanopub();
-				try {
-					if (task.isIndex()) {
+			} else if (task.isIndex()) {
+				if (fetchTasks.size() < 1000) {
+					try {
+						Nanopub np = task.getNanopub();
 						if (!IndexUtils.isIndex(np)) {
 							throw new RuntimeException("NOT AN INDEX: " + np.getUri());
 						}
@@ -125,14 +126,18 @@ public class FetchIndex {
 						if (npi.getAppendedIndex() != null) {
 							fetchTasks.add(new FetchNanopubTask(npi.getAppendedIndex().toString(), true));
 						}
-					} else {
-						writeNanopub(np);
+					} catch (Exception ex) {
+						throw new RuntimeException(ex);
 					}
-					fetchTasks.remove(0);
-					count = 0;
+					fetchTasks.remove(task);
+				}
+			} else {
+				try {
+					writeNanopub(task.getNanopub());
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
+				fetchTasks.remove(task);
 			}
 		}
 	}
@@ -202,12 +207,20 @@ public class FetchIndex {
 			return servers.contains(serverUrl);
 		}
 
+		public void resetServers() {
+			servers.clear();
+		}
+
 		public int getTriedServersCount() {
 			return servers.size();
 		}
 
 		public String getLastServerUrl() {
 			return lastServerUrl;
+		}
+
+		public void ignoreServer(String serverUrl) {
+			servers.add(serverUrl);
 		}
 
 		public void prepareForTryingServer(String serverUrl) {
