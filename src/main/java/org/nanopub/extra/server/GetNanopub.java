@@ -52,6 +52,10 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(names = "-r", description = "Show a report in the end")
 	private boolean showReport;
 
+	@com.beust.jcommander.Parameter(names = "--simulate-unreliable-connection",
+			description = "Simulate an unreliable connection for testing purposes")
+	private boolean simUnrelConn;
+
 	public static void main(String[] args) {
 		NanopubImpl.ensureLoaded();
 		GetNanopub obj = new GetNanopub();
@@ -62,6 +66,7 @@ public class GetNanopub {
 			jc.usage();
 			System.exit(1);
 		}
+		simulateUnreliableConnection = obj.simUnrelConn;
 		try {
 			obj.run();
 		} catch (Exception ex) {
@@ -69,6 +74,8 @@ public class GetNanopub {
 			System.exit(1);
 		}
 	}
+
+	private static boolean simulateUnreliableConnection = false;
 
 	public static Nanopub get(String uriOrArtifactCode) {
 		ServerIterator serverIterator = new ServerIterator();
@@ -118,6 +125,9 @@ public class GetNanopub {
 				throw new IOException(resp.getStatusLine().toString());
 			}
 			in = resp.getEntity().getContent();
+			if (simulateUnreliableConnection) {
+				in = new UnreliableInputStream(in);
+			}
 			Nanopub nanopub = new NanopubImpl(in, RDFFormat.TRIG);
 			if (!TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {
 				throw new MalformedNanopubException("Nanopub is not trusty");

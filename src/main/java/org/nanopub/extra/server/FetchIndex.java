@@ -74,6 +74,9 @@ public class FetchIndex {
 		running = true;
 		while (!fetchTasks.isEmpty()) {
 			checkTasks();
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException ex) {}
 		}
 	}
 
@@ -105,7 +108,7 @@ public class FetchIndex {
 					break;
 				}
 			} else if (task.isIndex()) {
-				if (fetchTasks.size() < 1000) {
+				if (fetchTasks.size() < 3000) {
 					try {
 						Nanopub np = task.getNanopub();
 						if (!IndexUtils.isIndex(np)) {
@@ -121,10 +124,10 @@ public class FetchIndex {
 							}
 						}
 						for (URI subIndexUri : npi.getSubIndexes()) {
-							fetchTasks.add(new FetchNanopubTask(subIndexUri.toString(), true));
+							fetchTasks.add(0, new FetchNanopubTask(subIndexUri.toString(), true));
 						}
 						if (npi.getAppendedIndex() != null) {
-							fetchTasks.add(new FetchNanopubTask(npi.getAppendedIndex().toString(), true));
+							fetchTasks.add(0, new FetchNanopubTask(npi.getAppendedIndex().toString(), true));
 						}
 					} catch (Exception ex) {
 						throw new RuntimeException(ex);
