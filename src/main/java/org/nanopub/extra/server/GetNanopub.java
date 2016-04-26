@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,6 +45,9 @@ public class GetNanopub {
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
+
+	@com.beust.jcommander.Parameter(names = "-e", description = "Write error messages from fetching nanopubs into this file (ignored otherwise)")
+	private File errorFile;
 
 	@com.beust.jcommander.Parameter(names = "-i", description = "Retrieve the index for the given index nanopub")
 	private boolean getIndex;
@@ -156,6 +160,7 @@ public class GetNanopub {
 	}
 
 	private OutputStream outputStream = System.out;
+	private PrintStream errorStream = null;
 	private int count;
 	private List<Exception> exceptions;
 
@@ -181,6 +186,9 @@ public class GetNanopub {
 				outputStream = new FileOutputStream(outputFile);
 			}
 		}
+		if (errorFile != null) {
+			errorStream = new PrintStream(errorFile);
+		}
 		FetchIndex fetchIndex = null;
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
@@ -197,6 +205,9 @@ public class GetNanopub {
 						if (showReport) {
 							exceptions.add(ex);
 						}
+						if (errorStream != null) {
+							ex.printStackTrace(errorStream);
+						}
 					}
 
 				});
@@ -209,6 +220,9 @@ public class GetNanopub {
 		if (outputStream != System.out) {
 			outputStream.close();
 			System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
+		}
+		if (errorStream != null) {
+			errorStream.close();
 		}
 		if (showReport && fetchIndex != null) {
 			System.err.println("Number of retries: " + exceptions.size());
