@@ -35,6 +35,7 @@ public class FetchIndex {
 	private List<ServerInfo> servers;
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
 	private Map<String,NanopubSurfacePattern> serverPatterns;
+	private Map<String,Integer> serverUsage;
 	private int nanopubCount;
 	private Listener listener;
 	private HttpClient httpClient;
@@ -49,12 +50,14 @@ public class FetchIndex {
 		servers = new ArrayList<>();
 		serverLoad = new HashMap<>();
 		serverPatterns = new HashMap<>();
+		serverUsage = new HashMap<>();
 		ServerIterator serverIterator = new ServerIterator();
 		while (serverIterator.hasNext()) {
 			ServerInfo serverInfo = serverIterator.next();
 			servers.add(serverInfo);
 			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
 			serverPatterns.put(serverInfo.getPublicUrl(), new NanopubSurfacePattern(serverInfo));
+			serverUsage.put(serverInfo.getPublicUrl(), 0);
 		}
 		try {
 			ServerIterator.writeCachedServers(servers);
@@ -157,6 +160,14 @@ public class FetchIndex {
 		return nanopubCount;
 	}
 
+	public List<ServerInfo> getServers() {
+		return new ArrayList<>(servers);
+	}
+
+	public int getServerUsage(ServerInfo si) {
+		return serverUsage.get(si.getPublicUrl());
+	}
+
 	public void setProgressListener(Listener l) {
 		listener = l;
 	}
@@ -169,6 +180,9 @@ public class FetchIndex {
 			@Override
 			public void run() {
 				task.tryServer(serverUrl);
+				synchronized (FetchIndex.class) {
+					serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
+				}
 			}
 
 		};

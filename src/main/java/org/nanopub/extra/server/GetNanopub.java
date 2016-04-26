@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -179,9 +181,10 @@ public class GetNanopub {
 				outputStream = new FileOutputStream(outputFile);
 			}
 		}
+		FetchIndex fetchIndex = null;
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
-				FetchIndex fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+				fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
 				fetchIndex.setProgressListener(new FetchIndex.Listener() {
 
 					@Override
@@ -207,8 +210,23 @@ public class GetNanopub {
 			outputStream.close();
 			System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
 		}
-		if (showReport) {
-			System.err.println("Number of exceptions: " + exceptions.size());
+		if (showReport && fetchIndex != null) {
+			System.err.println("Number of retries: " + exceptions.size());
+			System.err.println("Used servers:");
+			List<ServerInfo> usedServers = fetchIndex.getServers();
+			final FetchIndex fi = fetchIndex;
+			Collections.sort(usedServers, new Comparator<ServerInfo>() {
+				@Override
+				public int compare(ServerInfo o1, ServerInfo o2) {
+					return fi.getServerUsage(o2) - fi.getServerUsage(o1);
+				}
+			});
+			int usedServerCount = 0;
+			for (ServerInfo si : usedServers) {
+				if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;
+				System.err.format("%8d %s%n", fetchIndex.getServerUsage(si), si.getPublicUrl());
+			}
+			System.err.format("Number of servers used: " + usedServerCount);
 		}
 	}
 
