@@ -20,26 +20,46 @@ public class UnreliableInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (random.nextDouble() < errorProbability) {
+		double rd = random.nextDouble();
+		if (rd < errorProbability / 2) {
 			return random.nextInt(256);
+		} else if (rd < errorProbability) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ex) {}
+			throw new IOException("Simulated IO Problem");
 		}
 		return wrappedInputStream.read();
 	}
 
 	@Override
 	public int read(byte[] b) throws IOException {
+		double rd = random.nextDouble();
 		int r = wrappedInputStream.read(b);
-		if (random.nextDouble() < errorProbability) {
+		if (rd < errorProbability / 2) {
 			b[random.nextInt(b.length)] = (byte) random.nextInt(256);
+		} else if (rd < errorProbability) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ex) {}
+			throw new IOException("Simulated IO Problem");
 		}
 		return r;
 	}
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
+		double rd = random.nextDouble();
 		int r = wrappedInputStream.read(b, off, len);
-		if (random.nextDouble() < errorProbability && r > 0) {
-			b[off + random.nextInt(r)] = (byte) random.nextInt(256);
+		if (rd < errorProbability / 2) {
+			if (r > 0) {
+				b[off + random.nextInt(r)] = (byte) random.nextInt(256);
+			}
+		} else if (rd < errorProbability) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ex) {}
+			throw new IOException("Simulated IO Problem");
 		}
 		return r;
 	}
