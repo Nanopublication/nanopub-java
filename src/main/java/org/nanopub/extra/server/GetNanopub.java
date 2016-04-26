@@ -201,12 +201,13 @@ public class GetNanopub {
 					}
 
 					@Override
-					public void exceptionHappened(Exception ex) {
+					public void exceptionHappened(Exception ex, String serverUrl, String artifactCode) {
 						if (showReport) {
 							exceptions.add(ex);
 						}
 						if (errorStream != null) {
-							ex.printStackTrace(errorStream);
+							String exString = ex.toString().replaceAll("\\n", "\\\\n");
+							errorStream.println(serverUrl + " " + artifactCode + " " + exString);
 						}
 					}
 

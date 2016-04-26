@@ -27,7 +27,7 @@ public class UnreliableInputStream extends InputStream {
 			try {
 				Thread.sleep(5000);
 			} catch (InterruptedException ex) {}
-			throw new IOException("Simulated IO Problem");
+			throw new SimulatedIOException("Simulated IO Problem");
 		}
 		return wrappedInputStream.read();
 	}
@@ -42,7 +42,7 @@ public class UnreliableInputStream extends InputStream {
 			try {
 				Thread.sleep(5000);
 			} catch (InterruptedException ex) {}
-			throw new IOException("Simulated IO Problem");
+			throw new SimulatedIOException("Simulated IO Problem");
 		}
 		return r;
 	}
@@ -59,7 +59,7 @@ public class UnreliableInputStream extends InputStream {
 			try {
 				Thread.sleep(5000);
 			} catch (InterruptedException ex) {}
-			throw new IOException("Simulated IO Problem");
+			throw new SimulatedIOException("Simulated IO Problem");
 		}
 		return r;
 	}
@@ -93,5 +93,17 @@ public class UnreliableInputStream extends InputStream {
 	public long skip(long n) throws IOException {
 		return wrappedInputStream.skip(n);
 	}
+
+	
+	public class SimulatedIOException extends IOException {
+
+		private static final long serialVersionUID = -5015619781395185104L;
+
+		public SimulatedIOException(String text) {
+			super(text);
+		}
+
+	}
+
 
 }

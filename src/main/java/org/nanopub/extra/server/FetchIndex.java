@@ -13,6 +13,7 @@ import net.trustyuri.TrustyUriUtils;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.nanopub.Nanopub;
@@ -249,8 +250,10 @@ public class FetchIndex {
 		public void tryServer(String serverUrl) {
 			try {
 				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl, httpClient);
+			} catch (ConnectionPoolTimeoutException ex) {
+				// too many connection attempts; try again later
 			} catch (Exception ex) {
-				if (listener != null) listener.exceptionHappened(ex);
+				if (listener != null) listener.exceptionHappened(ex, serverUrl, TrustyUriUtils.getArtifactCode(npUri));
 			} finally {
 				running = false;
 			}
@@ -263,7 +266,7 @@ public class FetchIndex {
 
 		public void progress(int count);
 
-		public void exceptionHappened(Exception ex);
+		public void exceptionHappened(Exception ex, String serverUrl, String artifactCode);
 
 	}
 
