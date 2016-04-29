@@ -181,9 +181,6 @@ public class FetchIndex {
 			@Override
 			public void run() {
 				task.tryServer(serverUrl);
-				synchronized (FetchIndex.class) {
-					serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
-				}
 			}
 
 		};
@@ -248,14 +245,22 @@ public class FetchIndex {
 		}
 
 		public void tryServer(String serverUrl) {
+			boolean serverTried = false;
 			try {
+				serverTried = true;
 				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl, httpClient);
 			} catch (ConnectionPoolTimeoutException ex) {
+				serverTried = false;
 				// too many connection attempts; try again later
 			} catch (Exception ex) {
 				if (listener != null) listener.exceptionHappened(ex, serverUrl, TrustyUriUtils.getArtifactCode(npUri));
 			} finally {
 				running = false;
+				if (serverTried) {
+					synchronized (FetchIndex.class) {
+						serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
+					}
+				}
 			}
 		}
 
