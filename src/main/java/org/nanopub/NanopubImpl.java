@@ -322,30 +322,33 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 				URI p = st.getPredicate();
 				if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_ASSERTION_URI)) {
 					if (assertionUri != null) {
-						throw new MalformedNanopubException("Two assertion URIs found");
+						throw new MalformedNanopubException("Two assertion URIs found: " +
+								assertionUri + " and " + st.getObject());
 					}
 					assertionUri = (URI) st.getObject();
 				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PROVENANCE_URI)) {
 					if (provenanceUri != null) {
-						throw new MalformedNanopubException("Two provenance URIs found");
+						throw new MalformedNanopubException("Two provenance URIs found: " +
+								provenanceUri + " and " + st.getObject());
 					}
 					provenanceUri = (URI) st.getObject();
 				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PUBINFO_URI)) {
 					if (pubinfoUri != null) {
-						throw new MalformedNanopubException("Two publication info URIs found");
+						throw new MalformedNanopubException("Two publication info URIs found: " +
+								pubinfoUri + " and " + st.getObject());
 					}
 					pubinfoUri = (URI) st.getObject();
 				}
 			}
 		}
 		if (assertionUri == null) {
-			throw new MalformedNanopubException("No assertion URI found");
+			throw new MalformedNanopubException("No assertion URI found for " + nanopubUri);
 		}
 		if (provenanceUri == null) {
-			throw new MalformedNanopubException("No provenance URI found");
+			throw new MalformedNanopubException("No provenance URI found for " + nanopubUri);
 		}
 		if (pubinfoUri == null) {
-			throw new MalformedNanopubException("No publication info URI found");
+			throw new MalformedNanopubException("No publication info URI found for " + nanopubUri);
 		}
 		graphUris = new HashSet<>();
 		addGraphUri(headUri);
@@ -421,30 +424,30 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private void checkAssertion() throws MalformedNanopubException {
 		if (assertion.isEmpty()) {
-			throw new MalformedNanopubException("Empty assertion graph");
+			throw new MalformedNanopubException("Empty assertion graph: " + assertionUri);
 		}
 	}
 
 	private void checkProvenance() throws MalformedNanopubException {
 		if (provenance.isEmpty()) {
-			throw new MalformedNanopubException("Empty provenance graph");
+			throw new MalformedNanopubException("Empty provenance graph: " + provenanceUri);
 		}
 		for (Statement st : provenance) {
 			if (assertionUri.equals(st.getSubject())) return;
 			if (assertionUri.equals(st.getObject())) return;
 		}
-		throw new MalformedNanopubException("Provenance does not refer to assertion");
+		throw new MalformedNanopubException("Provenance does not refer to assertion: " + provenanceUri);
 	}
 
 	private void checkPubinfo() throws MalformedNanopubException {
 		if (pubinfo.isEmpty()) {
-			throw new MalformedNanopubException("Empty publication info graph");
+			throw new MalformedNanopubException("Empty publication info graph: " + pubinfoUri);
 		}
 		for (Statement st : pubinfo) {
 			if (nanopubUri.equals(st.getSubject())) return;
 			if (nanopubUri.equals(st.getObject())) return;
 		}
-		throw new MalformedNanopubException("Publication info does not refer to nanopublication URI");
+		throw new MalformedNanopubException("Publication info does not refer to nanopublication URI: " + pubinfoUri);
 	}
 
 	@Override
