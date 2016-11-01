@@ -115,6 +115,10 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 		if (!headComplete) {
 			if (headUri == null) {
 				headUri = (URI) st.getContext();
+				if (headUri == null) {
+					throwMalformed("Triple without context found: " +
+							st.getSubject() + " " + st.getPredicate() + " " + st.getObject());
+				}
 				graphs.put(headUri, true);
 			}
 			if (headUri.equals(st.getContext())) {
