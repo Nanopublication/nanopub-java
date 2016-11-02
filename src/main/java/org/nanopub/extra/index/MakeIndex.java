@@ -1,7 +1,9 @@
 package org.nanopub.extra.index;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -28,7 +30,7 @@ public class MakeIndex {
 	private List<File> inputFiles = new ArrayList<File>();
 
 	@com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
-			"as sub-indexes (instead of elements)")
+			"as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")
 	private boolean useSubindexes = false;
 
 	@com.beust.jcommander.Parameter(names = "-e", description = "Add given URIs as elements " +
@@ -137,25 +139,40 @@ public class MakeIndex {
 	private void run() throws Exception {
 		init();
 		for (File f : inputFiles) {
-			RDFFormat format = Rio.getParserFormatForFileName(f.getName());
-			MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
-				@Override
-				public void handleNanopub(Nanopub np) {
-					if (useSubindexes && IndexUtils.isIndex(np)) {
-						try {
-							indexCreator.addSubIndex(IndexUtils.castToIndex(np));
-						} catch (MalformedNanopubException ex) {
-							throw new RuntimeException(ex);
-						}
-					} else {
-						indexCreator.addElement(np);
-					}
-					count++;
-					if (count % 100 == 0) {
-						System.err.print(count + " nanopubs...\r");
-					}
+			if (f.getName().endsWith(".txt")) {
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(f));
+				    String line;
+				    while ((line = br.readLine()) != null) {
+				    	line = line.trim();
+				    	if (line.isEmpty()) continue;
+				    	indexCreator.addElement(new URIImpl(line));
+				    }
+				} finally {
+					if (br != null) br.close();
 				}
-			});
+			} else {
+				RDFFormat format = Rio.getParserFormatForFileName(f.getName());
+				MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
+					@Override
+					public void handleNanopub(Nanopub np) {
+						if (useSubindexes && IndexUtils.isIndex(np)) {
+							try {
+								indexCreator.addSubIndex(IndexUtils.castToIndex(np));
+							} catch (MalformedNanopubException ex) {
+								throw new RuntimeException(ex);
+							}
+						} else {
+							indexCreator.addElement(np);
+						}
+						count++;
+						if (count % 100 == 0) {
+							System.err.print(count + " nanopubs...\r");
+						}
+					}
+				});
+			}
 		}
 		for (String e : elements) {
 			indexCreator.addElement(new URIImpl(e));
