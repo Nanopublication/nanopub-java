@@ -147,6 +147,8 @@ public class MakeIndex {
 				    while ((line = br.readLine()) != null) {
 				    	line = line.trim();
 				    	if (line.isEmpty()) continue;
+				    	// To allow for other content in the file, ignore everything after the first blank space:
+				    	if (line.contains(" ")) line = line.substring(0, line.indexOf(" "));
 				    	indexCreator.addElement(new URIImpl(line));
 				    }
 				} finally {
