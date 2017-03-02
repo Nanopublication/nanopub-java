@@ -45,7 +45,7 @@ public class MakeIndex {
 	private File outputFile = new File("index.trig");
 
 	@com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-	private String baseUri = "http://np.inn.ac/";
+	private String baseUri = "http://purl.org/np/";
 
 	@com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
 	private String iTitle;
