@@ -20,6 +20,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
@@ -128,6 +129,7 @@ public class GetNanopub {
 		try {
 			HttpResponse resp = httpClient.execute(get);
 			if (!wasSuccessful(resp)) {
+				EntityUtils.consumeQuietly(resp.getEntity());
 				throw new IOException(resp.getStatusLine().toString());
 			}
 			in = resp.getEntity().getContent();

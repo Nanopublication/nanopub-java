@@ -14,6 +14,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 
 public class NanopubServerUtils {
 
@@ -36,7 +37,7 @@ public class NanopubServerUtils {
 	}
 
 	public static List<String> loadNanopubUriList(String serverUrl, int page) throws IOException {
-		return loadList(serverUrl +"nanopubs?page=" + page);
+		return loadList(serverUrl + "nanopubs?page=" + page);
 	}
 
 	public static List<String> loadNanopubUriList(ServerInfo si, int page) throws IOException {
@@ -61,6 +62,7 @@ public class NanopubServerUtils {
 			HttpResponse resp = httpClient.execute(get);
 			int code = resp.getStatusLine().getStatusCode();
 			if (code < 200 || code > 299) {
+				EntityUtils.consumeQuietly(resp.getEntity());
 				throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
 			}
 			InputStream in = resp.getEntity().getContent();
