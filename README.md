@@ -23,7 +23,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.11</version>
+      <version>1.14</version>
     </dependency>
 
 
