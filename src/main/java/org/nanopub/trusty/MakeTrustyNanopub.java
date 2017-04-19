@@ -99,9 +99,16 @@ public class MakeTrustyNanopub {
 		}
 		try {
 			RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
-			NanopubUtils.propagateToHandler(nanopub, r);
+			String npUri;
+			if (TempUriReplacer.hasTempUri(nanopub)) {
+				npUri = TempUriReplacer.normUri;
+				NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r));
+			} else {
+				npUri = nanopub.getUri().toString();
+				NanopubUtils.propagateToHandler(nanopub, r);
+			}
 			NanopubRdfHandler h = new NanopubRdfHandler();
-			TransformRdf.transform(r, h, nanopub.getUri().toString());
+			TransformRdf.transform(r, h, npUri);
 			np = h.getNanopub();
 		} catch (RDFHandlerException ex) {
 			throw new TrustyUriException(ex);
