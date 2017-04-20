@@ -79,6 +79,7 @@ This is an incomplete list of software projects using this library:
 - https://github.com/tkuhn/nanopub-server
 - https://github.com/tkuhn/bio2rdf2nanopub
 - https://github.com/tkuhn/nanopub-monitor
+- https://github.com/tkuhn/npop
 - https://github.com/rajaram5/NanopublicationVisualization
 - https://github.com/rajaram5/Nanopubviz
 - https://github.com/wikipathways/nanopublications
