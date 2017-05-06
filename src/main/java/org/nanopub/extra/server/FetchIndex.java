@@ -2,6 +2,7 @@ package org.nanopub.extra.server;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,6 +88,10 @@ public class FetchIndex {
 	private void checkTasks() {
 		for (FetchNanopubTask task : new ArrayList<>(fetchTasks)) {
 			if (task.isRunning()) continue;
+			if (task.isCancelled()) {
+				fetchTasks.remove(task);
+				continue;
+			}
 			if (task.getLastServerUrl() != null) {
 				serverLoad.get(task.getLastServerUrl()).remove(task);
 			}
@@ -132,6 +137,11 @@ public class FetchIndex {
 						}
 						if (npi.getAppendedIndex() != null) {
 							fetchTasks.add(0, new FetchNanopubTask(npi.getAppendedIndex().toString(), true));
+							// sibling tasks are currently not used:
+//							FetchNanopubTask t1 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true);
+//							fetchTasks.add(0, t1);
+//							FetchNanopubTask t2 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1);
+//							fetchTasks.add(0, t2);
 						}
 					} catch (Exception ex) {
 						throw new RuntimeException(ex);
@@ -195,11 +205,17 @@ public class FetchIndex {
 		private Nanopub nanopub;
 		private Set<String> servers = new HashSet<>();
 		private boolean running = false;
+		private boolean cancelled = false;
 		private String lastServerUrl;
+		private Set<FetchNanopubTask> siblings;
 
-		public FetchNanopubTask(String npUri, boolean isIndex) {
+		public FetchNanopubTask(String npUri, boolean isIndex, FetchNanopubTask... siblings) {
 			this.npUri = npUri;
 			this.isIndex = isIndex;
+			this.siblings = new HashSet<>(Arrays.asList(siblings));
+			for (FetchNanopubTask s : siblings) {
+				s.siblings.add(this);
+			}
 		}
 
 		public boolean isIndex() {
@@ -216,6 +232,10 @@ public class FetchIndex {
 
 		public boolean isRunning() {
 			return running;
+		}
+
+		public boolean isCancelled() {
+			return cancelled;
 		}
 
 		public boolean hasServerBeenTried(String serverUrl) {
@@ -258,7 +278,14 @@ public class FetchIndex {
 				running = false;
 				if (serverTried) {
 					synchronized (FetchIndex.class) {
-						serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
+						if (cancelled == true) {
+							// Sibling already did the work...
+						} else {
+							for (FetchNanopubTask s : siblings) {
+								s.cancelled = true;
+							}
+							serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
+						}
 					}
 				}
 			}
