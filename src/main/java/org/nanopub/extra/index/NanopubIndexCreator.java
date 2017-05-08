@@ -63,6 +63,15 @@ public abstract class NanopubIndexCreator {
 		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_SUBINDEX_URI, npcUri);
 	}
 
+	public void addSupersededIndex(NanopubIndex npc) {
+		addSupersededIndex(npc.getUri());
+	}
+
+	public void addSupersededIndex(URI npcUri) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, npcUri);
+	}
+
 	public void finalizeNanopub() {
 		if (finalized) throw new RuntimeException("Already finalized");
 		enrichCompleteIndex(npCreator);

@@ -25,6 +25,9 @@ public interface Nanopub {
 	public static final URI HAS_COLLPUBINFO_URI = new URIImpl("http://www.nanopub.org/nschema#hasCollectionPubInfo");
 	public static final URI HAS_MEMBER = new URIImpl("http://www.nanopub.org/nschema#hasMember");
 
+	// URIs that link nanopublications:
+	public static final URI SUPERSEDES = new URIImpl("http://purl.org/nanopub/x/supersedes");
+
 	public URI getUri();
 
 	public URI getHeadUri();
