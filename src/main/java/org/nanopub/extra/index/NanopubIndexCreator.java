@@ -19,6 +19,7 @@ public abstract class NanopubIndexCreator {
 	private Map<String,Boolean> elementNs;
 	private int elementNsCount;
 	private URI previousIndexUri;
+	private URI supersededIndexUri;
 
 	public NanopubIndexCreator() {
 		this(null);
@@ -63,20 +64,20 @@ public abstract class NanopubIndexCreator {
 		npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_SUBINDEX_URI, npcUri);
 	}
 
-	public void addSupersededIndex(NanopubIndex npc) {
-		addSupersededIndex(npc.getUri());
+	public void setSupersededIndex(NanopubIndex npc) {
+		setSupersededIndex(npc.getUri());
 	}
 
-	public void addSupersededIndex(URI npcUri) {
+	public void setSupersededIndex(URI npcUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
-		if (npCreator == null) {
-			newNpCreator();
-		}
-		npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, npcUri);
+		supersededIndexUri = npcUri;
 	}
 
 	public void finalizeNanopub() {
 		if (finalized) throw new RuntimeException("Already finalized");
+		if (supersededIndexUri != null) {
+			npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, supersededIndexUri);
+		}
 		enrichCompleteIndex(npCreator);
 		try {
 			if (npCreator == null) {
