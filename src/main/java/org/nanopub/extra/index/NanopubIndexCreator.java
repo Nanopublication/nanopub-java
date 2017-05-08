@@ -69,6 +69,9 @@ public abstract class NanopubIndexCreator {
 
 	public void addSupersededIndex(URI npcUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
+		if (npCreator == null) {
+			newNpCreator();
+		}
 		npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, npcUri);
 	}
 
