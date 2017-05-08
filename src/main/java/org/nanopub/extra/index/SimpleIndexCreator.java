@@ -19,9 +19,19 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	private List<URI> seeAlsoUris = new ArrayList<>();
 
 	public SimpleIndexCreator() {
+		this(null, null);
+	}
+
+	public SimpleIndexCreator(URI previousIndexUri) {
+		this(null, previousIndexUri);
 	}
 
 	public SimpleIndexCreator(String baseUri) {
+		this(baseUri, null);
+	}
+
+	public SimpleIndexCreator(String baseUri, URI previousIndexUri) {
+		super(previousIndexUri);
 		this.baseUri = baseUri;
 	}
 

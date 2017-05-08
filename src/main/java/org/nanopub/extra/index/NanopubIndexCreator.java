@@ -18,8 +18,14 @@ public abstract class NanopubIndexCreator {
 	private int itemCount;
 	private Map<String,Boolean> elementNs;
 	private int elementNsCount;
+	private URI previousIndexUri;
 
 	public NanopubIndexCreator() {
+		this(null);
+	}
+
+	public NanopubIndexCreator(URI previousIndexUri) {
+		this.previousIndexUri = previousIndexUri;
 	}
 
 	public void addElement(Nanopub np) {
@@ -61,6 +67,9 @@ public abstract class NanopubIndexCreator {
 		if (finalized) throw new RuntimeException("Already finalized");
 		enrichCompleteIndex(npCreator);
 		try {
+			if (npCreator == null) {
+				newNpCreator();
+			}
 			Nanopub np = npCreator.finalizeTrustyNanopub(true);
 			completeIndexUri = np.getUri();
 			handleCompleteIndex(IndexUtils.castToIndex(np));
@@ -130,7 +139,6 @@ public abstract class NanopubIndexCreator {
 
 	private void newNpCreator() {
 		// Finalize existing index nanopub:
-		URI previousIndexUri = null;
 		if (npCreator != null) {
 			npCreator.addPubinfoStatement(RDF.TYPE, NanopubIndex.INCOMPLETE_INDEX_URI);
 			enrichIncompleteIndex(npCreator);
