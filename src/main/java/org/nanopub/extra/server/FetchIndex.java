@@ -133,15 +133,24 @@ public class FetchIndex {
 							}
 						}
 						for (URI subIndexUri : npi.getSubIndexes()) {
-							fetchTasks.add(0, new FetchNanopubTask(subIndexUri.toString(), true));
+							// Failing to get subindexes can block the entire process, therefore
+							// we launch three sibling tasks at the same time:
+							FetchNanopubTask t1 = new FetchNanopubTask(subIndexUri.toString(), true);
+							fetchTasks.add(0, t1);
+							FetchNanopubTask t2 = new FetchNanopubTask(subIndexUri.toString(), true, t1);
+							fetchTasks.add(0, t2);
+							FetchNanopubTask t3 = new FetchNanopubTask(subIndexUri.toString(), true, t1, t2);
+							fetchTasks.add(0, t3);
 						}
 						if (npi.getAppendedIndex() != null) {
-							fetchTasks.add(0, new FetchNanopubTask(npi.getAppendedIndex().toString(), true));
-							// sibling tasks are currently not used:
-//							FetchNanopubTask t1 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true);
-//							fetchTasks.add(0, t1);
-//							FetchNanopubTask t2 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1);
-//							fetchTasks.add(0, t2);
+							// Failing to get appended indexes can block the entire process, therefore
+							// we launch three sibling tasks at the same time:
+							FetchNanopubTask t1 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true);
+							fetchTasks.add(0, t1);
+							FetchNanopubTask t2 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1);
+							fetchTasks.add(0, t2);
+							FetchNanopubTask t3 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1, t2);
+							fetchTasks.add(0, t3);
 						}
 					} catch (Exception ex) {
 						throw new RuntimeException(ex);
