@@ -20,6 +20,8 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	private static long serverInfoRefreshed = System.currentTimeMillis();
 	private static final long serverInfoRefreshInterval = 24 * 60 * 60 * 1000;
 
+	private static Map<String,Boolean> serverBlackList;
+
 	private List<ServerInfo> cachedServers = null;
 	private List<String> serversToContact = new ArrayList<>();
 	private List<String> serversToGetPeers = new ArrayList<>();
@@ -29,6 +31,16 @@ public class ServerIterator implements Iterator<ServerInfo> {
 
 	public ServerIterator() {
 		this(false);
+		// TODO: Peer URLs should expire so this isn't necessary:
+		serverBlackList = new HashMap<>();
+		serverBlackList.put("http://s1.semanticscience.org:8082/", true);
+		serverBlackList.put("http://nanopub-server.ops.labs.vu.nl/", true);
+		serverBlackList.put("http://ristretto.med.yale.edu:8080/nanopub-server/", true);
+		serverBlackList.put("http://nanopubs.semanticscience.org:8082/", true);
+		serverBlackList.put("http://rdf.disgenet.org/nanopub-server", true);
+		serverBlackList.put("http://digitalduchemin.org/np/", true);
+		serverBlackList.put("http://nanopub.exynize.com/", true);
+		serverBlackList.put("http://digitalduchemin.org/np-mirror/", true);
 	}
 
 	public ServerIterator(boolean forceServerReload) {
@@ -98,6 +110,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 					serversPeersGot.put(url, true);
 					try {
 						for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
+							if (serverBlackList.containsKey(peerUrl)) continue;
 							if (!serversContacted.containsKey(peerUrl)) {
 								serversToContact.add(peerUrl);
 							}

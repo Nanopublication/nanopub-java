@@ -91,7 +91,6 @@ public class NanopubServerUtils {
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-3/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-4/");
 		bootstrapServerList.add("http://nanopub.backend1.scify.org/nanopub-server/");
-		bootstrapServerList.add("http://nanopub.exynize.com/");
 		bootstrapServerList.add("http://sprout038.sprout.yale.edu/nanopub-server/");
 		bootstrapServerList.add("http://nanopubs.restdesc.org/");
 	}
