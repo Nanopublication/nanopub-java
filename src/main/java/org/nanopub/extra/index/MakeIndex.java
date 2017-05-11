@@ -41,6 +41,9 @@ public class MakeIndex {
 			"(in addition to the ones from the input files, if given)")
 	private List<String> subindexes = new ArrayList<>();
 
+	@com.beust.jcommander.Parameter(names = "-x", description = "Set given URI as superseded index")
+	private String supersededIndex;
+
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile = new File("index.trig");
 
@@ -69,7 +72,7 @@ public class MakeIndex {
 			jc.usage();
 			System.exit(1);
 		}
-		if (obj.inputFiles.isEmpty() && obj.elements.isEmpty() && obj.subindexes.isEmpty()) {
+		if (obj.inputFiles.isEmpty() && obj.elements.isEmpty() && obj.subindexes.isEmpty() && obj.supersededIndex == null) {
 			jc.usage();
 			System.exit(1);
 		}
@@ -181,6 +184,9 @@ public class MakeIndex {
 		}
 		for (String s : subindexes) {
 			indexCreator.addSubIndex(new URIImpl(s));
+		}
+		if (supersededIndex != null) {
+			indexCreator.setSupersededIndex(new URIImpl(supersededIndex));
 		}
 		indexCreator.finalizeNanopub();
 		writer.close();
