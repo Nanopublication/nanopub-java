@@ -65,9 +65,10 @@ public class SimpleTimestampPattern implements NanopubPattern {
 
 	public static final URI DCT_CREATED = new URIImpl("http://purl.org/dc/terms/created");
 	public static final URI PROV_GENERATEDATTIME = new URIImpl("http://www.w3.org/ns/prov#generatedAtTime");
+	public static final URI PAV_CREATEDON = new URIImpl("http://purl.org/pav/createdOn");
 
 	public static boolean isCreationTimeProperty(URI uri) {
-		return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME);
+		return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV_CREATEDON);
 	}
 
 }
