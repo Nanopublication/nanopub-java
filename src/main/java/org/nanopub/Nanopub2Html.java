@@ -21,6 +21,9 @@ public class Nanopub2Html {
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<String> inputNanopubs = new ArrayList<String>();
 
+	@com.beust.jcommander.Parameter(names = "-s", description = "Stand-alone HTML")
+	private boolean standalone = false;
+
 	public static void main(String[] args) {
 		NanopubImpl.ensureLoaded();
 		Nanopub2Html obj = new Nanopub2Html();
@@ -70,6 +73,9 @@ public class Nanopub2Html {
 				htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));
 			}
 		}
+		if (standalone) {
+			htmlWriter.writeHtmlStart();
+		}
 		htmlWriter.startPart("nanopub-prefixes");
 		htmlWriter.startRDF();
 		htmlWriter.endPart();
@@ -94,6 +100,9 @@ public class Nanopub2Html {
 		}
 		htmlWriter.endPart();
 		htmlWriter.endRDF();
+		if (standalone) {
+			htmlWriter.writeHtmlEnd();
+		}
 	}
 
 }

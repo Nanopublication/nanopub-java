@@ -33,13 +33,19 @@ public class HtmlWriter extends TurtleWriter {
 
 	public HtmlWriter(OutputStream out) {
 		super(out);
+		init();
 	}
 
 	public HtmlWriter(Writer writer) {
 		super(writer);
+		init();
 	}
 
 	private static RDFFormat format = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
+
+	private void init() {
+		writer.setIndentationString("&nbsp;&nbsp;");
+	}
 
 	@Override
 	public RDFFormat getRDFFormat()
@@ -139,7 +145,6 @@ public class HtmlWriter extends TurtleWriter {
 				closePreviousStatement();
 
 				// Write new subject:
-				writer.writeEOL();
 				writeResource(subj);
 				writer.write(" ");
 				lastWrittenSubject = subj;
@@ -329,6 +334,35 @@ public class HtmlWriter extends TurtleWriter {
 		closePreviousStatement();
 		closeActiveContext();
 		writer.write("</div>");
+		writer.writeEOL();
+	}
+
+	public void writeHtmlStart()
+		throws IOException
+	{
+		writenl("<!DOCTYPE html>");
+		writenl("<html lang=\"en\">");
+		writenl("<head>");
+		writenl("<meta charset=\"utf-8\">");
+		writenl("<title>Nanopublications</title>");
+		writenl("<style>");
+		writenl("body { font-family: monaco,monospace; font-size: 11pt; }");
+		writenl("</style>");
+		writenl("</head>");
+		writenl("<body>");
+	}
+
+	public void writeHtmlEnd()
+		throws IOException
+	{
+		writenl("</body>");
+		writenl("</htmls>");
+	}
+
+	private void writenl(String s)
+		throws IOException
+	{
+		writer.write(s);
 		writer.writeEOL();
 	}
 
