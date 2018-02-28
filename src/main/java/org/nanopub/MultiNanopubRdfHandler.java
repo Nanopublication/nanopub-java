@@ -19,7 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,8 +98,8 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 	private boolean headComplete = false;
 	private Map<URI,Boolean> graphs = new HashMap<>();
 	private Map<URI,Map<URI,Boolean>> members = new HashMap<>();
-	private Set<Statement> statements = new HashSet<>();
-	private Set<Statement> collAssertionStatements = new HashSet<>();
+	private Set<Statement> statements = new LinkedHashSet<>();
+	private Set<Statement> collAssertionStatements = new LinkedHashSet<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 

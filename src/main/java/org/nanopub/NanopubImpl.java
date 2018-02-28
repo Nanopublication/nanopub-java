@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -371,10 +372,10 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private void collectStatements(Collection<Statement> statements) throws MalformedNanopubException {
 		tripleCount = 0;
 		byteCount = 0;
-		Set<Statement> head = new HashSet<>();
-		Set<Statement> assertion = new HashSet<>();
-		Set<Statement> provenance = new HashSet<>();
-		Set<Statement> pubinfo = new HashSet<>();
+		Set<Statement> head = new LinkedHashSet<>();
+		Set<Statement> assertion = new LinkedHashSet<>();
+		Set<Statement> provenance = new LinkedHashSet<>();
+		Set<Statement> pubinfo = new LinkedHashSet<>();
 		for (Statement st : statements) {
 			checkStatement(st);
 			Resource g = st.getContext();
