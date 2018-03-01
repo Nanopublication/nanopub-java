@@ -76,6 +76,7 @@ public class Nanopub2Html {
 		if (standalone) {
 			htmlWriter.writeHtmlStart();
 		}
+		htmlWriter.startPart("nanopub");
 		htmlWriter.startPart("nanopub-prefixes");
 		htmlWriter.startRDF();
 		htmlWriter.endPart();
@@ -98,6 +99,7 @@ public class Nanopub2Html {
 		for (Statement st : np.getPubinfo()) {
 			htmlWriter.handleStatement(st);
 		}
+		htmlWriter.endPart();
 		htmlWriter.endPart();
 		htmlWriter.endRDF();
 		if (standalone) {

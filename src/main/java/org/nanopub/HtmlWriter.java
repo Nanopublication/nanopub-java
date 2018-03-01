@@ -31,6 +31,8 @@ public class HtmlWriter extends TurtleWriter {
 
 	private Resource currentContext;
 
+	private String openPart;
+
 	public HtmlWriter(OutputStream out) {
 		super(out);
 		init();
@@ -97,6 +99,12 @@ public class HtmlWriter extends TurtleWriter {
 			if (!inActiveContext) {
 				writer.write("<br/>");
 				writer.writeEOL();
+
+				if (openPart != null) {
+					writer.write(openPart);
+					writer.writeEOL();
+					openPart = null;
+				}
 
 				if (context != null) {
 					writeResource(context);
@@ -182,6 +190,13 @@ public class HtmlWriter extends TurtleWriter {
 		throws IOException
 	{
 		closeActiveContext();
+
+		if (openPart != null) {
+			writer.write(openPart);
+			writer.writeEOL();
+			openPart = null;
+		}
+
 		writer.write("@prefix ");
 		writer.write(prefix);
 		writer.write(": &lt;");
@@ -323,9 +338,11 @@ public class HtmlWriter extends TurtleWriter {
 	{
 		closePreviousStatement();
 		closeActiveContext();
-		writer.write("<div class=\"" + partName + "\">");
-		writer.writeEOL();
-		
+		if (openPart != null) {
+			openPart += "\n<div class=\"" + partName + "\">";
+		} else {
+			openPart = "<div class=\"" + partName + "\">";
+		}
 	}
 
 	public void endPart()
@@ -347,6 +364,11 @@ public class HtmlWriter extends TurtleWriter {
 		writenl("<title>Nanopublications</title>");
 		writenl("<style>");
 		writenl("body { font-family: monaco,monospace; font-size: 11pt; }");
+		writenl(".nanopub { padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
+		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; border-radius: 10px; }");
+		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; border-radius: 10px; }");
+		writenl(".nanopub-provenance { background: #eb613d; padding: 10px; border-radius: 10px; }");
+		writenl(".nanopub-pubinfo { background: #ffff66; padding: 10px; border-radius: 10px; }");
 		writenl("</style>");
 		writenl("</head>");
 		writenl("<body>");
