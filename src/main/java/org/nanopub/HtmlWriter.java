@@ -363,7 +363,9 @@ public class HtmlWriter extends TurtleWriter {
 		writenl("<meta charset=\"utf-8\">");
 		writenl("<title>Nanopublications</title>");
 		writenl("<style>");
-		writenl("body { font-family: monaco,monospace; font-size: 11pt; }");
+		writenl("body { font-family: monaco,monospace; font-size: 11pt; color: #444; }");
+		writenl("a { color: #000; text-decoration: none; }");
+		writenl("a:hover { color: #666; }");
 		writenl(".nanopub { padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
 		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; border-radius: 10px; }");
 		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; border-radius: 10px; }");
