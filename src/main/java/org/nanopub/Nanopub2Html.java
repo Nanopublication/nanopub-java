@@ -1,9 +1,14 @@
 package org.nanopub;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -24,6 +29,13 @@ public class Nanopub2Html {
 	@com.beust.jcommander.Parameter(names = "-s", description = "Stand-alone HTML")
 	private boolean standalone = false;
 
+	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+	private File outputFile;
+
+	private OutputStream outputStream = System.out;
+
+	private static final Charset utf8Charset = Charset.forName("UTF8");
+
 	public static void main(String[] args) {
 		NanopubImpl.ensureLoaded();
 		Nanopub2Html obj = new Nanopub2Html();
@@ -35,38 +47,57 @@ public class Nanopub2Html {
 			System.exit(1);
 		}
 		try {
-			obj.generateHtml();
+			obj.run();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	public void generateHtml() throws IOException {
+	private Nanopub2Html() {
+	}
+
+	private Nanopub2Html(OutputStream outputStream, boolean standalone) {
+		this.outputStream = outputStream;
+		this.standalone = standalone;
+	}
+
+
+	private void run() throws IOException {
+		if (outputFile != null) {
+			outputStream = new FileOutputStream(outputFile);
+		}
+
 		for (String s : inputNanopubs) {
 			try {
 				MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
 					@Override
 					public void handleNanopub(Nanopub np) {
-						createHtml(np);
+						try {
+							createHtml(np);
+						} catch (IOException | RDFHandlerException ex) {
+							ex.printStackTrace();
+						}
 					}
 				});
 			} catch (OpenRDFException | MalformedNanopubException ex) {
 				ex.printStackTrace();
 			}
 		}
-	}
-
-	private void createHtml(Nanopub np) {
-		try {
-			createHtml(np, System.out);
-		} catch (IOException | RDFHandlerException ex) {
-			ex.printStackTrace();
+		outputStream.flush();
+		if (outputStream != System.out) {
+			outputStream.close();
 		}
 	}
 
-	public void createHtml(Nanopub np, PrintStream htmlOut) throws IOException, RDFHandlerException {
-		HtmlWriter htmlWriter = new HtmlWriter(htmlOut);
+	private void createHtml(Nanopub np) throws IOException, RDFHandlerException {
+		PrintStream printHtml;
+		if (outputStream instanceof PrintStream) {
+			printHtml = (PrintStream) outputStream;
+		} else {
+			printHtml = new PrintStream(outputStream);
+		}
+		HtmlWriter htmlWriter = new HtmlWriter(printHtml);
 		if (np instanceof NanopubWithNs) {
 			NanopubWithNs npNs = (NanopubWithNs) np;
 			for (String prefix : npNs.getNsPrefixes()) {
@@ -105,6 +136,52 @@ public class Nanopub2Html {
 		if (standalone) {
 			htmlWriter.writeHtmlEnd();
 		}
+	}
+
+	public static void createHtml(Collection<Nanopub> nanopubs, OutputStream htmlOut, boolean standalone) {
+		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone);
+		try {
+			for (Nanopub np : nanopubs) {
+				nanopub2html.createHtml(np);
+			}
+		} catch (IOException | RDFHandlerException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone) {
+		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone);
+		try {
+			nanopub2html.createHtml(np);
+		} catch (IOException | RDFHandlerException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone) {
+		ByteArrayOutputStream htmlOut = null;
+		try {
+			htmlOut = new ByteArrayOutputStream();
+			createHtml(nanopubs, htmlOut, standalone);
+			htmlOut.flush();
+			htmlOut.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return new String(htmlOut.toByteArray(), utf8Charset);
+	}
+
+	public static String createHtmlString(Nanopub np, boolean standalone) {
+		ByteArrayOutputStream htmlOut = null;
+		try {
+			htmlOut = new ByteArrayOutputStream();
+			createHtml(np, htmlOut, standalone);
+			htmlOut.flush();
+			htmlOut.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return new String(htmlOut.toByteArray(), utf8Charset);
 	}
 
 }

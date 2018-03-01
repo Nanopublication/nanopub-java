@@ -21,9 +21,7 @@ import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleUtil;
 import org.openrdf.rio.turtle.TurtleWriter;
 
-// TODO: Work in progress...
-
-// Copied code from TurtleWriter and TrigWriter
+// Contains copied code from TurtleWriter and TrigWriter
 
 public class HtmlWriter extends TurtleWriter {
 
@@ -43,7 +41,7 @@ public class HtmlWriter extends TurtleWriter {
 		init();
 	}
 
-	private static RDFFormat format = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
+	public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
 
 	private void init() {
 		writer.setIndentationString("&nbsp;&nbsp;");
@@ -52,7 +50,7 @@ public class HtmlWriter extends TurtleWriter {
 	@Override
 	public RDFFormat getRDFFormat()
 	{
-		return format;
+		return HTML_FORMAT;
 	}
 
 	@Override
@@ -363,10 +361,10 @@ public class HtmlWriter extends TurtleWriter {
 		writenl("<meta charset=\"utf-8\">");
 		writenl("<title>Nanopublications</title>");
 		writenl("<style>");
-		writenl("body { font-family: monaco,monospace; font-size: 11pt; color: #444; }");
+		writenl("body { margin: 20px; font-family: monaco,monospace; font-size: 11pt; color: #444; }");
 		writenl("a { color: #000; text-decoration: none; }");
 		writenl("a:hover { color: #666; }");
-		writenl(".nanopub { padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
+		writenl(".nanopub { margin: 0 0 30px 0; padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
 		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; border-radius: 10px; }");
 		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; border-radius: 10px; }");
 		writenl(".nanopub-provenance { background: #f3a08c; padding: 10px; border-radius: 10px; }");

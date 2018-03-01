@@ -54,6 +54,7 @@ public class Run {
 		addRunnableClass(GetServerInfo.class, "server");
 		addRunnableClass(MakeIndex.class, "mkindex");
 		addRunnableClass(MakeKeys.class, "mkkeys");
+		addRunnableClass(Nanopub2Html.class, "html");
 	}
 
 	public static void run(String[] command) throws IOException, OpenRDFException {
