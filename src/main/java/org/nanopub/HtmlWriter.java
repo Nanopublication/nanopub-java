@@ -369,7 +369,7 @@ public class HtmlWriter extends TurtleWriter {
 		writenl(".nanopub { padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
 		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; border-radius: 10px; }");
 		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; border-radius: 10px; }");
-		writenl(".nanopub-provenance { background: #eb613d; padding: 10px; border-radius: 10px; }");
+		writenl(".nanopub-provenance { background: #f3a08c; padding: 10px; border-radius: 10px; }");
 		writenl(".nanopub-pubinfo { background: #ffff66; padding: 10px; border-radius: 10px; }");
 		writenl("</style>");
 		writenl("</head>");
