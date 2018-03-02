@@ -21,6 +21,8 @@ import org.openrdf.rio.helpers.BasicWriterSettings;
 import org.openrdf.rio.turtle.TurtleUtil;
 import org.openrdf.rio.turtle.TurtleWriter;
 
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
+
 // Contains copied code from TurtleWriter and TrigWriter
 
 public class HtmlWriter extends TurtleWriter {
@@ -198,7 +200,7 @@ public class HtmlWriter extends TurtleWriter {
 		writer.write("@prefix ");
 		writer.write(prefix);
 		writer.write(": &lt;");
-		String uriString = TurtleUtil.encodeURIString(name);
+		String uriString = escapeHtml4(TurtleUtil.encodeURIString(name));
 		writer.write("<a href=\"" + uriString + "\">");
 		writer.write(uriString);
 		writer.write("</a>");
@@ -224,7 +226,7 @@ public class HtmlWriter extends TurtleWriter {
 	{
 		if (predicate.equals(RDF.TYPE)) {
 			// Write short-cut for rdf:type
-			writer.write("a");
+			writer.write("<a href=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\">a</a>");
 		}
 		else {
 			writeURI(predicate);
@@ -247,17 +249,17 @@ public class HtmlWriter extends TurtleWriter {
 
 		if (prefix != null) {
 			// Namespace is mapped to a prefix; write abbreviated URI
-			writer.write("<a href=\"" + uriString + "\">");
+			writer.write("<a href=\"" + escapeHtml4(uriString) + "\">");
 			writer.write(prefix);
 			writer.write(":");
-			writer.write(uriString.substring(splitIdx));
+			writer.write(escapeHtml4(uriString.substring(splitIdx)));
 			writer.write("</a>");
 		}
 		else {
 			// Write full URI
 			writer.write("&lt;");
-			writer.write("<a href=\"" + uriString + "\">");
-			writer.write(TurtleUtil.encodeURIString(uriString));
+			writer.write("<a href=\"" + escapeHtml4(uriString) + "\">");
+			writer.write(escapeHtml4(TurtleUtil.encodeURIString(uriString)));
 			writer.write("</a>");
 			writer.write("&gt;");
 		}
@@ -280,7 +282,7 @@ public class HtmlWriter extends TurtleWriter {
 					|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
 			{
 				try {
-					writer.write(XMLDatatypeUtil.normalize(label, datatype));
+					writer.write(escapeHtml4(XMLDatatypeUtil.normalize(label, datatype)));
 					return; // done
 				}
 				catch (IllegalArgumentException e) {
@@ -293,13 +295,13 @@ public class HtmlWriter extends TurtleWriter {
 		if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
 			// Write label as long string
 			writer.write("\"\"\"");
-			writer.write(TurtleUtil.encodeLongString(label));
+			writer.write(escapeHtml4(TurtleUtil.encodeLongString(label)));
 			writer.write("\"\"\"");
 		}
 		else {
 			// Write label as normal string
 			writer.write("\"");
-			writer.write(TurtleUtil.encodeString(label));
+			writer.write(escapeHtml4(TurtleUtil.encodeString(label)));
 			writer.write("\"");
 		}
 
