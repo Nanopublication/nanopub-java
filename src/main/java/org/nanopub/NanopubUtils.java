@@ -1,8 +1,10 @@
 package org.nanopub;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandler;
@@ -19,6 +22,8 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFaParserSettings;
+import org.openrdf.rio.ntriples.NTriplesWriter;
+import org.openrdf.rio.trig.TriGWriter;
 
 /**
  * @author Tobias Kuhn
@@ -52,15 +57,29 @@ public class NanopubUtils {
 
 	public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		RDFWriter writer = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-		propagateToHandler(nanopub, writer);
+		writeNanopub(nanopub,format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}
 
 	public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException {
 		StringWriter sw = new StringWriter();
-		RDFWriter writer = Rio.createWriter(format, sw);
-		propagateToHandler(nanopub, writer);
+		writeNanopub(nanopub, format, sw);
 		return sw.toString();
+	}
+
+	private static void writeNanopub(Nanopub nanopub, RDFFormat format, Writer writer)
+			throws RDFHandlerException {
+		if (format.equals(TrustyNanopubUtils.STNP_FORMAT)) {
+			try {
+				writer.write(TrustyNanopubUtils.getTrustyDigestString(nanopub));
+				writer.flush();
+				writer.close();
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		} else {
+			RDFWriter rdfWriter = Rio.createWriter(format, writer);
+			propagateToHandler(nanopub, rdfWriter);
+		}
 	}
 
 	public static void propagateToHandler(Nanopub nanopub, RDFHandler handler)

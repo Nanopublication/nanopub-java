@@ -20,6 +20,8 @@ import org.openrdf.rio.Rio;
 
 public class TrustyNanopubUtils {
 
+	public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true);
+
 	private TrustyNanopubUtils() {}  // no instances allowed
 
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
@@ -54,6 +56,14 @@ public class TrustyNanopubUtils {
 		statements = RdfPreprocessor.run(statements, artifactCode);
 		String ac = RdfHasher.makeArtifactCode(statements);
 		return ac.equals(artifactCode);
+	}
+
+	public static String getTrustyDigestString(Nanopub nanopub) {
+		String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+		if (artifactCode == null) return null;
+		List<Statement> statements = NanopubUtils.getStatements(nanopub);
+		statements = RdfPreprocessor.run(statements, artifactCode);
+		return RdfHasher.getDigestString(statements);
 	}
 
 }
