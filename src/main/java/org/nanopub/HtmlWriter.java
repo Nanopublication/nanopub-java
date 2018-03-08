@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.Set;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -23,7 +24,7 @@ import org.openrdf.rio.turtle.TurtleWriter;
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 
-// Contains copied code from TurtleWriter and TrigWriter
+// Contains copied code from TurtleWriter, TrigWriter, and CustomTrigWriter
 
 public class HtmlWriter extends TurtleWriter {
 
@@ -32,6 +33,8 @@ public class HtmlWriter extends TurtleWriter {
 	private Resource currentContext;
 
 	private String openPart;
+
+	private Set<String> usedPrefixes;
 
 	public HtmlWriter(OutputStream out) {
 		super(out);
@@ -238,13 +241,72 @@ public class HtmlWriter extends TurtleWriter {
 	{
 		String uriString = uri.toString();
 
-		// Try to find a prefix for the URI's namespace
-		String prefix = null;
+		String prefix = namespaceTable.get(uriString);
+		if (prefix != null) {
+			// Exact match: no suffix required
+			writer.write("<a href=\"" + escapeHtml4(uriString) + "\">");
+			writer.write(prefix);
+			writer.write(":");
+			writer.write("</a>");
+			if (usedPrefixes != null) {
+				usedPrefixes.add(prefix);
+			}
+			return;
+		}
 
-		int splitIdx = TurtleUtil.findURISplitIndex(uriString);
+		prefix = null;
+
+		int splitIdx = TurtleUtil.findURISplitIndex(uriString); 
+
+		// Sesame bug for URIs that end with a period.
+		// Port fix from https://bitbucket.org/openrdf/sesame/pull-request/301/ses-2086-fix-turtlewriter-writing/diff
+		if (!TurtleUtil.isNameEndChar(uriString.charAt(uriString.length() - 1))) {
+			splitIdx = -1;
+		}
+
 		if (splitIdx > 0) {
 			String namespace = uriString.substring(0, splitIdx);
 			prefix = namespaceTable.get(namespace);
+		}
+
+		// Do also split at dots:
+		int splitIdxDot = uriString.lastIndexOf(".") + 1;
+		if (uriString.length() == splitIdxDot) splitIdxDot = -1;
+		if (splitIdx > 0 && splitIdxDot > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxDot);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxDot;
+				prefix = p;
+			}
+		}
+
+		// ... and colons:
+		int splitIdxColon = uriString.lastIndexOf(":") + 1;
+		if (uriString.length() == splitIdxColon) splitIdxColon = -1;
+		if (splitIdx > 0 && splitIdxColon > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxColon);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxColon;
+				prefix = p;
+			}
+		}
+
+		// ... and underscores:
+		int splitIdxUnderscore = uriString.lastIndexOf("_") + 1;
+		if (uriString.length() == splitIdxUnderscore) splitIdxUnderscore = -1;
+		if (splitIdx > 0 && splitIdxUnderscore > splitIdx) {
+			String namespace = uriString.substring(0, splitIdxUnderscore);
+			String p = namespaceTable.get(namespace);
+			if (p != null) {
+				splitIdx = splitIdxUnderscore;
+				prefix = p;
+			}
+		}
+
+		if (uriString.endsWith(".")) {
+			prefix = null;
 		}
 
 		if (prefix != null) {
@@ -295,13 +357,13 @@ public class HtmlWriter extends TurtleWriter {
 		if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
 			// Write label as long string
 			writer.write("\"\"\"");
-			writer.write(escapeHtml4(TurtleUtil.encodeLongString(label)));
+			writer.write(escapeHtml4(TurtleUtil.encodeLongString(label)).replace("  ", "&nbsp; ").replace("  ", " &nbsp;").replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp").replace("\n", "<br/>"));
 			writer.write("\"\"\"");
 		}
 		else {
 			// Write label as normal string
 			writer.write("\"");
-			writer.write(escapeHtml4(TurtleUtil.encodeString(label)));
+			writer.write(escapeHtml4(TurtleUtil.encodeString(label)).replace("  ", "&nbsp; ").replace("  ", " &nbsp;"));
 			writer.write("\"");
 		}
 
