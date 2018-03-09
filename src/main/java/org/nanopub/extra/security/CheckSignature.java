@@ -33,6 +33,8 @@ import org.openrdf.rio.helpers.RDFHandlerBase;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+// TODO: nanopub signatures are being updated...
+
 public class CheckSignature {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
@@ -90,7 +92,7 @@ public class CheckSignature {
 
 	public static boolean hasSignature(Nanopub nanopub) {
 		for (Statement st : nanopub.getPubinfo()) {
-			if (st.getPredicate().equals(NanopubSignature.HAS_SIGNATURE_ELEMENT)) return true;
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) return true;
 		}
 		return false;
 	}

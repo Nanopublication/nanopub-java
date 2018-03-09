@@ -1,9 +1,9 @@
 package org.nanopub.extra.security;
 
-import static org.nanopub.extra.security.NanopubSignature.HAS_PUBLIC_KEY;
-import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE;
-import static org.nanopub.extra.security.NanopubSignature.HAS_SIGNATURE_ELEMENT;
-import static org.nanopub.extra.security.NanopubSignature.SIGNED_BY;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_PUBLIC_KEY;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_ELEMENT;
+import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,6 +63,8 @@ import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
+// TODO: nanopub signatures are being updated...
 
 public class SignNanopub {
 

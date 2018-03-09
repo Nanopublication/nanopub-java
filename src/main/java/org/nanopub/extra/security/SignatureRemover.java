@@ -21,6 +21,8 @@ import org.openrdf.rio.RDFHandlerException;
 
 import com.google.common.collect.ImmutableList;
 
+// TODO: nanopub signatures are being updated...
+
 public class SignatureRemover implements RDFHandler {
 
 	private RDFHandler handler;
@@ -62,9 +64,9 @@ public class SignatureRemover implements RDFHandler {
 	@Override
 	public void handleStatement(Statement st) throws RDFHandlerException {
 		if (st.getContext() != null && st.getContext().equals(graph)) {
-			if (st.getPredicate().equals(NanopubSignature.HAS_SIGNATURE_ELEMENT)) {
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) {
 				if (!(st.getObject() instanceof Resource)) {
-					throw new RDFHandlerException("Object of " + NanopubSignature.HAS_SIGNATURE_ELEMENT + " has to be a resource");
+					throw new RDFHandlerException("Object of " + NanopubSignatureElement.HAS_SIGNATURE_ELEMENT + " has to be a resource");
 				}
 				Resource sigElement = (Resource) st.getObject();
 				if (signatureElements.contains(sigElement)) {
@@ -73,12 +75,12 @@ public class SignatureRemover implements RDFHandler {
 				signatureElements.add(sigElement);
 				return;
 			}
-			if (st.getPredicate().equals(NanopubSignature.HAS_PUBLIC_KEY)) {
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) {
 				if (publicKeys.get(st.getSubject()) != null) {
 					throw new RDFHandlerException("Two public keys found");
 				}
 				if (!(st.getObject() instanceof Literal)) {
-					throw new RDFHandlerException("Object of " + NanopubSignature.HAS_PUBLIC_KEY + " has to be a literal");
+					throw new RDFHandlerException("Object of " + NanopubSignatureElement.HAS_PUBLIC_KEY + " has to be a literal");
 				}
 				try {
 					byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(((Literal) st.getObject()).getLabel());
@@ -90,12 +92,12 @@ public class SignatureRemover implements RDFHandler {
 				}
 				return;
 			}
-			if (st.getPredicate().equals(NanopubSignature.HAS_SIGNATURE)) {
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) {
 				if (signatures.get(st.getSubject()) != null) {
 					throw new RDFHandlerException("Two signatures found");
 				}
 				if (!(st.getObject() instanceof Literal)) {
-					throw new RDFHandlerException("Object of " + NanopubSignature.HAS_SIGNATURE + " has to be a literal");
+					throw new RDFHandlerException("Object of " + NanopubSignatureElement.HAS_SIGNATURE + " has to be a literal");
 				}
 				try {
 					byte[] signature = DatatypeConverter.parseBase64Binary(((Literal) st.getObject()).getLabel());
@@ -106,7 +108,7 @@ public class SignatureRemover implements RDFHandler {
 				}
 				return;
 			}
-			if (st.getPredicate().equals(NanopubSignature.SIGNED_BY)) return;
+			if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) return;
 		}
 		handler.handleStatement(st);
 	}
