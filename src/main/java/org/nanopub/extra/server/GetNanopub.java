@@ -56,6 +56,21 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(names = "-c", description = "Retrieve the content of the given index")
 	private boolean getIndexContent;
 
+	@com.beust.jcommander.Parameter(names = "--mongodb-host", description = "Directly contact single MongoDB instance instead of the network (e.g. 'localhost')")
+	private String mongoDbHost;
+
+	@com.beust.jcommander.Parameter(names = "--mongodb-port", description = "MongoDB port")
+	private int mongoDbPort = 27017;
+
+	@com.beust.jcommander.Parameter(names = "--mongodb-dbname", description = "MongoDB database name")
+	private String mongoDbName = "nanopub-server";
+
+	@com.beust.jcommander.Parameter(names = "--mongodb-user", description = "MongoDB user name")
+	private String mongoDbUsername;
+
+	@com.beust.jcommander.Parameter(names = "--mongodb-pw", description = "MongoDB password")
+	private String mongoDbPassword;
+
 	@com.beust.jcommander.Parameter(names = "-r", description = "Show a report in the end")
 	private boolean showReport;
 
@@ -106,6 +121,14 @@ public class GetNanopub {
 			}
 		}
 		return null;
+	}
+
+	public static Nanopub get(String uriOrArtifactCode, NanopubDb db) {
+		String ac = getArtifactCode(uriOrArtifactCode);
+		if (!ac.startsWith(RdfModule.MODULE_ID)) {
+			throw new IllegalArgumentException("Not a trusty URI of type RA");
+		}
+		return db.getNanopub(ac);
 	}
 
 	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
@@ -165,6 +188,7 @@ public class GetNanopub {
 	private PrintStream errorStream = null;
 	private int count;
 	private List<Exception> exceptions;
+	private NanopubDb db = null;
 
 	private RDFFormat rdfFormat;
 
@@ -191,10 +215,17 @@ public class GetNanopub {
 		if (errorFile != null) {
 			errorStream = new PrintStream(errorFile);
 		}
+		if (mongoDbHost != null) {
+			db = new NanopubDb(mongoDbHost, mongoDbPort, mongoDbName, mongoDbUsername, mongoDbPassword);
+		}
 		FetchIndex fetchIndex = null;
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
-				fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+				if (db == null) {
+					fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+				} else {
+					fetchIndex = new FetchIndexFromDb(nanopubId, db, outputStream, rdfFormat, getIndex, getIndexContent);
+				}
 				fetchIndex.setProgressListener(new FetchIndex.Listener() {
 
 					@Override
@@ -217,7 +248,13 @@ public class GetNanopub {
 				fetchIndex.run();
 				count = fetchIndex.getNanopubCount();
 			} else {
-				outputNanopub(nanopubId, get(nanopubId));
+				Nanopub np;
+				if (db == null) {
+					np = get(nanopubId);
+				} else {
+					np = get(nanopubId, db);
+				}
+				outputNanopub(nanopubId, np);
 			}
 		}
 		if (outputStream != System.out) {

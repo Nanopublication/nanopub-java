@@ -74,6 +74,7 @@ public class Run {
 				runClass.getMethod("main", String[].class).invoke(runClass, (Object) cmdArgs);
 			} catch (Exception ex) {
 				System.err.println("Internal error: " + ex.getMessage());
+				ex.printStackTrace();
 				System.exit(1);
 			}
 		} else if (cmd.equals("help")) {

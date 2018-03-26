@@ -42,6 +42,9 @@ public class FetchIndex {
 	private Listener listener;
 	private HttpClient httpClient;
 
+	protected FetchIndex() {
+	}
+
 	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {
 		this.out = out;
 		this.format = format;
