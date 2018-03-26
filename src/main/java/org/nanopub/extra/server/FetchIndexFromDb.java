@@ -2,9 +2,12 @@ package org.nanopub.extra.server;
 
 import java.io.OutputStream;
 
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
+import org.nanopub.extra.index.NanopubIndexImpl;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
@@ -34,17 +37,17 @@ public class FetchIndexFromDb extends FetchIndex {
 	public void run() {
 		try {
 			getIndex(indexUri);
-		} catch (RDFHandlerException ex) {
+		} catch (RDFHandlerException | MalformedNanopubException ex) {
 			throw new RuntimeException(ex);
 		}
 	}
 
-	private void getIndex(String indexUri) throws RDFHandlerException {
+	private void getIndex(String indexUri) throws RDFHandlerException, MalformedNanopubException {
 		Nanopub np = GetNanopub.get(indexUri, db);
-		if (!(np instanceof NanopubIndex)) {
-			throw new RDFHandlerException("Nanopublication index expected");
+		if (!IndexUtils.isIndex(np)) {
+			throw new RuntimeException("NOT AN INDEX: " + np.getUri());
 		}
-		NanopubIndex npi = (NanopubIndex) np;
+		NanopubIndex npi = IndexUtils.castToIndex(np);
 		if (writeIndex) {
 			writeNanopub(npi);
 		}
