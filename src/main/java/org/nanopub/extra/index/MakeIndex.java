@@ -59,6 +59,9 @@ public class MakeIndex {
 	@com.beust.jcommander.Parameter(names = "-c", description = "Creator of index")
 	private List<String> iCreators = new ArrayList<>();
 
+	@com.beust.jcommander.Parameter(names = "-l", description = "License URI")
+	private String licenseUri;
+
 	@com.beust.jcommander.Parameter(names = "-a", description = "'See also' resources")
 	private List<String> seeAlso = new ArrayList<>();
 
@@ -133,6 +136,9 @@ public class MakeIndex {
 		}
 		for (String creator : iCreators) {
 			indexCreator.addCreator(creator);
+		}
+		if (licenseUri != null) {
+			indexCreator.setLicense(new URIImpl(licenseUri));
 		}
 		for (String sa : seeAlso) {
 			indexCreator.addSeeAlsoUri(new URIImpl(sa));

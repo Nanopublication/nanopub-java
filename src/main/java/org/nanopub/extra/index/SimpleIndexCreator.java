@@ -8,6 +8,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.DC;
+import org.openrdf.model.vocabulary.DCTERMS;
 import org.openrdf.model.vocabulary.RDFS;
 
 public abstract class SimpleIndexCreator extends NanopubIndexCreator {
@@ -15,6 +16,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	private String baseUri;
 	private String title;
 	private String description;
+	private URI license;
 	private List<String> creators = new ArrayList<>();
 	private List<URI> seeAlsoUris = new ArrayList<>();
 
@@ -47,6 +49,10 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		this.description = description;
 	}
 
+	public void setLicense(URI license) {
+		this.license = license;
+	}
+
 	public void addCreator(String creatorUriOrOrcid) {
 		creators.add(creatorUriOrOrcid);
 	}
@@ -73,6 +79,9 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 			} else {
 				throw new IllegalArgumentException("Author has to be URI or ORCID: " + creator);
 			}
+		}
+		if (license != null) {
+			npCreator.addPubinfoStatement(DCTERMS.LICENSE, license);
 		}
 		for (URI seeAlsoUri : seeAlsoUris) {
 			npCreator.addPubinfoStatement(RDFS.SEEALSO, seeAlsoUri);
