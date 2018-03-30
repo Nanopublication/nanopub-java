@@ -7,7 +7,6 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.nanopub.extra.index.NanopubIndexImpl;
 import org.openrdf.model.URI;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
@@ -43,25 +42,33 @@ public class FetchIndexFromDb extends FetchIndex {
 	}
 
 	private void getIndex(String indexUri) throws RDFHandlerException, MalformedNanopubException {
+		NanopubIndex npi = getIndex(indexUri, db);
+		while (npi != null) {
+			if (writeIndex) {
+				writeNanopub(npi);
+			}
+			if (writeContent) {
+				for (URI elementUri : npi.getElements()) {
+					writeNanopub(GetNanopub.get(elementUri.toString(), db));
+				}
+			}
+			for (URI subIndexUri : npi.getSubIndexes()) {
+				getIndex(subIndexUri.toString());
+			}
+			if (npi.getAppendedIndex() != null) {
+				npi = getIndex(npi.getAppendedIndex().toString(), db);
+			} else {
+				npi = null;
+			}
+		}
+	}
+
+	private static NanopubIndex getIndex(String indexUri, NanopubDb db) throws MalformedNanopubException {
 		Nanopub np = GetNanopub.get(indexUri, db);
 		if (!IndexUtils.isIndex(np)) {
 			throw new RuntimeException("NOT AN INDEX: " + np.getUri());
 		}
-		NanopubIndex npi = IndexUtils.castToIndex(np);
-		if (writeIndex) {
-			writeNanopub(npi);
-		}
-		if (writeContent) {
-			for (URI elementUri : npi.getElements()) {
-				writeNanopub(GetNanopub.get(elementUri.toString(), db));
-			}
-		}
-		for (URI subIndexUri : npi.getSubIndexes()) {
-			getIndex(subIndexUri.toString());
-		}
-		if (npi.getAppendedIndex() != null) {
-			getIndex(npi.getAppendedIndex().toString());
-		}
+		return IndexUtils.castToIndex(np);
 	}
 
 	private void writeNanopub(Nanopub np) throws RDFHandlerException {
