@@ -18,6 +18,9 @@ import org.openrdf.model.impl.URIImpl;
 // TODO: nanopub signatures are being updated...
 // Some of this code is not yet connected to the actual signing methods.
 
+// TODO: Add algorithm info (see here: https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature)
+// TODO: Add possiblity for public key fingerprint
+
 public class NanopubSignatureElement {
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");

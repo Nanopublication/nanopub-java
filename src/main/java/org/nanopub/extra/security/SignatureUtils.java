@@ -43,6 +43,9 @@ public class SignatureUtils {
 		}
 		
 		for (Statement st : nanopub.getPubinfo()) {
+			if (seMap.containsKey(st.getPredicate())) {
+				throw new MalformedSignatureException("Illegal use of signature URI as predicate: " + st.getPredicate());
+			}
 			URI subjUri = (URI) st.getSubject();
 			Value objValue = st.getObject();
 			URI objUri = null;
