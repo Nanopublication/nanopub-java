@@ -1,8 +1,11 @@
 package org.nanopub.extra.security;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -17,6 +20,10 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
 
 // TODO: nanopub signatures are being updated...
 // Some of this code is not yet connected to the actual signing methods.
@@ -37,6 +44,7 @@ public class NanopubSignatureElement {
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
 	private URI uri;
+	private URI targetNanopubUri;
 	private String publicKeyString;
 	private String algorithm;
 	private PublicKey publicKey;
@@ -44,12 +52,17 @@ public class NanopubSignatureElement {
 	private Set<URI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
 
-	NanopubSignatureElement(URI uri) {
+	NanopubSignatureElement(URI targetNanopubUri, URI uri) {
+		this.targetNanopubUri = targetNanopubUri;
 		this.uri = uri;
 	}
 
 	public URI getUri() {
 		return uri;
+	}
+
+	public URI getTargetNanopubUri() {
+		return targetNanopubUri;
 	}
 
 	void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedSignatureException {
@@ -87,9 +100,16 @@ public class NanopubSignatureElement {
 		if (algorithm != null) {
 			throw new MalformedSignatureException("Two algorithms found for signature element");
 		}
+		if (!algorithmLiteral.getLabel().contains("with")) {
+			throw new MalformedSignatureException("Algorithm strings does not follow '[DIGEST]with[ENCRYPTION]' pattern: " + algorithmLiteral.getLabel());
+		}
 		algorithm = algorithmLiteral.getLabel();
 	}
 
+	/**
+	 * Algorithm string of the form "[DIGEST]with[ENCRYPTION]", for example "SHA256withDSA".
+	 * See https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature
+	 */
 	public String getAlgorithm() {
 		return algorithm;
 	}
@@ -110,10 +130,19 @@ public class NanopubSignatureElement {
 		return targetStatements;
 	}
 
+	public boolean hasValidSignature() throws GeneralSecurityException {
+		String artifactCode = TrustyUriUtils.getArtifactCode(targetNanopubUri.toString());
+		List<Statement> statements = RdfPreprocessor.run(targetStatements, artifactCode);
+		MessageDigest digest = RdfHasher.digest(statements);
+		Signature dsa = Signature.getInstance("SHA1withDSA", "SUN");
+		dsa.initVerify(publicKey);
+		dsa.update(digest.digest());
+		return dsa.verify(signature);
+	}
+
 	private KeyFactory getKeyFactory() {
-		// TODO: Allow for different algorithms
 		try {
-			return KeyFactory.getInstance("DSA");
+			return KeyFactory.getInstance(getAlgorithm().replaceFirst(".*with", ""));
 		} catch (NoSuchAlgorithmException ex) {
 			throw new RuntimeException(ex);
 		}

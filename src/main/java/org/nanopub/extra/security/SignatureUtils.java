@@ -16,7 +16,7 @@ public class SignatureUtils {
 	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedSignatureException {
 		URI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
-		NanopubSignatureElement se = new NanopubSignatureElement(signatureUri);
+		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 		
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(signatureUri)) {
@@ -82,7 +82,7 @@ public class SignatureUtils {
 	public static NanopubSignatureElement getLegacySignatureElement(Nanopub nanopub) throws MalformedSignatureException {
 		URI signatureUri = getLegacySignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
-		NanopubSignatureElement se = new NanopubSignatureElement(signatureUri);
+		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 		
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(signatureUri)) {
