@@ -1,0 +1,34 @@
+@prefix this: <http://example.org/nanopub-validator-example/RAvO8ThGECy8oQ0dYT9uKEHMtCZppxuL0r6jP2F4pg2zY> .
+@prefix sub: <http://example.org/nanopub-validator-example/RAvO8ThGECy8oQ0dYT9uKEHMtCZppxuL0r6jP2F4pg2zY#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix pav: <http://purl.org/pav/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+@prefix ex: <http://example.org/> .
+
+sub:Head {
+	this: np:hasAssertion sub:assertion ;
+		np:hasProvenance sub:provenance ;
+		np:hasPublicationInfo sub:pubinfo ;
+		a np:Nanopublication .
+}
+
+sub:assertion {
+	ex:mosquito ex:transmits ex:malaria .
+}
+
+sub:provenance {
+	sub:assertion prov:hadPrimarySource <http://dx.doi.org/10.3233/ISU-2010-0613> .
+}
+
+sub:pubinfo {
+	sub:signature.MCwCFFZqMt3EHjGT npx:hasPublicKey "MIIBtzCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdSPO9EAMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVClpJ+f6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith1yrv8iIDGZ3RSAHHAhUAl2BQjxUjC8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoDgYQAAoGAEHvFRpU7ryp1gAOi2yoy2VX8jraJdwPo6ZC1idtsGVcmou89Y3KOoJmlW3VU8ZPolpVWuM+EPNmLNFmifYr+svu8AOQkilZBLdkS5BrPVxIpV0dLeaBUroof1wPsVuwEPOdNzWsEmPF1Az8qLGEdPbyn7ehWqO/lNVmW8+c4O2k=" ;
+		npx:hasSignature "MCwCFFZqMt3EHjGTwNEuUGRDaKZmOaPwAhR9aHw75+0KklNpAOUxSVWNPXx3+w==" .
+	
+	this: dc:created "2014-07-24T18:05:11+01:00"^^xsd:dateTime ;
+		npx:hasSignatureElement sub:signature.MCwCFFZqMt3EHjGT ;
+		pav:createdBy <http://orcid.org/0000-0002-1267-0234> ;
+		a npx:ExampleNanopub .
+}
