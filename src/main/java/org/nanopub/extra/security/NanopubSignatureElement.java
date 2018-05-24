@@ -6,12 +6,15 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
@@ -24,16 +27,20 @@ import org.openrdf.model.impl.URIImpl;
 public class NanopubSignatureElement {
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
-	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
+	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
 	public static final URI HAS_PUBLIC_KEY = new URIImpl("http://purl.org/nanopub/x/hasPublicKey");
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
 	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
+
+	// Will be @Deprecated
+	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
 	private URI uri;
 	private String publicKeyString;
 	private PublicKey publicKey;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
+	private List<Statement> targetStatements = new ArrayList<>();
 
 	NanopubSignatureElement(URI uri) {
 		this.uri = uri;
@@ -80,6 +87,14 @@ public class NanopubSignatureElement {
 
 	public Set<URI> getSigners() {
 		return signers;
+	}
+
+	void addTargetStatement(Statement st) {
+		targetStatements.add(st);
+	}
+
+	public List<Statement> getTargetStatements() {
+		return targetStatements;
 	}
 
 	private KeyFactory getKeyFactory() {
