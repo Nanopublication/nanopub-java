@@ -28,6 +28,7 @@ public class NanopubSignatureElement {
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
+	public static final URI HAS_ALGORITHM = new URIImpl("http://purl.org/nanopub/x/hasAlgorithm");
 	public static final URI HAS_PUBLIC_KEY = new URIImpl("http://purl.org/nanopub/x/hasPublicKey");
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
 	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
@@ -37,6 +38,7 @@ public class NanopubSignatureElement {
 
 	private URI uri;
 	private String publicKeyString;
+	private String algorithm;
 	private PublicKey publicKey;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
@@ -79,6 +81,17 @@ public class NanopubSignatureElement {
 
 	public byte[] getSignature() {
 		return signature;
+	}
+
+	void setAlgorithm(Literal algorithmLiteral) throws MalformedSignatureException {
+		if (algorithm != null) {
+			throw new MalformedSignatureException("Two algorithms found for signature element");
+		}
+		algorithm = algorithmLiteral.getLabel();
+	}
+
+	public String getAlgorithm() {
+		return algorithm;
 	}
 
 	void addSigner(URI signer) {
