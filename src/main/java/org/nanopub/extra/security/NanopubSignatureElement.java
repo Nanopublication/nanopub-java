@@ -134,7 +134,7 @@ public class NanopubSignatureElement {
 		String artifactCode = TrustyUriUtils.getArtifactCode(targetNanopubUri.toString());
 		List<Statement> statements = RdfPreprocessor.run(targetStatements, artifactCode);
 		MessageDigest digest = RdfHasher.digest(statements);
-		Signature dsa = Signature.getInstance("SHA1withDSA", "SUN");
+		Signature dsa = Signature.getInstance(algorithm);
 		dsa.initVerify(publicKey);
 		dsa.update(digest.digest());
 		return dsa.verify(signature);
