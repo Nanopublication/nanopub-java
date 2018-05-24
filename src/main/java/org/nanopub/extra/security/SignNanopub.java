@@ -66,6 +66,8 @@ import com.beust.jcommander.ParameterException;
 
 // TODO: nanopub signatures are being updated...
 
+// TODO: This class does not yet use the new code for signing nanopubs.
+
 public class SignNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)

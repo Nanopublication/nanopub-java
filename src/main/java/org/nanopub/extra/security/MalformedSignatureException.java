@@ -1,7 +1,6 @@
 package org.nanopub.extra.security;
 
 // TODO: nanopub signatures are being updated...
-// This code is not yet connected to the actual signing methods.
 
 public class MalformedSignatureException extends Exception {
 

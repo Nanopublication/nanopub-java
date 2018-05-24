@@ -6,7 +6,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
@@ -26,9 +25,7 @@ import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
 
 // TODO: nanopub signatures are being updated...
-// Some of this code is not yet connected to the actual signing methods.
 
-// TODO: Add algorithm info (see here: https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature)
 // TODO: Add possiblity for public key fingerprint
 
 public class NanopubSignatureElement {
@@ -72,17 +69,8 @@ public class NanopubSignatureElement {
 		publicKeyString = publicKeyLiteral.getLabel();
 	}
 
-	public PublicKey getPublicKey() throws MalformedSignatureException {
-		if (publicKey == null) {
-			if (publicKeyString == null) return null;
-			KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(publicKeyString));
-			try {
-				publicKey = getKeyFactory().generatePublic(publicSpec);
-			} catch (InvalidKeySpecException ex) {
-				throw new MalformedSignatureException(ex);
-			}
-		}
-		return publicKey;
+	public String getPublicKeyString() throws MalformedSignatureException {
+		return publicKeyString;
 	}
 
 	void setSignatureLiteral(Literal signatureLiteral) throws MalformedSignatureException {
@@ -135,6 +123,10 @@ public class NanopubSignatureElement {
 		List<Statement> statements = RdfPreprocessor.run(targetStatements, artifactCode);
 		MessageDigest digest = RdfHasher.digest(statements);
 		Signature dsa = Signature.getInstance(algorithm);
+		if (publicKey == null) {
+			KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(publicKeyString));
+			publicKey = getKeyFactory().generatePublic(publicSpec);
+		}
 		dsa.initVerify(publicKey);
 		dsa.update(digest.digest());
 		return dsa.verify(signature);

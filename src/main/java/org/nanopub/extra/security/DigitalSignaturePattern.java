@@ -2,6 +2,7 @@ package org.nanopub.extra.security;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
@@ -17,12 +18,30 @@ public class DigitalSignaturePattern implements NanopubPattern {
 
 	@Override
 	public boolean appliesTo(Nanopub nanopub) {
-		return CheckSignature.hasSignature(nanopub);
+		try {
+			return SignatureUtils.getLegacySignatureElement(nanopub) != null;
+		} catch (MalformedSignatureException ex) {
+			return true;
+		}
 	}
 
 	@Override
 	public boolean isCorrectlyUsedBy(Nanopub nanopub) {
-		return CheckSignature.hasValidSignatures(nanopub);
+		NanopubSignatureElement se;
+		try {
+			se = SignatureUtils.getLegacySignatureElement(nanopub);
+		} catch (MalformedSignatureException ex) {
+			return false;
+		}
+		if (se == null) {
+			return false;
+		} else {
+			try {
+				return se.hasValidSignature();
+			} catch (GeneralSecurityException ex) {
+				return false;
+			}
+		}
 	}
 
 	@Override

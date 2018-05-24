@@ -7,7 +7,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
 
 // TODO: nanopub signatures are being updated...
-// This code is not yet connected to the actual signing methods.
 
 public class SignatureUtils {
 
@@ -17,7 +16,11 @@ public class SignatureUtils {
 		URI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
-		
+
+		for (Statement st : nanopub.getHead()) se.addTargetStatement(st);
+		for (Statement st : nanopub.getAssertion()) se.addTargetStatement(st);
+		for (Statement st : nanopub.getProvenance()) se.addTargetStatement(st);
+
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(signatureUri)) {
 				se.addTargetStatement(st);
@@ -56,7 +59,7 @@ public class SignatureUtils {
 		if (se.getAlgorithm() == null) {
 			throw new MalformedSignatureException("Signature element without algorithm");
 		}
-		if (se.getPublicKey() == null) {
+		if (se.getPublicKeyString() == null) {
 			// We require a full public key for now, but plan to support public key fingerprints as an alternative.
 			throw new MalformedSignatureException("Signature element without public key");
 		}
@@ -83,7 +86,11 @@ public class SignatureUtils {
 		URI signatureUri = getLegacySignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
-		
+
+		for (Statement st : nanopub.getHead()) se.addTargetStatement(st);
+		for (Statement st : nanopub.getAssertion()) se.addTargetStatement(st);
+		for (Statement st : nanopub.getProvenance()) se.addTargetStatement(st);
+
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(signatureUri)) {
 				if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) {
@@ -113,7 +120,7 @@ public class SignatureUtils {
 		if (se.getSignature() == null) {
 			throw new MalformedSignatureException("Signature element without signature");
 		}
-		if (se.getPublicKey() == null) {
+		if (se.getPublicKeyString() == null) {
 			throw new MalformedSignatureException("Signature element without public key");
 		}
 		se.setAlgorithm(new LiteralImpl("SHA1withDSA"));

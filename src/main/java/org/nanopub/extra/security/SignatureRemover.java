@@ -23,6 +23,9 @@ import com.google.common.collect.ImmutableList;
 
 // TODO: nanopub signatures are being updated...
 
+// TODO: This class will be replaced by the code in NanopubSignatureElement and SignatureUtils.
+// Signature checking already uses the new code, but signature generating still uses the code here.
+
 public class SignatureRemover implements RDFHandler {
 
 	private RDFHandler handler;
