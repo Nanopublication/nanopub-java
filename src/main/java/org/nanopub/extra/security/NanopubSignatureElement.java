@@ -1,13 +1,5 @@
 package org.nanopub.extra.security;
 
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.spec.KeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,10 +11,6 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
-
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
 
 // TODO: nanopub signatures are being updated...
 
@@ -44,7 +32,6 @@ public class NanopubSignatureElement {
 	private URI targetNanopubUri;
 	private String publicKeyString;
 	private String algorithm;
-	private PublicKey publicKey;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
@@ -69,7 +56,7 @@ public class NanopubSignatureElement {
 		publicKeyString = publicKeyLiteral.getLabel();
 	}
 
-	public String getPublicKeyString() throws MalformedSignatureException {
+	public String getPublicKeyString() {
 		return publicKeyString;
 	}
 
@@ -116,28 +103,6 @@ public class NanopubSignatureElement {
 
 	public List<Statement> getTargetStatements() {
 		return targetStatements;
-	}
-
-	public boolean hasValidSignature() throws GeneralSecurityException {
-		String artifactCode = TrustyUriUtils.getArtifactCode(targetNanopubUri.toString());
-		List<Statement> statements = RdfPreprocessor.run(targetStatements, artifactCode);
-		MessageDigest digest = RdfHasher.digest(statements);
-		Signature dsa = Signature.getInstance(algorithm);
-		if (publicKey == null) {
-			KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(publicKeyString));
-			publicKey = getKeyFactory().generatePublic(publicSpec);
-		}
-		dsa.initVerify(publicKey);
-		dsa.update(digest.digest());
-		return dsa.verify(signature);
-	}
-
-	private KeyFactory getKeyFactory() {
-		try {
-			return KeyFactory.getInstance(getAlgorithm().replaceFirst(".*with", ""));
-		} catch (NoSuchAlgorithmException ex) {
-			throw new RuntimeException(ex);
-		}
 	}
 
 }

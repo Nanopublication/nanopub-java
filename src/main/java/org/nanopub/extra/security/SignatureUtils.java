@@ -1,10 +1,25 @@
 package org.nanopub.extra.security;
 
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.List;
+
+import javax.xml.bind.DatatypeConverter;
+
 import org.nanopub.Nanopub;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.LiteralImpl;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
 
 // TODO: nanopub signatures are being updated...
 
@@ -66,6 +81,11 @@ public class SignatureUtils {
 		return se;
 	}
 
+	public static boolean hasValidSignature(NanopubSignatureElement se) throws GeneralSecurityException {
+		// TODO
+		return false;
+	}
+
 	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {
 		URI signatureElementUri = null;
 		for (Statement st : nanopub.getPubinfo()) {
@@ -125,6 +145,19 @@ public class SignatureUtils {
 		}
 		se.setAlgorithm(new LiteralImpl("SHA1withDSA"));
 		return se;
+	}
+
+	public static boolean hasValidLegacySignature(NanopubSignatureElement se) throws GeneralSecurityException {
+		String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
+		List<Statement> statements = RdfPreprocessor.run(se.getTargetStatements(), artifactCode);
+		MessageDigest digest = RdfHasher.digest(statements);
+		Signature dsa = Signature.getInstance(se.getAlgorithm());
+		KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));
+		PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().replaceFirst(".*with", "")).generatePublic(publicSpec);
+		dsa.initVerify(publicKey);
+		// Legacy signatures apply double digesting:
+		dsa.update(digest.digest());
+		return dsa.verify(se.getSignature());
 	}
 
 	private static URI getLegacySignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {

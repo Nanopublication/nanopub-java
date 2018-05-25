@@ -142,7 +142,7 @@ public class CheckNanopub {
 			} else {
 				boolean valid = false;
 				try {
-					valid = se.hasValidSignature();
+					valid = SignatureUtils.hasValidLegacySignature(se);
 				} catch (GeneralSecurityException ex) {
 					System.out.println("FAILED TO CHECK SIGNATURE: " + np.getUri() + " (" + ex.getMessage() + ")");
 					report.countError();

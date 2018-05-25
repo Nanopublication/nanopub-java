@@ -37,7 +37,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 			return false;
 		} else {
 			try {
-				return se.hasValidSignature();
+				return SignatureUtils.hasValidLegacySignature(se);
 			} catch (GeneralSecurityException ex) {
 				return false;
 			}
