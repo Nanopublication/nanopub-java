@@ -2,7 +2,6 @@ package org.nanopub.extra.security;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
-import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.KeySpec;
@@ -81,8 +80,14 @@ public class SignatureUtils {
 	}
 
 	public static boolean hasValidSignature(NanopubSignatureElement se) throws GeneralSecurityException {
-		// TODO
-		return false;
+		String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
+		List<Statement> statements = RdfPreprocessor.run(se.getTargetStatements(), artifactCode);
+		Signature signature = Signature.getInstance("SHA256with" + se.getAlgorithm().name());
+		KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));
+		PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().name()).generatePublic(publicSpec);
+		signature.initVerify(publicKey);
+		signature.update(RdfHasher.getDigestString(statements).getBytes());
+		return signature.verify(se.getSignature());
 	}
 
 	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {
@@ -149,13 +154,12 @@ public class SignatureUtils {
 	public static boolean hasValidLegacySignature(NanopubSignatureElement se) throws GeneralSecurityException {
 		String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
 		List<Statement> statements = RdfPreprocessor.run(se.getTargetStatements(), artifactCode);
-		MessageDigest digest = RdfHasher.digest(statements);
 		Signature signature = Signature.getInstance("SHA1withDSA");
 		KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));
 		PublicKey publicKey = KeyFactory.getInstance("DSA").generatePublic(publicSpec);
 		signature.initVerify(publicKey);
 		// Legacy signatures apply double digesting:
-		signature.update(digest.digest());
+		signature.update(RdfHasher.digest(statements).digest());
 		return signature.verify(se.getSignature());
 	}
 
