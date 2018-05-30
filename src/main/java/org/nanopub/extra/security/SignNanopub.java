@@ -16,7 +16,6 @@ import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -32,14 +31,6 @@ import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import javax.xml.bind.DatatypeConverter;
-
-import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriResource;
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfFileContent;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.TransformRdf;
 
 import org.apache.commons.io.IOUtils;
 import org.nanopub.MalformedNanopubException;
@@ -63,6 +54,14 @@ import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdf;
 
 // TODO: nanopub signatures are being updated...
 
@@ -170,8 +169,8 @@ public class SignNanopub {
 
 			RdfFileContent contentWithoutSignature = new RdfFileContent(RDFFormat.TRIG);
 			content.propagate(new SignatureRemover(contentWithoutSignature, nanopub.getPubinfoUri()));
-			MessageDigest digest = RdfHasher.digest(contentWithoutSignature.getStatements());
-			dsa.update(digest.digest());
+			// Legacy signatures apply double digesting:
+			dsa.update(RdfHasher.digest(contentWithoutSignature.getStatements()).digest());
 			byte[] signatureBytes = dsa.sign();
 			String signature = DatatypeConverter.printBase64Binary(signatureBytes);
 			String signatureShort = TrustyUriUtils.getBase64(signatureBytes).substring(0, 16);
