@@ -15,7 +15,6 @@ import org.nanopub.Nanopub;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.LiteralImpl;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
@@ -143,7 +142,7 @@ public class SignatureUtils {
 		if (se.getPublicKeyString() == null) {
 			throw new MalformedSignatureException("Signature element without public key");
 		}
-		se.setAlgorithm(new LiteralImpl("SHA1withDSA"));
+		se.setAlgorithm(NanopubSignatureElement.Algorithm.DSA);
 		return se;
 	}
 
@@ -151,13 +150,13 @@ public class SignatureUtils {
 		String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
 		List<Statement> statements = RdfPreprocessor.run(se.getTargetStatements(), artifactCode);
 		MessageDigest digest = RdfHasher.digest(statements);
-		Signature dsa = Signature.getInstance(se.getAlgorithm());
+		Signature signature = Signature.getInstance("SHA1withDSA");
 		KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));
-		PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().replaceFirst(".*with", "")).generatePublic(publicSpec);
-		dsa.initVerify(publicKey);
+		PublicKey publicKey = KeyFactory.getInstance("DSA").generatePublic(publicSpec);
+		signature.initVerify(publicKey);
 		// Legacy signatures apply double digesting:
-		dsa.update(digest.digest());
-		return dsa.verify(se.getSignature());
+		signature.update(digest.digest());
+		return signature.verify(se.getSignature());
 	}
 
 	private static URI getLegacySignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {

@@ -130,7 +130,7 @@ public class CheckNanopub {
 			try {
 				se = SignatureUtils.getLegacySignatureElement(np);
 			} catch (MalformedSignatureException ex) {
-				System.out.println("SIGNATURE IS NOT WELL-FORMED: " + np.getUri());
+				System.out.println("SIGNATURE IS NOT WELL-FORMED (" + ex.getMessage() + "): " + np.getUri());
 				report.countInvalidSignature();
 				return;
 			}

@@ -16,6 +16,8 @@ import org.openrdf.model.impl.URIImpl;
 
 // TODO: Add possiblity for public key fingerprint
 
+// See: https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature
+
 public class NanopubSignatureElement {
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
@@ -28,10 +30,12 @@ public class NanopubSignatureElement {
 	// Will be @Deprecated
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
+	public static enum Algorithm { RSA, DSA, ECDSA }
+
 	private URI uri;
 	private URI targetNanopubUri;
 	private String publicKeyString;
-	private String algorithm;
+	private Algorithm algorithm;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
@@ -71,21 +75,30 @@ public class NanopubSignatureElement {
 		return signature;
 	}
 
+	void setAlgorithm(Algorithm algorithm) throws MalformedSignatureException {
+		if (this.algorithm != null) {
+			throw new MalformedSignatureException("Two algorithms found for signature element");
+		}
+		this.algorithm = algorithm;
+	}
+
 	void setAlgorithm(Literal algorithmLiteral) throws MalformedSignatureException {
 		if (algorithm != null) {
 			throw new MalformedSignatureException("Two algorithms found for signature element");
 		}
-		if (!algorithmLiteral.getLabel().contains("with")) {
-			throw new MalformedSignatureException("Algorithm strings does not follow '[DIGEST]with[ENCRYPTION]' pattern: " + algorithmLiteral.getLabel());
+		String alString = algorithmLiteral.getLabel().toUpperCase();
+		for (Algorithm al : Algorithm.values()) {
+			if (al.name().equals(alString)) {
+				algorithm = al;
+				break;
+			}
 		}
-		algorithm = algorithmLiteral.getLabel();
+		if (algorithm == null) {
+			throw new MalformedSignatureException("Algorithm not recognized: " + algorithmLiteral.getLabel());
+		}
 	}
 
-	/**
-	 * Algorithm string of the form "[DIGEST]with[ENCRYPTION]", for example "SHA256withDSA".
-	 * See https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature
-	 */
-	public String getAlgorithm() {
+	public Algorithm getAlgorithm() {
 		return algorithm;
 	}
 
