@@ -106,6 +106,19 @@ public class SignatureUtils {
 		return signatureElementUri;
 	}
 
+	/**
+	 * This includes legacy signatures. Might include false positives.
+	 */
+	public static boolean seemsToHaveSignature(Nanopub nanopub) {
+		for (Statement st : nanopub.getPubinfo()) {
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) return true;
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) return true;
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) return true;
+			if (st.getPredicate().equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) return true;
+		}
+		return false;
+	}
+
 	public static NanopubSignatureElement getLegacySignatureElement(Nanopub nanopub) throws MalformedSignatureException {
 		URI signatureUri = getLegacySignatureElementUri(nanopub);
 		if (signatureUri == null) return null;

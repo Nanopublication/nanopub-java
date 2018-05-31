@@ -148,6 +148,12 @@ public class SignNanopub {
 
 	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key, URI signer)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
+		if (TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()) != null) {
+			throw new SignatureException("Seems to have trusty URI before signing: " + nanopub.getUri());
+		}
+		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
+			throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
+		}
 		Nanopub np;
 		Signature dsa;
 		try {
@@ -167,16 +173,13 @@ public class SignNanopub {
 			NanopubUtils.propagateToHandler(nanopub, content);
 			content = RdfPreprocessor.run(content, nanopub.getUri());
 
-			RdfFileContent contentWithoutSignature = new RdfFileContent(RDFFormat.TRIG);
-			content.propagate(new SignatureRemover(contentWithoutSignature, nanopub.getPubinfoUri()));
 			// Legacy signatures apply double digesting:
-			dsa.update(RdfHasher.digest(contentWithoutSignature.getStatements()).digest());
+			dsa.update(RdfHasher.digest(content.getStatements()).digest());
 			byte[] signatureBytes = dsa.sign();
 			String signature = DatatypeConverter.printBase64Binary(signatureBytes);
-			String signatureShort = TrustyUriUtils.getBase64(signatureBytes).substring(0, 16);
 
 			RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
-			URI signatureElUri = new URIImpl(nanopub.getUri() + "signature." + signatureShort);
+			URI signatureElUri = new URIImpl(nanopub.getUri() + "signature");
 			signatureContent.startRDF();
 			signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
 			URI npUri = nanopub.getUri();

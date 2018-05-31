@@ -16,6 +16,8 @@ import org.nanopub.NanopubImpl;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+// TODO support other algorithms
+
 public class MakeKeys {
 
 	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name of key files")
