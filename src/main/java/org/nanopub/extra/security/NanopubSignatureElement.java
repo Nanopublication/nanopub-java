@@ -20,6 +20,8 @@ import org.openrdf.model.impl.URIImpl;
 
 public class NanopubSignatureElement {
 
+	// TODO Update public ontology file
+
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
 	public static final URI HAS_ALGORITHM = new URIImpl("http://purl.org/nanopub/x/hasAlgorithm");
@@ -27,7 +29,7 @@ public class NanopubSignatureElement {
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
 	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
 
-	// Will be @Deprecated
+	// Will be deprecated
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
 	public static enum Algorithm { RSA, DSA, ECDSA }

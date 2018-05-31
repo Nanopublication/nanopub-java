@@ -7,6 +7,8 @@ import java.security.GeneralSecurityException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
 
+// TODO Update to new signature scheme
+
 public class DigitalSignaturePattern implements NanopubPattern {
 
 	private static final long serialVersionUID = 669651544354988407L;
@@ -19,7 +21,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 	@Override
 	public boolean appliesTo(Nanopub nanopub) {
 		try {
-			return SignatureUtils.getLegacySignatureElement(nanopub) != null;
+			return LegacySignatureUtils.getSignatureElement(nanopub) != null;
 		} catch (MalformedSignatureException ex) {
 			return true;
 		}
@@ -29,7 +31,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 	public boolean isCorrectlyUsedBy(Nanopub nanopub) {
 		NanopubSignatureElement se;
 		try {
-			se = SignatureUtils.getLegacySignatureElement(nanopub);
+			se = LegacySignatureUtils.getSignatureElement(nanopub);
 		} catch (MalformedSignatureException ex) {
 			return false;
 		}
@@ -37,7 +39,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 			return false;
 		} else {
 			try {
-				return SignatureUtils.hasValidLegacySignature(se);
+				return LegacySignatureUtils.hasValidSignature(se);
 			} catch (GeneralSecurityException ex) {
 				return false;
 			}

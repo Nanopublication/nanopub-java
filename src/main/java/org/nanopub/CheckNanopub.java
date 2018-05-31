@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedSignatureException;
 import org.nanopub.extra.security.NanopubSignatureElement;
-import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.impl.URIImpl;
@@ -128,7 +128,7 @@ public class CheckNanopub {
 		if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
 			NanopubSignatureElement se;
 			try {
-				se = SignatureUtils.getLegacySignatureElement(np);
+				se = LegacySignatureUtils.getSignatureElement(np);
 			} catch (MalformedSignatureException ex) {
 				System.out.println("SIGNATURE IS NOT WELL-FORMED (" + ex.getMessage() + "): " + np.getUri());
 				report.countInvalidSignature();
@@ -142,7 +142,7 @@ public class CheckNanopub {
 			} else {
 				boolean valid = false;
 				try {
-					valid = SignatureUtils.hasValidLegacySignature(se);
+					valid = LegacySignatureUtils.hasValidSignature(se);
 				} catch (GeneralSecurityException ex) {
 					System.out.println("FAILED TO CHECK SIGNATURE: " + np.getUri() + " (" + ex.getMessage() + ")");
 					report.countError();
