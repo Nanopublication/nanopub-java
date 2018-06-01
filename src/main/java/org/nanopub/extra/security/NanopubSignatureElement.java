@@ -14,8 +14,6 @@ import org.openrdf.model.impl.URIImpl;
 
 // TODO: nanopub signatures are being updated...
 
-// TODO: Add possiblity for public key fingerprint
-
 // See: https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature
 
 public class NanopubSignatureElement {
@@ -32,12 +30,10 @@ public class NanopubSignatureElement {
 	// Will be deprecated
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
-	public static enum Algorithm { RSA, DSA, ECDSA }
-
 	private URI uri;
 	private URI targetNanopubUri;
 	private String publicKeyString;
-	private Algorithm algorithm;
+	private SignatureAlgorithm algorithm;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
@@ -77,7 +73,7 @@ public class NanopubSignatureElement {
 		return signature;
 	}
 
-	void setAlgorithm(Algorithm algorithm) throws MalformedSignatureException {
+	void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedSignatureException {
 		if (this.algorithm != null) {
 			throw new MalformedSignatureException("Two algorithms found for signature element");
 		}
@@ -89,7 +85,7 @@ public class NanopubSignatureElement {
 			throw new MalformedSignatureException("Two algorithms found for signature element");
 		}
 		String alString = algorithmLiteral.getLabel().toUpperCase();
-		for (Algorithm al : Algorithm.values()) {
+		for (SignatureAlgorithm al : SignatureAlgorithm.values()) {
 			if (al.name().equals(alString)) {
 				algorithm = al;
 				break;
@@ -100,7 +96,7 @@ public class NanopubSignatureElement {
 		}
 	}
 
-	public Algorithm getAlgorithm() {
+	public SignatureAlgorithm getAlgorithm() {
 		return algorithm;
 	}
 

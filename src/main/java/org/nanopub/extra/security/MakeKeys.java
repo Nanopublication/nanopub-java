@@ -16,12 +16,13 @@ import org.nanopub.NanopubImpl;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
-// TODO support other algorithms
-
 public class MakeKeys {
 
-	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name of key files")
-	private String pathAndFilename = "~/.nanopub/id_dsa";
+	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
+	private String pathAndFilenamePrefix = "~/.nanopub/id";
+
+	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
+	private SignatureAlgorithm algorithm = SignatureAlgorithm.DSA;
 
 	public static void main(String[] args) throws IOException {
 		NanopubImpl.ensureLoaded();
@@ -45,13 +46,13 @@ public class MakeKeys {
 	}
 
 	private void run() throws IOException {
-		make(pathAndFilename);
+		make(pathAndFilenamePrefix, algorithm);
 	}
 
-	public static void make(String pathAndFilename) throws IOException {
+	public static void make(String pathAndFilenamePrefix, SignatureAlgorithm algorithm) throws IOException {
 
 		// Preparation:
-		pathAndFilename = pathAndFilename.replaceFirst("^~", System.getProperty("user.home"));
+		String pathAndFilename = pathAndFilenamePrefix.replaceFirst("^~", System.getProperty("user.home")) + "_" + algorithm.name().toLowerCase();
 		File publicKeyFile = new File(pathAndFilename + ".pub");
 		if (publicKeyFile.exists()) {
 			throw new FileAlreadyExistsException("Key file already exists: " + publicKeyFile);
@@ -76,8 +77,8 @@ public class MakeKeys {
 		KeyPairGenerator keyPairGenerator;
 		SecureRandom random;
 		try {
-			keyPairGenerator = KeyPairGenerator.getInstance("DSA", "SUN");
-			random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+			keyPairGenerator = KeyPairGenerator.getInstance(algorithm.name());
+			random = SecureRandom.getInstance("SHA1PRNG");
 		} catch (GeneralSecurityException ex) {
 			throw new RuntimeException(ex);
 		}

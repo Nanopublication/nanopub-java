@@ -64,7 +64,7 @@ public class LegacySignatureUtils {
 		if (se.getPublicKeyString() == null) {
 			throw new MalformedSignatureException("Signature element without public key");
 		}
-		se.setAlgorithm(NanopubSignatureElement.Algorithm.DSA);
+		se.setAlgorithm(SignatureAlgorithm.DSA);
 		return se;
 	}
 
