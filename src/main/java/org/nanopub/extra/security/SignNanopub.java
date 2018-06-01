@@ -1,10 +1,5 @@
 package org.nanopub.extra.security;
 
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_PUBLIC_KEY;
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_ELEMENT;
-import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,10 +12,8 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -38,14 +31,9 @@ import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
-import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParseException;
@@ -58,14 +46,12 @@ import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfFileContent;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.TransformRdf;
 
 // TODO: nanopub signatures are being updated...
 
 // TODO: This class does not yet use the new code for signing nanopubs.
+
+// TODO: Support RSA
 
 public class SignNanopub {
 
@@ -154,61 +140,15 @@ public class SignNanopub {
 		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
 			throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
 		}
-		Nanopub np;
-		Signature dsa;
-		try {
-			dsa = Signature.getInstance("SHA1withDSA", "SUN");
-			dsa.initSign(key.getPrivate());
-		} catch (NoSuchAlgorithmException ex) {
-			throw new RuntimeException(ex);
-		} catch (NoSuchProviderException ex) {
-			throw new RuntimeException(ex);
-		}
 		if (nanopub instanceof NanopubWithNs) {
 			((NanopubWithNs) nanopub).removeUnusedPrefixes();
 		}
 		try {
-			// TODO improve the code below...
-			RdfFileContent content = new RdfFileContent(RDFFormat.TRIG);
-			NanopubUtils.propagateToHandler(nanopub, content);
-			content = RdfPreprocessor.run(content, nanopub.getUri());
-
-			// Legacy signatures apply double digesting:
-			dsa.update(RdfHasher.digest(content.getStatements()).digest());
-			byte[] signatureBytes = dsa.sign();
-			String signature = DatatypeConverter.printBase64Binary(signatureBytes);
-
-			RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
-			URI signatureElUri = new URIImpl(nanopub.getUri() + "signature");
-			signatureContent.startRDF();
-			signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
-			URI npUri = nanopub.getUri();
-			URI piUri = nanopub.getPubinfoUri();
-			signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
-			String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
-			Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
-			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
-			Literal signatureLiteral = new LiteralImpl(signature);
-			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
-			if (signer != null) {
-				signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
-			}
-			signatureContent.endRDF();
-			signatureContent = RdfPreprocessor.run(signatureContent, nanopub.getUri());
-
-			RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
-			signedContent.startRDF();
-			content.propagate(signedContent, false);
-			signatureContent.propagate(signedContent, false);
-			signedContent.endRDF();
-			NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-			TransformRdf.transformPreprocessed(signedContent, nanopub.getUri(), nanopubHandler);
-			np = nanopubHandler.getNanopub();
+			return LegacySignatureUtils.createSignedNanopub(nanopub, key, signer);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new RuntimeException(ex);
 		}
-		return np;
 	}
 
 	public static void signAndTransformMultiNanopub(final RDFFormat format, File file, KeyPair key, final OutputStream out)
