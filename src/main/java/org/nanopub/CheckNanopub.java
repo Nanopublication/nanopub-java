@@ -11,6 +11,7 @@ import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedSignatureException;
 import org.nanopub.extra.security.NanopubSignatureElement;
+import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.impl.URIImpl;
@@ -126,23 +127,27 @@ public class CheckNanopub {
 
 	private void check(Nanopub np) {
 		if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
-			NanopubSignatureElement se;
+			NanopubSignatureElement se = null;
+			NanopubSignatureElement legacySe = null;
 			try {
-				se = LegacySignatureUtils.getSignatureElement(np);
+				se = SignatureUtils.getSignatureElement(np);
+				if (se == null) legacySe = LegacySignatureUtils.getSignatureElement(np);
 			} catch (MalformedSignatureException ex) {
 				System.out.println("SIGNATURE IS NOT WELL-FORMED (" + ex.getMessage() + "): " + np.getUri());
 				report.countInvalidSignature();
 				return;
 			}
-			if (se == null) {
+			if (se == null && legacySe == null) {
+				// no signature
 				if (verbose) {
-					System.out.println("Trusty: " + np.getUri());
+					System.out.println("Trusty (without signature): " + np.getUri());
 				}
 				report.countTrusty();
-			} else {
+			} else if (se != null) {
+				// new signature
 				boolean valid = false;
 				try {
-					valid = LegacySignatureUtils.hasValidSignature(se);
+					valid = SignatureUtils.hasValidSignature(se);
 				} catch (GeneralSecurityException ex) {
 					System.out.println("FAILED TO CHECK SIGNATURE: " + np.getUri() + " (" + ex.getMessage() + ")");
 					report.countError();
@@ -155,6 +160,25 @@ public class CheckNanopub {
 					report.countSigned();
 				} else {
 					System.out.println("INVALID SIGNATURE: " + np.getUri());
+					report.countInvalidSignature();
+				}
+			} else {
+				// legacy signature
+				boolean valid = false;
+				try {
+					valid = LegacySignatureUtils.hasValidSignature(legacySe);
+				} catch (GeneralSecurityException ex) {
+					System.out.println("FAILED TO CHECK LEGACY SIGNATURE: " + np.getUri() + " (" + ex.getMessage() + ")");
+					report.countError();
+					return;
+				}
+				if (valid) {
+					if (verbose) {
+						System.out.println("Trusty with legacy signature: " + np.getUri());
+					}
+					report.countLegacySigned();
+				} else {
+					System.out.println("INVALID LEGACY SIGNATURE: " + np.getUri());
 					report.countInvalidSignature();
 				}
 			}
@@ -186,7 +210,7 @@ public class CheckNanopub {
 
 	public class Report {
 
-		private int signed, trusty, notTrusty, invalidSignature, invalid, error;
+		private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error;
 
 		private Report() {
 		}
@@ -197,6 +221,14 @@ public class CheckNanopub {
 
 		public int getSignedCount() {
 			return signed;
+		}
+
+		private void countLegacySigned() {
+			legacySigned++;
+		}
+
+		public int getLegacySignedCount() {
+			return legacySigned;
 		}
 
 		private void countTrusty() {
@@ -254,8 +286,9 @@ public class CheckNanopub {
 
 		public String getSummary() {
 			String s = "";
-			if (signed > 0) s += " " + signed + " signed and trusty;";
-			if (trusty > 0) s += " " + trusty + " trusty (unsigned);";
+			if (signed > 0) s += " " + signed + " trusty with signature;";
+			if (legacySigned > 0) s += " " + legacySigned + " trusty with legacy signature;";
+			if (trusty > 0) s += " " + trusty + " trusty (without signature);";
 			if (notTrusty > 0) s += " " + notTrusty + " valid (not trusty);";
 			if (invalidSignature > 0) s += " " + invalidSignature + " invalid signature;";
 			if (invalid > 0) s += " " + invalid + " invalid nanopubs;";
