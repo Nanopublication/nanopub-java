@@ -109,7 +109,7 @@ public class LegacySignatureUtils {
 		// Legacy signatures apply double digesting:
 		dsaSignature.update(RdfHasher.digest(content.getStatements()).digest());
 		byte[] signatureBytes = dsaSignature.sign();
-		String signature = DatatypeConverter.printBase64Binary(signatureBytes);
+		String signatureString = DatatypeConverter.printBase64Binary(signatureBytes);
 
 		RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
 		URI signatureElUri = new URIImpl(preNanopub.getUri() + "signature");
@@ -121,7 +121,7 @@ public class LegacySignatureUtils {
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
 		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
 		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
-		Literal signatureLiteral = new LiteralImpl(signature);
+		Literal signatureLiteral = new LiteralImpl(signatureString);
 		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
 		if (signer != null) {
 			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));

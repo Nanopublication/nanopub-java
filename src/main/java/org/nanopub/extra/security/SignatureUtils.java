@@ -1,23 +1,43 @@
 package org.nanopub.extra.security;
 
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_ALGORITHM;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_PUBLIC_KEY;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
+import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_TARGET;
+import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
+
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubRdfHandler;
+import org.nanopub.NanopubUtils;
+import org.nanopub.NanopubWithNs;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.ContextStatementImpl;
+import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFHandlerException;
 
+import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdf;
 
 // TODO: nanopub signatures are being updated...
 
@@ -88,6 +108,64 @@ public class SignatureUtils {
 		signature.initVerify(publicKey);
 		signature.update(RdfHasher.getDigestString(statements).getBytes());
 		return signature.verify(se.getSignature());
+	}
+
+	public static Nanopub createSignedNanopub(Nanopub preNanopub, SignatureAlgorithm algorithm, KeyPair key, URI signer)
+			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
+		// TODO: Test this
+
+		Signature signature = Signature.getInstance("SHA256with" + algorithm.name());
+		signature.initSign(key.getPrivate());
+
+		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
+
+		// Adding signature element:
+		URI signatureElUri = new URIImpl(preNanopub.getUri() + "signature");
+		URI npUri = preNanopub.getUri();
+		URI piUri = preNanopub.getPubinfoUri();
+		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
+		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
+		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
+		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+		Literal algorithmLiteral = new LiteralImpl(algorithm.name());
+		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_ALGORITHM, algorithmLiteral, piUri));
+		if (signer != null) {
+			preStatements.add(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
+		}
+
+		// Preprocess statements that are covered by signature:
+		List<Statement> preprocessedStatements = RdfPreprocessor.run(preStatements, preNanopub.getUri());
+
+		// Create signature:
+		signature.update(RdfHasher.getDigestString(preprocessedStatements).getBytes());
+		byte[] signatureBytes = signature.sign();
+		Literal signatureLiteral = new LiteralImpl(DatatypeConverter.printBase64Binary(signatureBytes));
+
+		// Preprocess signature statement:
+		List<Statement> sigStatementList = new ArrayList<Statement>();
+		sigStatementList.add(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, preNanopub.getUri()).get(0);
+
+		// Combine all statements:
+		RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
+		signedContent.startRDF();
+		if (preNanopub instanceof NanopubWithNs) {
+			NanopubWithNs preNanopubNs = (NanopubWithNs) preNanopub;
+			for (String prefix : preNanopubNs.getNsPrefixes()) {
+				signedContent.handleNamespace(prefix, preNanopubNs.getNamespace(prefix));
+			}
+		}
+		signedContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
+		for (Statement st : preprocessedStatements) {
+			signedContent.handleStatement(st);
+		}
+		signedContent.handleStatement(preprocessedSigStatement);
+		signedContent.endRDF();
+
+		// Create nanopub object:
+		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
+		TransformRdf.transformPreprocessed(signedContent, preNanopub.getUri(), nanopubHandler);
+		return nanopubHandler.getNanopub();
 	}
 
 	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {
