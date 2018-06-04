@@ -106,6 +106,11 @@ public class SignatureUtils {
 		KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));
 		PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().name()).generatePublic(publicSpec);
 		signature.initVerify(publicKey);
+
+//		System.err.println("SIGNATURE INPUT: ---");
+//		System.err.print(RdfHasher.getDigestString(statements));
+//		System.err.println("---");
+
 		signature.update(RdfHasher.getDigestString(statements).getBytes());
 		return signature.verify(se.getSignature());
 	}
@@ -120,7 +125,7 @@ public class SignatureUtils {
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
 
 		// Adding signature element:
-		URI signatureElUri = new URIImpl(preNanopub.getUri() + "signature");
+		URI signatureElUri = new URIImpl(preNanopub.getUri() + "sig");
 		URI npUri = preNanopub.getUri();
 		URI piUri = preNanopub.getPubinfoUri();
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");

@@ -54,6 +54,11 @@ public class TrustyNanopubUtils {
 		if (artifactCode == null) return false;
 		List<Statement> statements = NanopubUtils.getStatements(nanopub);
 		statements = RdfPreprocessor.run(statements, artifactCode);
+
+//		System.err.println("TRUSTY INPUT: ---");
+//		System.err.print(RdfHasher.getDigestString(statements));
+//		System.err.println("---");
+
 		String ac = RdfHasher.makeArtifactCode(statements);
 		return ac.equals(artifactCode);
 	}

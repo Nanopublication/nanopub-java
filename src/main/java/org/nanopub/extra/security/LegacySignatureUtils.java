@@ -112,7 +112,7 @@ public class LegacySignatureUtils {
 		String signatureString = DatatypeConverter.printBase64Binary(signatureBytes);
 
 		RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
-		URI signatureElUri = new URIImpl(preNanopub.getUri() + "signature");
+		URI signatureElUri = new URIImpl(preNanopub.getUri() + "sig");
 		signatureContent.startRDF();
 		signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
 		URI npUri = preNanopub.getUri();
