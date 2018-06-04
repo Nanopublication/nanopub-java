@@ -27,7 +27,7 @@ public class NanopubSignatureElement {
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
 	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
 
-	// Will be deprecated
+	// Deprecated; used for legacy signatures
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
 	private URI uri;

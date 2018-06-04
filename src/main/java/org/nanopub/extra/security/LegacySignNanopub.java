@@ -47,25 +47,20 @@ import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
 
-// TODO: nanopub signatures are being updated...
-
-public class SignNanopub {
+public class LegacySignNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<File> inputNanopubs = new ArrayList<File>();
 
 	@com.beust.jcommander.Parameter(names = "-k", description = "Path and file name of key files")
-	private String keyFilename;
-
-	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
-	private SignatureAlgorithm algorithm;
+	private String keyFilename = "~/.nanopub/id_dsa";
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
 
 	public static void main(String[] args) throws IOException {
 		NanopubImpl.ensureLoaded();
-		SignNanopub obj = new SignNanopub();
+		LegacySignNanopub obj = new LegacySignNanopub();
 		JCommander jc = new JCommander(obj);
 		try {
 			jc.parse(args);
@@ -83,26 +78,11 @@ public class SignNanopub {
 
 	private KeyPair key;
 
-	private SignNanopub() {
+	private LegacySignNanopub() {
 	}
 
 	private void run() throws Exception {
-		if (algorithm == null) {
-			if (keyFilename == null) {
-				keyFilename = "~/.nanopub/id_rsa";
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_rsa")) {
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_dsa")) {
-				algorithm = SignatureAlgorithm.DSA;
-			} else {
-				// Assuming RSA if not other information is available
-				algorithm = SignatureAlgorithm.RSA;
-			}
-		} else if (keyFilename == null) {
-			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
-		}
-		key = loadKey(keyFilename, algorithm);
+		key = loadKey(keyFilename);
 		for (File inputFile : inputNanopubs) {
 			File outFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
 			final OutputStream out;
@@ -117,7 +97,7 @@ public class SignNanopub {
 				@Override
 				public void handleNanopub(Nanopub np) {
 					try {
-						np = writeAsSignedTrustyNanopub(np, format, algorithm, key, out);
+						np = writeAsSignedTrustyNanopub(np, format, key, out);
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
 						}
@@ -141,12 +121,12 @@ public class SignNanopub {
 		}
 	}
 
-	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key)
+	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
-		return signAndTransform(nanopub, algorithm, key, null);
+		return signAndTransform(nanopub, key, null);
 	}
 
-	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key, URI signer)
+	public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key, URI signer)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
 		if (TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()) != null) {
 			throw new SignatureException("Seems to have trusty URI before signing: " + nanopub.getUri());
@@ -158,29 +138,27 @@ public class SignNanopub {
 			((NanopubWithNs) nanopub).removeUnusedPrefixes();
 		}
 		try {
-			return SignatureUtils.createSignedNanopub(nanopub, algorithm, key, signer);
+			return LegacySignatureUtils.createSignedNanopub(nanopub, key, signer);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new RuntimeException(ex);
 		}
 	}
 
-	public static void signAndTransformMultiNanopub(final RDFFormat format, File file, SignatureAlgorithm algorithm,
-				KeyPair key, OutputStream out)
+	public static void signAndTransformMultiNanopub(final RDFFormat format, File file, KeyPair key, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		InputStream in = new FileInputStream(file);
-		signAndTransformMultiNanopub(format, in, algorithm, key, out);
+		signAndTransformMultiNanopub(format, in, key, out);
 	}
 
-	public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final SignatureAlgorithm algorithm,
-				final KeyPair key, final OutputStream out)
+	public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final KeyPair key, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
 
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
-					writeAsSignedTrustyNanopub(np, format, algorithm, key, out);
+					writeAsSignedTrustyNanopub(np, format, key, out);
 				} catch (RDFHandlerException ex) {
 					ex.printStackTrace();
 					throw new RuntimeException(ex);
@@ -200,17 +178,17 @@ public class SignNanopub {
 		out.close();
 	}
 
-	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, SignatureAlgorithm algorithm, KeyPair key, OutputStream out)
+	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, KeyPair key, OutputStream out)
 			throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
-		np = signAndTransform(np, algorithm, key);
+		np = signAndTransform(np, key);
 		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;
 	}
 
-	public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+	public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
 		keyFilename = keyFilename.replaceFirst("^~", System.getProperty("user.home"));
-		KeyFactory kf = KeyFactory.getInstance(algorithm.name());
+		KeyFactory kf = KeyFactory.getInstance("DSA");
 		byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
 		KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
 		PrivateKey privateKey = kf.generatePrivate(privateSpec);
