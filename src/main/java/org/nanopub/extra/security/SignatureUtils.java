@@ -39,8 +39,6 @@ import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
 import net.trustyuri.rdf.TransformRdf;
 
-// TODO: nanopub signatures are being updated...
-
 public class SignatureUtils {
 
 	private SignatureUtils() {}  // no instances allowed

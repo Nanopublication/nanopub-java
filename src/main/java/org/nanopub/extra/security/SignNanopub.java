@@ -47,8 +47,6 @@ import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
 
-// TODO: nanopub signatures are being updated...
-
 public class SignNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)

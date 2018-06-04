@@ -12,13 +12,7 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-// TODO: nanopub signatures are being updated...
-
-// See: https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#Signature
-
 public class NanopubSignatureElement {
-
-	// TODO Update public ontology file
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
