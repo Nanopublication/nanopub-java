@@ -11,6 +11,9 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfUtils;
+
 public class TempRefReplacer implements RDFHandler {
 
 	private Map<String,String> tempRefMap;
@@ -44,7 +47,11 @@ public class TempRefReplacer implements RDFHandler {
 					throw new RuntimeException("Matched to two temp URI prefixes: " + vs);
 				}
 				matched = true;
-				return new URIImpl(vs.replace(k, tempRefMap.get(k)));
+				String trustyUriString = tempRefMap.get(k);
+				String artifactCode = TrustyUriUtils.getArtifactCode(trustyUriString);
+				String baseUriString = trustyUriString.split(artifactCode)[0];
+				String uriString = RdfUtils.getTrustyUriString(new URIImpl(baseUriString), artifactCode, vs.replace(k, ""));
+				return new URIImpl(uriString);
 			}
 		}
 		if (vs.startsWith(TempUriReplacer.tempUri)) {

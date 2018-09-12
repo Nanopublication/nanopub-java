@@ -67,6 +67,12 @@ public class MakeTrustyNanopub {
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
+		final Map<String,String> tempRefMap;
+		if (resolveTempRefs) {
+			tempRefMap = new HashMap<>();
+		} else {
+			tempRefMap = null;
+		}
 		for (File inputFile : inputNanopubs) {
 			File outFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
 			final OutputStream out;
@@ -76,12 +82,6 @@ public class MakeTrustyNanopub {
 				out = new FileOutputStream(outFile);
 			}
 			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-			final Map<String,String> tempRefMap;
-			if (resolveTempRefs) {
-				tempRefMap = new HashMap<>();
-			} else {
-				tempRefMap = null;
-			}
 			MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
 
 				@Override
@@ -132,7 +132,7 @@ public class MakeTrustyNanopub {
 				if (tempRefMap.containsKey(key)) {
 					throw new RuntimeException("Temp URI found twice.");
 				}
-				tempRefMap.put(key, np.getUri().stringValue());
+				tempRefMap.put(key, np.getUri().stringValue().replace("purl.org/np/", "purl.org/nanopub/tempref/"));
 			}
 		} catch (RDFHandlerException ex) {
 			throw new TrustyUriException(ex);
