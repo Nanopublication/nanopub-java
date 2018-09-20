@@ -12,15 +12,16 @@ import org.openrdf.rio.RDFHandlerException;
 
 /**
  * You can use temporary URIs for your nanopublications that start with
- * "http://purl.org/nanopub/temp/". These then become short "http://purl.org/np/"
- * when they are transformed to trusty nanopublications.
+ * "http://purl.org/nanopub/temp/". These then become "http://purl.org/np/ARTIFACTCODE-PLACEHOLDER/"
+ * before being transformed to trusty nanopublications, and as final trusty nanopublications have
+ * the actual artifact code instead of the placeholder.
  *
  * @author Tobias Kuhn
  */
 public class TempUriReplacer implements RDFHandler {
 
 	public static final String tempUri = "http://purl.org/nanopub/temp/";
-	public static final String normUri = "http://purl.org/np/";
+	public static final String normUri = "http://purl.org/np/ARTIFACTCODE-PLACEHOLDER/";
 
 	private String uriPrefix;
 	private RDFHandler nestedHandler;
