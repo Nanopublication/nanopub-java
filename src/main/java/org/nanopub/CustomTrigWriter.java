@@ -106,6 +106,18 @@ public class CustomTrigWriter extends TriGWriter {
 			}
 		}
 
+		// ... and *before* hash signs:
+		int splitIdxHashsign = uriString.lastIndexOf("#");
+		if (splitIdx > 0 && splitIdxHashsign > splitIdx - 2) {
+			String namespace = uriString.substring(0, splitIdxHashsign);
+			String p = namespaceTable.get(namespace);
+			String postHashPrefix = namespaceTable.get(namespace + "#");
+			if (p != null && postHashPrefix == null) {
+				splitIdx = splitIdxHashsign;
+				prefix = p;
+			}
+		}
+
 		if (uriString.endsWith(".")) {
 			prefix = null;
 		}
@@ -114,7 +126,7 @@ public class CustomTrigWriter extends TriGWriter {
 			// Namespace is mapped to a prefix; write abbreviated URI
 			writer.write(prefix);
 			writer.write(":");
-			writer.write(uriString.substring(splitIdx));
+			writer.write(uriString.substring(splitIdx).replaceFirst("^#", "\\\\#"));
 			if (usedPrefixes != null) {
 				usedPrefixes.add(prefix);
 			}

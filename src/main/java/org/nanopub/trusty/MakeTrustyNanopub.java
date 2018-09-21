@@ -132,7 +132,7 @@ public class MakeTrustyNanopub {
 				if (tempRefMap.containsKey(key)) {
 					throw new RuntimeException("Temp URI found twice.");
 				}
-				tempRefMap.put(key, np.getUri().stringValue().replace("purl.org/np/", "purl.org/nanopub/tempref/"));
+				tempRefMap.put(key, np.getUri().stringValue());
 			}
 		} catch (RDFHandlerException ex) {
 			throw new TrustyUriException(ex);

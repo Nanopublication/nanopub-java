@@ -35,7 +35,8 @@ public class TempRefReplacer implements RDFHandler {
 
 	@Override
 	public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-		nestedHandler.handleNamespace(prefix, uri);
+		String transformedUri = replace(new URIImpl(uri)).stringValue();
+		nestedHandler.handleNamespace(prefix, transformedUri);
 	}
 
 	private Value replace(Value v) {
@@ -50,7 +51,9 @@ public class TempRefReplacer implements RDFHandler {
 				String trustyUriString = tempRefMap.get(k);
 				String artifactCode = TrustyUriUtils.getArtifactCode(trustyUriString);
 				String baseUriString = trustyUriString.split(artifactCode)[0];
-				String uriString = RdfUtils.getTrustyUriString(new URIImpl(baseUriString), artifactCode, vs.replace(k, ""));
+				String suffix = vs.replace(k, "");
+				if (suffix.isEmpty()) suffix = null;
+				String uriString = RdfUtils.getTrustyUriString(new URIImpl(baseUriString), artifactCode, suffix);
 				return new URIImpl(uriString);
 			}
 		}
