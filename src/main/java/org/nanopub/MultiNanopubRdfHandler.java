@@ -1,13 +1,8 @@
 package org.nanopub;
 
-import static org.nanopub.Nanopub.HAS_ASSERTIONSET_URI;
 import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
-import static org.nanopub.Nanopub.HAS_COLLPROVENANCE_URI;
-import static org.nanopub.Nanopub.HAS_COLLPUBINFO_URI;
-import static org.nanopub.Nanopub.HAS_MEMBER;
 import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
 import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
-import static org.nanopub.Nanopub.NANOPUBCOLL_TYPE_URI;
 import static org.nanopub.Nanopub.NANOPUB_TYPE_URI;
 
 import java.io.BufferedInputStream;
@@ -25,11 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
@@ -39,8 +31,7 @@ import org.openrdf.rio.Rio;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 /**
- * Handles files or streams with a sequence of nanopubs. This class also handles nanopublication
- * collections (they are on the fly transformed to proper nanopubs).
+ * Handles files or streams with a sequence of nanopubs.
  *
  * @author Tobias Kuhn
  */
@@ -90,16 +81,10 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	private URI headUri = null;
 	private URI nanopubUri = null;
-	private URI nanopubCollUri = null;
-	private URI nanopubCollAssertionUri = null;
-	private URI nanopubAssertionSetUri = null;
-	private URI nanopubCollProvenanceUri = null;
-	private URI nanopubCollPubInfoUri = null;
 	private boolean headComplete = false;
 	private Map<URI,Boolean> graphs = new HashMap<>();
 	private Map<URI,Map<URI,Boolean>> members = new HashMap<>();
 	private Set<Statement> statements = new LinkedHashSet<>();
-	private Set<Statement> collAssertionStatements = new LinkedHashSet<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
 
@@ -126,32 +111,12 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				if (p.equals(RDF.TYPE) && st.getObject().equals(NANOPUB_TYPE_URI)) {
 					nanopubUri = (URI) st.getSubject();
 				}
-				if (p.equals(RDF.TYPE) && st.getObject().equals(NANOPUBCOLL_TYPE_URI)) {
-					nanopubCollUri = (URI) st.getSubject();
-				}
 				if (p.equals(HAS_ASSERTION_URI) || p.equals(HAS_PROVENANCE_URI) || p.equals(HAS_PUBINFO_URI)) {
 					graphs.put((URI) st.getObject(), true);
 				}
-				if (p.equals(HAS_ASSERTIONSET_URI)) {
-					nanopubAssertionSetUri = (URI) st.getObject();
-				}
-				if (p.equals(HAS_COLLPROVENANCE_URI)) {
-					nanopubCollProvenanceUri = (URI) st.getObject();
-				}
-				if (p.equals(HAS_COLLPUBINFO_URI)) {
-					nanopubCollPubInfoUri = (URI) st.getObject();
-				}
-				if (p.equals(HAS_MEMBER)) {
-					addMember((URI) st.getSubject(), (URI) st.getObject());
-				}
 			} else {
-				if (nanopubUri == null && nanopubCollUri == null) {
+				if (nanopubUri == null) {
 					throwMalformed("No nanopub (collection) URI found");
-				} else if (nanopubUri != null && nanopubCollUri != null) {
-					throwMalformed("Nanopub URI and nanopub collection URI found");
-				}
-				if (nanopubCollUri != null && nanopubAssertionSetUri == null) {
-					throwMalformed("No assertion set found for nanopub collection");
 				}
 				headComplete = true;
 			}
@@ -164,25 +129,6 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				} else {
 					addNamespaces();
 					statements.add(st);
-				}
-			} else if (nanopubCollUri != null) {
-				URI c = (URI) st.getContext();
-				if (members.get(nanopubAssertionSetUri).containsKey(c)) {
-					if (nanopubCollAssertionUri != null && !c.equals(nanopubCollAssertionUri)) {
-						finishNanopubFromCollection();
-					}
-					nanopubCollAssertionUri = c;
-					addNamespaces();
-					collAssertionStatements.add(st);
-				} else if (nanopubCollAssertionUri == null) {
-					if (!c.equals(nanopubCollProvenanceUri) && !c.equals(nanopubCollPubInfoUri)) {
-						throwMalformed("Nanopub URI and nanopub collection URI found");
-					}
-					addNamespaces();
-					statements.add(st);
-				} else {
-					finishAndReset();
-					handleStatement(st);
 				}
 			}
 		} else {
@@ -216,79 +162,20 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	private void finishAndReset() {
 		try {
-			if (nanopubCollUri != null) {
-				finishNanopubFromCollection();
-			} else {
-				npHandler.handleNanopub(new NanopubImpl(statements, nsPrefixes, ns));
-			}
+			npHandler.handleNanopub(new NanopubImpl(statements, nsPrefixes, ns));
 		} catch (MalformedNanopubException ex) {
 			throwMalformed(ex);
 		}
 		clearAll();
 	}
 
-	private void finishNanopubFromCollection() {
-		List<Statement> l = new ArrayList<>();
-		String s = nanopubCollAssertionUri.toString();
-		if (!s.matches(".*[^a-zA-Z]a") && !s.matches(".*[^a-zA-Z]assertion")) {
-			throwMalformed("Invalid assertion set member URI: " + s);
-		}
-		s = s.replaceFirst("assertion$", "").replaceFirst("a$", "");
-		URI npUri = new URIImpl(s.replaceFirst("(#|\\.)$", ""));
-		URI head = new URIImpl(s + "head");
-		URI prov = new URIImpl(s + "prov");
-		URI info = new URIImpl(s + "info");
-		l.add(new ContextStatementImpl(npUri, RDF.TYPE, NANOPUB_TYPE_URI, head));
-		l.add(new ContextStatementImpl(npUri, HAS_ASSERTION_URI, nanopubCollAssertionUri, head));
-		l.add(new ContextStatementImpl(npUri, HAS_PROVENANCE_URI, prov, head));
-		l.add(new ContextStatementImpl(npUri, HAS_PUBINFO_URI, info, head));
-		l.addAll(collAssertionStatements);
-		for (Statement st : statements) {
-			Resource context = null;
-			if (st.getContext().equals(nanopubCollProvenanceUri)) {
-				context = prov;
-			} else if (st.getContext().equals(nanopubCollPubInfoUri)) {
-				context = info;
-			} else if (st.getContext().equals(headUri)) {
-				// ignore
-			} else {
-				throwMalformed("Unrecognized graph for statement: " + st);
-			}
-			if (context != null) {
-				l.add(new ContextStatementImpl(st.getSubject(), st.getPredicate(), st.getObject(), context));
-			}
-		}
-		l.add(new ContextStatementImpl(nanopubAssertionSetUri, HAS_MEMBER, nanopubCollAssertionUri, prov));
-		l.add(new ContextStatementImpl(nanopubCollUri, HAS_MEMBER, npUri, info));
-		try {
-			npHandler.handleNanopub(new NanopubImpl(l, nsPrefixes, ns));
-		} catch (MalformedNanopubException ex) {
-			throwMalformed(ex);
-		}
-		// clear assertion graph:
-		collAssertionStatements.clear();
-		members.get(nanopubAssertionSetUri).remove(nanopubCollAssertionUri);
-	}
-
 	private void clearAll() {
 		headUri = null;
 		nanopubUri = null;
-		nanopubCollUri = null;
-		nanopubCollAssertionUri = null;
 		headComplete = false;
 		graphs.clear();
 		members.clear();
 		statements.clear();
-		collAssertionStatements.clear();
-	}
-
-	private void addMember(URI container, URI memberUri) {
-		Map<URI,Boolean> m = members.get(container);
-		if (m == null) {
-			m = new HashMap<URI,Boolean>();
-			members.put(container, m);
-		}
-		m.put(memberUri, true);
 	}
 
 	private void throwMalformed(MalformedNanopubException ex) {

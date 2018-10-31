@@ -18,13 +18,6 @@ public interface Nanopub {
 	public static final URI HAS_PROVENANCE_URI = new URIImpl("http://www.nanopub.org/nschema#hasProvenance");
 	public static final URI HAS_PUBINFO_URI = new URIImpl("http://www.nanopub.org/nschema#hasPublicationInfo");
 
-	// URIs for nanopub collections (preliminary and not stable):
-	public static final URI NANOPUBCOLL_TYPE_URI = new URIImpl("http://www.nanopub.org/nschema#NanopublicationCollection");
-	public static final URI HAS_ASSERTIONSET_URI = new URIImpl("http://www.nanopub.org/nschema#hasAssertionSet");
-	public static final URI HAS_COLLPROVENANCE_URI = new URIImpl("http://www.nanopub.org/nschema#hasCollectionProvenance");
-	public static final URI HAS_COLLPUBINFO_URI = new URIImpl("http://www.nanopub.org/nschema#hasCollectionPubInfo");
-	public static final URI HAS_MEMBER = new URIImpl("http://www.nanopub.org/nschema#hasMember");
-
 	// URIs that link nanopublications:
 	public static final URI SUPERSEDES = new URIImpl("http://purl.org/nanopub/x/supersedes");
 
