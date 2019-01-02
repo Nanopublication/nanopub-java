@@ -10,10 +10,14 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubUtils;
+import org.nanopub.extra.server.GetNanopub;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.vocabulary.FOAF;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 import org.openrdf.rio.turtle.TurtleParser;
@@ -46,14 +50,14 @@ public class GetIntroNanopub {
 		}
 	}
 
-	public static String get(String userId) throws IOException, OpenRDFException {
+	public static Nanopub get(String userId) throws IOException, OpenRDFException {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		return get(userId, c);
 	}
 
-	public static String get(final String userId, HttpClient httpClient) throws IOException, OpenRDFException {
+	public static Nanopub get(final String userId, HttpClient httpClient) throws IOException, OpenRDFException {
 		HttpGet get = new HttpGet(userId);
 		get.setHeader("Accept", "text/turtle");
 		InputStream in = null;
@@ -68,7 +72,7 @@ public class GetIntroNanopub {
 			TurtleParser parser = new TurtleParser();
 			parser.setRDFHandler(ie);
 			parser.parse(in, userId);
-			return ie.getIntroNanopubUri();
+			return ie.getIntroNanopub();
 		} finally {
 			if (in != null) in.close();
 		}
@@ -77,24 +81,24 @@ public class GetIntroNanopub {
 	private static class IntroExtractor extends RDFHandlerBase {
 
 		private String userId;
-		private String introNanopubUri;
+		private Nanopub introNanopub;
 
 		public IntroExtractor(String userId) {
 			this.userId = userId;
 		}
 
 		public void handleStatement(Statement st) throws RDFHandlerException {
-			if (introNanopubUri != null) return;
+			if (introNanopub != null) return;
 			if (!st.getSubject().stringValue().equals(userId)) return;
 			if (!st.getPredicate().stringValue().equals(FOAF.PAGE.stringValue())) return;
 			String o = st.getObject().stringValue();
 			if (TrustyUriUtils.isPotentialTrustyUri(o)) {
-				introNanopubUri = o;
+				introNanopub = GetNanopub.get(o);
 			}
 		};
 
-		public String getIntroNanopubUri() {
-			return introNanopubUri;
+		public Nanopub getIntroNanopub() {
+			return introNanopub;
 		}
 	}
 	
@@ -105,8 +109,7 @@ public class GetIntroNanopub {
 
 	private void run() throws IOException, OpenRDFException {
 		for (String userId : userIds) {
-			System.out.print(userId + ": ");
-			System.out.println(get(userId));
+			NanopubUtils.writeToStream(get(userId), System.out, RDFFormat.TRIG);
 		}
 	}
 
