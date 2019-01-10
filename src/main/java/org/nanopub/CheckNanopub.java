@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.security.LegacySignatureUtils;
-import org.nanopub.extra.security.MalformedSignatureException;
+import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
@@ -132,7 +132,7 @@ public class CheckNanopub {
 			try {
 				se = SignatureUtils.getSignatureElement(np);
 				if (se == null) legacySe = LegacySignatureUtils.getSignatureElement(np);
-			} catch (MalformedSignatureException ex) {
+			} catch (MalformedCryptoElementException ex) {
 				System.out.println("SIGNATURE IS NOT WELL-FORMED (" + ex.getMessage() + "): " + np.getUri());
 				report.countInvalidSignature();
 				return;

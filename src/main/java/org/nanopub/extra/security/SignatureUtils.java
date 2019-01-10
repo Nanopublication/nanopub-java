@@ -1,7 +1,5 @@
 package org.nanopub.extra.security;
 
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_ALGORITHM;
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_PUBLIC_KEY;
 import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
 import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_TARGET;
 import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
@@ -43,7 +41,7 @@ public class SignatureUtils {
 
 	private SignatureUtils() {}  // no instances allowed
 
-	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedSignatureException {
+	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
 		URI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
@@ -60,24 +58,24 @@ public class SignatureUtils {
 			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) {
 				// This statement is the only one that is *not* added as a target statement
 				if (!(st.getObject() instanceof Literal)) {
-					throw new MalformedSignatureException("Literal expected as signature: " + st.getObject());
+					throw new MalformedCryptoElementException("Literal expected as signature: " + st.getObject());
 				}
 				se.setSignatureLiteral((Literal) st.getObject());
 			} else {
 				se.addTargetStatement(st);
-				if (st.getPredicate().equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) {
+				if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) {
 					if (!(st.getObject() instanceof Literal)) {
-						throw new MalformedSignatureException("Literal expected as public key: " + st.getObject());
+						throw new MalformedCryptoElementException("Literal expected as public key: " + st.getObject());
 					}
 					se.setPublicKeyLiteral((Literal) st.getObject());
-				} else if (st.getPredicate().equals(NanopubSignatureElement.HAS_ALGORITHM)) {
+				} else if (st.getPredicate().equals(CryptoElement.HAS_ALGORITHM)) {
 					if (!(st.getObject() instanceof Literal)) {
-						throw new MalformedSignatureException("Literal expected as algorithm: " + st.getObject());
+						throw new MalformedCryptoElementException("Literal expected as algorithm: " + st.getObject());
 					}
 					se.setAlgorithm((Literal) st.getObject());
 				} else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
 					if (!(st.getObject() instanceof URI)) {
-						throw new MalformedSignatureException("URI expected as signer: " + st.getObject());
+						throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
 					}
 					se.addSigner((URI) st.getObject());
 				}
@@ -85,14 +83,14 @@ public class SignatureUtils {
 			}
 		}
 		if (se.getSignature() == null) {
-			throw new MalformedSignatureException("Signature element without signature");
+			throw new MalformedCryptoElementException("Signature element without signature");
 		}
 		if (se.getAlgorithm() == null) {
-			throw new MalformedSignatureException("Signature element without algorithm");
+			throw new MalformedCryptoElementException("Signature element without algorithm");
 		}
 		if (se.getPublicKeyString() == null) {
 			// We require a full public key for now, but plan to support public key fingerprints as an alternative.
-			throw new MalformedSignatureException("Signature element without public key");
+			throw new MalformedCryptoElementException("Signature element without public key");
 		}
 		return se;
 	}
@@ -129,9 +127,9 @@ public class SignatureUtils {
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
 		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
 		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
-		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+		preStatements.add(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
 		Literal algorithmLiteral = new LiteralImpl(algorithm.name());
-		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_ALGORITHM, algorithmLiteral, piUri));
+		preStatements.add(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_ALGORITHM, algorithmLiteral, piUri));
 		if (signer != null) {
 			preStatements.add(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
 		}
@@ -171,16 +169,16 @@ public class SignatureUtils {
 		return nanopubHandler.getNanopub();
 	}
 
-	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {
+	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
 		URI signatureElementUri = null;
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
 			if (!st.getObject().equals(nanopub.getUri())) continue;
 			if (!(st.getSubject() instanceof URI)) {
-				throw new MalformedSignatureException("Signature element must be identified by URI");
+				throw new MalformedCryptoElementException("Signature element must be identified by URI");
 			}
 			if (signatureElementUri != null) {
-				throw new MalformedSignatureException("Multiple signature elements found");
+				throw new MalformedCryptoElementException("Multiple signature elements found");
 			}
 			signatureElementUri = (URI) st.getSubject();
 		}
@@ -195,7 +193,7 @@ public class SignatureUtils {
 			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) return true;
 			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) return true;
 			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) return true;
-			if (st.getPredicate().equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) return true;
+			if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) return true;
 		}
 		return false;
 	}

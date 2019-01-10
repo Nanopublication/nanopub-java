@@ -35,7 +35,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 					return false;
 				}
 			}
-		} catch (MalformedSignatureException | GeneralSecurityException ex) {
+		} catch (MalformedCryptoElementException | GeneralSecurityException ex) {
 			return false;
 		}
 	}
@@ -56,7 +56,7 @@ public class DigitalSignaturePattern implements NanopubPattern {
 	private boolean hasLegacySignature(Nanopub nanopub) {
 		try {
 			return LegacySignatureUtils.getSignatureElement(nanopub) != null;
-		} catch (MalformedSignatureException ex) {
+		} catch (MalformedCryptoElementException ex) {
 			throw new RuntimeException(ex);
 		}
 	}

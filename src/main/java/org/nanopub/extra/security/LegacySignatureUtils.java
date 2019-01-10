@@ -1,6 +1,5 @@
 package org.nanopub.extra.security;
 
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_PUBLIC_KEY;
 import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
 import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_ELEMENT;
 import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
@@ -40,7 +39,7 @@ public class LegacySignatureUtils {
 
 	private LegacySignatureUtils() {}  // no instances allowed
 
-	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedSignatureException {
+	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
 		URI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
@@ -58,17 +57,17 @@ public class LegacySignatureUtils {
 			}
 			if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) {
 				if (!(st.getObject() instanceof Literal)) {
-					throw new MalformedSignatureException("Literal expected as signature: " + st.getObject());
+					throw new MalformedCryptoElementException("Literal expected as signature: " + st.getObject());
 				}
 				se.setSignatureLiteral((Literal) st.getObject());
-			} else if (st.getPredicate().equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) {
+			} else if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) {
 				if (!(st.getObject() instanceof Literal)) {
-					throw new MalformedSignatureException("Literal expected as public key: " + st.getObject());
+					throw new MalformedCryptoElementException("Literal expected as public key: " + st.getObject());
 				}
 				se.setPublicKeyLiteral((Literal) st.getObject());
 			} else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
 				if (!(st.getObject() instanceof URI)) {
-					throw new MalformedSignatureException("URI expected as signer: " + st.getObject());
+					throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
 				}
 				se.addSigner((URI) st.getObject());
 			} else {
@@ -76,10 +75,10 @@ public class LegacySignatureUtils {
 			}
 		}
 		if (se.getSignature() == null) {
-			throw new MalformedSignatureException("Signature element without signature");
+			throw new MalformedCryptoElementException("Signature element without signature");
 		}
 		if (se.getPublicKeyString() == null) {
-			throw new MalformedSignatureException("Signature element without public key");
+			throw new MalformedCryptoElementException("Signature element without public key");
 		}
 		se.setAlgorithm(SignatureAlgorithm.DSA);
 		return se;
@@ -120,7 +119,7 @@ public class LegacySignatureUtils {
 		signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
 		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
-		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
 		Literal signatureLiteral = new LiteralImpl(signatureString);
 		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
 		if (signer != null) {
@@ -139,16 +138,16 @@ public class LegacySignatureUtils {
 		return nanopubHandler.getNanopub();
 	}
 
-	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedSignatureException {
+	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
 		URI signatureElementUri = null;
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(nanopub.getUri())) continue;
 			if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) continue;
 			if (!(st.getObject() instanceof URI)) {
-				throw new MalformedSignatureException("Signature element must be identified by URI");
+				throw new MalformedCryptoElementException("Signature element must be identified by URI");
 			}
 			if (signatureElementUri != null) {
-				throw new MalformedSignatureException("Multiple signature elements found");
+				throw new MalformedCryptoElementException("Multiple signature elements found");
 			}
 			signatureElementUri = (URI) st.getObject();
 		}

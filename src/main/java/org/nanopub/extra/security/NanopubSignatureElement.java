@@ -12,86 +12,39 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-public class NanopubSignatureElement {
+public class NanopubSignatureElement extends CryptoElement {
 
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
-	public static final URI HAS_ALGORITHM = new URIImpl("http://purl.org/nanopub/x/hasAlgorithm");
-	public static final URI HAS_PUBLIC_KEY = new URIImpl("http://purl.org/nanopub/x/hasPublicKey");
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
 	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
 
 	// Deprecated; used for legacy signatures
 	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
 
-	private URI uri;
 	private URI targetNanopubUri;
-	private String publicKeyString;
-	private SignatureAlgorithm algorithm;
 	private byte[] signature;
 	private Set<URI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
 
 	NanopubSignatureElement(URI targetNanopubUri, URI uri) {
+		super(uri);
 		this.targetNanopubUri = targetNanopubUri;
-		this.uri = uri;
-	}
-
-	public URI getUri() {
-		return uri;
 	}
 
 	public URI getTargetNanopubUri() {
 		return targetNanopubUri;
 	}
 
-	void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedSignatureException {
-		if (publicKeyString != null) {
-			throw new MalformedSignatureException("Two public keys found for signature element");
-		}
-		publicKeyString = publicKeyLiteral.getLabel();
-	}
-
-	public String getPublicKeyString() {
-		return publicKeyString;
-	}
-
-	void setSignatureLiteral(Literal signatureLiteral) throws MalformedSignatureException {
+	void setSignatureLiteral(Literal signatureLiteral) throws MalformedCryptoElementException {
 		if (signature != null) {
-			throw new MalformedSignatureException("Two signatures found for signature element");
+			throw new MalformedCryptoElementException("Two signatures found for signature element");
 		}
 		signature = DatatypeConverter.parseBase64Binary(signatureLiteral.getLabel());
 	}
 
 	public byte[] getSignature() {
 		return signature;
-	}
-
-	void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedSignatureException {
-		if (this.algorithm != null) {
-			throw new MalformedSignatureException("Two algorithms found for signature element");
-		}
-		this.algorithm = algorithm;
-	}
-
-	void setAlgorithm(Literal algorithmLiteral) throws MalformedSignatureException {
-		if (algorithm != null) {
-			throw new MalformedSignatureException("Two algorithms found for signature element");
-		}
-		String alString = algorithmLiteral.getLabel().toUpperCase();
-		for (SignatureAlgorithm al : SignatureAlgorithm.values()) {
-			if (al.name().equals(alString)) {
-				algorithm = al;
-				break;
-			}
-		}
-		if (algorithm == null) {
-			throw new MalformedSignatureException("Algorithm not recognized: " + algorithmLiteral.getLabel());
-		}
-	}
-
-	public SignatureAlgorithm getAlgorithm() {
-		return algorithm;
 	}
 
 	void addSigner(URI signer) {
