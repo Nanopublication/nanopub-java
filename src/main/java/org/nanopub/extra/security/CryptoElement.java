@@ -1,10 +1,14 @@
 package org.nanopub.extra.security;
 
+import java.io.Serializable;
+
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
-public abstract class CryptoElement {
+public abstract class CryptoElement implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public static final URI CRYPTO_ELEMENT = new URIImpl("http://purl.org/nanopub/x/CryptoElement");
 	public static final URI HAS_ALGORITHM = new URIImpl("http://purl.org/nanopub/x/hasAlgorithm");

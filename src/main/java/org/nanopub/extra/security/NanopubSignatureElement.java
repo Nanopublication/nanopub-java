@@ -14,6 +14,8 @@ import org.openrdf.model.impl.URIImpl;
 
 public class NanopubSignatureElement extends CryptoElement {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
 	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");

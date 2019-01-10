@@ -8,6 +8,8 @@ import org.openrdf.model.impl.URIImpl;
 
 public class KeyDeclaration extends CryptoElement {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final URI DECLARED_BY = new URIImpl("http://purl.org/nanopub/x/declaredBy");
 
 	private Set<URI> declarers = new LinkedHashSet<>();

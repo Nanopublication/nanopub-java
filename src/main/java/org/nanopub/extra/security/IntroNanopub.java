@@ -2,7 +2,9 @@ package org.nanopub.extra.security;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
@@ -106,8 +108,8 @@ public class IntroNanopub {
 		return user;
 	}
 
-	public Map<URI,KeyDeclaration> getKeyDeclarations() {
-		return keyDeclarations;
+	public List<KeyDeclaration> getKeyDeclarations() {
+		return new ArrayList<>(keyDeclarations.values());
 	}
 
 
