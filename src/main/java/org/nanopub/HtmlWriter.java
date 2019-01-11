@@ -100,9 +100,6 @@ public class HtmlWriter extends TurtleWriter {
 			}
 
 			if (!inActiveContext) {
-				writer.write("<br/>");
-				writer.writeEOL();
-
 				if (openPart != null) {
 					writer.write(openPart);
 					writer.writeEOL();
@@ -428,11 +425,12 @@ public class HtmlWriter extends TurtleWriter {
 		writenl("body { margin: 20px; font-family: monaco,monospace; font-size: 11pt; color: #444; }");
 		writenl("a { color: #000; text-decoration: none; }");
 		writenl("a:hover { color: #666; }");
-		writenl(".nanopub { margin: 0 0 30px 0; padding: 10px; border-radius: 10px; border: solid; border-width: 1px; }");
-		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; border-radius: 10px; }");
-		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; border-radius: 10px; }");
-		writenl(".nanopub-provenance { background: #f3a08c; padding: 10px; border-radius: 10px; }");
-		writenl(".nanopub-pubinfo { background: #ffff66; padding: 10px; border-radius: 10px; }");
+		writenl(".nanopub { margin: 0 0 30px 0; padding: 0px 10px 10px 10px; border-radius: 10px; border: solid; border-width: 1px; }");
+		writenl(".nanopub-prefixes { margin-top: 10px; }");
+		writenl(".nanopub-head { background: #e8e8e8; padding: 10px; margin-top: 10px; border-radius: 10px; }");
+		writenl(".nanopub-assertion { background: #99ccff; padding: 10px; margin-top: 10px; border-radius: 10px; }");
+		writenl(".nanopub-provenance { background: #f3a08c; padding: 10px; margin-top: 10px; border-radius: 10px; }");
+		writenl(".nanopub-pubinfo { background: #ffff66; padding: 10px; margin-top: 10px; border-radius: 10px; }");
 		writenl("</style>");
 		writenl("</head>");
 		writenl("<body>");
