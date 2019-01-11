@@ -29,26 +29,35 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
 public class HtmlWriter extends TurtleWriter {
 
 	private boolean inActiveContext;
-
 	private Resource currentContext;
-
 	private String openPart;
-
 	private Set<String> usedPrefixes;
+	private boolean indentContexts;
+
+	public HtmlWriter(OutputStream out, boolean indentContexts) {
+		super(out);
+		init(indentContexts);
+	}
 
 	public HtmlWriter(OutputStream out) {
 		super(out);
-		init();
+		init(true);
+	}
+
+	public HtmlWriter(Writer writer, boolean indentContexts) {
+		super(writer);
+		init(indentContexts);
 	}
 
 	public HtmlWriter(Writer writer) {
 		super(writer);
-		init();
+		init(true);
 	}
 
 	public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
 
-	private void init() {
+	private void init(boolean indentContexts) {
+		this.indentContexts = indentContexts;
 		writer.setIndentationString("&nbsp;&nbsp;");
 	}
 
@@ -106,14 +115,16 @@ public class HtmlWriter extends TurtleWriter {
 					openPart = null;
 				}
 
+				writer.write("<span class=\"nanopub-context-switch\">");
+
 				if (context != null) {
 					writeResource(context);
 					writer.write(" ");
 				}
 
-				writer.write("{<br/>");
+				writer.write("{<br/></span>");
 				writer.writeEOL();
-				writer.increaseIndentation();
+				if (indentContexts) writer.increaseIndentation();
 
 				currentContext = context;
 				inActiveContext = true;
@@ -212,8 +223,8 @@ public class HtmlWriter extends TurtleWriter {
 		throws IOException
 	{
 		if (inActiveContext) {
-			writer.decreaseIndentation();
-			writer.write("}<br/>");
+			if (indentContexts) writer.decreaseIndentation();
+			writer.write("<span class=\"nanopub-context-switch\">}<br/></span>");
 			writer.writeEOL();
 
 			inActiveContext = false;

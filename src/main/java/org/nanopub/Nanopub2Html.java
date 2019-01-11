@@ -19,7 +19,6 @@ import org.openrdf.rio.RDFHandlerException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
-// TODO: Work in progress...
 
 public class Nanopub2Html {
 
@@ -28,6 +27,9 @@ public class Nanopub2Html {
 
 	@com.beust.jcommander.Parameter(names = "-s", description = "Stand-alone HTML")
 	private boolean standalone = false;
+
+	@com.beust.jcommander.Parameter(names = "-i", description = "No context indentation")
+	private boolean indentContextDisabled = false;
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -57,9 +59,10 @@ public class Nanopub2Html {
 	private Nanopub2Html() {
 	}
 
-	private Nanopub2Html(OutputStream outputStream, boolean standalone) {
+	private Nanopub2Html(OutputStream outputStream, boolean standalone, boolean indentContext) {
 		this.outputStream = outputStream;
 		this.standalone = standalone;
+		this.indentContextDisabled = !indentContext;
 	}
 
 
@@ -97,7 +100,7 @@ public class Nanopub2Html {
 		} else {
 			printHtml = new PrintStream(outputStream);
 		}
-		HtmlWriter htmlWriter = new HtmlWriter(printHtml);
+		HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);
 		if (np instanceof NanopubWithNs) {
 			NanopubWithNs npNs = (NanopubWithNs) np;
 			for (String prefix : npNs.getNsPrefixes()) {
@@ -138,8 +141,8 @@ public class Nanopub2Html {
 		}
 	}
 
-	public static void createHtml(Collection<Nanopub> nanopubs, OutputStream htmlOut, boolean standalone) {
-		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone);
+	public static void createHtml(Collection<Nanopub> nanopubs, OutputStream htmlOut, boolean standalone, boolean indentContext) {
+		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone, indentContext);
 		try {
 			for (Nanopub np : nanopubs) {
 				nanopub2html.createHtml(np);
@@ -149,8 +152,12 @@ public class Nanopub2Html {
 		}
 	}
 
-	public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone) {
-		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone);
+	public static void createHtml(Collection<Nanopub> nanopubs, OutputStream htmlOut, boolean standalone) {
+		createHtml(nanopubs, htmlOut, standalone, true);
+	}
+
+	public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone, boolean indentContext) {
+		Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone, indentContext);
 		try {
 			nanopub2html.createHtml(np);
 		} catch (IOException | RDFHandlerException ex) {
@@ -158,11 +165,32 @@ public class Nanopub2Html {
 		}
 	}
 
-	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone) {
+	public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone) {
+		createHtml(np, htmlOut, standalone, true);
+	}
+
+	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone, boolean indentContext) {
 		ByteArrayOutputStream htmlOut = null;
 		try {
 			htmlOut = new ByteArrayOutputStream();
-			createHtml(nanopubs, htmlOut, standalone);
+			createHtml(nanopubs, htmlOut, standalone, indentContext);
+			htmlOut.flush();
+			htmlOut.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return new String(htmlOut.toByteArray(), utf8Charset);
+	}
+
+	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone) {
+		return createHtmlString(nanopubs, standalone, true);
+	}
+
+	public static String createHtmlString(Nanopub np, boolean standalone, boolean indentContext) {
+		ByteArrayOutputStream htmlOut = null;
+		try {
+			htmlOut = new ByteArrayOutputStream();
+			createHtml(np, htmlOut, standalone, indentContext);
 			htmlOut.flush();
 			htmlOut.close();
 		} catch (IOException ex) {
@@ -172,16 +200,7 @@ public class Nanopub2Html {
 	}
 
 	public static String createHtmlString(Nanopub np, boolean standalone) {
-		ByteArrayOutputStream htmlOut = null;
-		try {
-			htmlOut = new ByteArrayOutputStream();
-			createHtml(np, htmlOut, standalone);
-			htmlOut.flush();
-			htmlOut.close();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		return new String(htmlOut.toByteArray(), utf8Charset);
+		return createHtmlString(np, standalone, true);
 	}
 
 }
