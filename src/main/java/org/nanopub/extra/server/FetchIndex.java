@@ -68,8 +68,8 @@ public class FetchIndex {
 			ServerIterator.writeCachedServers(servers);
 		} catch (Exception ex) {}
 		nanopubCount = 0;
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(5000).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
+				.setConnectionRequestTimeout(100).setSocketTimeout(2000).build();
 		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxTotal(1000);

@@ -51,8 +51,8 @@ public class NanopubServerUtils {
 		BufferedReader r = null;
 		try {
 			if (httpClient == null) {
-				RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-						.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
+				RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
+						.setConnectionRequestTimeout(100).setSocketTimeout(2000).build();
 				PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 				connManager.setDefaultMaxPerRoute(10);
 				connManager.setMaxTotal(1000);

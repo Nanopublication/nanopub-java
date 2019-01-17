@@ -37,8 +37,8 @@ public class ServerInfo implements Serializable {
 		ServerInfo si = null;
 		InputStream in = null;
 		try {
-			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-					.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
+			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
+					.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
 			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		    in = c.execute(get).getEntity().getContent();
 			si = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);

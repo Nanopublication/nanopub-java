@@ -31,8 +31,8 @@ import net.trustyuri.TrustyUriUtils;
 public class IntroNanopub {
 
 	public static IntroNanopub get(String userId) throws IOException, OpenRDFException {
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(10000).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
+				.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		return get(userId, c);
 	}
