@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -27,31 +28,31 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.RDFParserFactory;
-import org.openrdf.rio.RDFParserRegistry;
-import org.openrdf.rio.RDFWriterFactory;
-import org.openrdf.rio.RDFWriterRegistry;
-import org.openrdf.rio.Rio;
-import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.MalformedQueryException;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParser;
+import org.eclipse.rdf4j.rio.RDFParserFactory;
+import org.eclipse.rdf4j.rio.RDFParserRegistry;
+import org.eclipse.rdf4j.rio.RDFWriterFactory;
+import org.eclipse.rdf4j.rio.RDFWriterRegistry;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -102,9 +103,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
-	private URI nanopubUri;
-	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
-	private Set<URI> graphUris;
+	private IRI nanopubUri;
+	private IRI headUri, assertionUri, provenanceUri, pubinfoUri;
+	private Set<IRI> graphUris;
 	private Set<Statement> head, assertion, provenance, pubinfo;
 
 	private List<Statement> statements = new ArrayList<>();
@@ -142,7 +143,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			"  graph ?G { ?S ?P ?O } " +
 			"}";
 
-	public NanopubImpl(Repository repo, URI nanopubUri, List<String> nsPrefixes, Map<String,String> ns)
+	public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String,String> ns)
 			throws MalformedNanopubException, RepositoryException {
 		if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);
 		if (ns != null) this.ns.putAll(ns);
@@ -157,9 +158,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 						BindingSet bs = result.next();
 						Resource g = (Resource) bs.getBinding("G").getValue();
 						Resource s = (Resource) bs.getBinding("S").getValue();
-						URI p = (URI) bs.getBinding("P").getValue();
+						IRI p = (IRI) bs.getBinding("P").getValue();
 						Value o = bs.getBinding("O").getValue();
-						Statement st = new ContextStatementImpl(s, p, o, g);
+						Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
 						statements.add(st);
 					}
 				} finally {
@@ -176,50 +177,52 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		init();
 	}
 
-	public NanopubImpl(Repository repo, URI nanopubUri)
+	public NanopubImpl(Repository repo, IRI nanopubUri)
 			throws MalformedNanopubException, RepositoryException {
 		this(repo, nanopubUri, null, null);
 	}
 
 	public NanopubImpl(File file, RDFFormat format)
-			throws MalformedNanopubException, OpenRDFException, IOException {
+			throws MalformedNanopubException, RDF4JException, IOException {
 		readStatements(new FileInputStream(file), format, "");
 		init();
 	}
 
-	public NanopubImpl(File file) throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(File file) throws MalformedNanopubException, RDF4JException, IOException {
 		String n = file.getName();
-		RDFFormat format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));
-		if (format == null || !format.supportsContexts()) {
-			format = Rio.getParserFormatForFileName(n, RDFFormat.TRIG);
+		Optional<RDFFormat> format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));
+		if (!format.isPresent() || !format.get().supportsContexts()) {
+			format = Rio.getParserFormatForFileName(n);
 		}
-		if (!format.supportsContexts()) {
-			format = RDFFormat.TRIG;
+		RDFFormat f = format.get();
+		if (!f.supportsContexts()) {
+			f = RDFFormat.TRIG;
 		}
-		readStatements(new FileInputStream(file), format, "");
+		readStatements(new FileInputStream(file), f, "");
 		init();
 	}
 
-	public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
 		HttpResponse response = getNanopub(url);
 		readStatements(response.getEntity().getContent(), format, "");
 		init();
 	}
 
-	public NanopubImpl(URL url) throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(URL url) throws MalformedNanopubException, RDF4JException, IOException {
 		HttpResponse response = getNanopub(url);
 		Header contentTypeHeader = response.getFirstHeader("Content-Type");
-		RDFFormat format = RDFFormat.TRIG;
+		Optional<RDFFormat> format = null;
 		if (contentTypeHeader != null) {
 			format = Rio.getParserFormatForMIMEType(contentTypeHeader.getValue());
 		}
-		if (format == null || !format.supportsContexts()) {
-			format = Rio.getParserFormatForFileName(url.toString(), RDFFormat.TRIG);
+		if (format == null || !format.isPresent() || !format.get().supportsContexts()) {
+			format = Rio.getParserFormatForFileName(url.toString());
 		}
-		if (!format.supportsContexts()) {
-			format = RDFFormat.TRIG;
+		RDFFormat f = format.get();
+		if (!f.supportsContexts()) {
+			f = RDFFormat.TRIG;
 		}
-		readStatements(response.getEntity().getContent(), format, "");
+		readStatements(response.getEntity().getContent(), f, "");
 		init();
 	}
 
@@ -238,16 +241,16 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	public NanopubImpl(InputStream in, RDFFormat format, String baseUri)
-			throws MalformedNanopubException, OpenRDFException, IOException {
+			throws MalformedNanopubException, RDF4JException, IOException {
 		readStatements(in, format, baseUri);
 		init();
 	}
 
-	public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, OpenRDFException, IOException {
+	public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
 		this(in, format, "");
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format, String baseUri) throws MalformedNanopubException, OpenRDFException {
+	public NanopubImpl(String utf8, RDFFormat format, String baseUri) throws MalformedNanopubException, RDF4JException {
 		try {
 			readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
 		} catch (IOException ex) {
@@ -257,16 +260,16 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		init();
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, OpenRDFException {
+	public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {
 		this(utf8, format, "");
 	}
 
 	// TODO Is the baseURI really needed? Shouldn't the input stream contain all needed data?
 	private void readStatements(InputStream in, RDFFormat format, String baseUri)
-			throws MalformedNanopubException, OpenRDFException, IOException {
+			throws MalformedNanopubException, RDF4JException, IOException {
 		try {
 			RDFParser p = NanopubUtils.getParser(format);
-			p.setRDFHandler(new RDFHandlerBase() {
+			p.setRDFHandler(new AbstractRDFHandler() {
 	
 				@Override
 				public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
@@ -310,8 +313,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 				if (nanopubUri != null) {
 					throw new MalformedNanopubException("Two nanopub URIs found");
 				}
-				nanopubUri = (URI) st.getSubject();
-				headUri = (URI) st.getContext();
+				nanopubUri = (IRI) st.getSubject();
+				headUri = (IRI) st.getContext();
 			}
 		}
 	}
@@ -320,25 +323,25 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		for (Statement st : statements) {
 			if (st.getContext().equals(headUri)) {
 				Resource s = st.getSubject();
-				URI p = st.getPredicate();
+				IRI p = st.getPredicate();
 				if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_ASSERTION_URI)) {
 					if (assertionUri != null) {
 						throw new MalformedNanopubException("Two assertion URIs found: " +
 								assertionUri + " and " + st.getObject());
 					}
-					assertionUri = (URI) st.getObject();
+					assertionUri = (IRI) st.getObject();
 				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PROVENANCE_URI)) {
 					if (provenanceUri != null) {
 						throw new MalformedNanopubException("Two provenance URIs found: " +
 								provenanceUri + " and " + st.getObject());
 					}
-					provenanceUri = (URI) st.getObject();
+					provenanceUri = (IRI) st.getObject();
 				} else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PUBINFO_URI)) {
 					if (pubinfoUri != null) {
 						throw new MalformedNanopubException("Two publication info URIs found: " +
 								pubinfoUri + " and " + st.getObject());
 					}
-					pubinfoUri = (URI) st.getObject();
+					pubinfoUri = (IRI) st.getObject();
 				}
 			}
 		}
@@ -362,7 +365,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		this.graphUris = ImmutableSet.copyOf(graphUris);
 	}
 
-	private void addGraphUri(URI uri) throws MalformedNanopubException {
+	private void addGraphUri(IRI uri) throws MalformedNanopubException {
 		if (graphUris.contains(uri)) {
 			throw new MalformedNanopubException("Each graph needs a unique URI: " + uri);
 		}
@@ -414,7 +417,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			new java.net.URI(uriString);
 			uriString = st.getPredicate().stringValue();
 			new java.net.URI(uriString);
-			if (st.getObject() instanceof URI) {
+			if (st.getObject() instanceof IRI) {
 				uriString = st.getObject().stringValue();
 				new java.net.URI(uriString);
 			}
@@ -452,12 +455,12 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public URI getUri() {
+	public IRI getUri() {
 		return nanopubUri;
 	}
 
 	@Override
-	public URI getHeadUri() {
+	public IRI getHeadUri() {
 		return headUri;
 	}
 
@@ -467,7 +470,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public URI getAssertionUri() {
+	public IRI getAssertionUri() {
 		return assertionUri;
 	}
 
@@ -477,7 +480,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public URI getProvenanceUri() {
+	public IRI getProvenanceUri() {
 		return provenanceUri;
 	}
 
@@ -487,7 +490,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public URI getPubinfoUri() {
+	public IRI getPubinfoUri() {
 		return pubinfoUri;
 	}
 
@@ -497,7 +500,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public Set<URI> getGraphUris() {
+	public Set<IRI> getGraphUris() {
 		return graphUris;
 	}
 
@@ -507,12 +510,12 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	@Override
-	public Set<URI> getAuthors() {
+	public Set<IRI> getAuthors() {
 		return SimpleCreatorPattern.getAuthors(this);
 	}
 
 	@Override
-	public Set<URI> getCreators() {
+	public Set<IRI> getCreators() {
 		return SimpleCreatorPattern.getCreators(this);
 	}
 

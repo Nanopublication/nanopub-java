@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 
 /**
  * @author Tobias Kuhn
  */
-public class NanopubRdfHandler extends RDFHandlerBase {
+public class NanopubRdfHandler extends AbstractRDFHandler {
 
 	private List<Statement> statements = new ArrayList<>();
 	private List<String> nsPrefixes = new ArrayList<>();

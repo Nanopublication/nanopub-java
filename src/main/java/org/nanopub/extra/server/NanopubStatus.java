@@ -4,21 +4,21 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfModule;
-
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandlerException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfModule;
 
 public class NanopubStatus {
 
@@ -59,7 +59,7 @@ public class NanopubStatus {
 
 	private static String getArtifactCode(String uriOrArtifactCode) {
 		if (uriOrArtifactCode.indexOf(":") > 0) {
-			URI uri = new URIImpl(uriOrArtifactCode);
+			IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
 			if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
 				throw new IllegalArgumentException("Not a well-formed trusty URI");
 			}
@@ -126,7 +126,7 @@ public class NanopubStatus {
 				if (verbose && !recursive) {
 					System.out.println("CONNECTION ERROR: " + serverUrl);
 				}
-			} catch (OpenRDFException ex) {
+			} catch (RDF4JException ex) {
 				if (verbose && !recursive) {
 					System.out.println("VALIDATION ERROR: " + serverUrl);
 				}
@@ -157,10 +157,10 @@ public class NanopubStatus {
 					ex.printStackTrace();
 					System.exit(1);
 				}
-				for (URI elementUri : npi.getElements()) {
+				for (IRI elementUri : npi.getElements()) {
 					checkNanopub(elementUri.toString(), false);
 				}
-				for (URI subIndexUri : npi.getSubIndexes()) {
+				for (IRI subIndexUri : npi.getSubIndexes()) {
 					checkNanopub(subIndexUri.toString(), true);
 				}
 				if (npi.getAppendedIndex() != null) {

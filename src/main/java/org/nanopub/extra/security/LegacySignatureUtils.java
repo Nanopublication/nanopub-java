@@ -15,18 +15,17 @@ import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
@@ -40,7 +39,7 @@ public class LegacySignatureUtils {
 	private LegacySignatureUtils() {}  // no instances allowed
 
 	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
-		URI signatureUri = getSignatureElementUri(nanopub);
+		IRI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 
@@ -66,10 +65,10 @@ public class LegacySignatureUtils {
 				}
 				se.setPublicKeyLiteral((Literal) st.getObject());
 			} else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
-				if (!(st.getObject() instanceof URI)) {
+				if (!(st.getObject() instanceof IRI)) {
 					throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
 				}
-				se.addSigner((URI) st.getObject());
+				se.addSigner((IRI) st.getObject());
 			} else {
 				se.addTargetStatement(st);
 			}
@@ -96,7 +95,7 @@ public class LegacySignatureUtils {
 		return signature.verify(se.getSignature());
 	}
 
-	public static Nanopub createSignedNanopub(Nanopub preNanopub, KeyPair key, URI signer)
+	public static Nanopub createSignedNanopub(Nanopub preNanopub, KeyPair key, IRI signer)
 			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 		Signature dsaSignature = Signature.getInstance("SHA1withDSA");
 		dsaSignature.initSign(key.getPrivate());
@@ -110,20 +109,21 @@ public class LegacySignatureUtils {
 		byte[] signatureBytes = dsaSignature.sign();
 		String signatureString = DatatypeConverter.printBase64Binary(signatureBytes);
 
+		ValueFactory vf = SimpleValueFactory.getInstance();
 		RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
-		URI signatureElUri = new URIImpl(preNanopub.getUri() + "sig");
+		IRI signatureElUri = vf.createIRI(preNanopub.getUri() + "sig");
 		signatureContent.startRDF();
 		signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
-		URI npUri = preNanopub.getUri();
-		URI piUri = preNanopub.getPubinfoUri();
-		signatureContent.handleStatement(new ContextStatementImpl(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
+		IRI npUri = preNanopub.getUri();
+		IRI piUri = preNanopub.getPubinfoUri();
+		signatureContent.handleStatement(vf.createStatement(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
-		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
-		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
-		Literal signatureLiteral = new LiteralImpl(signatureString);
-		signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+		Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
+		signatureContent.handleStatement(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+		Literal signatureLiteral = vf.createLiteral(signatureString);
+		signatureContent.handleStatement(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
 		if (signer != null) {
-			signatureContent.handleStatement(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
+			signatureContent.handleStatement(vf.createStatement(signatureElUri, SIGNED_BY, signer, piUri));
 		}
 		signatureContent.endRDF();
 		signatureContent = RdfPreprocessor.run(signatureContent, preNanopub.getUri());
@@ -138,18 +138,18 @@ public class LegacySignatureUtils {
 		return nanopubHandler.getNanopub();
 	}
 
-	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
-		URI signatureElementUri = null;
+	private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
+		IRI signatureElementUri = null;
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(nanopub.getUri())) continue;
 			if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) continue;
-			if (!(st.getObject() instanceof URI)) {
+			if (!(st.getObject() instanceof IRI)) {
 				throw new MalformedCryptoElementException("Signature element must be identified by URI");
 			}
 			if (signatureElementUri != null) {
 				throw new MalformedCryptoElementException("Multiple signature elements found");
 			}
-			signatureElementUri = (URI) st.getObject();
+			signatureElementUri = (IRI) st.getObject();
 		}
 		return signatureElementUri;
 	}

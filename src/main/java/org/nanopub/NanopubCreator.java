@@ -6,16 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.StatementImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
 
 /**
  * This class allows for the programmatic creation of nanopubs in a step-wise fashion.
@@ -26,8 +24,8 @@ public class NanopubCreator {
 
 	private boolean finalized = false;
 
-	private URI nanopubUri;
-	private URI headUri, assertionUri, provenanceUri, pubinfoUri;
+	private IRI nanopubUri;
+	private IRI headUri, assertionUri, provenanceUri, pubinfoUri;
 	private boolean nanopubUriFixed, assertionUriFixed;
 	private List<Statement> assertion, provenance, pubinfo;
 
@@ -36,7 +34,7 @@ public class NanopubCreator {
 	private Map<String,String> ns;
 	private Nanopub nanopub;
 
-	private ValueFactoryImpl vf = new ValueFactoryImpl();
+	private ValueFactory vf = SimpleValueFactory.getInstance();
 
 	private static final String headSuffix = "Head";
 	private static final String assertionSuffix = "assertion";
@@ -47,7 +45,7 @@ public class NanopubCreator {
 		init();
 	}
 
-	public NanopubCreator(URI nanopubUri) {
+	public NanopubCreator(IRI nanopubUri) {
 		this();
 		setNanopubUri(nanopubUri);
 	}
@@ -66,27 +64,27 @@ public class NanopubCreator {
 		ns = new HashMap<String,String>();
 	}
 
-	public void setNanopubUri(URI nanopubUri) {
+	public void setNanopubUri(IRI nanopubUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		if (nanopubUriFixed) {
 			throw new RuntimeException("Cannot change nanopublication URI anymore: has already been used");
 		}
 		this.nanopubUri = nanopubUri;
-		if (headUri == null) headUri = new URIImpl(nanopubUri + headSuffix);
-		if (assertionUri == null) assertionUri = new URIImpl(nanopubUri + assertionSuffix);
-		if (provenanceUri == null) provenanceUri = new URIImpl(nanopubUri + provenanceSuffix);
-		if (pubinfoUri == null) pubinfoUri = new URIImpl(nanopubUri + pubinfoSuffix);
+		if (headUri == null) headUri = vf.createIRI(nanopubUri + headSuffix);
+		if (assertionUri == null) assertionUri = vf.createIRI(nanopubUri + assertionSuffix);
+		if (provenanceUri == null) provenanceUri = vf.createIRI(nanopubUri + provenanceSuffix);
+		if (pubinfoUri == null) pubinfoUri = vf.createIRI(nanopubUri + pubinfoSuffix);
 	}
 
 	public void setNanopubUri(String nanopubUri) {
-		setNanopubUri(new URIImpl(nanopubUri));
+		setNanopubUri(vf.createIRI(nanopubUri));
 	}
 
-	public URI getNanopubUri() {
+	public IRI getNanopubUri() {
 		return nanopubUri;
 	}
 
-	public void setAssertionUri(URI assertionUri) {
+	public void setAssertionUri(IRI assertionUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		if (assertionUriFixed) {
 			throw new RuntimeException("Cannot change assertion URI anymore: has already been used");
@@ -95,36 +93,36 @@ public class NanopubCreator {
 	}
 
 	public void setAssertionUri(String assertionUri) {
-		setAssertionUri(new URIImpl(assertionUri));
+		setAssertionUri(vf.createIRI(assertionUri));
 	}
 
-	public URI getAssertionUri() {
+	public IRI getAssertionUri() {
 		return assertionUri;
 	}
 
-	public void setProvenanceUri(URI provenanceUri) {
+	public void setProvenanceUri(IRI provenanceUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		this.provenanceUri = provenanceUri;
 	}
 
 	public void setProvenanceUri(String provenanceUri) {
-		setProvenanceUri(new URIImpl(provenanceUri));
+		setProvenanceUri(vf.createIRI(provenanceUri));
 	}
 
-	public URI getProvenanceUri() {
+	public IRI getProvenanceUri() {
 		return provenanceUri;
 	}
 
-	public void setPubinfoUri(URI pubinfoUri) {
+	public void setPubinfoUri(IRI pubinfoUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		this.pubinfoUri = pubinfoUri;
 	}
 
 	public void setPubinfoUri(String pubinfoUri) {
-		setPubinfoUri(new URIImpl(pubinfoUri));
+		setPubinfoUri(vf.createIRI(pubinfoUri));
 	}
 
-	public URI getPubinfoUri() {
+	public IRI getPubinfoUri() {
 		return pubinfoUri;
 	}
 
@@ -135,8 +133,8 @@ public class NanopubCreator {
 		}
 	}
 
-	public void addAssertionStatement(Resource subj, URI pred, Value obj) {
-		addAssertionStatements(new StatementImpl(subj, pred, obj));
+	public void addAssertionStatement(Resource subj, IRI pred, Value obj) {
+		addAssertionStatements(vf.createStatement(subj, pred, obj));
 	}
 
 	public void addProvenanceStatements(Statement... statements) {
@@ -146,11 +144,11 @@ public class NanopubCreator {
 		}
 	}
 
-	public void addProvenanceStatement(Resource subj, URI pred, Value obj) {
-		addProvenanceStatements(new StatementImpl(subj, pred, obj));
+	public void addProvenanceStatement(Resource subj, IRI pred, Value obj) {
+		addProvenanceStatements(vf.createStatement(subj, pred, obj));
 	}
 
-	public void addProvenanceStatement(URI pred, Value obj) {
+	public void addProvenanceStatement(IRI pred, Value obj) {
 		if (assertionUri == null) throw new RuntimeException("Assertion URI not yet set");
 		addProvenanceStatement(assertionUri, pred, obj);
 		assertionUriFixed = true;
@@ -163,11 +161,11 @@ public class NanopubCreator {
 		}
 	}
 
-	public void addPubinfoStatement(Resource subj, URI pred, Value obj) {
-		addPubinfoStatements(new StatementImpl(subj, pred, obj));
+	public void addPubinfoStatement(Resource subj, IRI pred, Value obj) {
+		addPubinfoStatements(vf.createStatement(subj, pred, obj));
 	}
 
-	public void addPubinfoStatement(URI pred, Value obj) {
+	public void addPubinfoStatement(IRI pred, Value obj) {
 		if (nanopubUri == null) throw new RuntimeException("Nanopublication URI not yet set");
 		addPubinfoStatement(nanopubUri, pred, obj);
 		nanopubUriFixed = true;
@@ -177,7 +175,7 @@ public class NanopubCreator {
 		addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(date));
 	}
 
-	public void addCreator(URI creator) {
+	public void addCreator(IRI creator) {
 		addPubinfoStatement(SimpleCreatorPattern.PAV_CREATEDBY, creator);
 	}
 
@@ -185,7 +183,7 @@ public class NanopubCreator {
 		addCreator(getOrcidUri(orcidIdentifier));
 	}
 
-	public void addAuthor(URI author) {
+	public void addAuthor(IRI author) {
 		addPubinfoStatement(SimpleCreatorPattern.PAV_AUTHOREDBY, author);
 	}
 
@@ -193,11 +191,11 @@ public class NanopubCreator {
 		addAuthor(getOrcidUri(orcidIdentifier));
 	}
 
-	private URI getOrcidUri(String orcid) {
+	private IRI getOrcidUri(String orcid) {
 		if (!orcid.startsWith("http://orcid.org/")) {
 			orcid = "http://orcid.org/" + orcid;
 		}
-		return new URIImpl(orcid);
+		return vf.createIRI(orcid);
 		
 	}
 
@@ -207,7 +205,7 @@ public class NanopubCreator {
 		ns.put(prefix, namespace);
 	}
 
-	public void addNamespace(String prefix, URI namespace) {
+	public void addNamespace(String prefix, IRI namespace) {
 		addNamespace(prefix, namespace.toString());
 	}
 
@@ -269,8 +267,8 @@ public class NanopubCreator {
 		}
 	}
 
-	private void addStatement(Resource subj, URI pred, Value obj, Resource context) {
-		statements.add(new ContextStatementImpl(subj, pred, obj, context));
+	private void addStatement(Resource subj, IRI pred, Value obj, Resource context) {
+		statements.add(vf.createStatement(subj, pred, obj, context));
 	}
 
 }

@@ -3,8 +3,8 @@ package org.nanopub;
 import java.io.OutputStream;
 import java.io.Writer;
 
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.trig.TriGWriterFactory;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.trig.TriGWriterFactory;
 
 /**
  * @author Tobias Kuhn

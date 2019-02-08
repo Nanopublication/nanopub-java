@@ -2,8 +2,8 @@ package org.nanopub.extra.index;
 
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.openrdf.model.Statement;
-import org.openrdf.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 
 public class IndexUtils {
 

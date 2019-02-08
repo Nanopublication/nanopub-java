@@ -7,16 +7,16 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -84,7 +84,7 @@ public class CheckNanopub {
 						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
 						sparqlRepo.initialize();
 					}
-					Nanopub np = new NanopubImpl(sparqlRepo, new URIImpl(s));
+					Nanopub np = new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s));
 					check(np);
 				} else {
 					if (verbose) {
@@ -105,7 +105,7 @@ public class CheckNanopub {
 						report.countError();
 					}
 				}
-			} catch (OpenRDFException ex) {
+			} catch (RDF4JException ex) {
 				log("RDF ERROR: " + s + "\n");
 				if (logOut != null) ex.printStackTrace(logOut);
 				report.countError();

@@ -12,29 +12,29 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfModule;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfModule;
 
 public class GetNanopub {
 
@@ -114,7 +114,7 @@ public class GetNanopub {
 				}
 			} catch (IOException ex) {
 				// ignore
-			} catch (OpenRDFException ex) {
+			} catch (RDF4JException ex) {
 				// ignore
 			} catch (MalformedNanopubException ex) {
 				// ignore
@@ -132,12 +132,12 @@ public class GetNanopub {
 	}
 
 	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
-			throws IOException, OpenRDFException, MalformedNanopubException {
+			throws IOException, RDF4JException, MalformedNanopubException {
 		return get(artifactCode, serverInfo.getPublicUrl());
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl)
-			throws IOException, OpenRDFException, MalformedNanopubException {
+			throws IOException, RDF4JException, MalformedNanopubException {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -145,7 +145,7 @@ public class GetNanopub {
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)
-			throws IOException, OpenRDFException, MalformedNanopubException {
+			throws IOException, RDF4JException, MalformedNanopubException {
 		HttpGet get = new HttpGet(serverUrl + artifactCode);
 		get.setHeader("Accept", "application/trig");
 		InputStream in = null;
@@ -171,7 +171,7 @@ public class GetNanopub {
 
 	public static String getArtifactCode(String uriOrArtifactCode) {
 		if (uriOrArtifactCode.indexOf(":") > 0) {
-			URI uri = new URIImpl(uriOrArtifactCode);
+			IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
 			if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
 				throw new IllegalArgumentException("Not a well-formed trusty URI");
 			}
@@ -203,9 +203,9 @@ public class GetNanopub {
 			if (format == null) {
 				format = "trig";
 			}
-			rdfFormat = Rio.getParserFormatForFileName("file." + format);
+			rdfFormat = Rio.getParserFormatForFileName("file." + format).orElse(null);
 		} else {
-			rdfFormat = Rio.getParserFormatForFileName(outputFile.getName());
+			rdfFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
 			if (outputFile.getName().endsWith(".gz")) {
 				outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
 			} else {

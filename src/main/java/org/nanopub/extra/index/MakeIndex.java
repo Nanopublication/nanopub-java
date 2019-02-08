@@ -11,15 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -97,7 +97,7 @@ public class MakeIndex {
 
 	private void init() throws IOException {
 		count = 0;
-		outFormat = Rio.getParserFormatForFileName(outputFile.getName());
+		outFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
 		if (outputFile.getName().endsWith(".gz")) {
 			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), Charset.forName("UTF-8"));
 		} else {
@@ -138,10 +138,10 @@ public class MakeIndex {
 			indexCreator.addCreator(creator);
 		}
 		if (licenseUri != null) {
-			indexCreator.setLicense(new URIImpl(licenseUri));
+			indexCreator.setLicense(SimpleValueFactory.getInstance().createIRI(licenseUri));
 		}
 		for (String sa : seeAlso) {
-			indexCreator.addSeeAlsoUri(new URIImpl(sa));
+			indexCreator.addSeeAlsoUri(SimpleValueFactory.getInstance().createIRI(sa));
 		}
 	}
 
@@ -158,13 +158,13 @@ public class MakeIndex {
 				    	if (line.isEmpty()) continue;
 				    	// To allow for other content in the file, ignore everything after the first blank space:
 				    	if (line.contains(" ")) line = line.substring(0, line.indexOf(" "));
-				    	indexCreator.addElement(new URIImpl(line));
+				    	indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(line));
 				    }
 				} finally {
 					if (br != null) br.close();
 				}
 			} else {
-				RDFFormat format = Rio.getParserFormatForFileName(f.getName());
+				RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(null);
 				MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
 					@Override
 					public void handleNanopub(Nanopub np) {
@@ -186,13 +186,13 @@ public class MakeIndex {
 			}
 		}
 		for (String e : elements) {
-			indexCreator.addElement(new URIImpl(e));
+			indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(e));
 		}
 		for (String s : subindexes) {
-			indexCreator.addSubIndex(new URIImpl(s));
+			indexCreator.addSubIndex(SimpleValueFactory.getInstance().createIRI(s));
 		}
 		if (supersededIndex != null) {
-			indexCreator.setSupersededIndex(new URIImpl(supersededIndex));
+			indexCreator.setSupersededIndex(SimpleValueFactory.getInstance().createIRI(supersededIndex));
 		}
 		indexCreator.finalizeNanopub();
 		writer.close();

@@ -16,19 +16,18 @@ import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
@@ -42,7 +41,7 @@ public class SignatureUtils {
 	private SignatureUtils() {}  // no instances allowed
 
 	public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
-		URI signatureUri = getSignatureElementUri(nanopub);
+		IRI signatureUri = getSignatureElementUri(nanopub);
 		if (signatureUri == null) return null;
 		NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 
@@ -74,10 +73,10 @@ public class SignatureUtils {
 					}
 					se.setAlgorithm((Literal) st.getObject());
 				} else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
-					if (!(st.getObject() instanceof URI)) {
+					if (!(st.getObject() instanceof IRI)) {
 						throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
 					}
-					se.addSigner((URI) st.getObject());
+					se.addSigner((IRI) st.getObject());
 				}
 				// We ignore other type of information at this point, but can consider it in the future.
 			}
@@ -111,7 +110,7 @@ public class SignatureUtils {
 		return signature.verify(se.getSignature());
 	}
 
-	public static Nanopub createSignedNanopub(Nanopub preNanopub, SignatureAlgorithm algorithm, KeyPair key, URI signer)
+	public static Nanopub createSignedNanopub(Nanopub preNanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
 			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 		// TODO: Test this
 
@@ -120,18 +119,20 @@ public class SignatureUtils {
 
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
 
+		ValueFactory vf = SimpleValueFactory.getInstance();
+
 		// Adding signature element:
-		URI signatureElUri = new URIImpl(preNanopub.getUri() + "sig");
-		URI npUri = preNanopub.getUri();
-		URI piUri = preNanopub.getPubinfoUri();
+		IRI signatureElUri = vf.createIRI(preNanopub.getUri() + "sig");
+		IRI npUri = preNanopub.getUri();
+		IRI piUri = preNanopub.getPubinfoUri();
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
-		Literal publicKeyLiteral = new LiteralImpl(publicKeyString);
-		preStatements.add(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
-		preStatements.add(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
-		Literal algorithmLiteral = new LiteralImpl(algorithm.name());
-		preStatements.add(new ContextStatementImpl(signatureElUri, CryptoElement.HAS_ALGORITHM, algorithmLiteral, piUri));
+		Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
+		preStatements.add(vf.createStatement(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
+		preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+		Literal algorithmLiteral = vf.createLiteral(algorithm.name());
+		preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_ALGORITHM, algorithmLiteral, piUri));
 		if (signer != null) {
-			preStatements.add(new ContextStatementImpl(signatureElUri, SIGNED_BY, signer, piUri));
+			preStatements.add(vf.createStatement(signatureElUri, SIGNED_BY, signer, piUri));
 		}
 
 		// Preprocess statements that are covered by signature:
@@ -140,11 +141,11 @@ public class SignatureUtils {
 		// Create signature:
 		signature.update(RdfHasher.getDigestString(preprocessedStatements).getBytes());
 		byte[] signatureBytes = signature.sign();
-		Literal signatureLiteral = new LiteralImpl(DatatypeConverter.printBase64Binary(signatureBytes));
+		Literal signatureLiteral = vf.createLiteral(DatatypeConverter.printBase64Binary(signatureBytes));
 
 		// Preprocess signature statement:
 		List<Statement> sigStatementList = new ArrayList<Statement>();
-		sigStatementList.add(new ContextStatementImpl(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+		sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
 		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, preNanopub.getUri()).get(0);
 
 		// Combine all statements:
@@ -169,18 +170,18 @@ public class SignatureUtils {
 		return nanopubHandler.getNanopub();
 	}
 
-	private static URI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
-		URI signatureElementUri = null;
+	private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
+		IRI signatureElementUri = null;
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
 			if (!st.getObject().equals(nanopub.getUri())) continue;
-			if (!(st.getSubject() instanceof URI)) {
+			if (!(st.getSubject() instanceof IRI)) {
 				throw new MalformedCryptoElementException("Signature element must be identified by URI");
 			}
 			if (signatureElementUri != null) {
 				throw new MalformedCryptoElementException("Multiple signature elements found");
 			}
-			signatureElementUri = (URI) st.getSubject();
+			signatureElementUri = (IRI) st.getSubject();
 		}
 		return signatureElementUri;
 	}

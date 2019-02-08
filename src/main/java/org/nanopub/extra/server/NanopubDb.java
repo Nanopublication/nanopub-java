@@ -3,11 +3,11 @@ package org.nanopub.extra.server;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
-import org.openrdf.OpenRDFException;
-import org.openrdf.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public class NanopubDb {
 			np = new NanopubImpl(nanopubString, internalFormat);
 		} catch (MalformedNanopubException ex) {
 			throw new RuntimeException("Stored nanopub is not wellformed (this shouldn't happen)", ex);
-		} catch (OpenRDFException ex) {
+		} catch (RDF4JException ex) {
 			throw new RuntimeException("Stored nanopub is corrupted (this shouldn't happen)", ex);
 		}
 		return np;

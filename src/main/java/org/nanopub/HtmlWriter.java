@@ -1,28 +1,28 @@
 package org.nanopub;
 
+import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Set;
 
-import org.openrdf.model.BNode;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.datatypes.XMLDatatypeUtil;
-import org.openrdf.model.util.Literals;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.XMLSchema;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.helpers.BasicWriterSettings;
-import org.openrdf.rio.turtle.TurtleUtil;
-import org.openrdf.rio.turtle.TurtleWriter;
-
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
+import org.eclipse.rdf4j.model.BNode;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
+import org.eclipse.rdf4j.model.util.Literals;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings;
+import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
+import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 
 // Contains copied code from TurtleWriter, TrigWriter, and CustomTrigWriter
 
@@ -139,7 +139,7 @@ public class HtmlWriter extends TurtleWriter {
 		}
 
 		Resource subj = st.getSubject();
-		URI pred = st.getPredicate();
+		IRI pred = st.getPredicate();
 		Value obj = st.getObject();
 
 		try {
@@ -232,7 +232,7 @@ public class HtmlWriter extends TurtleWriter {
 		}
 	}
 
-	protected void writePredicate(URI predicate)
+	protected void writePredicate(IRI predicate)
 		throws IOException
 	{
 		if (predicate.equals(RDF.TYPE)) {
@@ -244,7 +244,7 @@ public class HtmlWriter extends TurtleWriter {
 		}
 	}
 
-	protected void writeURI(URI uri)
+	protected void writeURI(IRI uri)
 		throws IOException
 	{
 		String uriString = uri.toString();
@@ -345,7 +345,7 @@ public class HtmlWriter extends TurtleWriter {
 		throws IOException
 	{
 		String label = lit.getLabel();
-		URI datatype = lit.getDatatype();
+		IRI datatype = lit.getDatatype();
 
 		if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {
 			if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
@@ -378,7 +378,7 @@ public class HtmlWriter extends TurtleWriter {
 		if (Literals.isLanguageLiteral(lit)) {
 			// Append the literal's language
 			writer.write("@");
-			writer.write(lit.getLanguage());
+			writer.write(lit.getLanguage().get());
 		}
 		else if (!XMLSchema.STRING.equals(datatype) || !xsdStringToPlainLiteral()) {
 			// Append the literal's datatype (possibly written as an abbreviated

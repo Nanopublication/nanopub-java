@@ -2,14 +2,14 @@ package org.nanopub.extra.server;
 
 import java.io.OutputStream;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.openrdf.model.URI;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
 
 public class FetchIndexFromDb extends FetchIndex {
 
@@ -48,11 +48,11 @@ public class FetchIndexFromDb extends FetchIndex {
 				writeNanopub(npi);
 			}
 			if (writeContent) {
-				for (URI elementUri : npi.getElements()) {
+				for (IRI elementUri : npi.getElements()) {
 					writeNanopub(GetNanopub.get(elementUri.toString(), db));
 				}
 			}
-			for (URI subIndexUri : npi.getSubIndexes()) {
+			for (IRI subIndexUri : npi.getSubIndexes()) {
 				getIndex(subIndexUri.toString());
 			}
 			if (npi.getAppendedIndex() != null) {

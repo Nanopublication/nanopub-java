@@ -2,27 +2,27 @@ package org.nanopub.extra.security;
 
 import java.io.Serializable;
 
-import org.openrdf.model.Literal;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public abstract class CryptoElement implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final URI CRYPTO_ELEMENT = new URIImpl("http://purl.org/nanopub/x/CryptoElement");
-	public static final URI HAS_ALGORITHM = new URIImpl("http://purl.org/nanopub/x/hasAlgorithm");
-	public static final URI HAS_PUBLIC_KEY = new URIImpl("http://purl.org/nanopub/x/hasPublicKey");
+	public static final IRI CRYPTO_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/CryptoElement");
+	public static final IRI HAS_ALGORITHM = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasAlgorithm");
+	public static final IRI HAS_PUBLIC_KEY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasPublicKey");
 
-	protected URI uri;
+	protected IRI uri;
 	protected String publicKeyString;
 	protected SignatureAlgorithm algorithm;
 
-	protected CryptoElement(URI uri) {
+	protected CryptoElement(IRI uri) {
 		this.uri = uri;
 	}
 
-	public URI getUri() {
+	public IRI getUri() {
 		return uri;
 	}
 

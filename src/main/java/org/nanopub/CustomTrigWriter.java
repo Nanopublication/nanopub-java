@@ -6,9 +6,9 @@ import java.io.Writer;
 import java.util.Set;
 
 import org.apache.commons.io.output.NullOutputStream;
-import org.openrdf.model.URI;
-import org.openrdf.rio.trig.TriGWriter;
-import org.openrdf.rio.turtle.TurtleUtil;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.trig.TriGWriter;
+import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 
 /**
  * @author Tobias Kuhn
@@ -41,7 +41,7 @@ public class CustomTrigWriter extends TriGWriter {
 	}
 
 	@Override
-	protected void writeURI(URI uri) throws IOException {
+	protected void writeURI(IRI uri) throws IOException {
 		String uriString = uri.toString();
 
 		String prefix = namespaceTable.get(uriString);

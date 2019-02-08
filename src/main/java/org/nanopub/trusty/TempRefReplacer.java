@@ -2,14 +2,13 @@ package org.nanopub.trusty;
 
 import java.util.Map;
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFHandler;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfUtils;
@@ -26,16 +25,16 @@ public class TempRefReplacer implements RDFHandler {
 
 	@Override
 	public void handleStatement(Statement st) throws RDFHandlerException {
-		nestedHandler.handleStatement(new ContextStatementImpl(
+		nestedHandler.handleStatement(SimpleValueFactory.getInstance().createStatement(
 				(Resource) replace(st.getSubject()),
-				(URI) replace(st.getPredicate()),
+				(IRI) replace(st.getPredicate()),
 				replace(st.getObject()),
 				(Resource) replace(st.getContext())));
 	}
 
 	@Override
 	public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-		String transformedUri = replace(new URIImpl(uri)).stringValue();
+		String transformedUri = replace(SimpleValueFactory.getInstance().createIRI(uri)).stringValue();
 		nestedHandler.handleNamespace(prefix, transformedUri);
 	}
 
@@ -53,8 +52,8 @@ public class TempRefReplacer implements RDFHandler {
 				String baseUriString = trustyUriString.split(artifactCode)[0];
 				String suffix = vs.replace(k, "");
 				if (suffix.isEmpty()) suffix = null;
-				String uriString = RdfUtils.getTrustyUriString(new URIImpl(baseUriString), artifactCode, suffix);
-				return new URIImpl(uriString);
+				String uriString = RdfUtils.getTrustyUriString(SimpleValueFactory.getInstance().createIRI(baseUriString), artifactCode, suffix);
+				return SimpleValueFactory.getInstance().createIRI(uriString);
 			}
 		}
 		if (vs.startsWith(TempUriReplacer.tempUri)) {

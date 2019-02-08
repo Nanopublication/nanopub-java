@@ -26,11 +26,11 @@ import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.Rio;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;

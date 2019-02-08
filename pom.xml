@@ -22,7 +22,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sesame.version>2.9.0</sesame.version>
+    <rdf4j.version>2.4.4</rdf4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -32,32 +32,32 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-trig</artifactId>
-      <version>${sesame.version}</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-rio-trig</artifactId>
+      <version>${rdf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-trix</artifactId>
-      <version>${sesame.version}</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-rio-trix</artifactId>
+      <version>${rdf4j.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-nquads</artifactId>
-      <version>${sesame.version}</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-rio-nquads</artifactId>
+      <version>${rdf4j.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-jsonld</artifactId>
-      <version>${sesame.version}</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-rio-jsonld</artifactId>
+      <version>${rdf4j.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-repository-sparql</artifactId>
-      <version>${sesame.version}</version>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-repository-sparql</artifactId>
+      <version>${rdf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.collections</groupId>
@@ -102,7 +102,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.11</version>
+      <version>1.12-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.rdf4j.RDF4JException;
 import org.nanopub.extra.index.MakeIndex;
 import org.nanopub.extra.security.MakeKeys;
 import org.nanopub.extra.security.SignNanopub;
@@ -16,13 +17,12 @@ import org.nanopub.extra.server.NanopubStatus;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
-import org.openrdf.OpenRDFException;
 
 public class Run {
 
 	private Run() {}  // no instances allowed
 
-	public static void main(String[] args) throws IOException, OpenRDFException {
+	public static void main(String[] args) throws IOException, RDF4JException {
 		NanopubImpl.ensureLoaded();
 		run(args);
 	}
@@ -57,7 +57,7 @@ public class Run {
 		addRunnableClass(Nanopub2Html.class, "html");
 	}
 
-	public static void run(String[] command) throws IOException, OpenRDFException {
+	public static void run(String[] command) throws IOException, RDF4JException {
 		if (command.length == 0) {
 			System.err.println("ERROR: missing command");
 			System.err.println("Run 'np help' to show all available commands.");

@@ -3,10 +3,10 @@ package org.nanopub.extra.security;
 import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
-import org.openrdf.OpenRDFException;
-import org.openrdf.rio.RDFFormat;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -34,7 +34,7 @@ public class GetIntroNanopub {
 		}
 	}
 
-	private void run() throws IOException, OpenRDFException {
+	private void run() throws IOException, RDF4JException {
 		for (String userId : userIds) {
 			NanopubUtils.writeToStream(IntroNanopub.get(userId).getNanopub(), System.out, RDFFormat.TRIG);
 		}

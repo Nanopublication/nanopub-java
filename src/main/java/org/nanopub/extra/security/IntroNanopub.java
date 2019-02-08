@@ -13,31 +13,31 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.FOAF;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.server.GetNanopub;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.FOAF;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.helpers.RDFHandlerBase;
-import org.openrdf.rio.turtle.TurtleParser;
 
 import net.trustyuri.TrustyUriUtils;
 
 public class IntroNanopub {
 
-	public static IntroNanopub get(String userId) throws IOException, OpenRDFException {
+	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
 		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		return get(userId, c);
 	}
 
-	public static IntroNanopub get(final String userId, HttpClient httpClient) throws IOException, OpenRDFException {
+	public static IntroNanopub get(final String userId, HttpClient httpClient) throws IOException, RDF4JException {
 		HttpGet get = new HttpGet(userId);
 		get.setHeader("Accept", "text/turtle");
 		InputStream in = null;
@@ -52,22 +52,22 @@ public class IntroNanopub {
 			TurtleParser parser = new TurtleParser();
 			parser.setRDFHandler(ie);
 			parser.parse(in, userId);
-			return new IntroNanopub(ie.getIntroNanopub(), new URIImpl(userId));
+			return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
 		} finally {
 			if (in != null) in.close();
 		}
 	}
 
 	private Nanopub nanopub;
-	private URI user;
-	private Map<URI,KeyDeclaration> keyDeclarations = new HashMap<>();
+	private IRI user;
+	private Map<IRI,KeyDeclaration> keyDeclarations = new HashMap<>();
 
-	private IntroNanopub(Nanopub nanopub, URI user) {
+	private IntroNanopub(Nanopub nanopub, IRI user) {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
-			if (st.getPredicate().equals(KeyDeclaration.DECLARED_BY) && st.getObject() instanceof URI) {
-				URI subj = (URI) st.getSubject();
+			if (st.getPredicate().equals(KeyDeclaration.DECLARED_BY) && st.getObject() instanceof IRI) {
+				IRI subj = (IRI) st.getSubject();
 				KeyDeclaration d;
 				if (keyDeclarations.containsKey(subj)) {
 					d = keyDeclarations.get(subj);
@@ -75,14 +75,14 @@ public class IntroNanopub {
 					d = new KeyDeclaration(subj);
 					keyDeclarations.put(subj, d);
 				}
-				d.addDeclarer((URI) st.getObject());
+				d.addDeclarer((IRI) st.getObject());
 			}
 		}
 		for (Statement st : nanopub.getAssertion()) {
-			URI subj = (URI) st.getSubject();
+			IRI subj = (IRI) st.getSubject();
 			if (!keyDeclarations.containsKey(subj)) continue;
 			KeyDeclaration d = keyDeclarations.get(subj);
-			URI pred = st.getPredicate();
+			IRI pred = st.getPredicate();
 			Value obj = st.getObject();
 			if (pred.equals(CryptoElement.HAS_ALGORITHM) && obj instanceof Literal) {
 				try {
@@ -104,7 +104,7 @@ public class IntroNanopub {
 		return nanopub;
 	}
 
-	public URI getUser() {
+	public IRI getUser() {
 		return user;
 	}
 
@@ -113,7 +113,7 @@ public class IntroNanopub {
 	}
 
 
-	private static class IntroExtractor extends RDFHandlerBase {
+	private static class IntroExtractor extends AbstractRDFHandler {
 
 		private String userId;
 		private Nanopub introNanopub;

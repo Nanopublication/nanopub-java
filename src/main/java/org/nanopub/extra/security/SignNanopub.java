@@ -26,6 +26,12 @@ import java.util.zip.GZIPOutputStream;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -33,12 +39,6 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
-import org.openrdf.model.URI;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -144,7 +144,7 @@ public class SignNanopub {
 		return signAndTransform(nanopub, algorithm, key, null);
 	}
 
-	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key, URI signer)
+	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
 		if (TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()) != null) {
 			throw new SignatureException("Seems to have trusty URI before signing: " + nanopub.getUri());

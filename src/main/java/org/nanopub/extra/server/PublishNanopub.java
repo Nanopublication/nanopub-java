@@ -7,12 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.trustyuri.TrustyUriUtils;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -20,14 +23,11 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.server.ServerInfo.ServerInfoException;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sparql.SPARQLRepository;
-import org.openrdf.rio.RDFFormat;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriUtils;
 
 public class PublishNanopub {
 
@@ -86,7 +86,7 @@ public class PublishNanopub {
 						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
 						sparqlRepo.initialize();
 					}
-					processNanopub(new NanopubImpl(sparqlRepo, new URIImpl(s)));
+					processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));
 				} else {
 					if (verbose) {
 						System.out.println("Reading file: " + s);
@@ -103,7 +103,7 @@ public class PublishNanopub {
 						break;
 					}
 				}
-			} catch (OpenRDFException ex) {
+			} catch (RDF4JException ex) {
 				System.out.println("RDF ERROR: " + s);
 				ex.printStackTrace(System.err);
 				break;
@@ -200,7 +200,7 @@ public class PublishNanopub {
 				if (verbose) {
 					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				}
-			} catch (OpenRDFException ex) {
+			} catch (RDF4JException ex) {
 				if (verbose) {
 					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				}

@@ -3,30 +3,30 @@ package org.nanopub.extra.security;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class KeyDeclaration extends CryptoElement {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final URI DECLARED_BY = new URIImpl("http://purl.org/nanopub/x/declaredBy");
+	public static final IRI DECLARED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/declaredBy");
 
-	private Set<URI> declarers = new LinkedHashSet<>();
+	private Set<IRI> declarers = new LinkedHashSet<>();
 
-	KeyDeclaration(URI uri) {
+	KeyDeclaration(IRI uri) {
 		super(uri);
 	}
 
-	void addDeclarer(URI declarer) {
+	void addDeclarer(IRI declarer) {
 		declarers.add(declarer);
 	}
 
-	public Set<URI> getDeclarers() {
+	public Set<IRI> getDeclarers() {
 		return declarers;
 	}
 
-	public boolean hasDeclarer(URI declarer) {
+	public boolean hasDeclarer(IRI declarer) {
 		return declarers.contains(declarer);
 	}
 

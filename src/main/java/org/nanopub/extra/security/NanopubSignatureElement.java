@@ -7,34 +7,34 @@ import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class NanopubSignatureElement extends CryptoElement {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final URI SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/NanopubSignatureElement");
-	public static final URI HAS_SIGNATURE_TARGET = new URIImpl("http://purl.org/nanopub/x/hasSignatureTarget");
-	public static final URI HAS_SIGNATURE = new URIImpl("http://purl.org/nanopub/x/hasSignature");
-	public static final URI SIGNED_BY = new URIImpl("http://purl.org/nanopub/x/signedBy");
+	public static final IRI SIGNATURE_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubSignatureElement");
+	public static final IRI HAS_SIGNATURE_TARGET = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignatureTarget");
+	public static final IRI HAS_SIGNATURE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignature");
+	public static final IRI SIGNED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/signedBy");
 
 	// Deprecated; used for legacy signatures
-	public static final URI HAS_SIGNATURE_ELEMENT = new URIImpl("http://purl.org/nanopub/x/hasSignatureElement");
+	public static final IRI HAS_SIGNATURE_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignatureElement");
 
-	private URI targetNanopubUri;
+	private IRI targetNanopubUri;
 	private byte[] signature;
-	private Set<URI> signers = new LinkedHashSet<>();
+	private Set<IRI> signers = new LinkedHashSet<>();
 	private List<Statement> targetStatements = new ArrayList<>();
 
-	NanopubSignatureElement(URI targetNanopubUri, URI uri) {
+	NanopubSignatureElement(IRI targetNanopubUri, IRI uri) {
 		super(uri);
 		this.targetNanopubUri = targetNanopubUri;
 	}
 
-	public URI getTargetNanopubUri() {
+	public IRI getTargetNanopubUri() {
 		return targetNanopubUri;
 	}
 
@@ -49,11 +49,11 @@ public class NanopubSignatureElement extends CryptoElement {
 		return signature;
 	}
 
-	void addSigner(URI signer) {
+	void addSigner(IRI signer) {
 		signers.add(signer);
 	}
 
-	public Set<URI> getSigners() {
+	public Set<IRI> getSigners() {
 		return signers;
 	}
 

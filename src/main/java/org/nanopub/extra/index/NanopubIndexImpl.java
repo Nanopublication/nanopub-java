@@ -5,16 +5,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DC;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.DC;
-import org.openrdf.model.vocabulary.DCTERMS;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -22,9 +22,9 @@ import com.google.common.collect.ImmutableSet;
 public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 
 	private final Nanopub np;
-	private final Set<URI> elementSet;
-	private final Set<URI> subIndexSet;
-	private final URI appendedIndex;
+	private final Set<IRI> elementSet;
+	private final Set<IRI> subIndexSet;
+	private final IRI appendedIndex;
 	private boolean isIncompleteIndex = false;
 
 	protected NanopubIndexImpl(Nanopub npIndex) throws MalformedNanopubException {
@@ -32,29 +32,29 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		if (!IndexUtils.isIndex(np)) {
 			throw new MalformedNanopubException("Nanopub is not a nanopub index");
 		}
-		URI appendedIndex = null;
-		Set<URI> elementSet = new HashSet<URI>();
-		Set<URI> subIndexSet = new HashSet<URI>();
+		IRI appendedIndex = null;
+		Set<IRI> elementSet = new HashSet<IRI>();
+		Set<IRI> subIndexSet = new HashSet<IRI>();
 		for (Statement st : np.getAssertion()) {
 			if (!st.getSubject().equals(np.getUri())) continue;
 			if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {
 				if (appendedIndex != null) {
 					throw new MalformedNanopubException("Multiple appends-statements found for index");
 				}
-				if (!(st.getObject() instanceof URI)) {
+				if (!(st.getObject() instanceof IRI)) {
 					throw new MalformedNanopubException("URI expected for object of appends-statement");
 				}
-				appendedIndex = (URI) st.getObject();
+				appendedIndex = (IRI) st.getObject();
 			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_ELEMENT_URI)) {
-				if (!(st.getObject() instanceof URI)) {
+				if (!(st.getObject() instanceof IRI)) {
 					throw new MalformedNanopubException("Element has to be a URI");
 				}
-				elementSet.add((URI) st.getObject());
+				elementSet.add((IRI) st.getObject());
 			} else if (st.getPredicate().equals(NanopubIndex.INCLUDES_SUBINDEX_URI)) {
-				if (!(st.getObject() instanceof URI)) {
+				if (!(st.getObject() instanceof IRI)) {
 					throw new MalformedNanopubException("Sub-index has to be a URI");
 				}
-				subIndexSet.add((URI) st.getObject());
+				subIndexSet.add((IRI) st.getObject());
 			}
 		}
 		for (Statement st : np.getPubinfo()) {
@@ -73,12 +73,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public URI getUri() {
+	public IRI getUri() {
 		return np.getUri();
 	}
 
 	@Override
-	public URI getHeadUri() {
+	public IRI getHeadUri() {
 		return np.getHeadUri();
 	}
 
@@ -88,7 +88,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public URI getAssertionUri() {
+	public IRI getAssertionUri() {
 		return np.getAssertionUri();
 	}
 
@@ -98,7 +98,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public URI getProvenanceUri() {
+	public IRI getProvenanceUri() {
 		return np.getProvenanceUri();
 	}
 
@@ -108,7 +108,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public URI getPubinfoUri() {
+	public IRI getPubinfoUri() {
 		return np.getPubinfoUri();
 	}
 
@@ -118,7 +118,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public Set<URI> getGraphUris() {
+	public Set<IRI> getGraphUris() {
 		return np.getGraphUris();
 	}
 
@@ -128,12 +128,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	}
 
 	@Override
-	public Set<URI> getAuthors() {
+	public Set<IRI> getAuthors() {
 		return np.getAuthors();
 	}
 
 	@Override
-	public Set<URI> getCreators() {
+	public Set<IRI> getCreators() {
 		return np.getCreators();
 	}
 
@@ -148,17 +148,17 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	};
 
 	@Override
-	public Set<URI> getElements() {
+	public Set<IRI> getElements() {
 		return elementSet;
 	}
 
 	@Override
-	public Set<URI> getSubIndexes() {
+	public Set<IRI> getSubIndexes() {
 		return subIndexSet;
 	}
 
 	@Override
-	public URI getAppendedIndex() {
+	public IRI getAppendedIndex() {
 		return appendedIndex;
 	}
 
@@ -207,13 +207,13 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		return null;
 	}
 
-	public Set<URI> getSeeAlsoUris() {
-		Set<URI> seeAlsoUris = new HashSet<>();
+	public Set<IRI> getSeeAlsoUris() {
+		Set<IRI> seeAlsoUris = new HashSet<>();
 		for (Statement st : getPubinfo()) {
 			if (!st.getSubject().equals(getUri())) continue;
 			if (!st.getPredicate().equals(RDFS.SEEALSO)) continue;
-			if (!(st.getObject() instanceof URI)) continue;
-			seeAlsoUris.add((URI) st.getObject());
+			if (!(st.getObject() instanceof IRI)) continue;
+			seeAlsoUris.add((IRI) st.getObject());
 		}
 		return seeAlsoUris;
 	}

@@ -7,10 +7,10 @@ import java.util.Calendar;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.openrdf.model.Literal;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class SimpleTimestampPattern implements NanopubPattern {
 
@@ -61,13 +61,13 @@ public class SimpleTimestampPattern implements NanopubPattern {
 		return DatatypeConverter.parseDateTime(s);
 	}
 
-	public static final URI XSD_DATETIME = new URIImpl("http://www.w3.org/2001/XMLSchema#dateTime");
+	public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
-	public static final URI DCT_CREATED = new URIImpl("http://purl.org/dc/terms/created");
-	public static final URI PROV_GENERATEDATTIME = new URIImpl("http://www.w3.org/ns/prov#generatedAtTime");
-	public static final URI PAV_CREATEDON = new URIImpl("http://purl.org/pav/createdOn");
+	public static final IRI DCT_CREATED = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/created");
+	public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
+	public static final IRI PAV_CREATEDON = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdOn");
 
-	public static boolean isCreationTimeProperty(URI uri) {
+	public static boolean isCreationTimeProperty(IRI uri) {
 		return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV_CREATEDON);
 	}
 

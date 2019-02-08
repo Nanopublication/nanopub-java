@@ -20,22 +20,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFParseException;
-import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.Rio;
-import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFParser;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 
 /**
  * Handles files or streams with a sequence of nanopubs.
  *
  * @author Tobias Kuhn
  */
-public class MultiNanopubRdfHandler extends RDFHandlerBase {
+public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 
 	public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -55,7 +55,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	public static void process(File file, NanopubHandler npHandler)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		RDFFormat format = Rio.getParserFormatForFileName(file.getName(), RDFFormat.TRIG);
+		RDFFormat format = Rio.getParserFormatForFileName(file.getName()).orElse(null);
 		process(format, file, npHandler);
 	}
 
@@ -79,11 +79,11 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 
 	private NanopubHandler npHandler;
 
-	private URI headUri = null;
-	private URI nanopubUri = null;
+	private IRI headUri = null;
+	private IRI nanopubUri = null;
 	private boolean headComplete = false;
-	private Map<URI,Boolean> graphs = new HashMap<>();
-	private Map<URI,Map<URI,Boolean>> members = new HashMap<>();
+	private Map<IRI,Boolean> graphs = new HashMap<>();
+	private Map<IRI,Map<IRI,Boolean>> members = new HashMap<>();
 	private Set<Statement> statements = new LinkedHashSet<>();
 	private List<String> nsPrefixes = new ArrayList<>();
 	private Map<String,String> ns = new HashMap<>();
@@ -99,7 +99,7 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 	public void handleStatement(Statement st) throws RDFHandlerException {
 		if (!headComplete) {
 			if (headUri == null) {
-				headUri = (URI) st.getContext();
+				headUri = (IRI) st.getContext();
 				if (headUri == null) {
 					throwMalformed("Triple without context found: " +
 							st.getSubject() + " " + st.getPredicate() + " " + st.getObject());
@@ -107,12 +107,12 @@ public class MultiNanopubRdfHandler extends RDFHandlerBase {
 				graphs.put(headUri, true);
 			}
 			if (headUri.equals(st.getContext())) {
-				URI p = st.getPredicate();
+				IRI p = st.getPredicate();
 				if (p.equals(RDF.TYPE) && st.getObject().equals(NANOPUB_TYPE_URI)) {
-					nanopubUri = (URI) st.getSubject();
+					nanopubUri = (IRI) st.getSubject();
 				}
 				if (p.equals(HAS_ASSERTION_URI) || p.equals(HAS_PROVENANCE_URI) || p.equals(HAS_PUBINFO_URI)) {
-					graphs.put((URI) st.getObject(), true);
+					graphs.put((IRI) st.getObject(), true);
 				}
 			} else {
 				if (nanopubUri == null) {

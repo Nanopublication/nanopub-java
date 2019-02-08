@@ -5,11 +5,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
 
 public class AidaPattern implements NanopubPattern {
 
@@ -30,7 +30,7 @@ public class AidaPattern implements NanopubPattern {
 
 	@Override
 	public boolean isCorrectlyUsedBy(Nanopub nanopub) {
-		URI aidaUri = getAidaUri(nanopub);
+		IRI aidaUri = getAidaUri(nanopub);
 		return aidaUri != null && aidaUri.toString().startsWith(AIDA_URI_PREFIX);
 	}
 
@@ -48,13 +48,13 @@ public class AidaPattern implements NanopubPattern {
 		return new URL("https://github.com/tkuhn/aida");
 	}
 
-	public static URI getAidaUri(Nanopub nanopub) {
-		URI aidaUri = null;
+	public static IRI getAidaUri(Nanopub nanopub) {
+		IRI aidaUri = null;
 		boolean error = false;
 		for (Statement st : nanopub.getAssertion()) {
 			if (!st.getSubject().equals(nanopub.getAssertionUri())) continue;
 			if (!st.getPredicate().equals(AS_SENTENCE)) continue;
-			if (!(st.getObject() instanceof URI)) {
+			if (!(st.getObject() instanceof IRI)) {
 				error = true;
 				break;
 			}
@@ -62,13 +62,13 @@ public class AidaPattern implements NanopubPattern {
 				error = true;
 				break;
 			}
-			aidaUri = (URI) st.getObject();
+			aidaUri = (IRI) st.getObject();
 		}
 		if (error) return null;
 		return aidaUri;
 	}
 
-	public static String getAidaText(URI aidaUri) {
+	public static String getAidaText(IRI aidaUri) {
 		if (aidaUri == null) return null;
 		if (!aidaUri.toString().startsWith(AIDA_URI_PREFIX)) return null;
 		String aidaSentence = aidaUri.toString().substring(AIDA_URI_PREFIX.length());
@@ -81,6 +81,6 @@ public class AidaPattern implements NanopubPattern {
 	}
 
 	public static final String AIDA_URI_PREFIX = "http://purl.org/aida/";
-	public static final URI AS_SENTENCE = new URIImpl("http://purl.org/nanopub/x/asSentence");
+	public static final IRI AS_SENTENCE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/asSentence");
 
 }

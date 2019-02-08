@@ -11,10 +11,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.openrdf.OpenRDFException;
-import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFHandlerException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -83,7 +83,7 @@ public class Nanopub2Html {
 						}
 					}
 				});
-			} catch (OpenRDFException | MalformedNanopubException ex) {
+			} catch (RDF4JException | MalformedNanopubException ex) {
 				ex.printStackTrace();
 			}
 		}

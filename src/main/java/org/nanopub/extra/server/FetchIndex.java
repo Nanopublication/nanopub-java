@@ -10,20 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.trustyuri.TrustyUriUtils;
-
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.openrdf.model.URI;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFHandlerException;
+
+import net.trustyuri.TrustyUriUtils;
 
 public class FetchIndex {
 
@@ -131,11 +131,11 @@ public class FetchIndex {
 							writeNanopub(npi);
 						}
 						if (writeContent) {
-							for (URI elementUri : npi.getElements()) {
+							for (IRI elementUri : npi.getElements()) {
 								fetchTasks.add(new FetchNanopubTask(elementUri.toString(), false));
 							}
 						}
-						for (URI subIndexUri : npi.getSubIndexes()) {
+						for (IRI subIndexUri : npi.getSubIndexes()) {
 							// Failing to get subindexes can block the entire process, therefore
 							// we launch three sibling tasks at the same time:
 							FetchNanopubTask t1 = new FetchNanopubTask(subIndexUri.toString(), true);

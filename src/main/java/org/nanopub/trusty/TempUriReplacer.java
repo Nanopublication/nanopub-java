@@ -1,14 +1,13 @@
 package org.nanopub.trusty;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFHandler;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.Nanopub;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.ContextStatementImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
 
 /**
  * You can use temporary URIs for your nanopublications that start with
@@ -37,9 +36,9 @@ public class TempUriReplacer implements RDFHandler {
 
 	@Override
 	public void handleStatement(Statement st) throws RDFHandlerException {
-		nestedHandler.handleStatement(new ContextStatementImpl(
+		nestedHandler.handleStatement(SimpleValueFactory.getInstance().createStatement(
 				(Resource) replace(st.getSubject()),
-				(URI) replace(st.getPredicate()),
+				(IRI) replace(st.getPredicate()),
 				replace(st.getObject()),
 				(Resource) replace(st.getContext())));
 	}
@@ -53,8 +52,8 @@ public class TempUriReplacer implements RDFHandler {
 	}
 
 	private Value replace(Value v) {
-		if (v instanceof URI && v.stringValue().startsWith(uriPrefix)) {
-			return new URIImpl(v.stringValue().replace(uriPrefix, normUri));
+		if (v instanceof IRI && v.stringValue().startsWith(uriPrefix)) {
+			return SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));
 		} else {
 			return v;
 		}

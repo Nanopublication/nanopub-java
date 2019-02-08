@@ -3,29 +3,29 @@ package org.nanopub.extra.index;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
-import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.rio.turtle.TurtleUtil;
 
 public abstract class NanopubIndexCreator {
 
-	private URI completeIndexUri = null;
+	private IRI completeIndexUri = null;
 	private boolean finalized = false;
 
 	private NanopubCreator npCreator;
 	private int itemCount;
 	private Map<String,Boolean> elementNs;
 	private int elementNsCount;
-	private URI previousIndexUri;
-	private URI supersededIndexUri;
+	private IRI previousIndexUri;
+	private IRI supersededIndexUri;
 
 	public NanopubIndexCreator() {
 		this(null);
 	}
 
-	public NanopubIndexCreator(URI previousIndexUri) {
+	public NanopubIndexCreator(IRI previousIndexUri) {
 		this.previousIndexUri = previousIndexUri;
 	}
 
@@ -33,7 +33,7 @@ public abstract class NanopubIndexCreator {
 		addElement(np.getUri());
 	}
 
-	public void addElement(URI npUri) {
+	public void addElement(IRI npUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		if (npCreator == null || itemCount >= NanopubIndex.MAX_SIZE) {
 			newNpCreator();
@@ -55,7 +55,7 @@ public abstract class NanopubIndexCreator {
 		addSubIndex(npc.getUri());
 	}
 
-	public void addSubIndex(URI npcUri) {
+	public void addSubIndex(IRI npcUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		if (npCreator == null || itemCount >= NanopubIndex.MAX_SIZE) {
 			newNpCreator();
@@ -68,7 +68,7 @@ public abstract class NanopubIndexCreator {
 		setSupersededIndex(npc.getUri());
 	}
 
-	public void setSupersededIndex(URI npcUri) {
+	public void setSupersededIndex(IRI npcUri) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		supersededIndexUri = npcUri;
 	}
@@ -92,7 +92,7 @@ public abstract class NanopubIndexCreator {
 		finalized = true;
 	}
 
-	public URI getCompleteIndexUri() {
+	public IRI getCompleteIndexUri() {
 		return completeIndexUri;
 	}
 

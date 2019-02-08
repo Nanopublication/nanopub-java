@@ -3,28 +3,27 @@ package org.nanopub.extra.index;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DC;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.NanopubCreator;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.DC;
-import org.openrdf.model.vocabulary.DCTERMS;
-import org.openrdf.model.vocabulary.RDFS;
 
 public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 
 	private String baseUri;
 	private String title;
 	private String description;
-	private URI license;
+	private IRI license;
 	private List<String> creators = new ArrayList<>();
-	private List<URI> seeAlsoUris = new ArrayList<>();
+	private List<IRI> seeAlsoUris = new ArrayList<>();
 
 	public SimpleIndexCreator() {
 		this(null, null);
 	}
 
-	public SimpleIndexCreator(URI previousIndexUri) {
+	public SimpleIndexCreator(IRI previousIndexUri) {
 		this(null, previousIndexUri);
 	}
 
@@ -32,7 +31,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		this(baseUri, null);
 	}
 
-	public SimpleIndexCreator(String baseUri, URI previousIndexUri) {
+	public SimpleIndexCreator(String baseUri, IRI previousIndexUri) {
 		super(previousIndexUri);
 		this.baseUri = baseUri;
 	}
@@ -49,7 +48,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		this.description = description;
 	}
 
-	public void setLicense(URI license) {
+	public void setLicense(IRI license) {
 		this.license = license;
 	}
 
@@ -57,7 +56,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		creators.add(creatorUriOrOrcid);
 	}
 
-	public void addSeeAlsoUri(URI seeAlsoUri) {
+	public void addSeeAlsoUri(IRI seeAlsoUri) {
 		seeAlsoUris.add(seeAlsoUri);
 	}
 
@@ -69,11 +68,11 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	@Override
 	public void enrichIncompleteIndex(NanopubCreator npCreator) {
 		if (title != null) {
-			npCreator.addPubinfoStatement(DC.TITLE, new LiteralImpl(title));
+			npCreator.addPubinfoStatement(DC.TITLE, SimpleValueFactory.getInstance().createLiteral(title));
 		}
 		for (String creator : creators) {
 			if (creator.indexOf("://") > 0) {
-				npCreator.addCreator(new URIImpl(creator));
+				npCreator.addCreator(SimpleValueFactory.getInstance().createIRI(creator));
 			} else if (creator.matches("[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]")) {
 				npCreator.addCreator(creator);
 			} else {
@@ -83,7 +82,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 		if (license != null) {
 			npCreator.addPubinfoStatement(DCTERMS.LICENSE, license);
 		}
-		for (URI seeAlsoUri : seeAlsoUris) {
+		for (IRI seeAlsoUri : seeAlsoUris) {
 			npCreator.addPubinfoStatement(RDFS.SEEALSO, seeAlsoUri);
 		}
 	}
@@ -92,7 +91,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	public void enrichCompleteIndex(NanopubCreator npCreator) {
 		enrichIncompleteIndex(npCreator);
 		if (description != null) {
-			npCreator.addPubinfoStatement(DC.DESCRIPTION, new LiteralImpl(description));
+			npCreator.addPubinfoStatement(DC.DESCRIPTION, SimpleValueFactory.getInstance().createLiteral(description));
 		}
 	}
 
