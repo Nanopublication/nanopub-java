@@ -8,17 +8,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
-import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriResource;
-import net.trustyuri.rdf.RdfFileContent;
-import net.trustyuri.rdf.TransformRdf;
-
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -27,19 +25,22 @@ import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFWriter;
-import org.eclipse.rdf4j.rio.Rio;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.TransformRdf;
+
 public class MakeTrustyNanopub {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	@com.beust.jcommander.Parameter(description = "input-nanopub-file", required = true)
+	private String inputFileName;
+
+	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+	private File outputFile;
 
 	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve temporary references (http://purl.org/nanopub/temp/...)")
 	private boolean resolveTempRefs = false;
@@ -73,34 +74,35 @@ public class MakeTrustyNanopub {
 		} else {
 			tempRefMap = null;
 		}
-		for (File inputFile : inputNanopubs) {
-			File outFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
-			final OutputStream out;
-			if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
-				out = new GZIPOutputStream(new FileOutputStream(outFile));
-			} else {
-				out = new FileOutputStream(outFile);
-			}
-			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-			MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
-
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						np = writeAsTrustyNanopub(np, format, out, tempRefMap);
-						if (verbose) {
-							System.out.println("Nanopub URI: " + np.getUri());
-						}
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						throw new RuntimeException(ex);
-					}
-				}
-
-			});
-			out.close();
+		File inputFile = new File(inputFileName);
+		if (outputFile == null) {
+			outputFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
 		}
+		final OutputStream out;
+		if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
+			out = new GZIPOutputStream(new FileOutputStream(outputFile));
+		} else {
+			out = new FileOutputStream(outputFile);
+		}
+		final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
+		MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
+
+			@Override
+			public void handleNanopub(Nanopub np) {
+				try {
+					np = writeAsTrustyNanopub(np, format, out, tempRefMap);
+					if (verbose) {
+						System.out.println("Nanopub URI: " + np.getUri());
+					}
+				} catch (RDFHandlerException ex) {
+					throw new RuntimeException(ex);
+				} catch (TrustyUriException ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+
+		});
+		out.close();
 	}
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
