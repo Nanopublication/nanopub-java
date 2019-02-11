@@ -42,6 +42,9 @@ public class MakeTrustyNanopub {
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
 
+	@com.beust.jcommander.Parameter(names = "-u", description = "Produce URI map file")
+	private File uriMapOutFile;
+
 	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve temporary references (http://purl.org/nanopub/temp/...)")
 	private boolean resolveTempRefs = false;
 
@@ -79,10 +82,20 @@ public class MakeTrustyNanopub {
 			outputFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
 		}
 		final OutputStream out;
-		if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
+		if (outputFile.getName().matches(".*\\.(gz|gzip)")) {
 			out = new GZIPOutputStream(new FileOutputStream(outputFile));
 		} else {
 			out = new FileOutputStream(outputFile);
+		}
+		final OutputStreamWriter uriMapOut;
+		if (uriMapOutFile != null) {
+			if (uriMapOutFile.getName().matches(".*\\.(gz|gzip)")) {
+				uriMapOut = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(uriMapOutFile)));
+			} else {
+				uriMapOut = new OutputStreamWriter(new FileOutputStream(uriMapOutFile));
+			}
+		} else {
+			uriMapOut = null;
 		}
 		final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
 		MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
@@ -90,19 +103,24 @@ public class MakeTrustyNanopub {
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
+					if (uriMapOut != null) {
+						uriMapOut.write(np.getUri().stringValue() + " ");
+					}
 					np = writeAsTrustyNanopub(np, format, out, tempRefMap);
+					if (uriMapOut != null) {
+						uriMapOut.write(np.getUri().stringValue() + "\n");
+					}
 					if (verbose) {
 						System.out.println("Nanopub URI: " + np.getUri());
 					}
-				} catch (RDFHandlerException ex) {
-					throw new RuntimeException(ex);
-				} catch (TrustyUriException ex) {
+				} catch (RDFHandlerException | TrustyUriException | IOException ex) {
 					throw new RuntimeException(ex);
 				}
 			}
 
 		});
 		out.close();
+		if (uriMapOut != null) uriMapOut.close();
 	}
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
