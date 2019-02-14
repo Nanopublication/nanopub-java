@@ -55,6 +55,7 @@ public class Run {
 		addRunnableClass(MakeIndex.class, "mkindex");
 		addRunnableClass(MakeKeys.class, "mkkeys");
 		addRunnableClass(Nanopub2Html.class, "html");
+		addRunnableClass(TimestampNow.class, "now");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
