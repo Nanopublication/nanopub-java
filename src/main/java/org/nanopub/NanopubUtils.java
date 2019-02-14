@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandler;
@@ -20,7 +21,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.rio.helpers.RDFaParserSettings;
+import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
 /**
@@ -109,7 +110,7 @@ public class NanopubUtils {
 
 	public static RDFParser getParser(RDFFormat format) {
 		RDFParser p = Rio.createParser(format);
-		p.getParserConfig().set(RDFaParserSettings.FAIL_ON_RDFA_UNDEFINED_PREFIXES, true);
+		p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet<Namespace>());
 		return p;
 	}
 
