@@ -16,7 +16,7 @@ public abstract class NanopubIndexCreator {
 
 	private NanopubCreator npCreator;
 	private int itemCount;
-	private Map<String,Boolean> elementNs;
+	private Map<String,Integer> elementNs;
 	private int elementNsCount;
 	private IRI previousIndexUri;
 	private IRI supersededIndexUri;
@@ -44,9 +44,12 @@ public abstract class NanopubIndexCreator {
 		if (nsSplit > 0) {
 			String ns = npUri.toString().substring(0, nsSplit);
 			if (!elementNs.containsKey(ns)) {
+				elementNs.put(ns, 1);
+			} else if (elementNs.get(ns) == 1) {
+				// only add namespace if at least 2 elements share it
 				elementNsCount++;
 				npCreator.addNamespace("ns" + elementNsCount, ns);
-				elementNs.put(ns, true);
+				elementNs.put(ns, 2);
 			}
 		}
 	}
