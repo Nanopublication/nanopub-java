@@ -32,34 +32,27 @@ public class HtmlWriter extends TurtleWriter {
 	private Resource currentContext;
 	private String openPart;
 	private Set<String> usedPrefixes;
-	private boolean indentContexts;
+	private boolean indentContexts = true;
 
 	public HtmlWriter(OutputStream out, boolean indentContexts) {
 		super(out);
-		init(indentContexts);
+		this.indentContexts = indentContexts;
 	}
 
 	public HtmlWriter(OutputStream out) {
 		super(out);
-		init(true);
 	}
 
 	public HtmlWriter(Writer writer, boolean indentContexts) {
 		super(writer);
-		init(indentContexts);
+		this.indentContexts = indentContexts;
 	}
 
 	public HtmlWriter(Writer writer) {
 		super(writer);
-		init(true);
 	}
 
 	public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
-
-	private void init(boolean indentContexts) {
-		this.indentContexts = indentContexts;
-		writer.setIndentationString("&nbsp;&nbsp;");
-	}
 
 	@Override
 	public RDFFormat getRDFFormat()
@@ -72,6 +65,7 @@ public class HtmlWriter extends TurtleWriter {
 		throws RDFHandlerException
 	{
 		super.startRDF();
+		writer.setIndentationString("&nbsp;&nbsp;");
 
 		inActiveContext = false;
 		currentContext = null;
@@ -118,7 +112,7 @@ public class HtmlWriter extends TurtleWriter {
 				writer.write("<span class=\"nanopub-context-switch\">");
 
 				if (context != null) {
-					writeResource(context);
+					writeResource(context, false);
 					writer.write(" ");
 				}
 
@@ -164,7 +158,7 @@ public class HtmlWriter extends TurtleWriter {
 				closePreviousStatement();
 
 				// Write new subject:
-				writeResource(subj);
+				writeResource(subj, false);
 				writer.write(" ");
 				lastWrittenSubject = subj;
 
@@ -177,7 +171,7 @@ public class HtmlWriter extends TurtleWriter {
 				writer.increaseIndentation();
 			}
 
-			writeValue(obj);
+			writeValue(obj, false);
 
 			// Don't close the line just yet. Maybe the next
 			// statement has the same subject and/or predicate.
