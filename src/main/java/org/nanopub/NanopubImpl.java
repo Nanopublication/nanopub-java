@@ -67,23 +67,22 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private static final long serialVersionUID = -1514452524339132128L;
 
 	static {
-		tryToLoadParserFactory("org.openrdf.rio.trig.TriGParserFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.trig.TriGParserFactory");
 		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());
-		tryToLoadParserFactory("org.openrdf.rio.nquads.NQuadsParserFactory");
-		tryToLoadWriterFactory("org.openrdf.rio.nquads.NQuadsWriterFactory");
-		tryToLoadParserFactory("org.openrdf.rio.trix.TriXParserFactory");
-		tryToLoadWriterFactory("org.openrdf.rio.trix.TriXWriterFactory");
-		tryToLoadParserFactory("org.openrdf.rio.jsonld.JSONLDParserFactory;");
-		tryToLoadWriterFactory("org.openrdf.rio.jsonld.JSONLDWriterFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.nquads.NQuadsParserFactory");
+		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.nquads.NQuadsWriterFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.trix.TriXParserFactory");
+		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.trix.TriXWriterFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory");
+		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory");
 	}
 
 	private static void tryToLoadParserFactory(String className) {
 		try {
 			RDFParserFactory pf = (RDFParserFactory) Class.forName(className).newInstance();
 			RDFParserRegistry.getInstance().add(pf);
-		} catch (ClassNotFoundException ex) {
-		} catch (IllegalAccessException ex) {
-		} catch (InstantiationException ex) {
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+			throw new RuntimeException(ex);
 		};
 	}
 
@@ -91,9 +90,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		try {
 			RDFWriterFactory wf = (RDFWriterFactory) Class.forName(className).newInstance();
 			RDFWriterRegistry.getInstance().add(wf);
-		} catch (ClassNotFoundException ex) {
-		} catch (IllegalAccessException ex) {
-		} catch (InstantiationException ex) {
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+			throw new RuntimeException(ex);
 		};
 	}
 
