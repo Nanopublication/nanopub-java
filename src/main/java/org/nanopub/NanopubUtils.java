@@ -56,7 +56,7 @@ public class NanopubUtils {
 
 	public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException {
-		writeNanopub(nanopub,format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+		writeNanopub(nanopub, format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}
 
 	public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException {
