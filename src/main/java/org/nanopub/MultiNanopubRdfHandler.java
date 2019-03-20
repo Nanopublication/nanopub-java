@@ -55,7 +55,7 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 
 	public static void process(File file, NanopubHandler npHandler)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		RDFFormat format = Rio.getParserFormatForFileName(file.getName()).orElse(null);
+		RDFFormat format = Rio.getParserFormatForFileName(file.getName()).orElse(RDFFormat.TRIG);
 		process(format, file, npHandler);
 	}
 

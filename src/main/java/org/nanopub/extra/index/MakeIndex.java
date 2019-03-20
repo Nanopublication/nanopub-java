@@ -97,7 +97,7 @@ public class MakeIndex {
 
 	private void init() throws IOException {
 		count = 0;
-		outFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
+		outFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(RDFFormat.TRIG);
 		if (outputFile.getName().endsWith(".gz")) {
 			writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), Charset.forName("UTF-8"));
 		} else {
@@ -164,7 +164,7 @@ public class MakeIndex {
 					if (br != null) br.close();
 				}
 			} else {
-				RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(null);
+				RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(RDFFormat.TRIG);
 				MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
 					@Override
 					public void handleNanopub(Nanopub np) {

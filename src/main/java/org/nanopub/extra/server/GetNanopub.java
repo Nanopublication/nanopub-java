@@ -203,9 +203,9 @@ public class GetNanopub {
 			if (format == null) {
 				format = "trig";
 			}
-			rdfFormat = Rio.getParserFormatForFileName("file." + format).orElse(null);
+			rdfFormat = Rio.getParserFormatForFileName("file." + format).orElse(RDFFormat.TRIG);
 		} else {
-			rdfFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
+			rdfFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(RDFFormat.TRIG);
 			if (outputFile.getName().endsWith(".gz")) {
 				outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
 			} else {
