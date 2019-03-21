@@ -4,3 +4,4 @@
 /scratch
 /classpath.txt
 *.bak
+/bin/*.jar
