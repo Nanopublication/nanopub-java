@@ -26,9 +26,9 @@ public class TempUriReplacer implements RDFHandler {
 
 	private String uriPrefix;
 	private RDFHandler nestedHandler;
-	private Map<IRI,IRI> transformMap;
+	private Map<Resource,IRI> transformMap;
 
-	public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<IRI,IRI> transformMap) {
+	public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<Resource,IRI> transformMap) {
 		this.uriPrefix = np.getUri().stringValue();
 		this.nestedHandler = nestedHandler;
 		this.transformMap = transformMap;

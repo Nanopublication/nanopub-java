@@ -10,15 +10,12 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfUtils;
+public class CrossRefResolver implements RDFHandler {
 
-public class TempRefReplacer implements RDFHandler {
-
-	private Map<String,String> tempRefMap;
+	private Map<Resource,IRI> tempRefMap;
 	private RDFHandler nestedHandler;
 
-	public TempRefReplacer(Map<String,String> tempRefMap, RDFHandler nestedHandler) {
+	public CrossRefResolver(Map<Resource,IRI> tempRefMap, RDFHandler nestedHandler) {
 		this.tempRefMap = tempRefMap;
 		this.nestedHandler = nestedHandler;
 	}
@@ -39,26 +36,9 @@ public class TempRefReplacer implements RDFHandler {
 	}
 
 	private Value replace(Value v) {
-		String vs = v.stringValue();
-		boolean matched = false;
-		for (String k : tempRefMap.keySet()) {
-			if (vs.startsWith(k)) {
-				if (matched == true) {
-					throw new RuntimeException("Matched to two temp URI prefixes: " + vs);
-				}
-				matched = true;
-				String trustyUriString = tempRefMap.get(k);
-				String artifactCode = TrustyUriUtils.getArtifactCode(trustyUriString);
-				String baseUriString = trustyUriString.split(artifactCode)[0];
-				String suffix = vs.replace(k, "");
-				if (suffix.isEmpty()) suffix = null;
-				String uriString = RdfUtils.getTrustyUriString(SimpleValueFactory.getInstance().createIRI(baseUriString), artifactCode, suffix);
-				return SimpleValueFactory.getInstance().createIRI(uriString);
-			}
-		}
-		if (vs.startsWith(TempUriReplacer.tempUri)) {
-			throw new RuntimeException("Found unresolvable temp URI: " + vs);
-		}
+		if (!(v instanceof Resource)) return v;
+		IRI i = tempRefMap.get(v);
+		if (i != null) return i;
 		return v;
 	}
 

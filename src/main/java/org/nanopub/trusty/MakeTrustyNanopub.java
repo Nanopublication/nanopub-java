@@ -9,9 +9,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -42,11 +45,8 @@ public class MakeTrustyNanopub {
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
 
-	@com.beust.jcommander.Parameter(names = "-u", description = "Produce URI map file")
-	private File uriMapOutFile;
-
-	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve temporary references (http://purl.org/nanopub/temp/...)")
-	private boolean resolveTempRefs = false;
+	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
+	private boolean resolveCrossRefs = false;
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
@@ -71,8 +71,8 @@ public class MakeTrustyNanopub {
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
-		final Map<String,String> tempRefMap;
-		if (resolveTempRefs) {
+		final Map<Resource,IRI> tempRefMap;
+		if (resolveCrossRefs) {
 			tempRefMap = new HashMap<>();
 		} else {
 			tempRefMap = null;
@@ -87,73 +87,53 @@ public class MakeTrustyNanopub {
 		} else {
 			out = new FileOutputStream(outputFile);
 		}
-		final OutputStreamWriter uriMapOut;
-		if (uriMapOutFile != null) {
-			if (uriMapOutFile.getName().matches(".*\\.(gz|gzip)")) {
-				uriMapOut = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(uriMapOutFile)));
-			} else {
-				uriMapOut = new OutputStreamWriter(new FileOutputStream(uriMapOutFile));
-			}
-		} else {
-			uriMapOut = null;
-		}
 		final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
 		MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
 
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
-					if (uriMapOut != null) {
-						uriMapOut.write(np.getUri().stringValue() + " ");
-					}
 					np = writeAsTrustyNanopub(np, format, out, tempRefMap);
-					if (uriMapOut != null) {
-						uriMapOut.write(np.getUri().stringValue() + "\n");
-					}
 					if (verbose) {
 						System.out.println("Nanopub URI: " + np.getUri());
 					}
-				} catch (RDFHandlerException | TrustyUriException | IOException ex) {
+				} catch (RDFHandlerException | TrustyUriException ex) {
 					throw new RuntimeException(ex);
 				}
 			}
 
 		});
 		out.close();
-		if (uriMapOut != null) uriMapOut.close();
 	}
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
 		return transform(nanopub, null);
 	}
 
-	public static Nanopub transform(Nanopub nanopub, Map<String,String> tempRefMap) throws TrustyUriException {
+	public static Nanopub transform(Nanopub nanopub, Map<Resource,IRI> tempRefMap) throws TrustyUriException {
 		Nanopub np;
 		try {
 			RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
 			String npUri;
+			Map<Resource,IRI> tempUriReplacerMap = null;
 			if (TempUriReplacer.hasTempUri(nanopub)) {
 				npUri = TempUriReplacer.normUri;
-				NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r, null));
+				tempUriReplacerMap = new HashMap<>();
+				NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r, tempUriReplacerMap));
 			} else {
 				npUri = nanopub.getUri().toString();
 				NanopubUtils.propagateToHandler(nanopub, r);
 			}
 			if (tempRefMap != null) {
+				mergeTransformMaps(tempRefMap, tempUriReplacerMap);
 				RdfFileContent r2 = new RdfFileContent(RDFFormat.TRIG);
-				r.propagate(new TempRefReplacer(tempRefMap, r2));
+				r.propagate(new CrossRefResolver(tempRefMap, r2));
 				r = r2;
 			}
 			NanopubRdfHandler h = new NanopubRdfHandler();
-			TransformRdf.transform(r, h, npUri);
+			Map<Resource,IRI> transformMap = TransformRdf.transformAndGetMap(r, h, npUri);
 			np = h.getNanopub();
-			if (TempUriReplacer.hasTempUri(nanopub) && tempRefMap != null) {
-				String key = nanopub.getUri().stringValue();
-				if (tempRefMap.containsKey(key)) {
-					throw new RuntimeException("Temp URI found twice.");
-				}
-				tempRefMap.put(key, np.getUri().stringValue());
-			}
+			mergeTransformMaps(tempRefMap, transformMap);
 		} catch (RDFHandlerException ex) {
 			throw new TrustyUriException(ex);
 		} catch (MalformedNanopubException ex) {
@@ -167,19 +147,35 @@ public class MakeTrustyNanopub {
 
 	public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		transformMultiNanopub(format, file, out, false);
+	}
+
+	public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out, boolean resolveCrossRefs)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		InputStream in = new FileInputStream(file);
-		transformMultiNanopub(format, in, out);
+		transformMultiNanopub(format, in, out, resolveCrossRefs);
 	}
 
 	public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		transformMultiNanopub(format, in, out, false);
+	}
+
+	public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out, boolean resolveCrossRefs)
+			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+		final Map<Resource,IRI> tempRefMap;
+		if (resolveCrossRefs) {
+			tempRefMap = new HashMap<>();
+		} else {
+			tempRefMap = null;
+		}
 		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
 
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
 					// TODO temporary URI ref resolution not yet supported here
-					writeAsTrustyNanopub(np, format, out, null);
+					writeAsTrustyNanopub(np, format, out, tempRefMap);
 				} catch (RDFHandlerException ex) {
 					throw new RuntimeException(ex);
 				} catch (TrustyUriException ex) {
@@ -191,12 +187,26 @@ public class MakeTrustyNanopub {
 		out.close();
 	}
 
-	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<String,String> tempRefMap)
+	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<Resource,IRI> tempRefMap)
 			throws RDFHandlerException, TrustyUriException {
 		np = MakeTrustyNanopub.transform(np, tempRefMap);
 		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;
+	}
+
+	static void mergeTransformMaps(Map<Resource,IRI> mainMap, Map<Resource,IRI> mapToMerge) {
+		if (mainMap == null || mapToMerge == null) return;
+		for (Resource r : new HashSet<>(mainMap.keySet())) {
+			IRI v = mainMap.get(r);
+			if (mapToMerge.containsKey(v)) {
+				mainMap.put(r, mapToMerge.get(v));
+				mapToMerge.remove(v);
+			}
+		}
+		for (Resource r : mapToMerge.keySet()) {
+			mainMap.put(r, mapToMerge.get(r));
+		}
 	}
 
 }
