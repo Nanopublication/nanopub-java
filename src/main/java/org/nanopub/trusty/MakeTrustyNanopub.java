@@ -134,7 +134,7 @@ public class MakeTrustyNanopub {
 			String npUri;
 			if (TempUriReplacer.hasTempUri(nanopub)) {
 				npUri = TempUriReplacer.normUri;
-				NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r));
+				NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r, null));
 			} else {
 				npUri = nanopub.getUri().toString();
 				NanopubUtils.propagateToHandler(nanopub, r);

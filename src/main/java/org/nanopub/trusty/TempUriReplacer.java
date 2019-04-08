@@ -1,5 +1,7 @@
 package org.nanopub.trusty;
 
+import java.util.Map;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -24,10 +26,12 @@ public class TempUriReplacer implements RDFHandler {
 
 	private String uriPrefix;
 	private RDFHandler nestedHandler;
+	private Map<IRI,IRI> transformMap;
 
-	public TempUriReplacer(Nanopub np, RDFHandler nestedHandler) {
-		uriPrefix = np.getUri().stringValue();
+	public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<IRI,IRI> transformMap) {
+		this.uriPrefix = np.getUri().stringValue();
 		this.nestedHandler = nestedHandler;
+		this.transformMap = transformMap;
 	}
 
 	public static boolean hasTempUri(Nanopub np) {
@@ -53,7 +57,9 @@ public class TempUriReplacer implements RDFHandler {
 
 	private Value replace(Value v) {
 		if (v instanceof IRI && v.stringValue().startsWith(uriPrefix)) {
-			return SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));
+			IRI i = SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));
+			if (transformMap != null) transformMap.put((IRI) v, i);
+			return i;
 		} else {
 			return v;
 		}
