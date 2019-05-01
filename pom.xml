@@ -102,7 +102,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.14-SNAPSHOT</version>
+      <version>1.14</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
@@ -255,6 +255,9 @@ See: https://central.sonatype.org/pages/apache-maven.html
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <source>8</source>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
