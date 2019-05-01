@@ -53,6 +53,9 @@ public class ServerInfo implements Serializable {
 				}
 			}
 		}
+		if (si == null || si.getPublicUrl() == null) {
+			throw new ServerInfoException("Error accessing server");
+		}
 		if (!si.getPublicUrl().equals(serverUrl)) {
 			throw new ServerInfoException("Server URL does not match its declared public URL");
 		}
