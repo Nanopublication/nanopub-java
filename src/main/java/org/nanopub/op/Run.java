@@ -1,4 +1,4 @@
-package org.nanopub;
+package org.nanopub.op;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,15 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.rdf4j.RDF4JException;
-import org.nanopub.extra.index.MakeIndex;
-import org.nanopub.extra.security.MakeKeys;
-import org.nanopub.extra.security.SignNanopub;
-import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.server.GetServerInfo;
-import org.nanopub.extra.server.NanopubStatus;
-import org.nanopub.extra.server.PublishNanopub;
-import org.nanopub.trusty.FixTrustyNanopub;
-import org.nanopub.trusty.MakeTrustyNanopub;
+import org.eclipse.rdf4j.rio.RDFParserRegistry;
+import org.eclipse.rdf4j.rio.RDFWriterRegistry;
+import org.eclipse.rdf4j.rio.turtle.TurtleParserFactory;
+import org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory;
+import org.nanopub.NanopubImpl;
 
 public class Run {
 
@@ -24,6 +20,11 @@ public class Run {
 
 	public static void main(String[] args) throws IOException, RDF4JException {
 		NanopubImpl.ensureLoaded();
+		
+		// Not sure why this isnt' done automatically...:
+		RDFParserRegistry.getInstance().add(new TurtleParserFactory());
+		RDFWriterRegistry.getInstance().add(new TurtleWriterFactory());
+
 		run(args);
 	}
 
@@ -44,25 +45,25 @@ public class Run {
 	}
 
 	static {
-		addRunnableClass(CheckNanopub.class, "check");
-		addRunnableClass(GetNanopub.class, "get");
-		addRunnableClass(PublishNanopub.class, "publish");
-		addRunnableClass(SignNanopub.class, "sign");
-		addRunnableClass(MakeTrustyNanopub.class, "mktrusty");
-		addRunnableClass(FixTrustyNanopub.class, "fix");
-		addRunnableClass(NanopubStatus.class, "status");
-		addRunnableClass(GetServerInfo.class, "server");
-		addRunnableClass(MakeIndex.class, "mkindex");
-		addRunnableClass(MakeKeys.class, "mkkeys");
-		addRunnableClass(Nanopub2Html.class, "html");
-		addRunnableClass(TimestampNow.class, "now");
-		addRunnableClass(org.nanopub.op.Run.class, "op");
+		addRunnableClass(Filter.class, "filter");
+		addRunnableClass(Extract.class, "extract");
+		addRunnableClass(Gml.class, "gml");
+		addRunnableClass(Fingerprint.class, "fingerprint");
+		addRunnableClass(Topic.class, "topic");
+		addRunnableClass(Reuse.class, "reuse");
+		addRunnableClass(Count.class, "count");
+		addRunnableClass(Decontextualize.class, "decontext");
+		addRunnableClass(Union.class, "union");
+		addRunnableClass(IndexReuse.class, "ireuse");
+		addRunnableClass(ExportJson.class, "exportjson");
+		addRunnableClass(Namespaces.class, "namespaces");
+		addRunnableClass(Aggregate.class, "aggregate");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
 		if (command.length == 0) {
 			System.err.println("ERROR: missing command");
-			System.err.println("Run 'np help' to show all available commands.");
+			System.err.println("Run with 'help' argument to show all available commands.");
 			System.exit(1);
 		}
 		String cmd = command[0];
@@ -76,7 +77,7 @@ public class Run {
 				runClass.getMethod("main", String[].class).invoke(runClass, (Object) cmdArgs);
 			} catch (Exception ex) {
 				System.err.println("Internal error: " + ex.getMessage());
-				ex.printStackTrace();
+				ex.printStackTrace(System.err);
 				System.exit(1);
 			}
 		} else if (cmd.equals("help")) {
@@ -93,7 +94,7 @@ public class Run {
 			System.exit(0);
 		} else {
 			System.err.println("ERROR. Unrecognized command: " + cmd);
-			System.err.println("Run 'np help' to show all available commands.");
+			System.err.println("Run 'npop help' to show all available commands.");
 			System.exit(1);
 		}
 	}
