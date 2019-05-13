@@ -41,6 +41,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 		serverBlackList.put("http://digitalduchemin.org/np/", true);
 		serverBlackList.put("http://nanopub.exynize.com/", true);
 		serverBlackList.put("http://digitalduchemin.org/np-mirror/", true);
+		serverBlackList.put("http://server.nanopubs.d2s.labs.vu.nl/", true);
 	}
 
 	public ServerIterator(boolean forceServerReload) {
