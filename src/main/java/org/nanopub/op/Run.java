@@ -58,6 +58,7 @@ public class Run {
 		addRunnableClass(ExportJson.class, "exportjson");
 		addRunnableClass(Namespaces.class, "namespaces");
 		addRunnableClass(Aggregate.class, "aggregate");
+		addRunnableClass(Import.class, "import");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
