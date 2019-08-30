@@ -238,6 +238,8 @@ public class Import {
 			npCreator.addNamespace("cedar-user", "https://metadatacenter.org/users/");
 			npCreator.addNamespace("cedar-temp", "https://repo.metadatacenter.org/templates/");
 			npCreator.addNamespace("cedar-tempinst", "https://repo.metadatacenter.org/template-instances/");
+			npCreator.addNamespace("cedar-tempelinst", "https://repo.metadatacenter.org/template-element-instances/");
+			npCreator.addNamespace("cedar-prop", "https://schema.metadatacenter.org/properties/");
 		}
 
 		@Override
