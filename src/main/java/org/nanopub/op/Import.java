@@ -184,7 +184,7 @@ public class Import {
 			npCreator.setProvenanceUri(npIriString + "provenance");
 			npCreator.setPubinfoUri(npIriString + "pubinfo");
 
-			npCreator.addPubinfoStatement(DCTERMS.HAS_VERSION, npIri);
+			npCreator.addPubinfoStatement(vf.createIRI("https://repo.metadatacenter.org/template-instances/" + cedarId), DCTERMS.HAS_VERSION, npIri);
 
 			for (Statement st : statements) {
 				if (st.getPredicate().stringValue().equals("http://open-services.net/ns/core#modifiedBy")) {
