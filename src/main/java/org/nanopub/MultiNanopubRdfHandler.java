@@ -116,7 +116,7 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 				}
 			} else {
 				if (nanopubUri == null) {
-					throwMalformed("No nanopub (collection) URI found");
+					throwMalformed("No nanopub URI found");
 				}
 				headComplete = true;
 			}
