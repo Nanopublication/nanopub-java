@@ -87,13 +87,14 @@ public class MakeTrustyNanopub {
 		} else {
 			out = new FileOutputStream(outputFile);
 		}
-		final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-		MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
+		final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
+		final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
+		MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
 
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
-					np = writeAsTrustyNanopub(np, format, out, tempRefMap);
+					np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap);
 					if (verbose) {
 						System.out.println("Nanopub URI: " + np.getUri());
 					}
