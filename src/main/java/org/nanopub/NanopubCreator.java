@@ -175,6 +175,10 @@ public class NanopubCreator {
 		addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(date));
 	}
 
+	public void addTimestampNow() {
+		addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, TimestampNow.getTimestamp());
+	}
+
 	public void addCreator(IRI creator) {
 		addPubinfoStatement(SimpleCreatorPattern.PAV_CREATEDBY, creator);
 	}

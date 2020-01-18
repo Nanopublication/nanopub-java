@@ -59,6 +59,7 @@ public class Run {
 		addRunnableClass(Namespaces.class, "namespaces");
 		addRunnableClass(Aggregate.class, "aggregate");
 		addRunnableClass(Import.class, "import");
+		addRunnableClass(Create.class, "create");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
