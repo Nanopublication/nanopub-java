@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Random;
 import java.util.zip.GZIPOutputStream;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -52,6 +53,7 @@ public class Create {
 
 	private RDFFormat rdfOutFormat;
 	private OutputStream outputStream = System.out;
+	private Random random = new Random();
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
@@ -70,8 +72,9 @@ public class Create {
 			}
 		}
 
-		IRI nanopubIri = vf.createIRI("http://purl.org/np/");
-		IRI assertionIri = vf.createIRI("http://purl.org/np/assertion");
+		String npUri = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+		IRI nanopubIri = vf.createIRI(npUri);
+		IRI assertionIri = vf.createIRI(npUri + "assertion");
 		IRI creatorIri = vf.createIRI("http://purl.org/np/creator");
 		NanopubCreator npCreator = new NanopubCreator(nanopubIri);
 		npCreator.setAssertionUri(assertionIri);
