@@ -75,7 +75,7 @@ public class Create {
 		String npUri = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
 		IRI nanopubIri = vf.createIRI(npUri);
 		IRI assertionIri = vf.createIRI(npUri + "assertion");
-		IRI creatorIri = vf.createIRI("http://purl.org/np/creator");
+		IRI creatorIri = vf.createIRI(npUri + "creator");
 		NanopubCreator npCreator = new NanopubCreator(nanopubIri);
 		npCreator.setAssertionUri(assertionIri);
 		npCreator.addAssertionStatement(assertionIri, RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
