@@ -134,6 +134,13 @@ public class MakeTrustyNanopub {
 	}
 
 	public static Nanopub transform(Nanopub nanopub, Map<Resource,IRI> tempRefMap) throws TrustyUriException {
+		String u = nanopub.getUri().stringValue();
+		if (!nanopub.getHeadUri().stringValue().startsWith(u) ||
+				!nanopub.getAssertionUri().stringValue().startsWith(u) ||
+				!nanopub.getProvenanceUri().stringValue().startsWith(u) ||
+				!nanopub.getPubinfoUri().stringValue().startsWith(u)) {
+			throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
+		}
 		Nanopub np;
 		try {
 			RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
