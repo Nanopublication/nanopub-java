@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -39,11 +40,11 @@ import net.trustyuri.rdf.TransformRdf;
 
 public class MakeTrustyNanopub {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopub-file", required = true)
-	private String inputFileName;
+	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
+	private List<String> inputFileNames;
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
-	private File outputFile;
+	private File singleOutputFile;
 
 	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
 	private boolean resolveCrossRefs = false;
@@ -77,34 +78,55 @@ public class MakeTrustyNanopub {
 		} else {
 			tempRefMap = null;
 		}
-		File inputFile = new File(inputFileName);
-		if (outputFile == null) {
-			outputFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
-		}
-		final OutputStream out;
-		if (outputFile.getName().matches(".*\\.(gz|gzip)")) {
-			out = new GZIPOutputStream(new FileOutputStream(outputFile));
-		} else {
-			out = new FileOutputStream(outputFile);
-		}
-		final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-		final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
-		MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
-
-			@Override
-			public void handleNanopub(Nanopub np) {
-				try {
-					np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap);
-					if (verbose) {
-						System.out.println("Nanopub URI: " + np.getUri());
-					}
-				} catch (RDFHandlerException | TrustyUriException ex) {
-					throw new RuntimeException(ex);
-				}
+		final OutputStream singleOut;
+		if (singleOutputFile != null) {
+			if (singleOutputFile.getName().matches(".*\\.(gz|gzip)")) {
+				singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));
+			} else {
+				singleOut = new FileOutputStream(singleOutputFile);
 			}
-
-		});
-		out.close();
+		} else {
+			singleOut = null;
+		}
+		for (String inputFileName : inputFileNames) {
+			File inputFile = new File(inputFileName);
+			File outputFile;
+			final OutputStream out;
+			if (singleOutputFile == null) {
+				outputFile = new File(inputFile.getParent(), "trusty." + inputFile.getName());
+				if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
+					out = new GZIPOutputStream(new FileOutputStream(outputFile));
+				} else {
+					out = new FileOutputStream(outputFile);
+				}
+			} else {
+				outputFile = singleOutputFile;
+				out = singleOut;
+			}
+			final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
+			final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
+			MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
+	
+				@Override
+				public void handleNanopub(Nanopub np) {
+					try {
+						np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap);
+						if (verbose) {
+							System.out.println("Nanopub URI: " + np.getUri());
+						}
+					} catch (RDFHandlerException | TrustyUriException ex) {
+						throw new RuntimeException(ex);
+					}
+				}
+	
+			});
+			if (singleOutputFile == null) {
+				out.close();
+			}
+		}
+		if (singleOutputFile != null) {
+			singleOut.close();
+		}
 	}
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
