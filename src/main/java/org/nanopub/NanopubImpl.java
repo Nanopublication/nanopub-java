@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.activation.MimetypesFileTypeMap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -118,6 +119,15 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		this.statements.addAll(statements);
 		this.nsPrefixes.addAll(nsPrefixes);
 		this.ns.putAll(ns);
+		init();
+	}
+
+	public NanopubImpl(Collection<Statement> statements, List<Pair<String,String>> namespaces) throws MalformedNanopubException {
+		this.statements.addAll(statements);
+		for (Pair<String,String> p : namespaces) {
+			nsPrefixes.add(p.getLeft());
+			ns.put(p.getLeft(), p.getRight());
+		}
 		init();
 	}
 

@@ -25,9 +25,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
+import org.nanopub.trusty.TempUriReplacer;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
@@ -112,7 +114,13 @@ public class SignatureUtils {
 
 	public static Nanopub createSignedNanopub(Nanopub preNanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
 			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
-		// TODO: Test this
+		// TODO: Test this more
+
+		RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
+		if (TempUriReplacer.hasTempUri(preNanopub)) {
+			NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, null));
+			preNanopub = new NanopubImpl(r.getStatements(), r.getNamespaces());
+		}
 
 		Signature signature = Signature.getInstance("SHA256with" + algorithm.name());
 		signature.initSign(key.getPrivate());
