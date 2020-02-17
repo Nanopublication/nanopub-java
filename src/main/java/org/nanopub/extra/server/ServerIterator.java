@@ -22,15 +22,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 
 	private static Map<String,Boolean> serverBlackList;
 
-	private List<ServerInfo> cachedServers = null;
-	private List<String> serversToContact = new ArrayList<>();
-	private List<String> serversToGetPeers = new ArrayList<>();
-	private Map<String,Boolean> serversContacted = new HashMap<>();
-	private Map<String,Boolean> serversPeersGot = new HashMap<>();
-	private ServerInfo next = null;
-
-	public ServerIterator() {
-		this(false);
+	static {
 		// TODO: Peer URLs should expire so this isn't necessary:
 		serverBlackList = new HashMap<>();
 		serverBlackList.put("http://s1.semanticscience.org:8082/", true);
@@ -42,6 +34,21 @@ public class ServerIterator implements Iterator<ServerInfo> {
 		serverBlackList.put("http://nanopub.exynize.com/", true);
 		serverBlackList.put("http://digitalduchemin.org/np-mirror/", true);
 		serverBlackList.put("http://server.nanopubs.d2s.labs.vu.nl/", true);
+		serverBlackList.put("http://nanopubs.semanticscience.org/", true);
+		serverBlackList.put("http://nanopubs.stanford.edu/nanopub-server/", true);
+		serverBlackList.put("http://app.petapico.d2s.labs.vu.nl/nanopub-server/", true);
+		serverBlackList.put("http://sprout038.sprout.yale.edu/nanopub-server/", true);
+	}
+
+	private List<ServerInfo> cachedServers = null;
+	private List<String> serversToContact = new ArrayList<>();
+	private List<String> serversToGetPeers = new ArrayList<>();
+	private Map<String,Boolean> serversContacted = new HashMap<>();
+	private Map<String,Boolean> serversPeersGot = new HashMap<>();
+	private ServerInfo next = null;
+
+	public ServerIterator() {
+		this(false);
 	}
 
 	public ServerIterator(boolean forceServerReload) {
