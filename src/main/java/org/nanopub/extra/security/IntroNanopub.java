@@ -62,7 +62,7 @@ public class IntroNanopub {
 	private IRI user;
 	private Map<IRI,KeyDeclaration> keyDeclarations = new HashMap<>();
 
-	private IntroNanopub(Nanopub nanopub, IRI user) {
+	public IntroNanopub(Nanopub nanopub, IRI user) {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
