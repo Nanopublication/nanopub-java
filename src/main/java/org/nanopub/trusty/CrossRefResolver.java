@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -13,10 +14,12 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 public class CrossRefResolver implements RDFHandler {
 
 	private Map<Resource,IRI> tempRefMap;
+	private Map<String,String> tempPrefixMap;
 	private RDFHandler nestedHandler;
 
-	public CrossRefResolver(Map<Resource,IRI> tempRefMap, RDFHandler nestedHandler) {
+	public CrossRefResolver(Map<Resource,IRI> tempRefMap, Map<String,String> tempPrefixMap, RDFHandler nestedHandler) {
 		this.tempRefMap = tempRefMap;
+		this.tempPrefixMap = tempPrefixMap;
 		this.nestedHandler = nestedHandler;
 	}
 
@@ -39,6 +42,13 @@ public class CrossRefResolver implements RDFHandler {
 		if (!(v instanceof Resource)) return v;
 		IRI i = tempRefMap.get(v);
 		if (i != null) return i;
+		if (v instanceof IRI && tempPrefixMap != null) {
+			for (String prefix : tempPrefixMap.keySet()) {
+				if (v.stringValue().startsWith(prefix)) {
+					return vf.createIRI(v.stringValue().replace(prefix, tempPrefixMap.get(prefix)));
+				}
+			}
+		}
 		return v;
 	}
 
@@ -56,5 +66,7 @@ public class CrossRefResolver implements RDFHandler {
 	public void handleComment(String comment) throws RDFHandlerException {
 		nestedHandler.handleComment(comment);
 	}
+
+	private static ValueFactory vf = SimpleValueFactory.getInstance();
 
 }

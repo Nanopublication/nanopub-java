@@ -35,6 +35,7 @@ import com.beust.jcommander.ParameterException;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfFileContent;
 import net.trustyuri.rdf.TransformRdf;
 
@@ -48,6 +49,9 @@ public class MakeTrustyNanopub {
 
 	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
 	private boolean resolveCrossRefs = false;
+
+	@com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
+	private boolean resolveCrossRefsPrefixBased = false;
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
@@ -73,9 +77,15 @@ public class MakeTrustyNanopub {
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
 		final Map<Resource,IRI> tempRefMap;
-		if (resolveCrossRefs) {
+		final Map<String,String> tempPrefixMap;
+		if (resolveCrossRefsPrefixBased) {
+			tempPrefixMap = new HashMap<>();
+			tempRefMap = new HashMap<>();
+		} else if (resolveCrossRefs) {
+			tempPrefixMap = null;
 			tempRefMap = new HashMap<>();
 		} else {
+			tempPrefixMap = null;
 			tempRefMap = null;
 		}
 		final OutputStream singleOut;
@@ -110,7 +120,7 @@ public class MakeTrustyNanopub {
 				@Override
 				public void handleNanopub(Nanopub np) {
 					try {
-						np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap);
+						np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap, tempPrefixMap);
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
 						}
@@ -130,10 +140,10 @@ public class MakeTrustyNanopub {
 	}
 
 	public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
-		return transform(nanopub, null);
+		return transform(nanopub, null, null);
 	}
 
-	public static Nanopub transform(Nanopub nanopub, Map<Resource,IRI> tempRefMap) throws TrustyUriException {
+	public static Nanopub transform(Nanopub nanopub, Map<Resource,IRI> tempRefMap, Map<String,String> tempPrefixMap) throws TrustyUriException {
 		String u = nanopub.getUri().stringValue();
 		if (!nanopub.getHeadUri().stringValue().startsWith(u) ||
 				!nanopub.getAssertionUri().stringValue().startsWith(u) ||
@@ -154,16 +164,20 @@ public class MakeTrustyNanopub {
 				npUri = nanopub.getUri().toString();
 				NanopubUtils.propagateToHandler(nanopub, r);
 			}
-			if (tempRefMap != null) {
+			if (tempRefMap != null || tempPrefixMap != null) {
+				if (tempRefMap == null) {
+					tempRefMap = new HashMap<>();
+				}
 				mergeTransformMaps(tempRefMap, tempUriReplacerMap);
 				RdfFileContent r2 = new RdfFileContent(RDFFormat.TRIG);
-				r.propagate(new CrossRefResolver(tempRefMap, r2));
+				r.propagate(new CrossRefResolver(tempRefMap, tempPrefixMap, r2));
 				r = r2;
 			}
 			NanopubRdfHandler h = new NanopubRdfHandler();
 			Map<Resource,IRI> transformMap = TransformRdf.transformAndGetMap(r, h, npUri);
 			np = h.getNanopub();
 			mergeTransformMaps(tempRefMap, transformMap);
+			mergePrefixTransformMaps(tempPrefixMap, transformMap);
 		} catch (RDFHandlerException ex) {
 			throw new TrustyUriException(ex);
 		} catch (MalformedNanopubException ex) {
@@ -205,7 +219,8 @@ public class MakeTrustyNanopub {
 			public void handleNanopub(Nanopub np) {
 				try {
 					// TODO temporary URI ref resolution not yet supported here
-					writeAsTrustyNanopub(np, format, out, tempRefMap);
+					// TODO prefix-based cross-ref resolution also not yet supported
+					writeAsTrustyNanopub(np, format, out, tempRefMap, null);
 				} catch (RDFHandlerException ex) {
 					throw new RuntimeException(ex);
 				} catch (TrustyUriException ex) {
@@ -217,9 +232,9 @@ public class MakeTrustyNanopub {
 		out.close();
 	}
 
-	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<Resource,IRI> tempRefMap)
+	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<Resource,IRI> tempRefMap, Map<String,String> tempPrefixMap)
 			throws RDFHandlerException, TrustyUriException {
-		np = MakeTrustyNanopub.transform(np, tempRefMap);
+		np = MakeTrustyNanopub.transform(np, tempRefMap, tempPrefixMap);
 		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;
@@ -236,6 +251,15 @@ public class MakeTrustyNanopub {
 		}
 		for (Resource r : mapToMerge.keySet()) {
 			mainMap.put(r, mapToMerge.get(r));
+		}
+	}
+
+	static void mergePrefixTransformMaps(Map<String,String> mainPrefixMap, Map<Resource,IRI> mapToMerge) {
+		if (mainPrefixMap == null || mapToMerge == null) return;
+		for (Resource r : mapToMerge.keySet()) {
+			if (r instanceof IRI && TrustyUriUtils.isPotentialTrustyUri(mapToMerge.get(r).stringValue())) {
+				mainPrefixMap.put(r.stringValue(), mapToMerge.get(r).stringValue());
+			}
 		}
 	}
 
