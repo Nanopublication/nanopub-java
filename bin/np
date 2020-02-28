@@ -6,7 +6,7 @@ function download-nanopub-jar {
   >&2 echo "Getting latest nanopub version..."
   NANOPUB_VERSION=$(
     curl --head -s https://github.com/Nanopublication/nanopub-java/releases/latest \
-    | egrep '^Location:' \
+    | egrep -i '^location:' \
     | sed 's/^.*-\([.0-9]*\)\s*$/\1/'
   )
   >&2 echo "Downloading nanopub jar file version $NANOPUB_VERSION..."
