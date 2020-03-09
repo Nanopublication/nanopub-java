@@ -20,6 +20,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.FOAF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
@@ -52,7 +53,7 @@ public class IntroNanopub {
 			TurtleParser parser = new TurtleParser();
 			parser.setRDFHandler(ie);
 			parser.parse(in, userId);
-			return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
+			return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
 		} finally {
 			if (in != null) in.close();
 		}
@@ -60,9 +61,14 @@ public class IntroNanopub {
 
 	private Nanopub nanopub;
 	private IRI user;
+	private String name;
 	private Map<IRI,KeyDeclaration> keyDeclarations = new HashMap<>();
 
 	public IntroNanopub(Nanopub nanopub, IRI user) {
+		this(nanopub, null, user);
+	}
+
+	public IntroNanopub(Nanopub nanopub, String name, IRI user) {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
@@ -108,15 +114,20 @@ public class IntroNanopub {
 		return user;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	public List<KeyDeclaration> getKeyDeclarations() {
 		return new ArrayList<>(keyDeclarations.values());
 	}
 
 
-	private static class IntroExtractor extends AbstractRDFHandler {
+	public static class IntroExtractor extends AbstractRDFHandler {
 
 		private String userId;
 		private Nanopub introNanopub;
+		private String name;
 
 		public IntroExtractor(String userId) {
 			this.userId = userId;
@@ -125,16 +136,24 @@ public class IntroNanopub {
 		public void handleStatement(Statement st) throws RDFHandlerException {
 			if (introNanopub != null) return;
 			if (!st.getSubject().stringValue().equals(userId)) return;
-			if (!st.getPredicate().stringValue().equals(FOAF.PAGE.stringValue())) return;
-			String o = st.getObject().stringValue();
-			if (TrustyUriUtils.isPotentialTrustyUri(o)) {
-				introNanopub = GetNanopub.get(o);
+			if (st.getPredicate().stringValue().equals(FOAF.PAGE.stringValue())) {
+				String o = st.getObject().stringValue();
+				if (TrustyUriUtils.isPotentialTrustyUri(o)) {
+					introNanopub = GetNanopub.get(o);
+				}
+			} else if (st.getPredicate().stringValue().equals(RDFS.LABEL.stringValue())) {
+				name = st.getObject().stringValue();
 			}
 		};
 
 		public Nanopub getIntroNanopub() {
 			return introNanopub;
 		}
+
+		public String getName() {
+			return name;
+		}
+
 	}
 	
 	private static boolean wasSuccessful(HttpResponse resp) {
