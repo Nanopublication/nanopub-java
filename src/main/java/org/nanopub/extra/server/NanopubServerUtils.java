@@ -81,7 +81,7 @@ public class NanopubServerUtils {
 
 	static {
 		// Hard-coded server instances:
-		bootstrapServerList.add("http://np.inn.ac/");
+		//bootstrapServerList.add("http://np.inn.ac/");
 		bootstrapServerList.add("http://rdf.disgenet.org/nanopub-server/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-1/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-2/");

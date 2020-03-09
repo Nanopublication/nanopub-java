@@ -38,6 +38,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 		serverBlackList.put("http://nanopubs.stanford.edu/nanopub-server/", true);
 		serverBlackList.put("http://app.petapico.d2s.labs.vu.nl/nanopub-server/", true);
 		serverBlackList.put("http://sprout038.sprout.yale.edu/nanopub-server/", true);
+		serverBlackList.put("http://np.inn.ac/", true);
 	}
 
 	private List<ServerInfo> cachedServers = null;
