@@ -31,14 +31,28 @@ import net.trustyuri.TrustyUriUtils;
 
 public class IntroNanopub {
 
-	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
+	static HttpClient defaultHttpClient;
+
+	static {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
-		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-		return get(userId, c);
+		defaultHttpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 	}
 
-	public static IntroNanopub get(final String userId, HttpClient httpClient) throws IOException, RDF4JException {
+	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
+		return get(userId, null);
+	}
+
+	public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
+		IntroExtractor ie = extract(userId, httpClient);
+		if (ie != null) {
+			return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+		}
+		return null;
+	}
+
+	public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
+		if (httpClient == null) httpClient = defaultHttpClient;
 		HttpGet get = new HttpGet(userId);
 		get.setHeader("Accept", "text/turtle");
 		InputStream in = null;
@@ -53,7 +67,7 @@ public class IntroNanopub {
 			TurtleParser parser = new TurtleParser();
 			parser.setRDFHandler(ie);
 			parser.parse(in, userId);
-			return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+			return ie;
 		} finally {
 			if (in != null) in.close();
 		}
