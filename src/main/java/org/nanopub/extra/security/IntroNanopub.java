@@ -40,7 +40,7 @@ public class IntroNanopub {
 	}
 
 	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
-		return get(userId, null);
+		return get(userId, (HttpClient) null);
 	}
 
 	public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
@@ -49,6 +49,10 @@ public class IntroNanopub {
 			return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
 		}
 		return null;
+	}
+
+	public static IntroNanopub get(String userId, IntroExtractor ie) {
+		return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
 	}
 
 	public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
