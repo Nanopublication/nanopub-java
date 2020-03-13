@@ -171,6 +171,9 @@ public class PublishNanopub {
 				serverInfo = serverIterator.next();
 				continue;
 			}
+			if (!serverInfo.getNanopubSurfacePattern().matchesUri(nanopub.getUri().stringValue())) {
+				continue;
+			}
 			if (verbose) {
 				System.out.println("Trying server: " + serverUrl);
 			}
