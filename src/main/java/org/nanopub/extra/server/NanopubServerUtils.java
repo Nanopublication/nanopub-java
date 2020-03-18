@@ -82,16 +82,16 @@ public class NanopubServerUtils {
 	static {
 		// Hard-coded server instances:
 		//bootstrapServerList.add("http://np.inn.ac/");
-		bootstrapServerList.add("http://rdf.disgenet.org/nanopub-server/");
+		bootstrapServerList.add("http://server.nanopubs.lod.labs.vu.nl/");
+		bootstrapServerList.add("http://130.60.24.146:7880/");
+		bootstrapServerList.add("https://server.nanopubs.knows.idlab.ugent.be/");
+		bootstrapServerList.add("https://openphacts.cs.man.ac.uk/nanopub/server/");
+		bootstrapServerList.add("http://server.np.scify.org/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-1/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-2/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-3/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-4/");
-		bootstrapServerList.add("http://server.nanopubs.lod.labs.vu.nl/");
-		bootstrapServerList.add("https://server.nanopubs.knows.idlab.ugent.be/");
-		bootstrapServerList.add("http://130.60.24.146:7880/");
-		bootstrapServerList.add("https://openphacts.cs.man.ac.uk/nanopub/server/");
-		bootstrapServerList.add("http://server.np.scify.org/");
+		bootstrapServerList.add("http://rdf.disgenet.org/nanopub-server/");
 	}
 
 	public static List<String> getBootstrapServerList() {
