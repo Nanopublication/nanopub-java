@@ -87,10 +87,11 @@ public class NanopubServerUtils {
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-2/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-3/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-4/");
-		bootstrapServerList.add("http://nanopub.backend1.scify.org/nanopub-server/");
-		bootstrapServerList.add("http://nanopubs.restdesc.org/");
 		bootstrapServerList.add("http://server.nanopubs.lod.labs.vu.nl/");
 		bootstrapServerList.add("https://server.nanopubs.knows.idlab.ugent.be/");
+		bootstrapServerList.add("http://130.60.24.146:7880/");
+		bootstrapServerList.add("https://openphacts.cs.man.ac.uk/nanopub/server/");
+		bootstrapServerList.add("http://server.np.scify.org/");
 	}
 
 	public static List<String> getBootstrapServerList() {
