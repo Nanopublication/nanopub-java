@@ -1,10 +1,5 @@
 package org.nanopub;
 
-import static org.nanopub.Nanopub.HAS_ASSERTION_URI;
-import static org.nanopub.Nanopub.HAS_PROVENANCE_URI;
-import static org.nanopub.Nanopub.HAS_PUBINFO_URI;
-import static org.nanopub.Nanopub.NANOPUB_TYPE_URI;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,7 +17,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -79,9 +73,6 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 
 	private NanopubHandler npHandler;
 
-	private IRI headUri = null;
-	private IRI nanopubUri = null;
-	private boolean headComplete = false;
 	private Map<IRI,Boolean> graphs = new HashMap<>();
 	private Map<IRI,Map<IRI,Boolean>> members = new HashMap<>();
 	private Set<Statement> statements = new LinkedHashSet<>();
@@ -97,44 +88,16 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 
 	@Override
 	public void handleStatement(Statement st) throws RDFHandlerException {
-		if (!headComplete) {
-			if (headUri == null) {
-				headUri = (IRI) st.getContext();
-				if (headUri == null) {
-					throwMalformed("Triple without context found: " +
-							st.getSubject() + " " + st.getPredicate() + " " + st.getObject());
-				}
-				graphs.put(headUri, true);
+		if (!graphs.containsKey(st.getContext())) {
+			if (graphs.size() == 4) {
+				finishAndReset();
+				handleStatement(st);
+				return;
 			}
-			if (headUri.equals(st.getContext())) {
-				IRI p = st.getPredicate();
-				if (p.equals(RDF.TYPE) && st.getObject().equals(NANOPUB_TYPE_URI)) {
-					nanopubUri = (IRI) st.getSubject();
-				}
-				if (p.equals(HAS_ASSERTION_URI) || p.equals(HAS_PROVENANCE_URI) || p.equals(HAS_PUBINFO_URI)) {
-					graphs.put((IRI) st.getObject(), true);
-				}
-			} else {
-				if (nanopubUri == null) {
-					throwMalformed("No nanopub URI found");
-				}
-				headComplete = true;
-			}
+			graphs.put((IRI) st.getContext(), true);
 		}
-		if (headComplete) {
-			if (nanopubUri != null) {
-				if (!graphs.containsKey(st.getContext())) {
-					finishAndReset();
-					handleStatement(st);
-				} else {
-					addNamespaces();
-					statements.add(st);
-				}
-			}
-		} else {
-			addNamespaces();
-			statements.add(st);
-		}
+		addNamespaces();
+		statements.add(st);
 	}
 
 	@Override
@@ -170,9 +133,6 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 	}
 
 	private void clearAll() {
-		headUri = null;
-		nanopubUri = null;
-		headComplete = false;
 		graphs.clear();
 		members.clear();
 		statements.clear();
@@ -180,10 +140,6 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 
 	private void throwMalformed(MalformedNanopubException ex) {
 		throw new RuntimeException("wrapped MalformedNanopubException", ex);
-	}
-
-	private void throwMalformed(String message) {
-		throw new RuntimeException("wrapped MalformedNanopubException", new MalformedNanopubException(message));
 	}
 
 	
