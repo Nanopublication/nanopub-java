@@ -51,6 +51,7 @@ a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
 
     $ java -jar nanopub-1.21-jar-with-dependencies.jar check nanopubfile.trig
 
+Note: For Mac users, before running `np` ensure that the GNU versions of `curl` and `sed` are installed (not the default BSD versions), and are the ones being used when '`curl`' or '`sed`' commands are invoked.
 
 Developers
 ----------
