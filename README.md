@@ -41,8 +41,9 @@ Make sure it is executable and then you can invoke it with `./np`, for example:
 ./np check nanopubfile.trig
 ```
 
-One can also directly use the JAR file (as generated in `target/`) or [download
-a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
+This automatically downloads the latest release as a jar file on the first run.
+You can also directly use the [prebuilt jar
+files](https://github.com/Nanopublication/nanopub-java/releases):
 
 ```bash
 java -jar nanopub-1.30-jar-with-dependencies.jar check nanopubfile.trig
