@@ -53,6 +53,28 @@ a prebuilt one](https://github.com/Nanopublication/nanopub-java/releases):
 
 Note: For Mac users, before running `np` ensure that the GNU versions of `curl` and `sed` are installed (not the default BSD versions), and are the ones being used when '`curl`' or '`sed`' commands are invoked.
 
+## Docker
+
+Using [image from DockerHub](https://hub.docker.com/repository/docker/umids/nanopub-java).
+
+Sign a nanopublication (`nanopub.trig` file in current dir here):
+
+```bash
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data umids/nanopub-java sign /data/nanopub.trig
+```
+
+Publish a signed nanopublication:
+
+```bash
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data umids/nanopub-java publish /data/signed.nanopub.trig
+```
+
+Build the Docker image:
+
+```shell
+docker build -t umids/nanopub-java .
+```
+
 Developers
 ----------
 
