@@ -15,6 +15,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.Nanopub;
 
 public class NanopubServerUtils {
 
@@ -106,6 +111,17 @@ public class NanopubServerUtils {
 		} catch (Exception ex) {
 			return 0;
 		}
+	}
+
+	public static final IRI PROTECTED_NANOPUB = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/ProtectedNanopub");
+
+	public static boolean isProtectedNanopub(Nanopub np) {
+		for (Statement st : np.getPubinfo()) {
+			if (!st.getSubject().equals(np.getUri())) continue;
+			if (!st.getPredicate().equals(RDF.TYPE)) continue;
+			if (st.getObject().equals(PROTECTED_NANOPUB)) return true;
+		}
+		return false;
 	}
 
 }
