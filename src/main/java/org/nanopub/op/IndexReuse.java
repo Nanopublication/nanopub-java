@@ -268,7 +268,7 @@ public class IndexReuse {
 	private class IndexCreator extends SimpleIndexCreator {
 
 		public IndexCreator(IRI previousIndexUri) {
-			super(previousIndexUri);
+			super(previousIndexUri, true);
 
 			setBaseUri(baseUri);
 			if (iTitle != null) {

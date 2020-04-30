@@ -48,7 +48,7 @@ public class MakeIndex {
 	private File outputFile = new File("index.trig");
 
 	@com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-	private String baseUri = "http://purl.org/np/";
+	private String baseUri = "http://purl.org/nanopub/temp/index/";
 
 	@com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
 	private String iTitle;
@@ -64,6 +64,18 @@ public class MakeIndex {
 
 	@com.beust.jcommander.Parameter(names = "-a", description = "'See also' resources")
 	private List<String> seeAlso = new ArrayList<>();
+
+	@com.beust.jcommander.Parameter(names = "-p", description = "Make plain (non-trusty) index nanopublications")
+	private boolean plainNanopub;
+
+//	@com.beust.jcommander.Parameter(names = "--sig", description = "Path and file name of key files")
+//	private boolean useSignature;
+//
+//	@com.beust.jcommander.Parameter(names = "--sig-key-file", description = "Path and file name of key files")
+//	private String keyFilename;
+//
+//	@com.beust.jcommander.Parameter(names = "--sig-algorithm", description = "Signature algorithm: either RSA or DSA")
+//	private SignatureAlgorithm algorithm;
 
 	public static void main(String[] args) throws IOException {
 		NanopubImpl.ensureLoaded();
@@ -91,6 +103,7 @@ public class MakeIndex {
 	private OutputStreamWriter writer;
 	private RDFFormat outFormat;
 	private int count;
+//	private KeyPair key;
 
 	private MakeIndex() {
 	}
@@ -104,7 +117,7 @@ public class MakeIndex {
 			writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF-8"));
 		}
 
-		indexCreator = new SimpleIndexCreator() {
+		indexCreator = new SimpleIndexCreator(!plainNanopub) {
 
 			@Override
 			public void handleIncompleteIndex(NanopubIndex npi) {
@@ -147,6 +160,26 @@ public class MakeIndex {
 
 	private void run() throws Exception {
 		init();
+
+//		if (useSignature) {
+//			if (algorithm == null) {
+//				if (keyFilename == null) {
+//					keyFilename = "~/.nanopub/id_rsa";
+//					algorithm = SignatureAlgorithm.RSA;
+//				} else if (keyFilename.endsWith("_rsa")) {
+//					algorithm = SignatureAlgorithm.RSA;
+//				} else if (keyFilename.endsWith("_dsa")) {
+//					algorithm = SignatureAlgorithm.DSA;
+//				} else {
+//					// Assuming RSA if not other information is available
+//					algorithm = SignatureAlgorithm.RSA;
+//				}
+//			} else if (keyFilename == null) {
+//				keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
+//			}
+//			key = SignNanopub.loadKey(keyFilename, algorithm);
+//		}
+
 		for (File f : inputFiles) {
 			if (f.getName().endsWith(".txt")) {
 				BufferedReader br = null;

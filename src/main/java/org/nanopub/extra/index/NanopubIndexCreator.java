@@ -2,6 +2,7 @@ package org.nanopub.extra.index;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -20,13 +21,16 @@ public abstract class NanopubIndexCreator {
 	private int elementNsCount;
 	private IRI previousIndexUri;
 	private IRI supersededIndexUri;
+	private boolean makeTrusty;
+	private Random random = new Random();
 
-	public NanopubIndexCreator() {
-		this(null);
+	public NanopubIndexCreator(boolean makeTrusty) {
+		this(null, makeTrusty);
 	}
 
-	public NanopubIndexCreator(IRI previousIndexUri) {
+	public NanopubIndexCreator(IRI previousIndexUri, boolean makeTrusty) {
 		this.previousIndexUri = previousIndexUri;
+		this.makeTrusty = makeTrusty;
 	}
 
 	public void addElement(Nanopub np) {
@@ -86,7 +90,12 @@ public abstract class NanopubIndexCreator {
 			if (npCreator == null) {
 				newNpCreator();
 			}
-			Nanopub np = npCreator.finalizeTrustyNanopub(true);
+			Nanopub np;
+			if (makeTrusty) {
+				np = npCreator.finalizeTrustyNanopub(true);
+			} else {
+				np = npCreator.finalizeNanopub(true);
+			}
 			completeIndexUri = np.getUri();
 			handleCompleteIndex(IndexUtils.castToIndex(np));
 		} catch (Exception ex) {
@@ -159,7 +168,12 @@ public abstract class NanopubIndexCreator {
 			npCreator.addPubinfoStatement(RDF.TYPE, NanopubIndex.INCOMPLETE_INDEX_URI);
 			enrichIncompleteIndex(npCreator);
 			try {
-				Nanopub np = npCreator.finalizeTrustyNanopub(true);
+				Nanopub np;
+				if (makeTrusty) {
+					np = npCreator.finalizeTrustyNanopub(true);
+				} else {
+					np = npCreator.finalizeNanopub(true);
+				}
 				previousIndexUri = np.getUri();
 				handleIncompleteIndex(IndexUtils.castToIndex(np));
 			} catch (Exception ex) {
@@ -170,7 +184,9 @@ public abstract class NanopubIndexCreator {
 		elementNs = new HashMap<>();
 		elementNsCount = 0;
 		itemCount = 0;
-		npCreator = new NanopubCreator(getBaseUri());
+		String baseUri = getBaseUri() + Math.abs(random.nextLong()) + "/";
+		npCreator = new NanopubCreator(baseUri);
+		npCreator.addNamespace("", baseUri);
 		npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 		npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");

@@ -20,19 +20,19 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
 	private List<IRI> seeAlsoUris = new ArrayList<>();
 
 	public SimpleIndexCreator() {
-		this(null, null);
+		this(null, null, true);
 	}
 
-	public SimpleIndexCreator(IRI previousIndexUri) {
-		this(null, previousIndexUri);
+	public SimpleIndexCreator(IRI previousIndexUri, boolean makeTrusty) {
+		this(null, previousIndexUri, makeTrusty);
 	}
 
-	public SimpleIndexCreator(String baseUri) {
-		this(baseUri, null);
+	public SimpleIndexCreator(boolean makeTrusty) {
+		this(null, null, makeTrusty);
 	}
 
-	public SimpleIndexCreator(String baseUri, IRI previousIndexUri) {
-		super(previousIndexUri);
+	public SimpleIndexCreator(String baseUri, IRI previousIndexUri, boolean makeTrusty) {
+		super(previousIndexUri, makeTrusty);
 		this.baseUri = baseUri;
 	}
 
