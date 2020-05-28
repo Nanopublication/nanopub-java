@@ -160,6 +160,9 @@ public class PublishNanopub {
 			System.out.println("---");
 			System.out.println("Trying to publish nanopub: " + artifactCode);
 		}
+		if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
+			throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
+		}
 		while (serverInfo != null) {
 			String serverUrl = serverInfo.getPublicUrl();
 			try {
@@ -211,7 +214,7 @@ public class PublishNanopub {
 			serverInfo = serverIterator.next();
 		}
 		serverInfo = null;
-		throw new IOException("Failed to publish the nanopub");
+		throw new RuntimeException("Failed to publish the nanopub");
 	}
 
 	public ServerInfo getUsedServer() {
