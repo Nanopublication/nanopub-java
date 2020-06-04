@@ -24,12 +24,33 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
+import com.sun.tools.javac.util.Pair;
+
 /**
  * @author Tobias Kuhn
  */
 public class NanopubUtils {
 
 	private NanopubUtils() {}  // no instances allowed
+
+	private static final List<Pair<String,String>> defaultNamespaces = new ArrayList<>();
+
+	static {
+		defaultNamespaces.add(Pair.of("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
+		defaultNamespaces.add(Pair.of("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
+		defaultNamespaces.add(Pair.of("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/"));
+		defaultNamespaces.add(Pair.of("xsd", "http://www.w3.org/2001/XMLSchema#"));
+		defaultNamespaces.add(Pair.of("owl", "http://www.w3.org/2002/07/owl#"));
+		defaultNamespaces.add(Pair.of("dct", "http://purl.org/dc/terms/"));
+		defaultNamespaces.add(Pair.of("dce", "http://purl.org/dc/elements/1.1/"));
+		defaultNamespaces.add(Pair.of("pav", "http://purl.org/pav/"));
+		defaultNamespaces.add(Pair.of("prov", "http://www.w3.org/ns/prov#"));
+		defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
+	}
+
+	public static List<Pair<String,String>> getDefaultNamespaces() {
+		return defaultNamespaces;
+	}
 
 	public static List<Statement> getStatements(Nanopub nanopub) {
 		List<Statement> s = new ArrayList<>();
@@ -84,24 +105,16 @@ public class NanopubUtils {
 	public static void propagateToHandler(Nanopub nanopub, RDFHandler handler)
 			throws RDFHandlerException {
 		handler.startRDF();
-		String s = nanopub.getUri().toString();
 		if (nanopub instanceof NanopubWithNs && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
 			NanopubWithNs np = (NanopubWithNs) nanopub;
 			for (String p : np.getNsPrefixes()) {
 				handler.handleNamespace(p, np.getNamespace(p));
 			}
 		} else {
-			handler.handleNamespace("this", s);
-			handler.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-			handler.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-			handler.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-			handler.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-			handler.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-			handler.handleNamespace("dct", "http://purl.org/dc/terms/");
-			handler.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
-			handler.handleNamespace("pav", "http://purl.org/pav/");
-			handler.handleNamespace("prov", "http://www.w3.org/ns/prov#");
-			handler.handleNamespace("np", "http://www.nanopub.org/nschema#");
+			handler.handleNamespace("this", nanopub.getUri().toString());
+			for (Pair<String,String> p : defaultNamespaces) {
+				handler.handleNamespace(p.fst, p.snd);
+			}
 		}
 		for (Statement st : getStatements(nanopub)) {
 			handler.handleStatement(st);

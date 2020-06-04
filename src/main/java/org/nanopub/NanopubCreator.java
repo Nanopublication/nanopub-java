@@ -15,6 +15,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
 
+import com.sun.tools.javac.util.Pair;
+
 /**
  * This class allows for the programmatic creation of nanopubs in a step-wise fashion.
  *
@@ -33,6 +35,7 @@ public class NanopubCreator {
 	private List<String> nsPrefixes;
 	private Map<String,String> ns;
 	private Nanopub nanopub;
+	private boolean removeUnusedPrefixesEnabled = false;
 
 	private ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -180,7 +183,7 @@ public class NanopubCreator {
 	}
 
 	public void addCreator(IRI creator) {
-		addPubinfoStatement(SimpleCreatorPattern.PAV_CREATEDBY, creator);
+		addPubinfoStatement(SimpleCreatorPattern.DCT_CREATOR, creator);
 	}
 
 	public void addCreator(String orcidIdentifier) {
@@ -213,6 +216,17 @@ public class NanopubCreator {
 		addNamespace(prefix, namespace.toString());
 	}
 
+	public void addDefaultNamespaces() {
+		addNamespace("this", nanopubUri);
+		for (Pair<String,String> p : NanopubUtils.getDefaultNamespaces()) {
+			addNamespace(p.fst, p.snd);
+		}
+	}
+
+	public void setRemoveUnusedPrefixesEnabled(boolean removeUnusedPrefixesEnabled) {
+		this.removeUnusedPrefixesEnabled = removeUnusedPrefixesEnabled;
+	}
+
 	public Nanopub finalizeNanopub() throws MalformedNanopubException {
 		return finalizeNanopub(false);
 	}
@@ -227,6 +241,9 @@ public class NanopubCreator {
 		}
 		collectStatements();
 		nanopub = new NanopubImpl(statements, nsPrefixes, ns);
+		if (removeUnusedPrefixesEnabled) {
+			((NanopubWithNs) nanopub).removeUnusedPrefixes();
+		}
 		finalized = true;
 		return nanopub;
 	}

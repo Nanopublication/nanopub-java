@@ -39,6 +39,9 @@ public class Build {
 	@com.beust.jcommander.Parameter(description = "input-rdf-files", required = true)
 	private List<File> inputRdfdFiles = new ArrayList<File>();
 
+	@com.beust.jcommander.Parameter(names = "-d", description = "Point to the URI of the resource the created nanopublications are derived from")
+	private String derivedFrom;
+
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
 
@@ -72,6 +75,7 @@ public class Build {
 	private NanopubCreator npCreator;
 	private IRI nanopubIri, assertionIri, creatorIri;
 	private Resource previousSubj;
+	private IRI derivedFromUri;
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
@@ -102,6 +106,9 @@ public class Build {
 				} else {
 					outputStream = new FileOutputStream(outputFile);
 				}
+			}
+			if (derivedFrom != null) {
+				derivedFromUri = vf.createIRI(derivedFrom);
 			}
 
 			RDFParser parser = Rio.createParser(rdfInFormat);
@@ -154,21 +161,30 @@ public class Build {
 			finalizeNanopub();
 		}
 		if (npCreator == null) {
-			// Init nanopub:
-			String npUriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
-			nanopubIri = vf.createIRI(npUriString);
-			assertionIri = vf.createIRI(npUriString + "assertion");
-			creatorIri = vf.createIRI(npUriString + "creator");
-			npCreator = new NanopubCreator(nanopubIri);
-			npCreator.setAssertionUri(assertionIri);
-			npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);
-			npCreator.addCreator(creatorIri);
+			initNanopub();
 		}
 		previousSubj = subj;
 	}
 
+	private void initNanopub() {
+		String npUriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+		nanopubIri = vf.createIRI(npUriString);
+		assertionIri = vf.createIRI(npUriString + "assertion");
+		creatorIri = vf.createIRI(npUriString + "creator");
+		npCreator = new NanopubCreator(nanopubIri);
+		npCreator.setAssertionUri(assertionIri);
+		npCreator.addDefaultNamespaces();
+		if (derivedFromUri != null) {
+			npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#wasDerivedFrom"), derivedFromUri);
+		} else {
+			npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);
+		}
+		npCreator.addCreator(creatorIri);
+	}
+
 	private void finalizeNanopub() {
 		npCreator.addTimestampNow();
+		npCreator.setRemoveUnusedPrefixesEnabled(true);
 		try {
 			Nanopub np = npCreator.finalizeNanopub();
 			NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);
