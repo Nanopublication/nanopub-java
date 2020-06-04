@@ -145,7 +145,7 @@ public class Build {
 			inputStream.close();
 		}
 
-		finalizeNanopub();
+		if (previousSubj != null) finalizeNanopub();
 
 		outputStream.flush();
 		if (outputStream != System.out) {
