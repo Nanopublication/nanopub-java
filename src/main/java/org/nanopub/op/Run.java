@@ -60,6 +60,7 @@ public class Run {
 		addRunnableClass(Aggregate.class, "aggregate");
 		addRunnableClass(Import.class, "import");
 		addRunnableClass(Create.class, "create");
+		addRunnableClass(Build.class, "build");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
