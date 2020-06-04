@@ -100,6 +100,7 @@ public class NanopubUtils {
 			handler.handleNamespace("dct", "http://purl.org/dc/terms/");
 			handler.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
 			handler.handleNamespace("pav", "http://purl.org/pav/");
+			handler.handleNamespace("prov", "http://www.w3.org/ns/prov#");
 			handler.handleNamespace("np", "http://www.nanopub.org/nschema#");
 		}
 		for (Statement st : getStatements(nanopub)) {
