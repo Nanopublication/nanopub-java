@@ -285,10 +285,12 @@ public class GetNanopub {
 	}
 
 	private void outputNanopub(String nanopubId, Nanopub np) throws IOException, RDFHandlerException {
-		count++;
 		if (np == null) {
 			System.err.println("NOT FOUND: " + nanopubId);
-		} else if (outputStream == System.out) {
+			return;
+		}
+		count++;
+		if (outputStream == System.out) {
 			NanopubUtils.writeToStream(np, System.out, rdfFormat);
 			System.out.print("\n\n");
 		} else {
