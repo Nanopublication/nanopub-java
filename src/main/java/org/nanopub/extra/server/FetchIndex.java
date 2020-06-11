@@ -100,7 +100,10 @@ public class FetchIndex {
 			}
 			if (task.getNanopub() == null) {
 				if (task.getTriedServersCount() == servers.size()) {
-					task.resetServers();
+//					task.resetServers();
+					System.err.println("Failed to get " + task.getNanopubUri());
+					fetchTasks.remove(task);
+					continue;
 				}
 				List<ServerInfo> shuffledServers = new ArrayList<>(servers);
 				Collections.shuffle(shuffledServers);
