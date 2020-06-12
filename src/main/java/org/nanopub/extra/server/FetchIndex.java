@@ -22,6 +22,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 import net.trustyuri.TrustyUriUtils;
 
@@ -35,6 +36,7 @@ public class FetchIndex {
 	private boolean running = false;
 	private List<FetchNanopubTask> fetchTasks;
 	private List<ServerInfo> servers;
+	private ServerInfo localServerInfo;
 	private Map<String,Set<FetchNanopubTask>> serverLoad;
 	private Map<String,NanopubSurfacePattern> serverPatterns;
 	private Map<String,Integer> serverUsage;
@@ -45,7 +47,7 @@ public class FetchIndex {
 	protected FetchIndex() {
 	}
 
-	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {
+	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent, String localServer) {
 		this.out = out;
 		this.format = format;
 		this.writeIndex = writeIndex;
@@ -67,6 +69,18 @@ public class FetchIndex {
 		try {
 			ServerIterator.writeCachedServers(servers);
 		} catch (Exception ex) {}
+		if (localServer != null) {
+			try {
+				localServerInfo = ServerInfo.load(localServer);
+				servers.add(localServerInfo);
+				serverLoad.put(localServer, new HashSet<FetchNanopubTask>());
+				serverPatterns.put(localServer, new NanopubSurfacePattern(localServerInfo));
+				serverUsage.put(localServer, 0);
+			} catch (ServerInfoException ex) {
+				ex.printStackTrace();
+				return;
+			}
+		}
 		nanopubCount = 0;
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
 				.setConnectionRequestTimeout(100).setSocketTimeout(2000).build();
@@ -100,10 +114,13 @@ public class FetchIndex {
 			}
 			if (task.getNanopub() == null) {
 				if (task.getTriedServersCount() == servers.size()) {
-//					task.resetServers();
 					System.err.println("Failed to get " + task.getNanopubUri());
 					fetchTasks.remove(task);
 					continue;
+				}
+				if (localServerInfo != null && !task.hasServerBeenTried(localServerInfo.getPublicUrl())) {
+					assignTask(task, localServerInfo.getPublicUrl());
+					break;
 				}
 				List<ServerInfo> shuffledServers = new ArrayList<>(servers);
 				Collections.shuffle(shuffledServers);
@@ -116,7 +133,6 @@ public class FetchIndex {
 					}
 					int load = serverLoad.get(serverUrl).size();
 					if (load >= maxParallelRequestsPerServer) {
-						task.ignoreServer(serverUrl);
 						continue;
 					}
 					assignTask(task, serverUrl);
@@ -255,10 +271,6 @@ public class FetchIndex {
 
 		public boolean hasServerBeenTried(String serverUrl) {
 			return servers.contains(serverUrl);
-		}
-
-		public void resetServers() {
-			servers.clear();
 		}
 
 		public int getTriedServersCount() {

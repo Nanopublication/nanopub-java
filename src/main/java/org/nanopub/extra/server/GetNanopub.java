@@ -74,6 +74,9 @@ public class GetNanopub {
 	@com.beust.jcommander.Parameter(names = "-r", description = "Show a report in the end")
 	private boolean showReport;
 
+	@com.beust.jcommander.Parameter(names = "-l", description = "Use a local server, e.g. http://localhost:7880/")
+	private String localServer;
+
 	@com.beust.jcommander.Parameter(names = "--simulate-unreliable-connection",
 			description = "Simulate an unreliable connection for testing purposes")
 	private boolean simUnrelConn;
@@ -222,7 +225,7 @@ public class GetNanopub {
 		for (String nanopubId : nanopubIds) {
 			if (getIndex || getIndexContent) {
 				if (db == null) {
-					fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent);
+					fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent, localServer);
 				} else {
 					fetchIndex = new FetchIndexFromDb(nanopubId, db, outputStream, rdfFormat, getIndex, getIndexContent);
 				}
