@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -14,8 +15,6 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
-
-import com.sun.tools.javac.util.Pair;
 
 /**
  * This class allows for the programmatic creation of nanopubs in a step-wise fashion.
@@ -219,7 +218,7 @@ public class NanopubCreator {
 	public void addDefaultNamespaces() {
 		addNamespace("this", nanopubUri);
 		for (Pair<String,String> p : NanopubUtils.getDefaultNamespaces()) {
-			addNamespace(p.fst, p.snd);
+			addNamespace(p.getLeft(), p.getRight());
 		}
 	}
 

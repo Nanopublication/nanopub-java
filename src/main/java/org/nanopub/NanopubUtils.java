@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -23,8 +24,6 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.trusty.TrustyNanopubUtils;
-
-import com.sun.tools.javac.util.Pair;
 
 /**
  * @author Tobias Kuhn
@@ -113,7 +112,7 @@ public class NanopubUtils {
 		} else {
 			handler.handleNamespace("this", nanopub.getUri().toString());
 			for (Pair<String,String> p : defaultNamespaces) {
-				handler.handleNamespace(p.fst, p.snd);
+				handler.handleNamespace(p.getLeft(), p.getRight());
 			}
 		}
 		for (Statement st : getStatements(nanopub)) {
