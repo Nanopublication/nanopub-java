@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -31,7 +32,6 @@ import org.nanopub.NanopubUtils;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import com.sun.tools.javac.util.Pair;
 
 import net.trustyuri.TrustyUriException;
 
@@ -183,7 +183,7 @@ public class Build {
 		npCreator.setAssertionUri(assertionIri);
 		npCreator.addDefaultNamespaces();
 		for (Pair<String,String> p : namespaces) {
-			npCreator.addNamespace(p.fst, p.snd);
+			npCreator.addNamespace(p.getLeft(), p.getRight());
 		}
 		if (derivedFromUri != null) {
 			npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#wasDerivedFrom"), derivedFromUri);
