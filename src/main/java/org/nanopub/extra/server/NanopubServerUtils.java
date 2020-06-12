@@ -86,7 +86,6 @@ public class NanopubServerUtils {
 
 	static {
 		// Hard-coded server instances:
-		//bootstrapServerList.add("http://np.inn.ac/");
 		bootstrapServerList.add("http://server.nanopubs.lod.labs.vu.nl/");
 		bootstrapServerList.add("http://130.60.24.146:7880/");
 		bootstrapServerList.add("https://server.nanopubs.knows.idlab.ugent.be/");
@@ -96,7 +95,6 @@ public class NanopubServerUtils {
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-2/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-3/");
 		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-4/");
-		bootstrapServerList.add("http://rdf.disgenet.org/nanopub-server/");
 	}
 
 	public static List<String> getBootstrapServerList() {
