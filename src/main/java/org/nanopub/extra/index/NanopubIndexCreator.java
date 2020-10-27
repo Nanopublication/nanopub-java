@@ -82,14 +82,14 @@ public abstract class NanopubIndexCreator {
 
 	public void finalizeNanopub() {
 		if (finalized) throw new RuntimeException("Already finalized");
+		if (npCreator == null) {
+			newNpCreator();
+		}
 		if (supersededIndexUri != null) {
 			npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, supersededIndexUri);
 		}
 		enrichCompleteIndex(npCreator);
 		try {
-			if (npCreator == null) {
-				newNpCreator();
-			}
 			Nanopub np;
 			if (makeTrusty) {
 				np = npCreator.finalizeTrustyNanopub(true);
