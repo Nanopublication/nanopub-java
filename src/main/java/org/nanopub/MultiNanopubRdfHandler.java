@@ -127,7 +127,11 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 		try {
 			npHandler.handleNanopub(new NanopubImpl(statements, nsPrefixes, ns));
 		} catch (MalformedNanopubException ex) {
-			throwMalformed(ex);
+			if (ex.getMessage().equals("No content received for nanopub")) { // TODO: Improve this check!
+				// ignore (a stream of zero nanopubs is also a valid nanopub stream)
+			} else {
+				throwMalformed(ex);
+			}
 		}
 		clearAll();
 	}
