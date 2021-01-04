@@ -207,7 +207,7 @@ public class SignNanopub {
 	}
 
 	public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
-		keyFilename = keyFilename.replaceFirst("^~", System.getProperty("user.home"));
+		keyFilename = System.getProperty("user.home") + "/" + keyFilename.replaceFirst("^~", "");
 		KeyFactory kf = KeyFactory.getInstance(algorithm.name());
 		byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
 		KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);

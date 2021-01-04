@@ -52,7 +52,7 @@ public class MakeKeys {
 	public static void make(String pathAndFilenamePrefix, SignatureAlgorithm algorithm) throws IOException {
 
 		// Preparation:
-		String pathAndFilename = pathAndFilenamePrefix.replaceFirst("^~", System.getProperty("user.home")) + "_" + algorithm.name().toLowerCase();
+		String pathAndFilename = System.getProperty("user.home") + "/" + pathAndFilenamePrefix.replaceFirst("^~", "") + "_" + algorithm.name().toLowerCase();
 		File publicKeyFile = new File(pathAndFilename + ".pub");
 		if (publicKeyFile.exists()) {
 			throw new FileAlreadyExistsException("Key file already exists: " + publicKeyFile);
