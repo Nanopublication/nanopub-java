@@ -184,7 +184,10 @@ public abstract class NanopubIndexCreator {
 		elementNs = new HashMap<>();
 		elementNsCount = 0;
 		itemCount = 0;
-		String baseUri = getBaseUri() + Math.abs(random.nextLong()) + "/";
+		String baseUri = getBaseUri();
+		if (baseUri.startsWith("http://purl.org/nanopub/temp/")) {
+			baseUri += Math.abs(random.nextLong()) + "/";
+		}
 		npCreator = new NanopubCreator(baseUri);
 		npCreator.addNamespace("", baseUri);
 		npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
