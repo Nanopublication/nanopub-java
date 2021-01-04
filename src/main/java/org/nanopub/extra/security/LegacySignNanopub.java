@@ -187,7 +187,7 @@ public class LegacySignNanopub {
 	}
 
 	public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
-		keyFilename = System.getProperty("user.home") + "/" + keyFilename.replaceFirst("^~", "");
+		keyFilename = SignatureUtils.getFullFilePath(keyFilename);
 		KeyFactory kf = KeyFactory.getInstance("DSA");
 		byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
 		KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);

@@ -207,4 +207,11 @@ public class SignatureUtils {
 		return false;
 	}
 
+	public static String getFullFilePath(String filename) {
+		if (filename.startsWith("~")) {
+			return System.getProperty("user.home") + "/" + filename.substring(1);
+		}
+		return filename;
+	}
+
 }
