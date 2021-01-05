@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +43,7 @@ import net.trustyuri.rdf.TransformRdf;
 public class MakeTrustyNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-	private List<String> inputFileNames;
+	private List<File> inputNanopubsFiles = new ArrayList<File>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File singleOutputFile;
@@ -98,8 +99,7 @@ public class MakeTrustyNanopub {
 		} else {
 			singleOut = null;
 		}
-		for (String inputFileName : inputFileNames) {
-			File inputFile = new File(inputFileName);
+		for (File inputFile : inputNanopubsFiles) {
 			File outputFile;
 			final OutputStream out;
 			if (singleOutputFile == null) {

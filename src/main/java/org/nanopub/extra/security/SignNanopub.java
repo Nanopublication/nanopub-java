@@ -45,12 +45,14 @@ import com.beust.jcommander.ParameterException;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
-import net.trustyuri.TrustyUriUtils;
 
 public class SignNanopub {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
+	private List<File> inputNanopubFiles = new ArrayList<File>();
+
+	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+	private File singleOutputFile;
 
 	@com.beust.jcommander.Parameter(names = "-k", description = "Path and file name of key files")
 	private String keyFilename;
@@ -101,21 +103,40 @@ public class SignNanopub {
 			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
 		}
 		key = loadKey(keyFilename, algorithm);
-		for (File inputFile : inputNanopubs) {
-			File outFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
-			final OutputStream out;
-			if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
-				out = new GZIPOutputStream(new FileOutputStream(outFile));
+
+		final OutputStream singleOut;
+		if (singleOutputFile != null) {
+			if (singleOutputFile.getName().matches(".*\\.(gz|gzip)")) {
+				singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));
 			} else {
-				out = new FileOutputStream(outFile);
+				singleOut = new FileOutputStream(singleOutputFile);
 			}
-			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-			MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
+		} else {
+			singleOut = null;
+		}
+
+		for (File inputFile : inputNanopubFiles) {
+			File outputFile;
+			final OutputStream out;
+			if (singleOutputFile == null) {
+				outputFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
+				if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
+					out = new GZIPOutputStream(new FileOutputStream(outputFile));
+				} else {
+					out = new FileOutputStream(outputFile);
+				}
+			} else {
+				outputFile = singleOutputFile;
+				out = singleOut;
+			}
+			final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
+			final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
+			MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
 
 				@Override
 				public void handleNanopub(Nanopub np) {
 					try {
-						np = writeAsSignedTrustyNanopub(np, format, algorithm, key, out);
+						np = writeAsSignedTrustyNanopub(np, outFormat, algorithm, key, out);
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
 						}
@@ -146,9 +167,6 @@ public class SignNanopub {
 
 	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
-		if (TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()) != null) {
-			throw new SignatureException("Seems to have trusty URI before signing: " + nanopub.getUri());
-		}
 		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
 			throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
 		}

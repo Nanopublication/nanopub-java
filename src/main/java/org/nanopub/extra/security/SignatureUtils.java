@@ -12,13 +12,17 @@ import java.security.Signature;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -30,6 +34,7 @@ import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.NanopubWithNs;
 import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.trusty.TrustyNanopubUtils;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
@@ -126,13 +131,29 @@ public class SignatureUtils {
 		signature.initSign(key.getPrivate());
 
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
-
-		ValueFactory vf = SimpleValueFactory.getInstance();
-
-		// Adding signature element:
-		IRI signatureElUri = vf.createIRI(preNanopub.getUri() + "sig");
 		IRI npUri = preNanopub.getUri();
 		IRI piUri = preNanopub.getPubinfoUri();
+		Map<String,String> nsMap = new HashMap<>();
+		if (preNanopub instanceof NanopubWithNs) {
+			NanopubWithNs preNanopubNs = (NanopubWithNs) preNanopub;
+			for (String prefix : preNanopubNs.getNsPrefixes()) {
+				nsMap.put(prefix, preNanopubNs.getNamespace(prefix));
+			}
+		}
+
+		// Removing trusty URI if one is already present:
+		if (TrustyNanopubUtils.isValidTrustyNanopub(preNanopub)) {
+			String ac = TrustyUriUtils.getArtifactCode(preNanopub.getUri().toString());
+			preStatements = removeArtifactCode(preStatements, ac);
+			npUri = (IRI) removeArtifactCode(npUri, ac);
+			piUri = (IRI) removeArtifactCode(piUri, ac);
+			for (String prefix : nsMap.keySet()) {
+				nsMap.put(prefix, removeArtifactCode(nsMap.get(prefix), ac));
+			}
+		}
+
+		// Adding signature element:
+		IRI signatureElUri = vf.createIRI(npUri + "sig");
 		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
 		Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
 		preStatements.add(vf.createStatement(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
@@ -144,7 +165,7 @@ public class SignatureUtils {
 		}
 
 		// Preprocess statements that are covered by signature:
-		List<Statement> preprocessedStatements = RdfPreprocessor.run(preStatements, preNanopub.getUri());
+		List<Statement> preprocessedStatements = RdfPreprocessor.run(preStatements, npUri);
 
 		// Create signature:
 		signature.update(RdfHasher.getDigestString(preprocessedStatements).getBytes());
@@ -154,16 +175,13 @@ public class SignatureUtils {
 		// Preprocess signature statement:
 		List<Statement> sigStatementList = new ArrayList<Statement>();
 		sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
-		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, preNanopub.getUri()).get(0);
+		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri).get(0);
 
 		// Combine all statements:
 		RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
 		signedContent.startRDF();
-		if (preNanopub instanceof NanopubWithNs) {
-			NanopubWithNs preNanopubNs = (NanopubWithNs) preNanopub;
-			for (String prefix : preNanopubNs.getNsPrefixes()) {
-				signedContent.handleNamespace(prefix, preNanopubNs.getNamespace(prefix));
-			}
+		for (String prefix : nsMap.keySet()) {
+			signedContent.handleNamespace(prefix, nsMap.get(prefix));
 		}
 		signedContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
 		for (Statement st : preprocessedStatements) {
@@ -174,9 +192,39 @@ public class SignatureUtils {
 
 		// Create nanopub object:
 		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-		TransformRdf.transformPreprocessed(signedContent, preNanopub.getUri(), nanopubHandler);
+		TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler);
 		return nanopubHandler.getNanopub();
 	}
+
+	// ----------
+	// TODO: Move this into separate class?
+
+	private static List<Statement> removeArtifactCode(List<Statement> in, String ac) {
+		List<Statement> out = new ArrayList<>();
+		for (Statement st : in) {
+			out.add(removeArtifactCode(st, ac));
+		}
+		return out;
+	}
+
+	private static Statement removeArtifactCode(Statement st, String ac) {
+		return vf.createStatement((Resource) removeArtifactCode(st.getSubject(), ac), (IRI) removeArtifactCode(st.getPredicate(), ac),
+				removeArtifactCode(st.getObject(), ac), (Resource) removeArtifactCode(st.getContext(), ac));
+	}
+
+	private static Value removeArtifactCode(Value v, String ac) {
+		if (v instanceof IRI) {
+			return vf.createIRI(removeArtifactCode(v.stringValue(), ac));
+		} else {
+			return v;
+		}
+	}
+
+	private static String removeArtifactCode(String s, String ac) {
+		return s.replaceAll(ac + "[#/]?", "");
+	}
+
+	// ----------
 
 	private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
 		IRI signatureElementUri = null;
@@ -213,5 +261,7 @@ public class SignatureUtils {
 		}
 		return filename;
 	}
+
+	private static ValueFactory vf = SimpleValueFactory.getInstance();
 
 }
