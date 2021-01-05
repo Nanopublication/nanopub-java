@@ -21,6 +21,10 @@ public class DefaultFingerprints implements FingerprintHandler {
 	private boolean ignoreProv;
 	private boolean ignorePubinfo;
 
+	public DefaultFingerprints() {
+		this(false, false, false);
+	}
+
 	public DefaultFingerprints(boolean ignoreHead, boolean ignoreProv, boolean ignorePubinfo) {
 		this.ignoreHead = ignoreHead;
 		this.ignoreProv = ignoreProv;
