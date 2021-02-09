@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -83,7 +84,8 @@ public class FetchIndex {
 		}
 		nanopubCount = 0;
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(2000).build();
+				.setConnectionRequestTimeout(100).setSocketTimeout(2000)
+				.setCookieSpec(CookieSpecs.STANDARD).build();
 		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 		connManager.setDefaultMaxPerRoute(10);
 		connManager.setMaxTotal(1000);

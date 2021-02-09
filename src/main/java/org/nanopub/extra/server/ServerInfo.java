@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -38,7 +39,8 @@ public class ServerInfo implements Serializable {
 		InputStream in = null;
 		try {
 			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-					.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
+					.setConnectionRequestTimeout(100).setSocketTimeout(1000)
+					.setCookieSpec(CookieSpecs.STANDARD).build();
 			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		    in = c.execute(get).getEntity().getContent();
 			si = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);

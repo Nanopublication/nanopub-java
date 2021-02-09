@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -57,7 +58,8 @@ public class NanopubServerUtils {
 		try {
 			if (httpClient == null) {
 				RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
-						.setConnectionRequestTimeout(100).setSocketTimeout(2000).build();
+						.setConnectionRequestTimeout(100).setSocketTimeout(2000)
+						.setCookieSpec(CookieSpecs.STANDARD).build();
 				PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 				connManager.setDefaultMaxPerRoute(10);
 				connManager.setMaxTotal(1000);

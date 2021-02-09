@@ -27,6 +27,8 @@ import javax.activation.MimetypesFileTypeMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.rdf4j.RDF4JException;
@@ -237,7 +239,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	private HttpResponse getNanopub(URL url) throws IOException {
 		HttpGet get = new HttpGet(url.toString());
 		get.setHeader("Accept", "application/trig; q=1, application/x-trig; q=1, text/x-nquads; q=0.1, application/trix; q=0.1");
-		HttpResponse response = HttpClientBuilder.create().build().execute(get);
+		RequestConfig requestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build();
+		HttpResponse response = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == 404 || statusCode == 410) {
 			throw new FileNotFoundException(response.getStatusLine().getReasonPhrase());

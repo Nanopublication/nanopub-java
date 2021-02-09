@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -35,7 +36,8 @@ public class IntroNanopub {
 
 	static {
 		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(1000).build();
+				.setConnectionRequestTimeout(100).setSocketTimeout(1000)
+				.setCookieSpec(CookieSpecs.STANDARD).build();
 		defaultHttpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 	}
 
