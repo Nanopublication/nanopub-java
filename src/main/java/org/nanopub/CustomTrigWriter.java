@@ -7,6 +7,9 @@ import java.util.Set;
 
 import org.apache.commons.io.output.NullOutputStream;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.util.Literals;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.rio.trig.TriGWriter;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 
@@ -138,4 +141,33 @@ public class CustomTrigWriter extends TriGWriter {
 		}
 	}
 
+	// Overriding this method to *not* normalize/pretty-print literals.
+	@Override
+	protected void writeLiteral(Literal lit) throws IOException {
+		String label = lit.getLabel();
+		IRI datatype = lit.getDatatype();
+
+		if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {
+			// Write label as long string
+			writer.write("\"\"\"");
+			writer.write(TurtleUtil.encodeLongString(label));
+			writer.write("\"\"\"");
+		} else {
+			// Write label as normal string
+			writer.write("\"");
+			writer.write(TurtleUtil.encodeString(label));
+			writer.write("\"");
+		}
+
+		if (Literals.isLanguageLiteral(lit)) {
+			// Append the literal's language
+			writer.write("@");
+			writer.write(lit.getLanguage().get());
+		} else if (!XMLSchema.STRING.equals(datatype)) {
+			// Append the literal's datatype (possibly written as an abbreviated
+			// URI)
+			writer.write("^^");
+			writeURI(datatype);
+		}
+	}
 }
