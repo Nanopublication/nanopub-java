@@ -61,6 +61,7 @@ public class Run {
 		addRunnableClass(Import.class, "import");
 		addRunnableClass(Create.class, "create");
 		addRunnableClass(Build.class, "build");
+		addRunnableClass(Tar.class, "tar");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
