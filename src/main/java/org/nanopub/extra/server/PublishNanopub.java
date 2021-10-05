@@ -24,7 +24,6 @@ import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
-import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -167,12 +166,7 @@ public class PublishNanopub {
 		}
 		while (serverInfo != null) {
 			String serverUrl = serverInfo.getPublicUrl();
-			try {
-				if (!ServerInfo.load(serverUrl).isPostNanopubsEnabled()) {
-					serverInfo = serverIterator.next();
-					continue;
-				}
-			} catch (ServerInfoException ex) {
+			if (!serverInfo.isPostNanopubsEnabled()) {
 				serverInfo = serverIterator.next();
 				continue;
 			}
