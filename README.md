@@ -118,4 +118,4 @@ This is an incomplete (and outdated) list of software projects using this librar
 - https://github.com/rajaram5/NanopublicationVisualization
 - https://github.com/rajaram5/Nanopubviz
 - https://github.com/wikipathways/nanopublications
-- https://github.com/jhpoelen/eol-globi-data/tree/master/eol-globi-data-tool
+- https://github.com/globalbioticinteractions/elton
