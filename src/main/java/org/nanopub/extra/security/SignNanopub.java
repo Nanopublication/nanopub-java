@@ -26,7 +26,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -103,6 +102,7 @@ public class SignNanopub {
 			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
 		}
 		key = loadKey(keyFilename, algorithm);
+		final TransformContext c = new TransformContext(algorithm, key, null);
 
 		final OutputStream singleOut;
 		if (singleOutputFile != null) {
@@ -136,7 +136,7 @@ public class SignNanopub {
 				@Override
 				public void handleNanopub(Nanopub np) {
 					try {
-						np = writeAsSignedTrustyNanopub(np, outFormat, algorithm, key, out);
+						np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
 						}
@@ -160,12 +160,7 @@ public class SignNanopub {
 		}
 	}
 
-	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key)
-			throws TrustyUriException, InvalidKeyException, SignatureException {
-		return signAndTransform(nanopub, algorithm, key, null);
-	}
-
-	public static Nanopub signAndTransform(Nanopub nanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
+	public static Nanopub signAndTransform(Nanopub nanopub, TransformContext c)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
 		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
 			throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
@@ -174,29 +169,27 @@ public class SignNanopub {
 			((NanopubWithNs) nanopub).removeUnusedPrefixes();
 		}
 		try {
-			return SignatureUtils.createSignedNanopub(nanopub, algorithm, key, signer);
+			return SignatureUtils.createSignedNanopub(nanopub, c);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new RuntimeException(ex);
 		}
 	}
 
-	public static void signAndTransformMultiNanopub(final RDFFormat format, File file, SignatureAlgorithm algorithm,
-				KeyPair key, OutputStream out)
+	public static void signAndTransformMultiNanopub(final RDFFormat format, File file, TransformContext c, OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		InputStream in = new FileInputStream(file);
-		signAndTransformMultiNanopub(format, in, algorithm, key, out);
+		signAndTransformMultiNanopub(format, in, c, out);
 	}
 
-	public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final SignatureAlgorithm algorithm,
-				final KeyPair key, final OutputStream out)
+	public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final TransformContext c, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
 
 			@Override
 			public void handleNanopub(Nanopub np) {
 				try {
-					writeAsSignedTrustyNanopub(np, format, algorithm, key, out);
+					writeAsSignedTrustyNanopub(np, format, c, out);
 				} catch (RDFHandlerException ex) {
 					ex.printStackTrace();
 					throw new RuntimeException(ex);
@@ -216,9 +209,9 @@ public class SignNanopub {
 		out.close();
 	}
 
-	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, SignatureAlgorithm algorithm, KeyPair key, OutputStream out)
+	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, TransformContext c, OutputStream out)
 			throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
-		np = signAndTransform(np, algorithm, key);
+		np = signAndTransform(np, c);
 		RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 		NanopubUtils.propagateToHandler(np, w);
 		return np;

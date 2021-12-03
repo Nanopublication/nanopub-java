@@ -6,7 +6,6 @@ import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
-import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.KeySpec;
@@ -117,7 +116,7 @@ public class SignatureUtils {
 		return signature.verify(se.getSignature());
 	}
 
-	public static Nanopub createSignedNanopub(Nanopub preNanopub, SignatureAlgorithm algorithm, KeyPair key, IRI signer)
+	public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
 			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 		// TODO: Test this more
 
@@ -127,8 +126,8 @@ public class SignatureUtils {
 			preNanopub = new NanopubImpl(r.getStatements(), r.getNamespaces());
 		}
 
-		Signature signature = Signature.getInstance("SHA256with" + algorithm.name());
-		signature.initSign(key.getPrivate());
+		Signature signature = Signature.getInstance("SHA256with" + c.getSignatureAlgorithm().name());
+		signature.initSign(c.getKey().getPrivate());
 
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
 		IRI npUri = preNanopub.getUri();
@@ -154,14 +153,14 @@ public class SignatureUtils {
 
 		// Adding signature element:
 		IRI signatureElUri = vf.createIRI(npUri + "sig");
-		String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
+		String publicKeyString = DatatypeConverter.printBase64Binary(c.getKey().getPublic().getEncoded()).replaceAll("\\s", "");
 		Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
 		preStatements.add(vf.createStatement(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
 		preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
-		Literal algorithmLiteral = vf.createLiteral(algorithm.name());
+		Literal algorithmLiteral = vf.createLiteral(c.getSignatureAlgorithm().name());
 		preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_ALGORITHM, algorithmLiteral, piUri));
-		if (signer != null) {
-			preStatements.add(vf.createStatement(signatureElUri, SIGNED_BY, signer, piUri));
+		if (c.getSigner() != null) {
+			preStatements.add(vf.createStatement(signatureElUri, SIGNED_BY, c.getSigner(), piUri));
 		}
 
 		// Preprocess statements that are covered by signature:
