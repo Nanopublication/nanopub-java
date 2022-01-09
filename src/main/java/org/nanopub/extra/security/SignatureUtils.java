@@ -120,17 +120,33 @@ public class SignatureUtils {
 			throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 		// TODO: Test this more
 
-		RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
-		if (TempUriReplacer.hasTempUri(preNanopub)) {
-			NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, null));
-			preNanopub = new NanopubImpl(r.getStatements(), r.getNamespaces());
+		String u = preNanopub.getUri().stringValue();
+		if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||
+				!preNanopub.getAssertionUri().stringValue().startsWith(u) ||
+				!preNanopub.getProvenanceUri().stringValue().startsWith(u) ||
+				!preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
+			throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
 		}
+
+		RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
+		IRI npUri;
+		Map<Resource,IRI> tempUriReplacerMap = null;
+		if (TempUriReplacer.hasTempUri(preNanopub)) {
+			npUri = vf.createIRI(TempUriReplacer.normUri);
+			tempUriReplacerMap = new HashMap<>();
+			NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, tempUriReplacerMap));
+		} else {
+			npUri = preNanopub.getUri();
+			NanopubUtils.propagateToHandler(preNanopub, r);
+		}
+		r = c.resolveCrossRefs(r);
+		preNanopub = new NanopubImpl(r.getStatements(), r.getNamespaces());
+		c.mergeTransformMap(tempUriReplacerMap);
 
 		Signature signature = Signature.getInstance("SHA256with" + c.getSignatureAlgorithm().name());
 		signature.initSign(c.getKey().getPrivate());
 
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
-		IRI npUri = preNanopub.getUri();
 		IRI piUri = preNanopub.getPubinfoUri();
 		Map<String,String> nsMap = new HashMap<>();
 		if (preNanopub instanceof NanopubWithNs) {
@@ -164,10 +180,20 @@ public class SignatureUtils {
 		}
 
 		// Preprocess statements that are covered by signature:
-		List<Statement> preprocessedStatements = RdfPreprocessor.run(preStatements, npUri);
+		RdfFileContent preContent = new RdfFileContent(RDFFormat.TRIG);
+		preContent.startRDF();
+		for (Statement st : preStatements) preContent.handleStatement(st);
+		preContent.endRDF();
+		RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
+		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri);
+		try {
+			preContent.propagate(rp);
+		} catch (RDFHandlerException ex) {
+			throw new TrustyUriException(ex);
+		}
 
 		// Create signature:
-		signature.update(RdfHasher.getDigestString(preprocessedStatements).getBytes());
+		signature.update(RdfHasher.getDigestString(preprocessedContent.getStatements()).getBytes());
 		byte[] signatureBytes = signature.sign();
 		Literal signatureLiteral = vf.createLiteral(DatatypeConverter.printBase64Binary(signatureBytes));
 
@@ -183,7 +209,7 @@ public class SignatureUtils {
 			signedContent.handleNamespace(prefix, nsMap.get(prefix));
 		}
 		signedContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
-		for (Statement st : preprocessedStatements) {
+		for (Statement st : preprocessedContent.getStatements()) {
 			signedContent.handleStatement(st);
 		}
 		signedContent.handleStatement(preprocessedSigStatement);
@@ -191,7 +217,9 @@ public class SignatureUtils {
 
 		// Create nanopub object:
 		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-		TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler);
+		IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler);
+		Map<Resource,IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));
+		c.mergeTransformMap(transformMap);
 		return nanopubHandler.getNanopub();
 	}
 

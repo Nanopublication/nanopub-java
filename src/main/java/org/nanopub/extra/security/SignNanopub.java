@@ -62,6 +62,12 @@ public class SignNanopub {
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
 
+	@com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
+	private boolean resolveCrossRefs = false;
+
+	@com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
+	private boolean resolveCrossRefsPrefixBased = false;
+
 	public static void main(String[] args) throws IOException {
 		NanopubImpl.ensureLoaded();
 		SignNanopub obj = new SignNanopub();
@@ -102,7 +108,7 @@ public class SignNanopub {
 			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
 		}
 		key = loadKey(keyFilename, algorithm);
-		final TransformContext c = new TransformContext(algorithm, key, null);
+		final TransformContext c = new TransformContext(algorithm, key, null, resolveCrossRefs, resolveCrossRefsPrefixBased);
 
 		final OutputStream singleOut;
 		if (singleOutputFile != null) {

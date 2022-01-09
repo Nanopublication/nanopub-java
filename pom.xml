@@ -63,8 +63,8 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.2</version>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.32</version>
     </dependency>
     <dependency>
       <groupId>com.beust</groupId>
@@ -89,7 +89,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.15</version>
+      <version>1.16</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
