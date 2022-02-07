@@ -56,7 +56,7 @@ public class TransformContext {
 	}
 
 	public RdfFileContent resolveCrossRefs(RdfFileContent input) {
-		if (tempRefMap == null) return null;
+		if (tempRefMap == null) return input;
 		RdfFileContent output = new RdfFileContent(RDFFormat.TRIG);
 		input.propagate(new CrossRefResolver(tempRefMap, tempPrefixMap, output));
 		return output;
