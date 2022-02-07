@@ -2,6 +2,7 @@ package org.nanopub.extra.security;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,9 @@ import org.nanopub.extra.server.GetNanopub;
 
 import net.trustyuri.TrustyUriUtils;
 
-public class IntroNanopub {
+public class IntroNanopub implements Serializable {
+
+	private static final long serialVersionUID = -2760220283018515835L;
 
 	static HttpClient defaultHttpClient;
 
