@@ -12,6 +12,7 @@ public class KeyDeclaration extends CryptoElement {
 
 	public static final IRI DECLARED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/declaredBy");
 
+	// TODO: Shouldn't there be only one declarer?
 	private Set<IRI> declarers = new LinkedHashSet<>();
 
 	KeyDeclaration(IRI uri) {

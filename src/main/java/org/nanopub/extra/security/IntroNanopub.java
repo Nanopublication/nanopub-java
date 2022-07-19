@@ -87,15 +87,24 @@ public class IntroNanopub implements Serializable {
 	private String name;
 	private Map<IRI,KeyDeclaration> keyDeclarations = new HashMap<>();
 
+	public IntroNanopub(Nanopub nanopub) {
+		this(nanopub, null, null);
+	}
+
 	public IntroNanopub(Nanopub nanopub, IRI user) {
 		this(nanopub, null, user);
 	}
 
+	// TODO: Do we still need name and user here? We can extract it from the content.
 	public IntroNanopub(Nanopub nanopub, String name, IRI user) {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
 			if (st.getPredicate().equals(KeyDeclaration.DECLARED_BY) && st.getObject() instanceof IRI) {
+				IRI obj = (IRI) st.getObject();
+				if (this.user == null) this.user = obj;
+				if (!this.user.equals(obj)) continue;
+
 				IRI subj = (IRI) st.getSubject();
 				KeyDeclaration d;
 				if (keyDeclarations.containsKey(subj)) {
@@ -104,26 +113,29 @@ public class IntroNanopub implements Serializable {
 					d = new KeyDeclaration(subj);
 					keyDeclarations.put(subj, d);
 				}
-				d.addDeclarer((IRI) st.getObject());
+				d.addDeclarer(this.user);
 			}
 		}
 		for (Statement st : nanopub.getAssertion()) {
 			IRI subj = (IRI) st.getSubject();
-			if (!keyDeclarations.containsKey(subj)) continue;
-			KeyDeclaration d = keyDeclarations.get(subj);
-			IRI pred = st.getPredicate();
-			Value obj = st.getObject();
-			if (pred.equals(CryptoElement.HAS_ALGORITHM) && obj instanceof Literal) {
-				try {
-					d.setAlgorithm((Literal) obj);
-				} catch (MalformedCryptoElementException ex) {
-					ex.printStackTrace();
-				}
-			} else if (pred.equals(CryptoElement.HAS_PUBLIC_KEY) && obj instanceof Literal) {
-				try {
-					d.setPublicKeyLiteral((Literal) obj);
-				} catch (MalformedCryptoElementException ex) {
-					ex.printStackTrace();
+			if (subj.equals(this.user) && st.getPredicate().equals(FOAF.NAME)) {
+				this.name = st.getObject().stringValue();
+			} else if (keyDeclarations.containsKey(subj)) {
+				KeyDeclaration d = keyDeclarations.get(subj);
+				IRI pred = st.getPredicate();
+				Value obj = st.getObject();
+				if (pred.equals(CryptoElement.HAS_ALGORITHM) && obj instanceof Literal) {
+					try {
+						d.setAlgorithm((Literal) obj);
+					} catch (MalformedCryptoElementException ex) {
+						ex.printStackTrace();
+					}
+				} else if (pred.equals(CryptoElement.HAS_PUBLIC_KEY) && obj instanceof Literal) {
+					try {
+						d.setPublicKeyLiteral((Literal) obj);
+					} catch (MalformedCryptoElementException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 		}
