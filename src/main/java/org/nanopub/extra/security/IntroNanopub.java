@@ -128,13 +128,13 @@ public class IntroNanopub implements Serializable {
 					try {
 						d.setAlgorithm((Literal) obj);
 					} catch (MalformedCryptoElementException ex) {
-						ex.printStackTrace();
+						//ex.printStackTrace();
 					}
 				} else if (pred.equals(CryptoElement.HAS_PUBLIC_KEY) && obj instanceof Literal) {
 					try {
 						d.setPublicKeyLiteral((Literal) obj);
 					} catch (MalformedCryptoElementException ex) {
-						ex.printStackTrace();
+						//ex.printStackTrace();
 					}
 				}
 			}
