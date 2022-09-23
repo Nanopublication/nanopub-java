@@ -144,6 +144,12 @@ public class IntroNanopub implements Serializable {
 				}
 			}
 		}
+		for (IRI kdi : new ArrayList<IRI>(keyDeclarations.keySet())) {
+			KeyDeclaration kd = keyDeclarations.get(kdi);
+			if (kd.getPublicKeyString() == null || kd.getPublicKeyString().isEmpty() || kd.getDeclarers().isEmpty()) {
+				keyDeclarations.remove(kdi);
+			}
+		}
 	}
 
 	public Nanopub getNanopub() {
