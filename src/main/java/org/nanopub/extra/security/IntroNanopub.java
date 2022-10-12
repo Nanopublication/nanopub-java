@@ -169,7 +169,9 @@ public class IntroNanopub implements Serializable {
 	}
 
 
-	public static class IntroExtractor extends AbstractRDFHandler {
+	public static class IntroExtractor extends AbstractRDFHandler implements Serializable {
+
+		private static final long serialVersionUID = 1L;
 
 		private String userId;
 		private Nanopub introNanopub;
