@@ -272,17 +272,28 @@ public class CheckNanopub {
 		}
 
 		public int getAllValidCount() {
-			return signed + trusty + notTrusty;
+			return signed + legacySigned + trusty + notTrusty;
 		}
 
 		public int getAllInvalidCount() {
 			return invalidSignature + invalid + error;
 		}
 
+		public int getAllCount() {
+			return getAllValidCount() + getAllInvalidCount();
+		}
+
 		public boolean areAllValid() {
 			return getAllInvalidCount() == 0;
 		}
 
+		public boolean areAllTrusty() {
+			return trusty + signed + legacySigned == getAllCount();
+		}
+
+		public boolean areAllSigned() {
+			return signed + legacySigned == getAllCount();
+		}
 
 		public String getSummary() {
 			String s = "";

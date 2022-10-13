@@ -9,17 +9,36 @@ public class CheckValidNanopubsTest {
  
 	@Test
 	public void runTest() throws Exception {
-		File testSuiteValidDir = new File("src/main/resources/testsuite/valid/");
-		for (File testFile : testSuiteValidDir.listFiles()) {
-			testValid(testFile.getName());
+		for (File testFile : new File("src/main/resources/testsuite/valid/plain/").listFiles()) {
+			testPlain(testFile.getName());
+		}
+		for (File testFile : new File("src/main/resources/testsuite/valid/trusty/").listFiles()) {
+			testTrusty(testFile.getName());
+		}
+		for (File testFile : new File("src/main/resources/testsuite/valid/signed/").listFiles()) {
+			testSigned(testFile.getName());
 		}
 	}
 
-	public void testValid(String filename) throws Exception {
-		CheckNanopub c = new CheckNanopub("src/main/resources/testsuite/valid/" + filename);
+	public void testPlain(String filename) throws Exception {
+		CheckNanopub c = new CheckNanopub("src/main/resources/testsuite/valid/plain/" + filename);
 		Report report = c.check();
 		System.out.println(report.getSummary());
 		assert report.areAllValid();
+	}
+
+	public void testTrusty(String filename) throws Exception {
+		CheckNanopub c = new CheckNanopub("src/main/resources/testsuite/valid/trusty/" + filename);
+		Report report = c.check();
+		System.out.println(report.getSummary());
+		assert report.areAllTrusty();
+	}
+
+	public void testSigned(String filename) throws Exception {
+		CheckNanopub c = new CheckNanopub("src/main/resources/testsuite/valid/signed/" + filename);
+		Report report = c.check();
+		System.out.println(report.getSummary());
+		assert report.areAllSigned();
 	}
 
 }
