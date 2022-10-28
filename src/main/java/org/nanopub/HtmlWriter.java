@@ -427,7 +427,7 @@ public class HtmlWriter extends TurtleWriter {
 		writenl("<meta charset=\"utf-8\">");
 		writenl("<title>Nanopublications</title>");
 		writenl("<style>");
-		writenl("body { margin: 20px; font-family: monaco,monospace; font-size: 11pt; color: #444; }");
+		writenl("body { margin: 20px; font-family: monaco,monospace; font-size: 11pt; color: #444; overflow-wrap: break-word; }");
 		writenl("a { color: #000; text-decoration: none; }");
 		writenl("a:hover { color: #666; }");
 		writenl(".nanopub { margin: 0 0 30px 0; padding: 0px 10px 10px 10px; border-radius: 10px; border: solid; border-width: 1px; }");
@@ -445,7 +445,7 @@ public class HtmlWriter extends TurtleWriter {
 		throws IOException
 	{
 		writenl("</body>");
-		writenl("</htmls>");
+		writenl("</html>");
 	}
 
 	private void writenl(String s)
