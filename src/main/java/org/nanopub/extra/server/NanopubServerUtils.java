@@ -16,11 +16,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.extra.security.NanopubSetting;
 
 public class NanopubServerUtils {
 
@@ -86,20 +89,16 @@ public class NanopubServerUtils {
 
 	private static final List<String> bootstrapServerList = new ArrayList<>();
 
-	static {
-		// Hard-coded server instances:
-		bootstrapServerList.add("http://server.nanopubs.lod.labs.vu.nl/");
-		bootstrapServerList.add("http://130.60.24.146:7880/");
-		bootstrapServerList.add("https://server.nanopubs.knows.idlab.ugent.be/");
-		bootstrapServerList.add("https://openphacts.cs.man.ac.uk/nanopub/server/");
-		bootstrapServerList.add("http://server.np.scify.org/");
-		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-1/");
-		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-2/");
-		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-3/");
-		bootstrapServerList.add("http://app.tkuhn.eculture.labs.vu.nl/nanopub-server-4/");
-	}
-
 	public static List<String> getBootstrapServerList() {
+		if (bootstrapServerList.isEmpty()) {
+			try {
+				for (IRI iri : NanopubSetting.getLocalSetting().getBootstrapServices()) {
+					bootstrapServerList.add(iri.stringValue());
+				}
+			} catch (RDF4JException | MalformedNanopubException | IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		}
 		return bootstrapServerList;
 	}
 
