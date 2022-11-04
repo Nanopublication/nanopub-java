@@ -1,16 +1,22 @@
 package org.nanopub.extra.security;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
 
 public class NanopubSetting implements Serializable {
 
@@ -23,6 +29,23 @@ public class NanopubSetting implements Serializable {
 	public static final IRI HAS_BOOTSTRAP_SERVICE = vf.createIRI("http://purl.org/nanopub/x/hasBootstrapService");
 	public static final IRI HAS_TRUST_RANGE_ALGORITHM = vf.createIRI("http://purl.org/nanopub/x/hasTrustRangeAlgorithm");
 	public static final IRI HAS_UPDATE_STRATEGY = vf.createIRI("http://purl.org/nanopub/x/hasUpdateStrategy");
+
+	public static NanopubSetting getLocalSetting() throws RDF4JException, MalformedNanopubException, IOException {
+		return getLocalSetting(null);
+	}
+
+	public static NanopubSetting getLocalSetting(String name) throws RDF4JException, MalformedNanopubException, IOException {
+		if (name == null) name = "default";
+		NanopubSetting setting = null;
+		InputStream in = null;
+		try {
+			in = NanopubSetting.class.getResourceAsStream("/settings/" + name + ".trig");
+			setting = new NanopubSetting(new NanopubImpl(in, RDFFormat.TRIG));
+		} finally {
+			if (in != null) in.close();
+		}
+		return setting;
+	}
 
 	private Nanopub nanopub;
 	private IRI settingIri;

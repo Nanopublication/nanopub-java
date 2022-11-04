@@ -57,6 +57,7 @@ public class Run {
 		addRunnableClass(Nanopub2Html.class, "html");
 		addRunnableClass(TimestampNow.class, "now");
 		addRunnableClass(org.nanopub.op.Run.class, "op");
+		addRunnableClass(org.nanopub.extra.security.ShowSetting.class, "setting");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
