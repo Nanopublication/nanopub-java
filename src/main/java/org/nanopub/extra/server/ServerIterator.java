@@ -23,7 +23,7 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	private static Map<String,Boolean> serverBlackList;
 
 	static {
-		// TODO: Peer URLs should expire so this isn't necessary:
+		// TODO: Nanopub monitor should be contacted to see which services are up, so this hard-coded black list isn't necessary:
 		serverBlackList = new HashMap<>();
 		serverBlackList.put("http://s1.semanticscience.org:8082/", true);
 		serverBlackList.put("http://nanopub-server.ops.labs.vu.nl/", true);
