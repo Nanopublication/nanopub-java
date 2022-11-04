@@ -3,6 +3,7 @@ package org.nanopub.extra.security;
 import java.io.IOException;
 
 import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.NanopubImpl;
 
@@ -31,8 +32,15 @@ public class ShowSetting {
 
 	private void run() throws RDF4JException, MalformedNanopubException, IOException {
 		NanopubSetting ns =  NanopubSetting.getLocalSetting();
-		System.out.println("setting nanopub: " + ns.getNanopub().getUri());
-		System.out.println("name: " + ns.getName());
+		System.out.println("setting nanopub:       " + ns.getNanopub().getUri());
+		System.out.println("name:                  " + ns.getName());
+		for (IRI i : ns.getBootstrapServices()) {
+			System.out.println("bootstrap service:     " + i);
+		}
+		System.out.println("agent index:           " + ns.getAgentIntroCollection());
+		System.out.println("service index:         " + ns.getServiceIntroCollection());
+		System.out.println("trust range algorithm: " + ns.getTrustRangeAlgorithm());
+		System.out.println("update strategy:       " + ns.getUpdateStrategy());
 	}
 
 }
