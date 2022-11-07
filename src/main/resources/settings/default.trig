@@ -1,5 +1,5 @@
-@prefix this: <http://purl.org/np/RACr5XFnS9DZihSpozkfGTg8hp1ok9luI2RegkvFOxv5g> .
-@prefix sub: <http://purl.org/np/RACr5XFnS9DZihSpozkfGTg8hp1ok9luI2RegkvFOxv5g#> .
+@prefix this: <http://purl.org/np/RA7oCucqCRIDikQkVFZvpvVdyoYydompdUgI06FEhLFMw> .
+@prefix sub: <http://purl.org/np/RA7oCucqCRIDikQkVFZvpvVdyoYydompdUgI06FEhLFMw#> .
 @prefix np: <http://www.nanopub.org/nschema#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix nt: <https://w3id.org/np/o/ntemplate/> .
@@ -17,14 +17,14 @@ sub:Head {
 }
 
 sub:assertion {
-  sub:test-setting npx:hasAgents <http://purl.org/np/RAs2tE1BHvwEM2OmUftb1T0JZ6oK2J7Nnr9tGbrE_s4KQ>;
+  sub:setting npx:hasAgents <http://purl.org/np/RAs2tE1BHvwEM2OmUftb1T0JZ6oK2J7Nnr9tGbrE_s4KQ>;
     npx:hasBootstrapService <http://130.60.24.146:7880/>, <http://server.nanopubs.lod.labs.vu.nl/>,
       <http://server.np.dumontierlab.com/>, <https://np.petapico.org/>;
     npx:hasServices <http://purl.org/np/RA6H6eWp93TQHxpPEiSO2WsVBJCXTQSyjaD68JMz5OVtY>;
     npx:hasTrustRangeAlgorithm npx:TransitiveTrust;
     npx:hasUpdateStrategy npx:UpdatesByCreator;
     a npx:NanopubSetting;
-    rdfs:label "first nanopublication setting for testing..." .
+    rdfs:label "first nanopublication setting" .
 }
 
 sub:provenance {
@@ -34,12 +34,14 @@ sub:provenance {
 sub:pubinfo {
   sub:sig npx:hasAlgorithm "RSA";
     npx:hasPublicKey "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCwUtewGCpT5vIfXYE1bmf/Uqu1ojqnWdYxv+ySO80ul8Gu7m8KoyPAwuvaPj0lvPtHrg000qMmkxzKhYknEjq8v7EerxZNYp5B3/3+5ZpuWOYAs78UnQVjbHSmDdmryr4D4VvvNIiUmd0yxci47dTFUj4DvfHnGd6hVe5+goqdcwIDAQAB";
-    npx:hasSignature "nMbSTN3rc5vuyIonQSjuvywx34S5Ph8yeRrlkfw0lv8uQIo02SwxvcSW3AEaoZ6ofKQHlFPHbwTtlc59fLlK2hKeqWG1cpxP7MQi0F+LfKq2qHcVZwZBZU6oFOlJGL0B2FUGJHztyvCJbGJ07qFDeUqV//3pbvFdQvbIRoEAMSs=";
+    npx:hasSignature "aDeVPzu5TzJ6uQxrpaWkleGNuJs04vTQZrb+lavha45HebDNtbvEQMCqRR+QYLl9eoyboxRoGXEkm7CoN19ph/xjgdrlgzuRi2IfhyO00UwAxqZojLQqv1rWOgb839vxca+4XVAOKDxf90kIban3m8o6W23EkVD7IJvgc9Viaco=";
     npx:hasSignatureTarget this: .
   
-  this: dct:created "2022-10-24T13:16:21.026+02:00"^^xsd:dateTime;
+  this: dct:created "2022-11-07T14:50:37.810+01:00"^^xsd:dateTime;
     dct:creator orcid:0000-0002-1267-0234;
+    npx:supersedes <http://purl.org/np/RACr5XFnS9DZihSpozkfGTg8hp1ok9luI2RegkvFOxv5g>;
     nt:wasCreatedFromProvenanceTemplate <http://purl.org/np/RANwQa4ICWS5SOjw7gp99nBpXBasapwtZF1fIM3H2gYTM>;
-    nt:wasCreatedFromPubinfoTemplate <http://purl.org/np/RAA2MfqdBCzmz9yVWjKLXNbyfBNcwsMmOqcNUxkk1maIM>;
+    nt:wasCreatedFromPubinfoTemplate <http://purl.org/np/RAA2MfqdBCzmz9yVWjKLXNbyfBNcwsMmOqcNUxkk1maIM>,
+      <http://purl.org/np/RAjpBMlw3owYhJUBo3DtsuDlXsNAJ8cnGeWAutDVjuAuI>;
     nt:wasCreatedFromTemplate <http://purl.org/np/RADPosS9nW3_uT4nILnjz9qQTYnwLelD_tDYjc1su8NQk> .
 }
