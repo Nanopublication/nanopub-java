@@ -190,8 +190,25 @@
           <excludes>
             <exclude>**/log4j.properties</exclude>
           </excludes>
-		</configuration>
-	  </plugin>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <id>invoke build</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>initialize.sh</executable>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <distributionManagement>
