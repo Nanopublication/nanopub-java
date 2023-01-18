@@ -24,6 +24,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.security.NanopubSetting;
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 public class NanopubServerUtils {
 
@@ -55,7 +56,12 @@ public class NanopubServerUtils {
 
 	public static List<String> loadList(String url) throws IOException {
 		List<String> list = new ArrayList<String>();
-		HttpGet get = new HttpGet(url);
+		HttpGet get = null;
+		try {
+			get = new HttpGet(url);
+		} catch (IllegalArgumentException ex) {
+			throw new IOException("invalid URL: " + url);
+		}
 		get.setHeader("Content-Type", "text/plain");
 		BufferedReader r = null;
 		try {

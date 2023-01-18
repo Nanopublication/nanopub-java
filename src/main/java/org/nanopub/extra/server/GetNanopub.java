@@ -151,7 +151,12 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		HttpGet get = new HttpGet(serverUrl + artifactCode);
+		HttpGet get = null;
+		try {
+			get = new HttpGet(serverUrl + artifactCode);
+		} catch (IllegalArgumentException ex) {
+			throw new IOException("invalid URL: " + serverUrl + artifactCode);
+		}
 		get.setHeader("Accept", "application/trig");
 		InputStream in = null;
 		try {

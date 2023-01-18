@@ -33,7 +33,12 @@ public class ServerInfo implements Serializable {
 	}
 
 	protected static ServerInfo load(String serverUrl, Class<? extends ServerInfo> serverInfoClass) throws ServerInfoException {
-		HttpGet get = new HttpGet(serverUrl);
+		HttpGet get = null;
+		try {
+			get = new HttpGet(serverUrl);
+		} catch (IllegalArgumentException ex) {
+			throw new ServerInfoException("invalid URL: " + serverUrl);
+		}
 		get.setHeader("Accept", "application/json");
 		ServerInfo si = null;
 		InputStream in = null;

@@ -237,7 +237,12 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	private HttpResponse getNanopub(URL url) throws IOException {
-		HttpGet get = new HttpGet(url.toString());
+		HttpGet get = null;
+		try {
+			get = new HttpGet(url.toString());
+		} catch (IllegalArgumentException ex) {
+			throw new IOException("invalid URL: " + url);
+		}
 		get.setHeader("Accept", "application/trig; q=1, application/x-trig; q=1, text/x-nquads; q=0.1, application/trix; q=0.1");
 		RequestConfig requestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build();
 		HttpResponse response = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);

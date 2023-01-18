@@ -62,7 +62,12 @@ public class IntroNanopub implements Serializable {
 
 	public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
 		if (httpClient == null) httpClient = defaultHttpClient;
-		HttpGet get = new HttpGet(userId);
+		HttpGet get = null;
+		try {
+			get = new HttpGet(userId);
+		} catch (IllegalArgumentException ex) {
+			throw new IOException("invalid URL: " + userId);
+		}
 		get.setHeader("Accept", "text/turtle");
 		InputStream in = null;
 		try {
