@@ -57,9 +57,9 @@
       <version>${rdf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.collections</groupId>
-      <artifactId>google-collections</artifactId>
-      <version>1.0</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>31.1-jre</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
