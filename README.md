@@ -1,11 +1,11 @@
 nanopub-java
 ============
 
-This is a Java library for nanopublications (see http://nanopub.org) based on
+This is a Java library for nanopublications (see http://nanopub.net) based on
 RDF4J.
 
 It implements the formal structure defined in the [official nanopublication
-guidelines](http://nanopub.org/guidelines/working_draft/).
+guidelines](http://nanopub.net/guidelines/working_draft/).
 
 
 ## Publication
