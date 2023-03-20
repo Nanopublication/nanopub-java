@@ -7,7 +7,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -82,7 +82,7 @@ public class CheckNanopub {
 				if (sparqlEndpointUrl != null) {
 					if (sparqlRepo == null) {
 						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
-						sparqlRepo.initialize();
+						sparqlRepo.init();
 					}
 					Nanopub np = new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s));
 					check(np);

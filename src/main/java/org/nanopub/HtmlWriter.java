@@ -17,7 +17,7 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.util.Literals;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings;
@@ -52,7 +52,7 @@ public class HtmlWriter extends TurtleWriter {
 		super(writer);
 	}
 
-	public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true);
+	public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true, false);
 
 	@Override
 	public RDFFormat getRDFFormat()
@@ -90,7 +90,7 @@ public class HtmlWriter extends TurtleWriter {
 	public void handleStatement(Statement st)
 		throws RDFHandlerException
 	{
-		if (!writingStarted) {
+		if (!isWritingStarted()) {
 			throw new RuntimeException("Document writing has not yet been started");
 		}
 
@@ -128,7 +128,7 @@ public class HtmlWriter extends TurtleWriter {
 			throw new RDFHandlerException(e);
 		}
 
-		if (!writingStarted) {
+		if (!isWritingStarted()) {
 			throw new RuntimeException("Document writing has not yet been started");
 		}
 
@@ -342,8 +342,8 @@ public class HtmlWriter extends TurtleWriter {
 		IRI datatype = lit.getDatatype();
 
 		if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {
-			if (XMLSchema.INTEGER.equals(datatype) || XMLSchema.DECIMAL.equals(datatype)
-					|| XMLSchema.DOUBLE.equals(datatype) || XMLSchema.BOOLEAN.equals(datatype))
+			if (XSD.INTEGER.equals(datatype) || XSD.DECIMAL.equals(datatype)
+					|| XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype))
 			{
 				try {
 					writer.write(escapeHtml4(XMLDatatypeUtil.normalize(label, datatype)));
@@ -374,7 +374,7 @@ public class HtmlWriter extends TurtleWriter {
 			writer.write("@");
 			writer.write(lit.getLanguage().get());
 		}
-		else if (!XMLSchema.STRING.equals(datatype) || !xsdStringToPlainLiteral()) {
+		else if (!XSD.STRING.equals(datatype) || !xsdStringToPlainLiteral()) {
 			// Append the literal's datatype (possibly written as an abbreviated
 			// URI)
 			writer.write("^^");
