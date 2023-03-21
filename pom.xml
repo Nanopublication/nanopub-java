@@ -89,7 +89,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.17-SNAPSHOT</version>
+      <version>1.17</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
