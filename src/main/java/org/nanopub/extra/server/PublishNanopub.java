@@ -13,7 +13,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -85,7 +85,7 @@ public class PublishNanopub {
 				if (sparqlEndpointUrl != null) {
 					if (sparqlRepo == null) {
 						sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);
-						sparqlRepo.initialize();
+						sparqlRepo.init();
 					}
 					processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));
 				} else {

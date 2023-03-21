@@ -3,7 +3,7 @@ package org.nanopub.extra.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;

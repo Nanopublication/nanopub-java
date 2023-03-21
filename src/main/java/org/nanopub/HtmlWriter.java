@@ -205,12 +205,26 @@ public class HtmlWriter extends TurtleWriter {
 		writer.write("@prefix ");
 		writer.write(prefix);
 		writer.write(": &lt;");
-		String uriString = escapeHtml4(TurtleUtil.encodeURIString(name));
+		String uriString = escapeHtml4(encodeURIString(name));
 		writer.write("<a href=\"" + uriString + "\">");
 		writer.write(uriString);
 		writer.write("</a>");
 		writer.write("&gt; .<br/>");
 		writer.writeEOL();
+	}
+
+	private static String encodeURIString(String s) {
+		return s.replace("\\", "\\u005C")
+				.replace("\t", "\\u0009")
+				.replace("\n", "\\u000A")
+				.replace("\r", "\\u000D")
+				.replace("\"", "\\u0022")
+				.replace("`", "\\u0060")
+				.replace("^", "\\u005E")
+				.replace("|", "\\u007C")
+				.replace("<", "\\u003C")
+				.replace(">", "\\u003E")
+				.replace(" ", "\\u0020");
 	}
 
 	protected void closeActiveContext()
@@ -323,7 +337,7 @@ public class HtmlWriter extends TurtleWriter {
 			// Write full URI
 			writer.write("&lt;");
 			writer.write("<a href=\"" + escapeHtml4(uriString) + "\">");
-			writer.write(escapeHtml4(TurtleUtil.encodeURIString(uriString)));
+			writer.write(escapeHtml4(encodeURIString(uriString)));
 			writer.write("</a>");
 			writer.write("&gt;");
 		}
