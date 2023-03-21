@@ -24,7 +24,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.30</version>
+      <version>1.46</version>
     </dependency>
 
 Alternatively, you might want to use one of the [pre-built
