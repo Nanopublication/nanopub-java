@@ -15,6 +15,7 @@ import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.server.GetServerInfo;
 import org.nanopub.extra.server.NanopubStatus;
 import org.nanopub.extra.server.PublishNanopub;
+import org.nanopub.extra.setting.ShowSetting;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
 
@@ -57,7 +58,7 @@ public class Run {
 		addRunnableClass(Nanopub2Html.class, "html");
 		addRunnableClass(TimestampNow.class, "now");
 		addRunnableClass(org.nanopub.op.Run.class, "op");
-		addRunnableClass(org.nanopub.extra.security.ShowSetting.class, "setting");
+		addRunnableClass(ShowSetting.class, "setting");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {

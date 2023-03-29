@@ -26,7 +26,7 @@ public abstract class CryptoElement implements Serializable {
 		return uri;
 	}
 
-	void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedCryptoElementException {
+	public void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedCryptoElementException {
 		if (publicKeyString != null) {
 			throw new MalformedCryptoElementException("Two public keys found for signature element");
 		}
@@ -37,14 +37,14 @@ public abstract class CryptoElement implements Serializable {
 		return publicKeyString;
 	}
 
-	void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedCryptoElementException {
+	public void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedCryptoElementException {
 		if (this.algorithm != null) {
 			throw new MalformedCryptoElementException("Two algorithms found for signature element");
 		}
 		this.algorithm = algorithm;
 	}
 
-	void setAlgorithm(Literal algorithmLiteral) throws MalformedCryptoElementException {
+	public void setAlgorithm(Literal algorithmLiteral) throws MalformedCryptoElementException {
 		if (algorithm != null) {
 			throw new MalformedCryptoElementException("Two algorithms found for signature element");
 		}

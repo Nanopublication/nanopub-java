@@ -23,7 +23,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.extra.security.NanopubSetting;
+import org.nanopub.extra.setting.NanopubSetting;
 
 public class NanopubServerUtils {
 

@@ -1,4 +1,4 @@
-package org.nanopub.extra.security;
+package org.nanopub.extra.setting;
 
 import java.io.IOException;
 import java.util.List;

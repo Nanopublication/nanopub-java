@@ -17,11 +17,11 @@ public class KeyDeclaration extends CryptoElement {
 	private Set<IRI> declarers = new LinkedHashSet<>();
 	private IRI keyLocation;
 
-	KeyDeclaration(IRI uri) {
+	public KeyDeclaration(IRI uri) {
 		super(uri);
 	}
 
-	void addDeclarer(IRI declarer) {
+	public void addDeclarer(IRI declarer) {
 		declarers.add(declarer);
 	}
 
@@ -33,7 +33,7 @@ public class KeyDeclaration extends CryptoElement {
 		return declarers.contains(declarer);
 	}
 
-	void setKeyLocation(IRI keyLocation) {
+	public void setKeyLocation(IRI keyLocation) {
 		this.keyLocation = keyLocation;
 	}
 

@@ -1,4 +1,4 @@
-package org.nanopub.extra.security;
+package org.nanopub.extra.setting;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +27,9 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.nanopub.Nanopub;
+import org.nanopub.extra.security.CryptoElement;
+import org.nanopub.extra.security.KeyDeclaration;
+import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
 
 import net.trustyuri.TrustyUriUtils;
