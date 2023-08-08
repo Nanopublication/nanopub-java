@@ -82,18 +82,18 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	private static void tryToLoadParserFactory(String className) {
 		try {
-			RDFParserFactory pf = (RDFParserFactory) Class.forName(className).newInstance();
+			RDFParserFactory pf = (RDFParserFactory) Class.forName(className).getConstructor().newInstance();
 			RDFParserRegistry.getInstance().add(pf);
-		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		};
 	}
 
 	private static void tryToLoadWriterFactory(String className) {
 		try {
-			RDFWriterFactory wf = (RDFWriterFactory) Class.forName(className).newInstance();
+			RDFWriterFactory wf = (RDFWriterFactory) Class.forName(className).getConstructor().newInstance();
 			RDFWriterRegistry.getInstance().add(wf);
-		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		};
 	}
@@ -194,7 +194,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
 	public NanopubImpl(File file, RDFFormat format)
 			throws MalformedNanopubException, RDF4JException, IOException {
-		readStatements(new FileInputStream(file), format, "");
+		readStatements(new FileInputStream(file), format);
 		init();
 	}
 
@@ -208,13 +208,13 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		if (!f.supportsContexts()) {
 			f = RDFFormat.TRIG;
 		}
-		readStatements(new FileInputStream(file), f, "");
+		readStatements(new FileInputStream(file), f);
 		init();
 	}
 
 	public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
 		HttpResponse response = getNanopub(url);
-		readStatements(response.getEntity().getContent(), format, "");
+		readStatements(response.getEntity().getContent(), format);
 		init();
 	}
 
@@ -232,7 +232,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		if (!f.supportsContexts()) {
 			f = RDFFormat.TRIG;
 		}
-		readStatements(response.getEntity().getContent(), f, "");
+		readStatements(response.getEntity().getContent(), f);
 		init();
 	}
 
@@ -256,19 +256,14 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		return response;
 	}
 
-	public NanopubImpl(InputStream in, RDFFormat format, String baseUri)
-			throws MalformedNanopubException, RDF4JException, IOException {
-		readStatements(in, format, baseUri);
+	public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
+		readStatements(in, format);
 		init();
 	}
 
-	public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
-		this(in, format, "");
-	}
-
-	public NanopubImpl(String utf8, RDFFormat format, String baseUri) throws MalformedNanopubException, RDF4JException {
+	public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {
 		try {
-			readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format, baseUri);
+			readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
 		} catch (IOException ex) {
 			// We do not expect an IOException here (no file system IO taking place)
 			throw new RuntimeException("Unexptected IOException", ex);
@@ -276,13 +271,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		init();
 	}
 
-	public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {
-		this(utf8, format, "");
-	}
-
-	// TODO Is the baseURI really needed? Shouldn't the input stream contain all needed data?
-	private void readStatements(InputStream in, RDFFormat format, String baseUri)
-			throws MalformedNanopubException, RDF4JException, IOException {
+	private void readStatements(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
 		try {
 			RDFParser p = NanopubUtils.getParser(format);
 			p.setRDFHandler(new AbstractRDFHandler() {
@@ -299,7 +288,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 				}
 	
 			});
-			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")), baseUri);
+			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")));
 		} finally {
 			in.close();
 		}

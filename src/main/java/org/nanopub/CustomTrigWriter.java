@@ -9,7 +9,7 @@ import org.apache.commons.io.output.NullOutputStream;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.util.Literals;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.trig.TriGWriter;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 
@@ -163,7 +163,7 @@ public class CustomTrigWriter extends TriGWriter {
 			// Append the literal's language
 			writer.write("@");
 			writer.write(lit.getLanguage().get());
-		} else if (!XMLSchema.STRING.equals(datatype)) {
+		} else if (!XSD.STRING.equals(datatype)) {
 			// Append the literal's datatype (possibly written as an abbreviated
 			// URI)
 			writer.write("^^");
