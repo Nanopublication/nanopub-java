@@ -22,7 +22,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <rdf4j.version>4.3.0-M1</rdf4j.version>
+    <rdf4j.version>4.3.5</rdf4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -59,7 +59,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>31.1-jre</version>
+      <version>32.1.2-jre</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -94,7 +94,7 @@
     <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>mongo-java-driver</artifactId>
-      <version>3.12.12</version>
+      <version>3.12.14</version>
     </dependency>
     <dependency>
       <groupId>javax.xml.bind</groupId>
@@ -109,7 +109,7 @@
     <dependency>
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
-      <version>5.7.1</version>
+      <version>5.8</version>
     </dependency>
   </dependencies>
   <scm>
