@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -190,6 +191,13 @@ public class CheckNanopub {
 				System.out.println("Valid (but not trusty): " + np.getUri());
 			}
 			report.countNotTrusty();
+		}
+		if (verbose) {
+			System.out.println("LABEL: " + NanopubUtils.getLabel(np));
+			System.out.println("TYPES:");
+			for (IRI typeIri : NanopubUtils.getTypes(np)) {
+				System.out.println("- " + typeIri);
+			}
 		}
 	}
 

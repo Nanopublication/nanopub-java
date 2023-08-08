@@ -9,13 +9,24 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -138,5 +149,104 @@ public class NanopubUtils {
 		}
 		return usedPrefixes;
 	}
+
+	public static String getLabel(Nanopub np) {
+		String npLabel = "", npTitle = "", aLabel = "", aTitle = "", introLabel = "";
+		final IRI npId = np.getUri();
+		final IRI aId = np.getAssertionUri();
+		final Map<IRI,Boolean> introMap = new HashMap<>();
+		for (Statement st : np.getPubinfo()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(npId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
+				npLabel += " " + obj.stringValue();
+			}
+			if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+				npTitle += " " + obj.stringValue();
+			}
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+				introMap.put((IRI) obj, true);
+			}
+		}
+		for (Statement st : np.getProvenance()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
+				aLabel += " " + obj.stringValue();
+			}
+			if (subj.equals(aId) && pred.equals(DCTERMS.TITLE) && obj instanceof Literal) {
+				aTitle += " " + obj.stringValue();
+			}
+		}
+		for (Statement st : np.getAssertion()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
+				aLabel += " " + obj.stringValue();
+			}
+			if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+				aTitle += " " + obj.stringValue();
+			}
+			if (introMap.containsKey(subj) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
+				introLabel += " " + obj.stringValue();
+			}
+		}
+		if (!npLabel.isEmpty()) return npLabel.substring(1);
+		if (!npTitle.isEmpty()) return npTitle.substring(1);
+		if (!aLabel.isEmpty()) return aLabel.substring(1);
+		if (!aTitle.isEmpty()) return aTitle.substring(1);
+		if (!introLabel.isEmpty()) return introLabel.substring(1);
+		return null;
+	}
+
+	public static Set<IRI> getTypes(Nanopub np) {
+		final Set<IRI> types = new HashSet<>();
+		final IRI npId = np.getUri();
+		final IRI aId = np.getAssertionUri();
+		final Map<IRI,Boolean> introMap = new HashMap<>();
+		for (Statement st : np.getPubinfo()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(npId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
+				types.add((IRI) obj);
+			}
+			if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
+				types.add((IRI) obj);
+			}
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+				introMap.put((IRI) obj, true);
+			}
+		}
+		for (Statement st : np.getProvenance()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(aId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
+				types.add((IRI) obj);
+			}
+		}
+		for (Statement st : np.getAssertion()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (subj.equals(aId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
+				types.add((IRI) obj);
+			}
+			if (introMap.containsKey(subj) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
+				types.add((IRI) obj);
+			}
+		}
+		return types;
+	}
+
+	private static final ValueFactory vf = SimpleValueFactory.getInstance();
+	private static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
+	private static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
+	private static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
+	private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
 
 }
