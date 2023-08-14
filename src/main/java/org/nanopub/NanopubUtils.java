@@ -229,6 +229,8 @@ public class NanopubUtils {
 				types.add((IRI) obj);
 			}
 		}
+		IRI onlyPredicateInAssertion = null;
+		boolean hasOnlyPredicateInAssertion = true;
 		for (Statement st : np.getAssertion()) {
 			final Resource subj = st.getSubject();
 			final IRI pred = st.getPredicate();
@@ -239,7 +241,13 @@ public class NanopubUtils {
 			if (introMap.containsKey(subj) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
 				types.add((IRI) obj);
 			}
+			if (onlyPredicateInAssertion == null) {
+				onlyPredicateInAssertion = pred;
+			} else if (!onlyPredicateInAssertion.equals(pred)) {
+				hasOnlyPredicateInAssertion = false;
+			}
 		}
+		if (hasOnlyPredicateInAssertion) types.add(onlyPredicateInAssertion);
 		return types;
 	}
 
