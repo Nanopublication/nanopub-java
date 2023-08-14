@@ -22,7 +22,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <rdf4j.version>4.3.5</rdf4j.version>
+    <rdf4j.version>5.0.0-M1</rdf4j.version>
   </properties>
   <dependencies>
     <dependency>
