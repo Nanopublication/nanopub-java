@@ -34,6 +34,7 @@ import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
 /**
@@ -240,6 +241,11 @@ public class NanopubUtils {
 			}
 			if (introMap.containsKey(subj) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
 				types.add((IRI) obj);
+			}
+			if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+				// This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
+				// this predicate is treated as a special case that triggers a type assignment.
+				types.add(pred);
 			}
 			if (onlyPredicateInAssertion == null) {
 				onlyPredicateInAssertion = pred;
