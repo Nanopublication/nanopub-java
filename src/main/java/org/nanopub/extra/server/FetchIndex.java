@@ -109,6 +109,7 @@ public class FetchIndex {
 			if (task.isRunning()) continue;
 			if (task.isCancelled()) {
 				fetchTasks.remove(task);
+				serverLoad.get(task.getLastServerUrl()).remove(task);
 				continue;
 			}
 			if (task.getLastServerUrl() != null) {
