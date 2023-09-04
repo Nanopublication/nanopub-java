@@ -230,22 +230,29 @@ public class NanopubUtils {
 				types.add((IRI) obj);
 			}
 		}
+		IRI onlySubjectInAssertion = null;
+		List<IRI> allTypes = new ArrayList<>();
+		boolean hasOnlySubjectInAssertion = true;
 		IRI onlyPredicateInAssertion = null;
 		boolean hasOnlyPredicateInAssertion = true;
 		for (Statement st : np.getAssertion()) {
-			final Resource subj = st.getSubject();
+			final IRI subj = (IRI) st.getSubject();
 			final IRI pred = st.getPredicate();
 			final Value obj = st.getObject();
-			if (subj.equals(aId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
-				types.add((IRI) obj);
-			}
-			if (introMap.containsKey(subj) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
-				types.add((IRI) obj);
+			if (pred.equals(RDF.TYPE) && obj instanceof IRI) {
+				allTypes.add((IRI) obj);
+				if (subj.equals(aId)) types.add((IRI) obj);
+				if (introMap.containsKey(subj)) types.add((IRI) obj);
 			}
 			if (pred.equals(KeyDeclaration.DECLARED_BY)) {
 				// This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
 				// this predicate is treated as a special case that triggers a type assignment.
 				types.add(pred);
+			}
+			if (onlySubjectInAssertion == null) {
+				onlySubjectInAssertion = subj;
+			} else if (!onlySubjectInAssertion.equals(subj)) {
+				hasOnlySubjectInAssertion = false;
 			}
 			if (onlyPredicateInAssertion == null) {
 				onlyPredicateInAssertion = pred;
@@ -253,6 +260,7 @@ public class NanopubUtils {
 				hasOnlyPredicateInAssertion = false;
 			}
 		}
+		if (hasOnlySubjectInAssertion) types.addAll(allTypes);
 		if (hasOnlyPredicateInAssertion) types.add(onlyPredicateInAssertion);
 		return types;
 	}
