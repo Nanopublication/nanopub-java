@@ -37,6 +37,8 @@ import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
+import net.trustyuri.TrustyUriUtils;
+
 /**
  * @author Tobias Kuhn
  */
@@ -263,6 +265,17 @@ public class NanopubUtils {
 		if (hasOnlySubjectInAssertion) types.addAll(allTypes);
 		if (hasOnlyPredicateInAssertion) types.add(onlyPredicateInAssertion);
 		return types;
+	}
+
+	public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
+
+	public static String updateXorChecksum(IRI nanopubId, String checksum) {
+		byte[] checksumBytes = TrustyUriUtils.getBase64Bytes(checksum);
+		byte[] addBytes = TrustyUriUtils.getBase64Bytes(TrustyUriUtils.getArtifactCode(nanopubId.stringValue()).substring(2));
+		for (int i = 0 ; i < 32 ; i++) {
+			checksumBytes[i] = (byte) (checksumBytes[i] ^ addBytes[i]);
+		}
+		return TrustyUriUtils.getBase64(checksumBytes);
 	}
 
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
