@@ -198,6 +198,7 @@ public class CheckNanopub {
 			for (IRI typeIri : NanopubUtils.getTypes(np)) {
 				System.out.println("- " + typeIri);
 			}
+			System.out.println("DESCRIPTION:\n" + NanopubUtils.getDescription(np));
 		}
 	}
 

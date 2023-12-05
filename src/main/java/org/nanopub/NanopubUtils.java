@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -205,6 +206,82 @@ public class NanopubUtils {
 		return null;
 	}
 
+	public static String getDescription(Nanopub np) {
+		String npDesc = "", npComment = "", npDef = "", aDesc = "", aComment = "", aDef = "", iDesc = "", iComment = "", iDef = "";
+		final IRI npId = np.getUri();
+		final IRI aId = np.getAssertionUri();
+		final Map<IRI,Boolean> introMap = new HashMap<>();
+		for (Statement st : np.getPubinfo()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (!subj.equals(npId)) continue;
+			if (obj instanceof Literal) {
+				if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+					npDesc += "\n" + obj.stringValue();
+				} else if (pred.equals(RDFS.COMMENT)) {
+					npComment += "\n" + obj.stringValue();
+				} else if (pred.equals(SKOS.DEFINITION)) {
+					npDef += "\n" + obj.stringValue();
+				}
+			} else {
+				if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) {
+					introMap.put((IRI) obj, true);
+				}
+			}
+		}
+		for (Statement st : np.getProvenance()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (!(obj instanceof Literal)) continue;
+			if (!subj.equals(aId)) continue;
+			if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+				aDesc += "\n" + obj.stringValue();
+			} else if (pred.equals(RDFS.COMMENT)) {
+				aComment += "\n" + obj.stringValue();
+			} else if (pred.equals(SKOS.DEFINITION)) {
+				aDef += "\n" + obj.stringValue();
+			}
+		}
+		for (Statement st : np.getAssertion()) {
+			final Resource subj = st.getSubject();
+			final IRI pred = st.getPredicate();
+			final Value obj = st.getObject();
+			if (!(obj instanceof Literal)) continue;
+			if (subj.equals(aId)) {
+				if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+					aDesc += "\n" + obj.stringValue();
+				} else if (pred.equals(RDFS.COMMENT)) {
+					aComment += "\n" + obj.stringValue();
+				} else if (pred.equals(SKOS.DEFINITION)) {
+					aDef += "\n" + obj.stringValue();
+				}
+			}
+			if (introMap.containsKey(subj)) {
+				if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+					iDesc += " " + obj.stringValue();
+				} else if (pred.equals(RDFS.COMMENT)) {
+					iComment += " " + obj.stringValue();
+				} else if (pred.equals(SKOS.DEFINITION)) {
+					iDef += " " + obj.stringValue();
+				}
+			}
+		}
+		String description = "";
+		if (!npDesc.isEmpty()) description += npDesc;
+		if (!npComment.isEmpty()) description += npComment;
+		if (!npDef.isEmpty()) description += npDef;
+		if (!aDesc.isEmpty()) description += aDesc;
+		if (!aComment.isEmpty()) description += aComment;
+		if (!aDef.isEmpty()) description += aDef;
+		if (!iDesc.isEmpty()) description += iDesc;
+		if (!iComment.isEmpty()) description += iComment;
+		if (!iDef.isEmpty()) description += iDef;
+		if (description.isEmpty()) return null;
+		return description.substring(1);
+	}
+
 	public static Set<IRI> getTypes(Nanopub np) {
 		final Set<IRI> types = new HashSet<>();
 		final IRI npId = np.getUri();
@@ -283,5 +360,6 @@ public class NanopubUtils {
 	private static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
 	private static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
 	private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
+	private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
 
 }
