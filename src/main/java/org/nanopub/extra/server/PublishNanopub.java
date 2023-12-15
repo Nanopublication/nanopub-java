@@ -62,8 +62,8 @@ public class PublishNanopub {
 		}
 	}
 
-	public static void publish(Nanopub nanopub) throws IOException {
-		new PublishNanopub().publishNanopub(nanopub);
+	public static String publish(Nanopub nanopub) throws IOException {
+		return new PublishNanopub().publishNanopub(nanopub);
 	}
 
 	private ServerIterator serverIterator = null;
@@ -147,7 +147,7 @@ public class PublishNanopub {
 		}
 	}
 
-	public void publishNanopub(Nanopub nanopub) throws IOException {
+	public String publishNanopub(Nanopub nanopub) throws IOException {
 		if (serverInfo == null) {
 			if (serverUrls == null || serverUrls.isEmpty()) {
 				serverIterator = new ServerIterator();
@@ -190,10 +190,11 @@ public class PublishNanopub {
 					} else {
 						usedServers.put(serverUrl, 1);
 					}
+					String url = serverUrl + artifactCode;
 					if (verbose) {
-						System.out.println("Published: " + artifactCode);
+						System.out.println("Published: " + url);
 					}
-					return;
+					return url;
 				} else {
 					if (verbose) {
 						System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
