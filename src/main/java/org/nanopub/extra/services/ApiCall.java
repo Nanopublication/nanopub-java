@@ -103,6 +103,7 @@ public class ApiCall {
 				}
 			}
 		}
+		System.err.println("Invoking API operation " + operation + " " + paramString);
 	}
 
 	private void run() {
