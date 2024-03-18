@@ -47,7 +47,6 @@ public class ApiCall {
 //		"http://grlc.np.scify.org/api/local/local/",
 		// Two are Signed Nanopub Services (because we're only using the 'signed_...' operations here, the difference doesn't matter):
 		"http://130.60.24.146:7881/api/local/local/",
-		"https://grlc.nps.petapico.org/api/local/local/",
 		"https://grlc.services.np.trustyuri.net/api/local/local/"
 	};
 

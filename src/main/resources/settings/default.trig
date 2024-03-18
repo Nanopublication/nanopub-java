@@ -1,5 +1,5 @@
-@prefix this: <http://purl.org/np/RA7oCucqCRIDikQkVFZvpvVdyoYydompdUgI06FEhLFMw> .
-@prefix sub: <http://purl.org/np/RA7oCucqCRIDikQkVFZvpvVdyoYydompdUgI06FEhLFMw#> .
+@prefix this: <https://w3id.org/np/RApvJxJO7tJFbhu0sqfO09XVOxxH9_-IO5EzztJqHMitk> .
+@prefix sub: <https://w3id.org/np/RApvJxJO7tJFbhu0sqfO09XVOxxH9_-IO5EzztJqHMitk#> .
 @prefix np: <http://www.nanopub.org/nschema#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix nt: <https://w3id.org/np/o/ntemplate/> .
@@ -8,6 +8,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix orcid: <https://orcid.org/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
 sub:Head {
   this: np:hasAssertion sub:assertion;
@@ -17,9 +18,9 @@ sub:Head {
 }
 
 sub:assertion {
-  sub:setting npx:hasAgents <http://purl.org/np/RAs2tE1BHvwEM2OmUftb1T0JZ6oK2J7Nnr9tGbrE_s4KQ>;
-    npx:hasBootstrapService <http://130.60.24.146:7880/>, <http://server.nanopubs.lod.labs.vu.nl/>,
-      <http://server.np.dumontierlab.com/>, <https://np.petapico.org/>;
+  sub:setting npx:hasAgents <http://purl.org/np/RAv5xA8qrDXd8Sw8r_DQwJ3E1IzmRbRhvLpj5dlc1QPhs>;
+    npx:hasBootstrapService <http://130.60.24.146:7880/>, <http://server.np.dumontierlab.com/>,
+      <https://np.knowledgepixels.com/>, <https://server.np.trustyuri.net/>;
     npx:hasServices <http://purl.org/np/RA6H6eWp93TQHxpPEiSO2WsVBJCXTQSyjaD68JMz5OVtY>;
     npx:hasTrustRangeAlgorithm npx:TransitiveTrust;
     npx:hasUpdateStrategy npx:UpdatesByCreator;
@@ -32,16 +33,23 @@ sub:provenance {
 }
 
 sub:pubinfo {
+  orcid:0000-0002-1267-0234 foaf:name "Tobias Kuhn" .
+  
   sub:sig npx:hasAlgorithm "RSA";
     npx:hasPublicKey "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCwUtewGCpT5vIfXYE1bmf/Uqu1ojqnWdYxv+ySO80ul8Gu7m8KoyPAwuvaPj0lvPtHrg000qMmkxzKhYknEjq8v7EerxZNYp5B3/3+5ZpuWOYAs78UnQVjbHSmDdmryr4D4VvvNIiUmd0yxci47dTFUj4DvfHnGd6hVe5+goqdcwIDAQAB";
-    npx:hasSignature "aDeVPzu5TzJ6uQxrpaWkleGNuJs04vTQZrb+lavha45HebDNtbvEQMCqRR+QYLl9eoyboxRoGXEkm7CoN19ph/xjgdrlgzuRi2IfhyO00UwAxqZojLQqv1rWOgb839vxca+4XVAOKDxf90kIban3m8o6W23EkVD7IJvgc9Viaco=";
-    npx:hasSignatureTarget this: .
+    npx:hasSignature "qLifxeNWKlAWu3kBa31a4kF/3BVR4mTLbj6R8+GTXHzf8lBmBCnKlmhowiDWBGVOA8Fce/7q15sbu9pC5okAOwwAsJs5QHGX0O44Qz/VQyjANxrke/K6H4Ika6QphMFRaZDPD7Gge7aSdsC/Ap92lWXbnwOkQyqO9kP6vRdbpDs=";
+    npx:hasSignatureTarget this:;
+    npx:signedBy orcid:0000-0002-1267-0234 .
   
-  this: dct:created "2022-11-07T14:50:37.810+01:00"^^xsd:dateTime;
+  this: dct:created "2024-03-18T12:09:04.209Z"^^xsd:dateTime;
     dct:creator orcid:0000-0002-1267-0234;
-    npx:supersedes <http://purl.org/np/RACr5XFnS9DZihSpozkfGTg8hp1ok9luI2RegkvFOxv5g>;
+    dct:license <https://creativecommons.org/licenses/by/4.0/>;
+    npx:introduces sub:setting;
+    npx:supersedes <http://purl.org/np/RAo-CGb4FbjkJZWkgrcHwEhYU1iHAjABnlwD9PK1PJeFM>;
+    npx:wasCreatedAt <http://localhost:37373/>;
+    rdfs:label "Nanopublication setting: first nanopublication setting";
     nt:wasCreatedFromProvenanceTemplate <http://purl.org/np/RANwQa4ICWS5SOjw7gp99nBpXBasapwtZF1fIM3H2gYTM>;
     nt:wasCreatedFromPubinfoTemplate <http://purl.org/np/RAA2MfqdBCzmz9yVWjKLXNbyfBNcwsMmOqcNUxkk1maIM>,
-      <http://purl.org/np/RAjpBMlw3owYhJUBo3DtsuDlXsNAJ8cnGeWAutDVjuAuI>;
-    nt:wasCreatedFromTemplate <http://purl.org/np/RADPosS9nW3_uT4nILnjz9qQTYnwLelD_tDYjc1su8NQk> .
+      <http://purl.org/np/RAh1gm83JiG5M6kDxXhaYT1l49nCzyrckMvTzcPn-iv90>, <http://purl.org/np/RAjpBMlw3owYhJUBo3DtsuDlXsNAJ8cnGeWAutDVjuAuI>;
+    nt:wasCreatedFromTemplate <http://purl.org/np/RA-nvwU310EzeV5EGDaTQAAD6pNgxpa9htP-ImbXBrXO4> .
 }
