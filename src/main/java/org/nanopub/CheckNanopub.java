@@ -199,6 +199,18 @@ public class CheckNanopub {
 				System.out.println("- " + typeIri);
 			}
 			System.out.println("DESCRIPTION:\n" + NanopubUtils.getDescription(np));
+			System.out.println("AUTHORS:");
+			for (IRI authorIri : SimpleCreatorPattern.getAuthors(np)) {
+				System.out.println("- " + authorIri);
+			}
+			System.out.println("AUTHOR LIST:");
+			for (IRI authorIri : SimpleCreatorPattern.getAuthorList(np)) {
+				System.out.println("- " + authorIri);
+			}
+			System.out.println("CREATORS:");
+			for (IRI creatorIri : SimpleCreatorPattern.getCreators(np)) {
+				System.out.println("- " + creatorIri);
+			}
 		}
 	}
 

@@ -2,7 +2,11 @@ package org.nanopub;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
@@ -55,15 +59,63 @@ public class SimpleCreatorPattern implements NanopubPattern {
 		return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java");
 	}
 
+
 	public static Set<IRI> getAuthors(Nanopub nanopub) {
 		Set<IRI> authors = new HashSet<>();
+		IRI authorListId = null;
 		for (Statement st : nanopub.getPubinfo()) {
-			if (!st.getSubject().equals(nanopub.getUri())) continue;
-			if (!isAuthorProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof IRI)) continue;
-			authors.add((IRI) st.getObject());
+			if (st.getSubject().equals(nanopub.getUri()) && isAuthorProperty(st.getPredicate()) && (st.getObject() instanceof IRI)) {
+				authors.add((IRI) st.getObject());
+			}
+			if (st.getSubject().equals(nanopub.getUri()) && st.getPredicate().equals(BIBO_AUTHOR_LIST) && (st.getObject() instanceof IRI)) {
+				authorListId = (IRI) st.getObject();
+			}
+		}
+		if (authorListId != null) {
+			for (Statement st : nanopub.getPubinfo()) {
+				if (!st.getSubject().equals(authorListId)) continue;
+				if (!st.getPredicate().stringValue().matches(RDF_ELEMENT_PROPERTY_REGEX)) continue;
+				if (!(st.getObject() instanceof IRI)) continue;
+				authors.add((IRI) st.getObject());
+			}
 		}
 		return authors;
+	}
+
+	public static List<IRI> getAuthorList(Nanopub nanopub) {
+		List<IRI> authorList = new ArrayList<IRI>();
+		Set<IRI> authorSet = new HashSet<>();
+		Map<Integer,IRI> authorMap = new HashMap<>();
+		IRI authorListId = null;
+		for (Statement st : nanopub.getPubinfo()) {
+			if (st.getSubject().equals(nanopub.getUri()) && isAuthorProperty(st.getPredicate()) && (st.getObject() instanceof IRI)) {
+				authorSet.add((IRI) st.getObject());
+			}
+			if (st.getSubject().equals(nanopub.getUri()) && st.getPredicate().equals(BIBO_AUTHOR_LIST) && (st.getObject() instanceof IRI)) {
+				authorListId = (IRI) st.getObject();
+			}
+		}
+		if (authorListId != null) {
+			for (Statement st : nanopub.getPubinfo()) {
+				if (!st.getSubject().equals(authorListId)) continue;
+				if (!st.getPredicate().stringValue().matches(RDF_ELEMENT_PROPERTY_REGEX)) continue;
+				if (!(st.getObject() instanceof IRI)) continue;
+				int i = Integer.parseInt(st.getPredicate().stringValue().replaceFirst(RDF_ELEMENT_PROPERTY_REGEX, "$1"));
+				authorMap.put(i, (IRI) st.getObject());
+			}
+			int i = 1;
+			while (true) {
+				if (!authorMap.containsKey(i)) break;
+				authorList.add(authorMap.get(i));
+				i = i + 1;
+			}
+		}
+		for (IRI a : authorSet) {
+			// TODO This is not efficient (but lists should be small...)
+			if (!authorList.contains(a)) authorList.add(a);
+		}
+		
+		return authorList;
 	}
 
 	public static Set<IRI> getCreators(Nanopub nanopub) {
@@ -87,6 +139,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
 	public static final IRI PAV_AUTHOREDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/authoredBy");
 	public static final IRI PAV_AUTHOREDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
 	public static final IRI PAV_AUTHOREDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/authoredBy");
+
+	public static final IRI BIBO_AUTHOR_LIST = SimpleValueFactory.getInstance().createIRI("http://purl.org/ontology/bibo/authorList");
+	public static final String RDF_ELEMENT_PROPERTY_REGEX = "http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_([1-9][0-9]*)";
 
 	public static boolean isCreatorProperty(IRI uri) {
 		return uri.equals(PAV_CREATEDBY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV_CREATEDBY_2)
