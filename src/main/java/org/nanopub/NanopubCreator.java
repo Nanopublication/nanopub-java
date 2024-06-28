@@ -291,4 +291,16 @@ public class NanopubCreator {
 		statements.add(vf.createStatement(subj, pred, obj, context));
 	}
 
+	public List<Statement> getCurrentAssertionStatements() {
+		return new ArrayList<Statement>(assertion);
+	}
+
+	public List<Statement> getCurrentProvenanceStatements() {
+		return new ArrayList<Statement>(provenance);
+	}
+
+	public List<Statement> getCurrentPubinfoStatements() {
+		return new ArrayList<Statement>(pubinfo);
+	}
+
 }
