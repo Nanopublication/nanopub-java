@@ -16,12 +16,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 /**
- * First-generation query API call. To be deprecated and replaced by second-generation query services.
+ * Second-generation query API call.
  */
-public class ApiCall {
+public class QueryCall {
 
-	public static HttpResponse run(String apiUrl, String operation, Map<String,String> params) {
-		ApiCall apiCall = new ApiCall(apiUrl, operation, params);
+	public static HttpResponse run(String queryId, Map<String,String> params) {
+		QueryCall apiCall = new QueryCall(queryId, params);
 		apiCall.run();
 		while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
 			try {
@@ -41,16 +41,11 @@ public class ApiCall {
 				.setCookieSpec(CookieSpecs.STANDARD).build();
 	}
 
-	// TODO Available services should be retrieved from the network, not hard-coded:
-	public static String[] apiInstances = new String[] {
-		"http://grlc.nanopubs.lod.labs.vu.nl/api/local/local/",
-		"http://grlc.np.dumontierlab.com/api/local/local/",
-//		"https://openphacts.cs.man.ac.uk/nanopub/grlc/api/local/local/",
-		"https://grlc.nanopubs.knows.idlab.ugent.be/api/local/local/",
-//		"http://grlc.np.scify.org/api/local/local/",
-		// Two are Signed Nanopub Services (because we're only using the 'signed_...' operations here, the difference doesn't matter):
-		"http://130.60.24.146:7881/api/local/local/",
-		"https://grlc.services.np.trustyuri.net/api/local/local/"
+	// TODO Available services should be retrieved from a setting, not hard-coded:
+	public static String[] queryApiInstances = new String[] {
+		"https://query.knowledgepixels.com/",
+		"https://query.np.kpxl.org/",
+		"https://query.np.trustyuri.net/"
 	};
 
 	private static List<String> checkedApiInstances;
@@ -58,30 +53,29 @@ public class ApiCall {
 	public static List<String> getApiInstances() {
 		if (checkedApiInstances != null) return checkedApiInstances;
 		checkedApiInstances = new ArrayList<String>();
-		for (String a : apiInstances) {
+		for (String a : queryApiInstances) {
 			try {
 				System.err.println("Checking API instance: " + a);
 				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(new HttpGet(a));
 				if (wasSuccessful(resp)) {
-					System.err.println("SUCCESS: API instance is accessible: " + a);
+					System.err.println("SUCCESS: Nanopub Query instance is accessible: " + a);
 					checkedApiInstances.add(a);
 				} else {
-					System.err.println("FAILURE: API instance isn't accessible: " + a);
+					System.err.println("FAILURE: Nanopub Query instance isn't accessible: " + a);
 				}
 			} catch (IOException ex) {
-				System.err.println("FAILURE: API instance isn't accessible: " + a);
+				System.err.println("FAILURE: Nanopub Query instance isn't accessible: " + a);
 			}
 		}
-		System.err.println(checkedApiInstances.size() + " accessible API instances");
+		System.err.println(checkedApiInstances.size() + " accessible Nanopub Query instances");
 		if (checkedApiInstances.size() < 2) {
 			checkedApiInstances = null;
-			throw new RuntimeException("Not enough healthy API instances available");
+			throw new RuntimeException("Not enough healthy Nanopub Query instances available");
 		}
 		return checkedApiInstances;
 	}
 
-	private String apiUrl;
-	private String operation;
+	private String queryId;
 	private String paramString;
 	private int parallelCallCount = 2;
 	private List<String> apisToCall = new ArrayList<>();
@@ -89,9 +83,8 @@ public class ApiCall {
 
 	private HttpResponse resp;
 
-	private ApiCall(String apiUrl, String operation, Map<String,String> params) {
-		this.apiUrl = apiUrl;
-		this.operation = operation;
+	private QueryCall(String queryId, Map<String,String> params) {
+		this.queryId = queryId;
 		paramString = "";
 		if (params != null) {
 			paramString = "?";
@@ -105,22 +98,17 @@ public class ApiCall {
 				}
 			}
 		}
-		System.err.println("Invoking API operation " + operation + " " + paramString);
+		System.err.println("Invoking API operation " + queryId + " " + paramString);
 	}
 
 	private void run() {
-		// TODO Make this more general when loading services from setting:
-		if (apiUrl == null || apiUrl.equals(ApiAccess.MAIN_GRLC_API_GENERIC_URL)) {
-			List<String> apiInstancesToTry = new LinkedList<>(getApiInstances());
-			while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
-				int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
-				String apiUrl = apiInstancesToTry.get(randomIndex);
-				apisToCall.add(apiUrl);
-				System.err.println("Trying API (" + apisToCall.size() + ") " + apiUrl);
-				apiInstancesToTry.remove(randomIndex);
-			}
-		} else {
+		List<String> apiInstancesToTry = new LinkedList<>(getApiInstances());
+		while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
+			int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
+			String apiUrl = apiInstancesToTry.get(randomIndex);
 			apisToCall.add(apiUrl);
+			System.err.println("Trying API (" + apisToCall.size() + ") " + apiUrl);
+			apiInstancesToTry.remove(randomIndex);
 		}
 		for (String api : apisToCall) {
 			Call call = new Call(api);
@@ -150,7 +138,7 @@ public class ApiCall {
 		}
 
 		public void run() {
-			HttpGet get = new HttpGet(apiUrl + operation + paramString);
+			HttpGet get = new HttpGet(apiUrl + "api/" + queryId + paramString);
 			get.setHeader("Accept", "text/csv");
 			try {
 				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);

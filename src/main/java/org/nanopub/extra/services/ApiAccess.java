@@ -17,6 +17,9 @@ import org.apache.http.HttpResponse;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
+/**
+ * First-generation query API access. To be deprecated and replaced by second-generation query services.
+ */
 public abstract class ApiAccess {
 
 	public static final String MAIN_GRLC_API_GENERIC_URL = "http://purl.org/nanopub/api/";

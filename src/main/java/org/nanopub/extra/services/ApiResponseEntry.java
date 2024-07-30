@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ApiResponseEntry implements Serializable {
 
@@ -25,6 +26,10 @@ public class ApiResponseEntry implements Serializable {
 	public boolean getAsBoolean(String key) {
 		String v = data.get(key);
 		return v.equals("1") || v.equals("true");
+	}
+
+	public Set<String> getKeys() {
+		return data.keySet();
 	}
 
 
