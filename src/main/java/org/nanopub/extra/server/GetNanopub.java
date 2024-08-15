@@ -103,7 +103,18 @@ public class GetNanopub {
 
 	private static boolean simulateUnreliableConnection = false;
 
+	private static HttpClient createDefaultHttpClient() {
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
+				.setConnectionRequestTimeout(100).setSocketTimeout(1000)
+				.setCookieSpec(CookieSpecs.STANDARD).build();
+		return HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+	}
+
 	public static Nanopub get(String uriOrArtifactCode) {
+		return get(uriOrArtifactCode, createDefaultHttpClient());
+	}
+
+	public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
 		ServerIterator serverIterator = new ServerIterator();
 		String ac = getArtifactCode(uriOrArtifactCode);
 		if (!ac.startsWith(RdfModule.MODULE_ID)) {
@@ -112,7 +123,7 @@ public class GetNanopub {
 		while (serverIterator.hasNext()) {
 			ServerInfo serverInfo = serverIterator.next();
 			try {
-				Nanopub np = get(ac, serverInfo);
+				Nanopub np = get(ac, serverInfo, httpClient);
 				if (np != null) {
 					return np;
 				}
@@ -137,16 +148,17 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverInfo.getPublicUrl());
+		return get(artifactCode, serverInfo.getPublicUrl(), createDefaultHttpClient());
+	}
+
+	public static Nanopub get(String artifactCode, ServerInfo serverInfo, HttpClient httpClient)
+			throws IOException, RDF4JException, MalformedNanopubException {
+		return get(artifactCode, serverInfo.getPublicUrl(), httpClient);
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(1000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
-		HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-		return get(artifactCode, serverUrl, c);
+		return get(artifactCode, serverUrl, createDefaultHttpClient());
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)
