@@ -14,10 +14,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
@@ -103,15 +100,8 @@ public class GetNanopub {
 
 	private static boolean simulateUnreliableConnection = false;
 
-	private static HttpClient createDefaultHttpClient() {
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(1000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
-		return HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-	}
-
 	public static Nanopub get(String uriOrArtifactCode) {
-		return get(uriOrArtifactCode, createDefaultHttpClient());
+		return get(uriOrArtifactCode, NanopubUtils.getHttpClient());
 	}
 
 	public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
@@ -148,7 +138,7 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverInfo.getPublicUrl(), createDefaultHttpClient());
+		return get(artifactCode, serverInfo.getPublicUrl(), NanopubUtils.getHttpClient());
 	}
 
 	public static Nanopub get(String artifactCode, ServerInfo serverInfo, HttpClient httpClient)
@@ -158,7 +148,7 @@ public class GetNanopub {
 
 	public static Nanopub get(String artifactCode, String serverUrl)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverUrl, createDefaultHttpClient());
+		return get(artifactCode, serverUrl, NanopubUtils.getHttpClient());
 	}
 
 	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)

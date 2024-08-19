@@ -9,11 +9,9 @@ import java.util.Map;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.nanopub.NanopubUtils;
 
 /**
  * Second-generation query API call.
@@ -33,14 +31,6 @@ public class QueryCall {
 		return apiCall.resp;
 	}
 
-	private static RequestConfig requestConfig;
-
-	static {
-		requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(10000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
-	}
-
 	// TODO Available services should be retrieved from a setting, not hard-coded:
 	public static String[] queryApiInstances = new String[] {
 		"https://query.knowledgepixels.com/",
@@ -56,7 +46,7 @@ public class QueryCall {
 		for (String a : queryApiInstances) {
 			try {
 				System.err.println("Checking API instance: " + a);
-				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(new HttpGet(a));
+				HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
 				if (wasSuccessful(resp)) {
 					System.err.println("SUCCESS: Nanopub Query instance is accessible: " + a);
 					checkedApiInstances.add(a);
@@ -141,7 +131,7 @@ public class QueryCall {
 			HttpGet get = new HttpGet(apiUrl + "api/" + queryId + paramString);
 			get.setHeader("Accept", "text/csv");
 			try {
-				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);
+				HttpResponse resp = NanopubUtils.getHttpClient().execute(get);
 				if (!wasSuccessful(resp)) {
 					EntityUtils.consumeQuietly(resp.getEntity());
 					throw new IOException(resp.getStatusLine().toString());

@@ -8,11 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -181,8 +178,7 @@ public class PublishNanopub {
 				String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
 				post.setEntity(new StringEntity(nanopubString, "UTF-8"));
 				post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
-				RequestConfig requestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build();
-				HttpResponse response = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(post);
+				HttpResponse response = NanopubUtils.getHttpClient().execute(post);
 				int code = response.getStatusLine().getStatusCode();
 				if (code >= 200 && code < 300) {
 					if (usedServers.containsKey(serverUrl)) {

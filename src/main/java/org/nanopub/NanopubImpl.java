@@ -27,10 +27,7 @@ import javax.activation.MimetypesFileTypeMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
@@ -244,8 +241,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			throw new IOException("invalid URL: " + url);
 		}
 		get.setHeader("Accept", "application/trig; q=1, application/x-trig; q=1, text/x-nquads; q=0.1, application/trix; q=0.1");
-		RequestConfig requestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build();
-		HttpResponse response = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);
+		HttpResponse response = NanopubUtils.getHttpClient().execute(get);
 		int statusCode = response.getStatusLine().getStatusCode();
 		if (statusCode == 404 || statusCode == 410) {
 			throw new FileNotFoundException(response.getStatusLine().getReasonPhrase());
@@ -272,7 +268,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	}
 
 	private void readStatements(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
-		try {
+		try (in) {
 			RDFParser p = NanopubUtils.getParser(format);
 			p.setRDFHandler(new AbstractRDFHandler() {
 	
@@ -289,8 +285,6 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	
 			});
 			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")));
-		} finally {
-			in.close();
 		}
 	}
 

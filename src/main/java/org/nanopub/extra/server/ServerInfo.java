@@ -1,16 +1,12 @@
 package org.nanopub.extra.server;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.nanopub.NanopubUtils;
 
 import com.google.gson.Gson;
 
@@ -41,24 +37,10 @@ public class ServerInfo implements Serializable {
 		}
 		get.setHeader("Accept", "application/json");
 		ServerInfo si = null;
-		InputStream in = null;
-		try {
-			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-					.setConnectionRequestTimeout(100).setSocketTimeout(1000)
-					.setCookieSpec(CookieSpecs.STANDARD).build();
-			HttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-		    in = c.execute(get).getEntity().getContent();
+		try (InputStream in = NanopubUtils.getHttpClient().execute(get).getEntity().getContent()) {
 			si = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);
 		} catch (Exception ex) {
 			throw new ServerInfoException(serverUrl);
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException ex) {
-					throw new ServerInfoException("Could not close stream: " + ex.getMessage());
-				}
-			}
 		}
 		if (si == null || si.getPublicUrl() == null) {
 			throw new ServerInfoException("Error accessing server");

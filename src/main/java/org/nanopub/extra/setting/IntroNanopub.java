@@ -10,10 +10,7 @@ import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
@@ -27,6 +24,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
 import org.nanopub.extra.security.CryptoElement;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
@@ -37,15 +35,6 @@ import net.trustyuri.TrustyUriUtils;
 public class IntroNanopub implements Serializable {
 
 	private static final long serialVersionUID = -2760220283018515835L;
-
-	static HttpClient defaultHttpClient;
-
-	static {
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(1000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(1000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
-		defaultHttpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-	}
 
 	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
 		return get(userId, (HttpClient) null);
@@ -64,7 +53,7 @@ public class IntroNanopub implements Serializable {
 	}
 
 	public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
-		if (httpClient == null) httpClient = defaultHttpClient;
+		if (httpClient == null) httpClient = NanopubUtils.getHttpClient();
 		HttpGet get = null;
 		try {
 			get = new HttpGet(userId);

@@ -9,11 +9,9 @@ import java.util.Map;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.nanopub.NanopubUtils;
 
 /**
  * First-generation query API call. To be deprecated and replaced by second-generation query services.
@@ -31,14 +29,6 @@ public class ApiCall {
 			}
 		}
 		return apiCall.resp;
-	}
-
-	private static RequestConfig requestConfig;
-
-	static {
-		requestConfig = RequestConfig.custom().setConnectTimeout(10000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(10000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
 	}
 
 	// TODO Available services should be retrieved from the network, not hard-coded:
@@ -61,7 +51,7 @@ public class ApiCall {
 		for (String a : apiInstances) {
 			try {
 				System.err.println("Checking API instance: " + a);
-				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(new HttpGet(a));
+				HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
 				if (wasSuccessful(resp)) {
 					System.err.println("SUCCESS: API instance is accessible: " + a);
 					checkedApiInstances.add(a);
@@ -153,7 +143,7 @@ public class ApiCall {
 			HttpGet get = new HttpGet(apiUrl + operation + paramString);
 			get.setHeader("Accept", "text/csv");
 			try {
-				HttpResponse resp = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build().execute(get);
+				HttpResponse resp = NanopubUtils.getHttpClient().execute(get);
 				if (!wasSuccessful(resp)) {
 					EntityUtils.consumeQuietly(resp.getEntity());
 					throw new IOException(resp.getStatusLine().toString());

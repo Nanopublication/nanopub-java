@@ -16,6 +16,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Namespace;
@@ -361,5 +366,22 @@ public class NanopubUtils {
 	private static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
 	private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
 	private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
+
+
+	private static CloseableHttpClient httpClient;
+
+	public static CloseableHttpClient getHttpClient() {
+		if (httpClient == null) {
+			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
+					.setConnectionRequestTimeout(100).setSocketTimeout(2000)
+					.setCookieSpec(CookieSpecs.STANDARD).build();
+			PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+			connManager.setDefaultMaxPerRoute(10);
+			connManager.setMaxTotal(100);
+			httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
+					.setConnectionManager(connManager).build();
+		}
+		return httpClient;
+	}
 
 }

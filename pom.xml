@@ -22,7 +22,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <rdf4j.version>5.0.0</rdf4j.version>
+    <rdf4j.version>5.0.2</rdf4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -59,7 +59,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.2.1-jre</version>
+      <version>33.3.0-jre</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -104,7 +104,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.26.2</version>
+      <version>1.27.0</version>
     </dependency>
     <dependency>
       <groupId>com.opencsv</groupId>

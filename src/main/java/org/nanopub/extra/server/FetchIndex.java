@@ -10,12 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -43,7 +38,6 @@ public class FetchIndex {
 	private Map<String,Integer> serverUsage;
 	private int nanopubCount;
 	private Listener listener;
-	private HttpClient httpClient;
 
 	protected FetchIndex() {
 	}
@@ -83,14 +77,6 @@ public class FetchIndex {
 			}
 		}
 		nanopubCount = 0;
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(2000)
-				.setConnectionRequestTimeout(100).setSocketTimeout(2000)
-				.setCookieSpec(CookieSpecs.STANDARD).build();
-		PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
-		connManager.setDefaultMaxPerRoute(10);
-		connManager.setMaxTotal(1000);
-		httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
-				.setConnectionManager(connManager).build();
 	}
 
 	public void run() {
@@ -298,7 +284,7 @@ public class FetchIndex {
 			boolean serverTried = false;
 			try {
 				serverTried = true;
-				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl, httpClient);
+				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl);
 			} catch (ConnectionPoolTimeoutException ex) {
 				serverTried = false;
 				// too many connection attempts; try again later
