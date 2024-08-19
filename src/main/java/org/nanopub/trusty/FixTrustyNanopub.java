@@ -74,29 +74,30 @@ public class FixTrustyNanopub {
 				out = new FileOutputStream(outFile);
 			}
 			final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-			MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
-
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						np = writeAsFixedNanopub(np, format, out);
-						count++;
-						if (verbose) {
-							System.out.println("Nanopub URI: " + np.getUri());
-						} else {
-							if (count % 100 == 0) {
-								System.err.print(count + " nanopubs...\r");
+			try (out) {
+				MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
+	
+					@Override
+					public void handleNanopub(Nanopub np) {
+						try {
+							np = writeAsFixedNanopub(np, format, out);
+							count++;
+							if (verbose) {
+								System.out.println("Nanopub URI: " + np.getUri());
+							} else {
+								if (count % 100 == 0) {
+									System.err.print(count + " nanopubs...\r");
+								}
 							}
+						} catch (RDFHandlerException ex) {
+							throw new RuntimeException(ex);
+						} catch (TrustyUriException ex) {
+							throw new RuntimeException(ex);
 						}
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						throw new RuntimeException(ex);
 					}
-				}
-
-			});
-			out.close();
+	
+				});
+			}
 		}
 	}
 
@@ -131,21 +132,22 @@ public class FixTrustyNanopub {
 
 	public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-			@Override
-			public void handleNanopub(Nanopub np) {
-				try {
-					writeAsFixedNanopub(np, format, out);
-				} catch (RDFHandlerException ex) {
-					throw new RuntimeException(ex);
-				} catch (TrustyUriException ex) {
-					throw new RuntimeException(ex);
+		try (in; out) {
+			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
+	
+				@Override
+				public void handleNanopub(Nanopub np) {
+					try {
+						writeAsFixedNanopub(np, format, out);
+					} catch (RDFHandlerException ex) {
+						throw new RuntimeException(ex);
+					} catch (TrustyUriException ex) {
+						throw new RuntimeException(ex);
+					}
 				}
-			}
-
-		});
-		out.close();
+	
+			});
+		}
 	}
 
 	public static Nanopub writeAsFixedNanopub(Nanopub np, RDFFormat format, OutputStream out)

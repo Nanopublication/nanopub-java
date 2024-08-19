@@ -85,12 +85,12 @@ public class MakeKeys {
 		keyPairGenerator.initialize(1024, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
 
-		FileOutputStream outPublic = new FileOutputStream(publicKeyFile);
-		outPublic.write(DatatypeConverter.printBase64Binary(keyPair.getPublic().getEncoded()).getBytes());
-		outPublic.close();
-		FileOutputStream outPrivate = new FileOutputStream(privateKeyFile);
-		outPrivate.write(DatatypeConverter.printBase64Binary(keyPair.getPrivate().getEncoded()).getBytes());
-		outPrivate.close();
+		try (FileOutputStream outPublic = new FileOutputStream(publicKeyFile)) {
+			outPublic.write(DatatypeConverter.printBase64Binary(keyPair.getPublic().getEncoded()).getBytes());
+		}
+		try (FileOutputStream outPrivate = new FileOutputStream(privateKeyFile)) {
+			outPrivate.write(DatatypeConverter.printBase64Binary(keyPair.getPrivate().getEncoded()).getBytes());
+		}
 	}
 
 }

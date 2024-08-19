@@ -103,44 +103,46 @@ public class Nanopub2Html {
 		} else {
 			printHtml = new PrintStream(outputStream);
 		}
-		HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);
-		if (np instanceof NanopubWithNs) {
-			NanopubWithNs npNs = (NanopubWithNs) np;
-			for (String prefix : npNs.getNsPrefixes()) {
-				htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));
+		try (printHtml) {
+			HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);
+			if (np instanceof NanopubWithNs) {
+				NanopubWithNs npNs = (NanopubWithNs) np;
+				for (String prefix : npNs.getNsPrefixes()) {
+					htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));
+				}
 			}
-		}
-		if (standalone) {
-			htmlWriter.writeHtmlStart();
-		}
-		htmlWriter.startPart("nanopub");
-		htmlWriter.startPart("nanopub-prefixes");
-		htmlWriter.startRDF();
-		htmlWriter.endPart();
-		htmlWriter.startPart("nanopub-head");
-		for (Statement st : np.getHead()) {
-			htmlWriter.handleStatement(st);
-		}
-		htmlWriter.endPart();
-		htmlWriter.startPart("nanopub-assertion");
-		for (Statement st : np.getAssertion()) {
-			htmlWriter.handleStatement(st);
-		}
-		htmlWriter.endPart();
-		htmlWriter.startPart("nanopub-provenance");
-		for (Statement st : np.getProvenance()) {
-			htmlWriter.handleStatement(st);
-		}
-		htmlWriter.endPart();
-		htmlWriter.startPart("nanopub-pubinfo");
-		for (Statement st : np.getPubinfo()) {
-			htmlWriter.handleStatement(st);
-		}
-		htmlWriter.endPart();
-		htmlWriter.endPart();
-		htmlWriter.endRDF();
-		if (standalone) {
-			htmlWriter.writeHtmlEnd();
+			if (standalone) {
+				htmlWriter.writeHtmlStart();
+			}
+			htmlWriter.startPart("nanopub");
+			htmlWriter.startPart("nanopub-prefixes");
+			htmlWriter.startRDF();
+			htmlWriter.endPart();
+			htmlWriter.startPart("nanopub-head");
+			for (Statement st : np.getHead()) {
+				htmlWriter.handleStatement(st);
+			}
+			htmlWriter.endPart();
+			htmlWriter.startPart("nanopub-assertion");
+			for (Statement st : np.getAssertion()) {
+				htmlWriter.handleStatement(st);
+			}
+			htmlWriter.endPart();
+			htmlWriter.startPart("nanopub-provenance");
+			for (Statement st : np.getProvenance()) {
+				htmlWriter.handleStatement(st);
+			}
+			htmlWriter.endPart();
+			htmlWriter.startPart("nanopub-pubinfo");
+			for (Statement st : np.getPubinfo()) {
+				htmlWriter.handleStatement(st);
+			}
+			htmlWriter.endPart();
+			htmlWriter.endPart();
+			htmlWriter.endRDF();
+			if (standalone) {
+				htmlWriter.writeHtmlEnd();
+			}
 		}
 	}
 
@@ -173,16 +175,14 @@ public class Nanopub2Html {
 	}
 
 	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone, boolean indentContext) {
-		ByteArrayOutputStream htmlOut = null;
-		try {
-			htmlOut = new ByteArrayOutputStream();
+		try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {
 			createHtml(nanopubs, htmlOut, standalone, indentContext);
 			htmlOut.flush();
-			htmlOut.close();
+			return new String(htmlOut.toByteArray(), utf8Charset);
 		} catch (IOException ex) {
 			ex.printStackTrace();
+			return "";
 		}
-		return new String(htmlOut.toByteArray(), utf8Charset);
 	}
 
 	public static String createHtmlString(Collection<Nanopub> nanopubs, boolean standalone) {
@@ -190,16 +190,14 @@ public class Nanopub2Html {
 	}
 
 	public static String createHtmlString(Nanopub np, boolean standalone, boolean indentContext) {
-		ByteArrayOutputStream htmlOut = null;
-		try {
-			htmlOut = new ByteArrayOutputStream();
+		try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {
 			createHtml(np, htmlOut, standalone, indentContext);
 			htmlOut.flush();
-			htmlOut.close();
+			return new String(htmlOut.toByteArray(), utf8Charset);
 		} catch (IOException ex) {
 			ex.printStackTrace();
+			return "";
 		}
-		return new String(htmlOut.toByteArray(), utf8Charset);
 	}
 
 	public static String createHtmlString(Nanopub np, boolean standalone) {

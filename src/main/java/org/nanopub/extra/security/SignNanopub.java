@@ -137,32 +137,33 @@ public class SignNanopub {
 			}
 			final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
 			final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
-			MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
-
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
-						if (verbose) {
-							System.out.println("Nanopub URI: " + np.getUri());
+			try (out) {				
+				MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
+	
+					@Override
+					public void handleNanopub(Nanopub np) {
+						try {
+							np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
+							if (verbose) {
+								System.out.println("Nanopub URI: " + np.getUri());
+							}
+						} catch (RDFHandlerException ex) {
+							ex.printStackTrace();
+							throw new RuntimeException(ex);
+						} catch (TrustyUriException ex) {
+							ex.printStackTrace();
+							throw new RuntimeException(ex);
+						} catch (InvalidKeyException ex) {
+							ex.printStackTrace();
+							throw new RuntimeException(ex);
+						} catch (SignatureException ex) {
+							ex.printStackTrace();
+							throw new RuntimeException(ex);
 						}
-					} catch (RDFHandlerException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (InvalidKeyException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (SignatureException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
 					}
-				}
-
-			});
-			out.close();
+	
+				});
+			}
 		}
 	}
 
@@ -190,29 +191,30 @@ public class SignNanopub {
 
 	public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final TransformContext c, final OutputStream out)
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-			@Override
-			public void handleNanopub(Nanopub np) {
-				try {
-					writeAsSignedTrustyNanopub(np, format, c, out);
-				} catch (RDFHandlerException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (TrustyUriException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (InvalidKeyException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (SignatureException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
+		try (out) {
+			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
+	
+				@Override
+				public void handleNanopub(Nanopub np) {
+					try {
+						writeAsSignedTrustyNanopub(np, format, c, out);
+					} catch (RDFHandlerException ex) {
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					} catch (TrustyUriException ex) {
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					} catch (InvalidKeyException ex) {
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					} catch (SignatureException ex) {
+						ex.printStackTrace();
+						throw new RuntimeException(ex);
+					}
 				}
-			}
-
-		});
-		out.close();
+	
+			});
+		}
 	}
 
 	public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, TransformContext c, OutputStream out)

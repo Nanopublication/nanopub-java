@@ -57,8 +57,8 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
 			throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
 		RDFParser p = NanopubUtils.getParser(format);
 		p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
-		try (in) {
-			p.parse(new InputStreamReader(in, Charset.forName("UTF-8")), "");
+		try (InputStreamReader is = new InputStreamReader(in, Charset.forName("UTF-8"))) {
+			p.parse(is, "");
 		} catch (RuntimeException ex) {
 			if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&
 					ex.getCause() instanceof MalformedNanopubException) {

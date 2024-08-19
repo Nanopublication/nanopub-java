@@ -162,10 +162,9 @@ public class ServerIterator implements Iterator<ServerInfo> {
 			if (fileTime > now || now - fileTime > 1000 * 60 * 60 * 24) {
 				return;
 			}
-			FileInputStream fin = new FileInputStream(serverListFile);
-			ObjectInputStream oin = new ObjectInputStream(fin);
-			cachedServers = (List<ServerInfo>) oin.readObject();
-			oin.close();
+			try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(serverListFile))) {
+				cachedServers = (List<ServerInfo>) oin.readObject();
+			}
 		}
 	}
 
@@ -173,10 +172,9 @@ public class ServerIterator implements Iterator<ServerInfo> {
 		if (cachedServers.size() < 5) return;
 		File serverListFile = getServerListFile();
 		serverListFile.getParentFile().mkdir();
-		FileOutputStream fout = new FileOutputStream(serverListFile);
-		ObjectOutputStream oos = new ObjectOutputStream(fout);
-		oos.writeObject(cachedServers);
-		oos.close();
+		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(serverListFile))) {
+			oos.writeObject(cachedServers);
+		}
 	}
 
 	private static File getServerListFile() {

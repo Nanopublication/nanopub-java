@@ -1,5 +1,6 @@
 package org.nanopub.trusty;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -25,28 +26,30 @@ public class TrustyNanopubUtils {
 	private TrustyNanopubUtils() {}  // no instances allowed
 
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
-			throws RDFHandlerException {
-		RDFWriter writer = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-		writer.startRDF();
-		String s = nanopub.getUri().toString();
-		writer.handleNamespace("this", s);
-		writer.handleNamespace("sub", s + RdfUtils.postAcChar);
-		if (!(RdfUtils.bnodeChar + "").matches("[A-Za-z0-9\\-_]")) {
-			writer.handleNamespace("node", s + RdfUtils.postAcChar + RdfUtils.bnodeChar);
+			throws RDFHandlerException, IOException {
+		try (OutputStreamWriter sw = new OutputStreamWriter(out, Charset.forName("UTF-8"))) {
+			RDFWriter writer = Rio.createWriter(format, sw);
+			writer.startRDF();
+			String s = nanopub.getUri().toString();
+			writer.handleNamespace("this", s);
+			writer.handleNamespace("sub", s + RdfUtils.postAcChar);
+			if (!(RdfUtils.bnodeChar + "").matches("[A-Za-z0-9\\-_]")) {
+				writer.handleNamespace("node", s + RdfUtils.postAcChar + RdfUtils.bnodeChar);
+			}
+			writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+			writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+			writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
+			writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
+			writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
+			writer.handleNamespace("dct", "http://purl.org/dc/terms/");
+			writer.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
+			writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
+			writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
+			for (Statement st : NanopubUtils.getStatements(nanopub)) {
+				writer.handleStatement(st);
+			}
+			writer.endRDF();
 		}
-		writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-		writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-		writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-		writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-		writer.handleNamespace("dct", "http://purl.org/dc/terms/");
-		writer.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
-		writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
-		writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
-		for (Statement st : NanopubUtils.getStatements(nanopub)) {
-			writer.handleStatement(st);
-		}
-		writer.endRDF();
 	}
 
 	public static boolean isValidTrustyNanopub(Nanopub nanopub) {

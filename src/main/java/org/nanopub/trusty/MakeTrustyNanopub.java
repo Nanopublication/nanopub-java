@@ -213,7 +213,7 @@ public class MakeTrustyNanopub {
 		} else {
 			tempRefMap = null;
 		}
-		try (out) {
+		try (in; out) {
 			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
 	
 				@Override

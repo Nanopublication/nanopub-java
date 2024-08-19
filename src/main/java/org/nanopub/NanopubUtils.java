@@ -99,25 +99,25 @@ public class NanopubUtils {
 		writeNanopub(nanopub, format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
 	}
 
-	public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException {
-		StringWriter sw = new StringWriter();
-		writeNanopub(nanopub, format, sw);
-		return sw.toString();
+	public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException, IOException {
+		try (StringWriter sw = new StringWriter()) {
+			writeNanopub(nanopub, format, sw);
+			return sw.toString();
+		}
 	}
 
 	private static void writeNanopub(Nanopub nanopub, RDFFormat format, Writer writer)
 			throws RDFHandlerException {
-		if (format.equals(TrustyNanopubUtils.STNP_FORMAT)) {
-			try {
-				writer.write(TrustyNanopubUtils.getTrustyDigestString(nanopub));
-				writer.flush();
-				writer.close();
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
+		try {
+			if (format.equals(TrustyNanopubUtils.STNP_FORMAT)) {
+					writer.write(TrustyNanopubUtils.getTrustyDigestString(nanopub));
+					writer.flush();
+			} else {
+				RDFWriter rdfWriter = Rio.createWriter(format, writer);
+				propagateToHandler(nanopub, rdfWriter);
 			}
-		} else {
-			RDFWriter rdfWriter = Rio.createWriter(format, writer);
-			propagateToHandler(nanopub, rdfWriter);
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
 		}
 	}
 
