@@ -1,6 +1,7 @@
 package org.nanopub.extra.services;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -90,8 +91,8 @@ public class ApiCall {
 				try {
 					paramString += k + "=";
 					paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8.toString());
-				} catch (java.io.UnsupportedEncodingException e) {
-					e.printStackTrace();
+				} catch (UnsupportedEncodingException ex) {
+					ex.printStackTrace();
 				}
 			}
 		}

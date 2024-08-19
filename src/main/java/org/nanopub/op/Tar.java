@@ -63,31 +63,34 @@ public class Tar {
 			MalformedNanopubException, TrustyUriException {
 
 		outputStream = new TarArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+		try {
 
-		for (File inputFile : inputNanopubs) {
-			if (inFormat != null) {
-				rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
-			} else {
-				rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
-			}
-
-			MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					}
+			for (File inputFile : inputNanopubs) {
+				if (inFormat != null) {
+					rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
+				} else {
+					rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
 				}
-
-			});
-
+	
+				MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
+	
+					@Override
+					public void handleNanopub(Nanopub np) {
+						try {
+							process(np);
+						} catch (RDFHandlerException ex) {
+							throw new RuntimeException(ex);
+						}
+					}
+	
+				});
+	
+			}
+			outputStream.finish();
+			outputStream.flush();
+		} finally {
+			outputStream.close();
 		}
-		outputStream.finish();
-		outputStream.flush();
-		outputStream.close();
 	}
 
 	private void process(Nanopub np) throws RDFHandlerException {

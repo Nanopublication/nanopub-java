@@ -71,25 +71,28 @@ public class Nanopub2Html {
 			outputStream = new FileOutputStream(outputFile);
 		}
 
-		for (String s : inputNanopubs) {
-			try {
-				MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
-					@Override
-					public void handleNanopub(Nanopub np) {
-						try {
-							createHtml(np);
-						} catch (IOException | RDFHandlerException ex) {
-							ex.printStackTrace();
+		try {
+			for (String s : inputNanopubs) {
+				try {
+					MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
+						@Override
+						public void handleNanopub(Nanopub np) {
+							try {
+								createHtml(np);
+							} catch (IOException | RDFHandlerException ex) {
+								ex.printStackTrace();
+							}
 						}
-					}
-				});
-			} catch (RDF4JException | MalformedNanopubException ex) {
-				ex.printStackTrace();
+					});
+				} catch (RDF4JException | MalformedNanopubException ex) {
+					ex.printStackTrace();
+				}
 			}
-		}
-		outputStream.flush();
-		if (outputStream != System.out) {
-			outputStream.close();
+			outputStream.flush();
+		} finally {
+			if (outputStream != System.out) {
+				outputStream.close();
+			}
 		}
 	}
 

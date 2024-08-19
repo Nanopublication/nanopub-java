@@ -20,10 +20,8 @@ public abstract class QueryAccess {
 	protected abstract void processLine(String[] line);
 
 	public void call(String queryId, Map<String,String> params) throws IOException, CsvValidationException {
-		CSVReader csvReader = null;
-		try {
-			HttpResponse resp = QueryCall.run(queryId, params);
-			csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())));
+		HttpResponse resp = QueryCall.run(queryId, params);
+		try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
 			String[] line = null;
 			int n = 0;
 			while ((line = csvReader.readNext()) != null) {
@@ -34,8 +32,6 @@ public abstract class QueryAccess {
 					processLine(line);
 				}
 			}
-		} finally {
-			if (csvReader != null) csvReader.close();
 		}
 	}
 

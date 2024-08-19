@@ -231,50 +231,51 @@ public class GetNanopub {
 			db = new NanopubDb(mongoDbHost, mongoDbPort, mongoDbName, mongoDbUsername, mongoDbPassword);
 		}
 		FetchIndex fetchIndex = null;
-		for (String nanopubId : nanopubIds) {
-			if (getIndex || getIndexContent) {
-				if (db == null) {
-					fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent, localServer);
-				} else {
-					fetchIndex = new FetchIndexFromDb(nanopubId, db, outputStream, rdfFormat, getIndex, getIndexContent);
-				}
-				fetchIndex.setProgressListener(new FetchIndex.Listener() {
-
-					@Override
-					public void progress(int count) {
-						System.err.print(count + " nanopubs...\r");
+		try {
+			for (String nanopubId : nanopubIds) {
+				if (getIndex || getIndexContent) {
+					if (db == null) {
+						fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent, localServer);
+					} else {
+						fetchIndex = new FetchIndexFromDb(nanopubId, db, outputStream, rdfFormat, getIndex, getIndexContent);
 					}
-
-					@Override
-					public void exceptionHappened(Exception ex, String serverUrl, String artifactCode) {
-						if (showReport) {
-							exceptions.add(ex);
+					fetchIndex.setProgressListener(new FetchIndex.Listener() {
+	
+						@Override
+						public void progress(int count) {
+							System.err.print(count + " nanopubs...\r");
 						}
-						if (errorStream != null) {
-							String exString = ex.toString().replaceAll("\\n", "\\\\n");
-							errorStream.println(serverUrl + " " + artifactCode + " " + exString);
+	
+						@Override
+						public void exceptionHappened(Exception ex, String serverUrl, String artifactCode) {
+							if (showReport) {
+								exceptions.add(ex);
+							}
+							if (errorStream != null) {
+								String exString = ex.toString().replaceAll("\\n", "\\\\n");
+								errorStream.println(serverUrl + " " + artifactCode + " " + exString);
+							}
 						}
-					}
-
-				});
-				fetchIndex.run();
-				count = fetchIndex.getNanopubCount();
-			} else {
-				Nanopub np;
-				if (db == null) {
-					np = get(nanopubId);
+	
+					});
+					fetchIndex.run();
+					count = fetchIndex.getNanopubCount();
 				} else {
-					np = get(nanopubId, db);
+					Nanopub np;
+					if (db == null) {
+						np = get(nanopubId);
+					} else {
+						np = get(nanopubId, db);
+					}
+					outputNanopub(nanopubId, np);
 				}
-				outputNanopub(nanopubId, np);
 			}
-		}
-		if (outputStream != System.out) {
-			outputStream.close();
-			System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
-		}
-		if (errorStream != null) {
-			errorStream.close();
+			if (outputStream != null && outputStream != System.out) {
+				System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
+			}
+		} finally {
+			if (outputStream != System.out) outputStream.close();
+			if (errorStream != null) errorStream.close();
 		}
 		if (showReport && fetchIndex != null) {
 			System.err.println("Number of retries: " + exceptions.size());

@@ -154,27 +154,22 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			throws MalformedNanopubException, RepositoryException {
 		if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);
 		if (ns != null) this.ns.putAll(ns);
-		try {
-			RepositoryConnection connection = repo.getConnection();
+		try (RepositoryConnection connection = repo.getConnection()) {
+			String q = nanopubViaSPARQLQuery.replaceAll("@", nanopubUri.toString());
+			TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, q);
+			TupleQueryResult result = tupleQuery.evaluate();
 			try {
-				String q = nanopubViaSPARQLQuery.replaceAll("@", nanopubUri.toString());
-				TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, q);
-				TupleQueryResult result = tupleQuery.evaluate();
-				try {
-					while (result.hasNext()) {
-						BindingSet bs = result.next();
-						Resource g = (Resource) bs.getBinding("G").getValue();
-						Resource s = (Resource) bs.getBinding("S").getValue();
-						IRI p = (IRI) bs.getBinding("P").getValue();
-						Value o = bs.getBinding("O").getValue();
-						Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
-						statements.add(st);
-					}
-				} finally {
-					result.close();
+				while (result.hasNext()) {
+					BindingSet bs = result.next();
+					Resource g = (Resource) bs.getBinding("G").getValue();
+					Resource s = (Resource) bs.getBinding("S").getValue();
+					IRI p = (IRI) bs.getBinding("P").getValue();
+					Value o = bs.getBinding("O").getValue();
+					Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
+					statements.add(st);
 				}
 			} finally {
-				connection.close();
+				result.close();
 			}
 		} catch (MalformedQueryException ex) {
 			ex.printStackTrace();

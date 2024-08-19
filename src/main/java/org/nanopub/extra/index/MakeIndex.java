@@ -180,55 +180,54 @@ public class MakeIndex {
 //			key = SignNanopub.loadKey(keyFilename, algorithm);
 //		}
 
-		for (File f : inputFiles) {
-			if (f.getName().endsWith(".txt")) {
-				BufferedReader br = null;
-				try {
-					br = new BufferedReader(new FileReader(f));
-				    String line;
-				    while ((line = br.readLine()) != null) {
-				    	line = line.trim();
-				    	if (line.isEmpty()) continue;
-				    	// To allow for other content in the file, ignore everything after the first blank space:
-				    	if (line.contains(" ")) line = line.substring(0, line.indexOf(" "));
-				    	indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(line));
-				    }
-				} finally {
-					if (br != null) br.close();
-				}
-			} else {
-				RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(RDFFormat.TRIG);
-				MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
-					@Override
-					public void handleNanopub(Nanopub np) {
-						if (useSubindexes && IndexUtils.isIndex(np)) {
-							try {
-								indexCreator.addSubIndex(IndexUtils.castToIndex(np));
-							} catch (MalformedNanopubException ex) {
-								throw new RuntimeException(ex);
-							}
-						} else {
-							indexCreator.addElement(np);
-						}
-						count++;
-						if (count % 100 == 0) {
-							System.err.print(count + " nanopubs...\r");
-						}
+		try {
+			for (File f : inputFiles) {
+				if (f.getName().endsWith(".txt")) {
+					try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+					    String line;
+					    while ((line = br.readLine()) != null) {
+					    	line = line.trim();
+					    	if (line.isEmpty()) continue;
+					    	// To allow for other content in the file, ignore everything after the first blank space:
+					    	if (line.contains(" ")) line = line.substring(0, line.indexOf(" "));
+					    	indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(line));
+					    }
 					}
-				});
+				} else {
+					RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(RDFFormat.TRIG);
+					MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
+						@Override
+						public void handleNanopub(Nanopub np) {
+							if (useSubindexes && IndexUtils.isIndex(np)) {
+								try {
+									indexCreator.addSubIndex(IndexUtils.castToIndex(np));
+								} catch (MalformedNanopubException ex) {
+									throw new RuntimeException(ex);
+								}
+							} else {
+								indexCreator.addElement(np);
+							}
+							count++;
+							if (count % 100 == 0) {
+								System.err.print(count + " nanopubs...\r");
+							}
+						}
+					});
+				}
 			}
+			for (String e : elements) {
+				indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(e));
+			}
+			for (String s : subindexes) {
+				indexCreator.addSubIndex(SimpleValueFactory.getInstance().createIRI(s));
+			}
+			if (supersededIndex != null) {
+				indexCreator.setSupersededIndex(SimpleValueFactory.getInstance().createIRI(supersededIndex));
+			}
+			indexCreator.finalizeNanopub();
+		} finally {
+			writer.close();
 		}
-		for (String e : elements) {
-			indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(e));
-		}
-		for (String s : subindexes) {
-			indexCreator.addSubIndex(SimpleValueFactory.getInstance().createIRI(s));
-		}
-		if (supersededIndex != null) {
-			indexCreator.setSupersededIndex(SimpleValueFactory.getInstance().createIRI(supersededIndex));
-		}
-		indexCreator.finalizeNanopub();
-		writer.close();
 	}
 
 }

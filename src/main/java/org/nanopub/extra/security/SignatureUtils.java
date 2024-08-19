@@ -186,6 +186,8 @@ public class SignatureUtils {
 		preContent.endRDF();
 		RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
 		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri);
+
+		// TODO Why do we do this?
 		try {
 			preContent.propagate(rp);
 		} catch (RDFHandlerException ex) {

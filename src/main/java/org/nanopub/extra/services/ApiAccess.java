@@ -29,10 +29,8 @@ public abstract class ApiAccess {
 	protected abstract void processLine(String[] line);
 
 	public void call(String apiUrl, String operation, Map<String,String> params) throws IOException, CsvValidationException {
-		CSVReader csvReader = null;
-		try {
-			HttpResponse resp = ApiCall.run(apiUrl, operation, params);
-			csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())));
+		HttpResponse resp = ApiCall.run(apiUrl, operation, params);
+		try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
 			String[] line = null;
 			int n = 0;
 			while ((line = csvReader.readNext()) != null) {
@@ -43,8 +41,6 @@ public abstract class ApiAccess {
 					processLine(line);
 				}
 			}
-		} finally {
-			if (csvReader != null) csvReader.close();
 		}
 	}
 

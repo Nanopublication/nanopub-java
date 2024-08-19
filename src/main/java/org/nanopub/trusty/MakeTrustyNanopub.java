@@ -213,23 +213,24 @@ public class MakeTrustyNanopub {
 		} else {
 			tempRefMap = null;
 		}
-		MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-			@Override
-			public void handleNanopub(Nanopub np) {
-				try {
-					// TODO temporary URI ref resolution not yet supported here
-					// TODO prefix-based cross-ref resolution also not yet supported
-					writeAsTrustyNanopub(np, format, out, tempRefMap, null);
-				} catch (RDFHandlerException ex) {
-					throw new RuntimeException(ex);
-				} catch (TrustyUriException ex) {
-					throw new RuntimeException(ex);
+		try (out) {
+			MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
+	
+				@Override
+				public void handleNanopub(Nanopub np) {
+					try {
+						// TODO temporary URI ref resolution not yet supported here
+						// TODO prefix-based cross-ref resolution also not yet supported
+						writeAsTrustyNanopub(np, format, out, tempRefMap, null);
+					} catch (RDFHandlerException ex) {
+						throw new RuntimeException(ex);
+					} catch (TrustyUriException ex) {
+						throw new RuntimeException(ex);
+					}
 				}
-			}
-
-		});
-		out.close();
+	
+			});
+		}
 	}
 
 	public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<Resource,IRI> tempRefMap, Map<String,String> tempPrefixMap)

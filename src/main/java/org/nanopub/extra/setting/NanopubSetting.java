@@ -37,12 +37,8 @@ public class NanopubSetting implements Serializable {
 	public static NanopubSetting getLocalSetting(String name) throws RDF4JException, MalformedNanopubException, IOException {
 		if (name == null) name = "default";
 		NanopubSetting setting = null;
-		InputStream in = null;
-		try {
-			in = NanopubSetting.class.getResourceAsStream("/settings/" + name + ".trig");
+		try (InputStream in = NanopubSetting.class.getResourceAsStream("/settings/" + name + ".trig")) {
 			setting = new NanopubSetting(new NanopubImpl(in, RDFFormat.TRIG));
-		} finally {
-			if (in != null) in.close();
 		}
 		return setting;
 	}
