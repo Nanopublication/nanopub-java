@@ -19,17 +19,26 @@ import org.nanopub.NanopubUtils;
  */
 public class QueryCall {
 
+	private static int parallelCallCount = 2;
+	private static int maxRetryCount = 5;
+
 	public static HttpResponse run(String queryId, Map<String,String> params) {
-		QueryCall apiCall = new QueryCall(queryId, params);
-		apiCall.run();
-		while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
-			try {
-			    Thread.sleep(50);
-			} catch(InterruptedException ex) {
-			    Thread.currentThread().interrupt();
+		HttpResponse resp = null;
+		int retryCount = 0;
+		while (resp == null && retryCount < maxRetryCount) {
+			QueryCall apiCall = new QueryCall(queryId, params);
+			apiCall.run();
+			while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
+				try {
+				    Thread.sleep(50);
+				} catch(InterruptedException ex) {
+				    Thread.currentThread().interrupt();
+				}
 			}
+			resp = apiCall.resp;
+			retryCount = retryCount + 1;
 		}
-		return apiCall.resp;
+		return resp;
 	}
 
 	// TODO Available services should be retrieved from a setting, not hard-coded:
@@ -68,7 +77,6 @@ public class QueryCall {
 
 	private String queryId;
 	private String paramString;
-	private int parallelCallCount = 2;
 	private List<String> apisToCall = new ArrayList<>();
 	private List<Call> calls = new ArrayList<>();
 
