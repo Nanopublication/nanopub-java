@@ -23,9 +23,8 @@ public class QueryCall {
 	private static int maxRetryCount = 5;
 
 	public static HttpResponse run(String queryId, Map<String,String> params) {
-		HttpResponse resp = null;
 		int retryCount = 0;
-		while (resp == null && retryCount < maxRetryCount) {
+		while (retryCount < maxRetryCount) {
 			QueryCall apiCall = new QueryCall(queryId, params);
 			apiCall.run();
 			while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
@@ -35,10 +34,12 @@ public class QueryCall {
 				    Thread.currentThread().interrupt();
 				}
 			}
-			resp = apiCall.resp;
+			if (apiCall.resp != null) {
+				return apiCall.resp;
+			}
 			retryCount = retryCount + 1;
 		}
-		return resp;
+		throw new RuntimeException("Giving up contacting API: " + queryId);
 	}
 
 	// TODO Available services should be retrieved from a setting, not hard-coded:
@@ -117,7 +118,10 @@ public class QueryCall {
 	}
 
 	private void finished(HttpResponse resp, String apiUrl) {
-		if (this.resp != null) return; // result already in
+		if (this.resp != null) { // result already in
+			EntityUtils.consumeQuietly(resp.getEntity());
+			return;
+		}
 		System.err.println("Result in from " + apiUrl);
 		this.resp = resp;
 	}
@@ -139,16 +143,16 @@ public class QueryCall {
 		public void run() {
 			HttpGet get = new HttpGet(apiUrl + "api/" + queryId + paramString);
 			get.setHeader("Accept", "text/csv");
+			HttpResponse resp = null;
 			try {
-				HttpResponse resp = NanopubUtils.getHttpClient().execute(get);
+				resp = NanopubUtils.getHttpClient().execute(get);
 				if (!wasSuccessful(resp)) {
-					EntityUtils.consumeQuietly(resp.getEntity());
 					throw new IOException(resp.getStatusLine().toString());
 				}
 				finished(resp, apiUrl);
 			} catch (Exception ex) {
-//				ex.printStackTrace();
-				System.err.println("Request to " + apiUrl + " was not successful");
+				if (resp != null) EntityUtils.consumeQuietly(resp.getEntity());
+				System.err.println("Request to " + apiUrl + " was not successful: " + ex.getMessage());
 			}
 			calls.remove(this);
 		}
