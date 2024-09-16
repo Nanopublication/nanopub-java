@@ -117,18 +117,28 @@ public class QueryCall {
 		}
 	}
 
-	private void finished(HttpResponse resp, String apiUrl) {
+	private synchronized void finished(HttpResponse resp, String apiUrl) {
 		if (this.resp != null) { // result already in
 			EntityUtils.consumeQuietly(resp.getEntity());
 			return;
 		}
-		System.err.println("Result in from " + apiUrl);
+		System.err.println("Result in from " + apiUrl + ":");
+		System.err.println("- Request: " + queryId + " " + paramString);
+		System.err.println("- Response size: " + resp.getEntity().getContentLength());
 		this.resp = resp;
 	}
 
 	private static boolean wasSuccessful(HttpResponse resp) {
+		if (resp == null || resp.getEntity() == null) return false;
 		int c = resp.getStatusLine().getStatusCode();
-		return c >= 200 && c < 300;
+		if (c < 200 || c >= 300) return false;
+		return true;
+	}
+
+	private static boolean wasSuccessfulNonempty(HttpResponse resp) {
+		if (!wasSuccessful(resp)) return false;
+		if (resp.getEntity().getContentLength() < 0) return false;
+		return true;
 	}
 
 
@@ -146,7 +156,7 @@ public class QueryCall {
 			HttpResponse resp = null;
 			try {
 				resp = NanopubUtils.getHttpClient().execute(get);
-				if (!wasSuccessful(resp)) {
+				if (!wasSuccessfulNonempty(resp)) {
 					throw new IOException(resp.getStatusLine().toString());
 				}
 				finished(resp, apiUrl);
