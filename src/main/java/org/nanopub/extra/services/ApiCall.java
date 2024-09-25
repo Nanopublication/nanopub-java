@@ -35,13 +35,14 @@ public class ApiCall {
 	// TODO Available services should be retrieved from the network, not hard-coded:
 	public static String[] apiInstances = new String[] {
 		"http://grlc.nanopubs.lod.labs.vu.nl/api/local/local/",
-		"http://grlc.np.dumontierlab.com/api/local/local/",
+//		"http://grlc.np.dumontierlab.com/api/local/local/",
 //		"https://openphacts.cs.man.ac.uk/nanopub/grlc/api/local/local/",
-		"https://grlc.nanopubs.knows.idlab.ugent.be/api/local/local/",
+//		"https://grlc.nanopubs.knows.idlab.ugent.be/api/local/local/",
 //		"http://grlc.np.scify.org/api/local/local/",
-		// Two are Signed Nanopub Services (because we're only using the 'signed_...' operations here, the difference doesn't matter):
+		// Some are Signed Nanopub Services (because we're only using the 'signed_...' operations here, the difference doesn't matter):
 		"http://130.60.24.146:7881/api/local/local/",
-		"https://grlc.services.np.trustyuri.net/api/local/local/"
+		"https://grlc.services.np.trustyuri.net/api/local/local/",
+		"https://grlc.nps.knowledgepixels.com/api/local/local/"
 	};
 
 	private static List<String> checkedApiInstances;
