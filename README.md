@@ -24,7 +24,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.46</version>
+      <version>1.66</version>
     </dependency>
 
 Alternatively, you might want to use one of the [pre-built
@@ -90,7 +90,7 @@ same commands as for the `np` script above, but using the locally compiled code
 and not the jar file).
 
 
-## Developers
+## Main Developer
 
 - Tobias Kuhn (http://www.tkuhn.org)
 
@@ -99,23 +99,3 @@ and not the jar file).
 
 nanopub-java is free software under the MIT License. See LICENSE.txt.
 
-
-## Usage Tracking
-
-This is an incomplete (and outdated) list of software projects using this library:
-
-- https://github.com/Nanopublication/nanopub-store-api
-- https://github.com/Nanopublication/landmark-publication-tool
-- https://github.com/ISA-tools/NanoMaton
-- https://github.com/tkuhn/bel2nanopub
-- https://github.com/tkuhn/nanobrowser
-- https://github.com/tkuhn/nanolytics
-- https://github.com/tkuhn/nanopub-validator
-- https://github.com/tkuhn/nanopub-server
-- https://github.com/tkuhn/bio2rdf2nanopub
-- https://github.com/tkuhn/nanopub-monitor
-- https://github.com/tkuhn/npop
-- https://github.com/rajaram5/NanopublicationVisualization
-- https://github.com/rajaram5/Nanopubviz
-- https://github.com/wikipathways/nanopublications
-- https://github.com/globalbioticinteractions/elton
