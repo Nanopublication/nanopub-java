@@ -45,7 +45,7 @@ public class QueryCall {
 	// TODO Available services should be retrieved from a setting, not hard-coded:
 	public static String[] queryApiInstances = new String[] {
 		"https://query.knowledgepixels.com/",
-		"https://query.np.kpxl.org/",
+		"https://query.petapico.org/",
 		"https://query.np.trustyuri.net/"
 	};
 
