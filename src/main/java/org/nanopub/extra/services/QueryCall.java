@@ -113,11 +113,11 @@ public class QueryCall {
 		for (String api : apisToCall) {
 			Call call = new Call(api);
 			calls.add(call);
-			new Thread(call).run();
+			new Thread(call).start();
 		}
 	}
 
-	private synchronized void finished(HttpResponse resp, String apiUrl) {
+	private synchronized void finished(Call call, HttpResponse resp, String apiUrl) {
 		if (this.resp != null) { // result already in
 			EntityUtils.consumeQuietly(resp.getEntity());
 			return;
@@ -126,6 +126,10 @@ public class QueryCall {
 		System.err.println("- Request: " + queryId + " " + paramString);
 		System.err.println("- Response size: " + resp.getEntity().getContentLength());
 		this.resp = resp;
+
+		for (Call c : calls) {
+			if (c != call) c.abort();
+		}
 	}
 
 	private static boolean wasSuccessful(HttpResponse resp) {
@@ -145,13 +149,14 @@ public class QueryCall {
 	private class Call implements Runnable {
 
 		private String apiUrl;
+		private HttpGet get;
 
 		public Call(String apiUrl) {
 			this.apiUrl = apiUrl;
 		}
 
 		public void run() {
-			HttpGet get = new HttpGet(apiUrl + "api/" + queryId + paramString);
+			get = new HttpGet(apiUrl + "api/" + queryId + paramString);
 			get.setHeader("Accept", "text/csv");
 			HttpResponse resp = null;
 			try {
@@ -159,12 +164,18 @@ public class QueryCall {
 				if (!wasSuccessfulNonempty(resp)) {
 					throw new IOException(resp.getStatusLine().toString());
 				}
-				finished(resp, apiUrl);
+				finished(this, resp, apiUrl);
 			} catch (Exception ex) {
 				if (resp != null) EntityUtils.consumeQuietly(resp.getEntity());
 				System.err.println("Request to " + apiUrl + " was not successful: " + ex.getMessage());
 			}
 			calls.remove(this);
+		}
+
+		private void abort() {
+			if (get == null) return;
+			if (get.isAborted()) return;
+			get.abort();
 		}
 
 	}
