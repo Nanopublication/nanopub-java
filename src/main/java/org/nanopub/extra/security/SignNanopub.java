@@ -59,6 +59,9 @@ public class SignNanopub {
 	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
 	private SignatureAlgorithm algorithm;
 
+	@com.beust.jcommander.Parameter(names = "-i", description = "Ignore already signed nanopubs")
+	private boolean ignoreSigned = false;
+
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
 
@@ -108,7 +111,7 @@ public class SignNanopub {
 			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
 		}
 		key = loadKey(keyFilename, algorithm);
-		final TransformContext c = new TransformContext(algorithm, key, null, resolveCrossRefs, resolveCrossRefsPrefixBased);
+		final TransformContext c = new TransformContext(algorithm, key, null, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
 		final OutputStream singleOut;
 		if (singleOutputFile != null) {
@@ -169,11 +172,15 @@ public class SignNanopub {
 
 	public static Nanopub signAndTransform(Nanopub nanopub, TransformContext c)
 			throws TrustyUriException, InvalidKeyException, SignatureException {
-		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
-			throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
-		}
 		if (nanopub instanceof NanopubWithNs) {
 			((NanopubWithNs) nanopub).removeUnusedPrefixes();
+		}
+		if (SignatureUtils.seemsToHaveSignature(nanopub)) {
+			if (c.isIgnoreSignedEnabled()) {
+				return nanopub;
+			} else {
+				throw new SignatureException("Seems to have signature before signing: " + nanopub.getUri());
+			}
 		}
 		try {
 			return SignatureUtils.createSignedNanopub(nanopub, c);

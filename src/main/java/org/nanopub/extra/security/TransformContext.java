@@ -22,11 +22,13 @@ public class TransformContext {
 	private IRI signer;
 	private Map<Resource,IRI> tempRefMap;
 	private Map<String,String> tempPrefixMap;
+	private boolean ignoreSigned;
 
-	public TransformContext(SignatureAlgorithm algorithm, KeyPair key, IRI signer, boolean resolveCrossRefs, boolean resolveCrossRefsPrefixBased) {
+	public TransformContext(SignatureAlgorithm algorithm, KeyPair key, IRI signer, boolean resolveCrossRefs, boolean resolveCrossRefsPrefixBased, boolean ignoreSigned) {
 		this.algorithm = algorithm;
 		this.key = key;
 		this.signer = signer;
+		this.ignoreSigned = ignoreSigned;
 		if (resolveCrossRefsPrefixBased) {
 			tempPrefixMap = new HashMap<>();
 			tempRefMap = new HashMap<>();
@@ -45,6 +47,10 @@ public class TransformContext {
 
 	public IRI getSigner() {
 		return signer;
+	}
+
+	public boolean isIgnoreSignedEnabled() {
+		return ignoreSigned;
 	}
 
 	public Map<Resource,IRI> getTempRefMap() {
