@@ -66,7 +66,6 @@ public class DefaultFingerprints implements FingerprintHandler {
 			}
 			Statement newSt = transform(st, np.getUri().stringValue(), ac);
 			n.add(newSt);
-			System.err.println(newSt);
 		}
 		return n;
 	}

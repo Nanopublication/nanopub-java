@@ -189,7 +189,6 @@ public class Reuse {
 				public void handleNanopub(Nanopub np) {
 					try {
 						String fp = fingerprint.getFingerprint(np);
-						System.err.println("FP: " + fp);
 						String uri = np.getUri().toString();
 						reusableNanopubs.put(fp, uri);
 						reusableCount++;
@@ -300,7 +299,6 @@ public class Reuse {
 	private void process(Nanopub np) throws IOException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
 		inputCount++;
 		String fp = fingerprint.getFingerprint(np);
-		System.err.println("FPX: " + fp);
 		String t = null;
 		if (addSupersedesBacklinks) {
 			t = topic.getTopic(np);
