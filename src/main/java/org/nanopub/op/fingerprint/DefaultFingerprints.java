@@ -5,6 +5,7 @@ import static org.nanopub.SimpleTimestampPattern.isCreationTimeProperty;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
@@ -80,7 +81,14 @@ public class DefaultFingerprints implements FingerprintHandler {
 	}
 
 	private Value transform(Value v, String buri, String ac) {
+		// This can lead to identical fingerprints for semantically different statements in edge cases.
+		// Should hardly ever be a problem with bona fide changes, but we should probably issue warnings or so.
+		// TODO Add documentation/warnings for this.
+
 		if (v instanceof Literal) return v;
+		// Treating all blank nodes as the same, so fingerprinting will miss rearranged blank nodes:
+		if (v instanceof BNode) return vf.createIRI(buri + "  blank-node");
+		// Removing slashes and hashes around artifact code position to make pre-trusty nanopub match with already-trusty ones:
 		if (ac != null && v.stringValue().contains(ac)) {
 			String s = v.stringValue().replace(ac, " ").replaceFirst("[/#]+ ", " ").replaceFirst(" [/#]+", " ");
 			return vf.createIRI(s);
