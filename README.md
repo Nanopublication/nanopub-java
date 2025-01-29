@@ -24,7 +24,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.66</version>
+      <version>1.67</version>
     </dependency>
 
 Alternatively, you might want to use one of the [pre-built
@@ -35,7 +35,8 @@ jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
 To use this library on the command line, just download the [np
 script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np).
-Make sure it is executable and then you can invoke it with `./np`, for example:
+Make sure it is executable and then you can invoke it with `./np ...` (or simply
+`np ...` if you make sure it's included in the PATH variable), for example:
 
 ```bash
 ./np check nanopubfile.trig
@@ -46,7 +47,7 @@ You can also directly use the [prebuilt jar
 files](https://github.com/Nanopublication/nanopub-java/releases):
 
 ```bash
-java -jar nanopub-1.30-jar-with-dependencies.jar check nanopubfile.trig
+java -jar nanopub-1.67-jar-with-dependencies.jar check nanopubfile.trig
 ```
 
 Note: For Mac users, before running `np` ensure that the GNU version of `curl`
