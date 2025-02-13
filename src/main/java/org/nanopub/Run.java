@@ -25,6 +25,7 @@ public class Run {
 	private Run() {}  // no instances allowed
 
 	public static void main(String[] args) throws IOException, RDF4JException {
+		System.setProperty("slf4j.internal.verbosity", "WARN");
 		NanopubImpl.ensureLoaded();
 		run(args);
 	}
