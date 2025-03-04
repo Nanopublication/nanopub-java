@@ -15,8 +15,9 @@ import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
 
 /**
- * First-generation query API call. To be deprecated and replaced by second-generation query services.
+ * First-generation query API call. Deprecated and replaced by second-generation query services.
  */
+@Deprecated
 public class ApiCall {
 
 	public static HttpResponse run(String apiUrl, String operation, Map<String,String> params) {
