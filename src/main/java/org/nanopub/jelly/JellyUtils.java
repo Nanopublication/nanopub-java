@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 
 /**
  * Utility functions for working with Jelly RDF data.
- * TODO: consider putting this in the nanopub-java library?
  */
 public class JellyUtils {
 
@@ -65,10 +64,9 @@ public class JellyUtils {
     /**
      * Read a Nanopub from bytes in the Jelly format stored in the database.
      * <p>
-     * This is only needed because nanopub-java does not support parsing binary data as input.
-     * Nonetheless, this should be a bit faster than going through RDF4J Rio, because we are
-     * dealing with a special (simpler) case here.
-     * TODO: fix this in nanopub-java?
+     * This specialized implementation should be a bit faster than going through RDF4J Rio,
+     * because we are dealing with a special (simpler) case here.
+     *
      * @param jellyBytes Jelly RDF bytes (non-delimited)
      * @return Nanopub
      * @throws MalformedNanopubException if this is not a valid Nanopub
@@ -80,9 +78,7 @@ public class JellyUtils {
 
     /**
      * Read one Nanopub from an input byte stream in the Jelly format. This can be used on HTTP responses.
-     * <p>
-     * This is only needed because nanopub-java does not support parsing binary data as input.
-     * TODO: fix this in nanopub-java?
+     *
      * @param is Jelly RDF data (delimited, one frame (!!!))
      * @return Nanopub
      * @throws MalformedNanopubException if this is not a valid Nanopub
@@ -111,7 +107,11 @@ public class JellyUtils {
                 statements.clear();
                 namespaces.clear();
                 parseStatements(frame, decoder, statements);
-                return new MaybeNanopub(new NanopubImpl(statements, namespaces));
+                return new MaybeNanopub(
+                        new NanopubImpl(statements, namespaces),
+                        // Extract the counter metadata from the frame
+                        JellyMetadataUtil.tryGetCounterFromMetadata(frame.metadata())
+                );
             } catch (MalformedNanopubException e) {
                 return new MaybeNanopub(e);
             }
