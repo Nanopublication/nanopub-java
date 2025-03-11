@@ -6,6 +6,7 @@ import com.google.protobuf.CodedOutputStream;
 import scala.Some$;
 import scala.Tuple2;
 import scala.collection.immutable.Map;
+import scala.collection.immutable.Map$;
 
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ import java.io.IOException;
  */
 public class JellyMetadataUtil {
     public static final String COUNTER_KEY = "c";
+    public static final Map<String, ByteString> EMPTY_METADATA = Map$.MODULE$.empty();
 
     /**
      * Create a metadata map with the counter key.
