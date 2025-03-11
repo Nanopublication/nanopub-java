@@ -55,7 +55,7 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
     public RdfStreamFrame getFrame(long counter) {
         var rows = rowBuffer.toList();
         rowBuffer.clear();
-        scala.collection.immutable.Map<String, ByteString> metadata = null;
+        var metadata = JellyMetadataUtil.EMPTY_METADATA;
         if (counter >= 0) {
             metadata = JellyMetadataUtil.getCounterMetadata(counter);
         }

@@ -18,8 +18,7 @@ jobs:
           cache: 'maven'
 
       - name: Publish snapshot to GitHub Packages
-        # Note: we are skipping tests for now, because they don't seem to pass in CI.
-        # TODO: fix this.
+        # Note: we are skipping tests here.
         run: mvn --batch-mode -Dmaven.test.skip deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
