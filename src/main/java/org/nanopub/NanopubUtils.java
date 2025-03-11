@@ -353,6 +353,11 @@ public class NanopubUtils {
 
 	public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
 
+	/**
+	 * For the first 32 bytes of the checksum, XOR them with the nanupub ID (starting at 3rd character)
+	 *
+	 * @return base64 representation of (checksum XOR nanopubId)
+	 */
 	public static String updateXorChecksum(IRI nanopubId, String checksum) {
 		byte[] checksumBytes = TrustyUriUtils.getBase64Bytes(checksum);
 		byte[] addBytes = TrustyUriUtils.getBase64Bytes(TrustyUriUtils.getArtifactCode(nanopubId.stringValue()).substring(2));
