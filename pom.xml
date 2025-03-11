@@ -219,23 +219,6 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.4.2</version>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <executions>
-          <execution>
-            <phase>initialize</phase>
-            <id>invoke build</id>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <executable>initialize.sh</executable>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
   <distributionManagement>
@@ -300,6 +283,34 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- Profile to fetch submodules before build. -->
+    <!-- Activate unless we are in Jitpack CI environment. -->
+    <profile>
+      <activation>
+        <property><name>!env.JITPACK</name></property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+              <execution>
+                <phase>initialize</phase>
+                <id>invoke build</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <executable>initialize.sh</executable>
+            </configuration>
           </plugin>
         </plugins>
       </build>
