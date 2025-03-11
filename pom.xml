@@ -240,8 +240,9 @@
   </build>
   <distributionManagement>
     <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/Nanopublication/nanopub-java</url>
     </snapshotRepository>
     <repository>
       <id>ossrh</id>
