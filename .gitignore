@@ -4,3 +4,4 @@
 /classpath.txt
 *.bak
 /bin/*.jar
+.idea
