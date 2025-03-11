@@ -7,11 +7,14 @@ import eu.ostrzyciel.jelly.core.proto.v1.*;
 import org.bson.Document;
 import org.bson.types.Binary;
 import scala.Option;
+import scala.collection.mutable.ListBuffer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.Vector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -40,6 +43,33 @@ public class NanopubStream {
                         "Either the database query is incorrect or the DB must be reinitialized.");
             }
             return transcoder.ingestFrame(RdfStreamFrame$.MODULE$.parseFrom(jellyContent));
+        });
+        return new NanopubStream(frameStream);
+    }
+
+    /**
+     * Same as fromMongoCursor, but also returns the Nanopub counter in the Jelly frame metadata.
+     * The curson MUST include the "jelly" and "counter" fields.
+     * @param cursor MongoDB cursor
+     * @return NanopubStream
+     */
+    public static NanopubStream fromMongoCursorWithCounter(MongoCursor<Document> cursor) {
+        Stream<Document> jellyStream = StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(cursor, Spliterator.ORDERED), false);
+
+        ProtoTranscoder transcoder = ProtoTranscoder$.MODULE$.fastMergingTranscoderUnsafe(
+                JellyUtils.jellyOptionsForTransmission
+        );
+        Stream<RdfStreamFrame> frameStream = jellyStream.map(doc -> {
+            var jellyContent = ((Binary) doc.get("jelly")).getData();
+            if (jellyContent == null) {
+                throw new RuntimeException("Jelly content stored in DB is null. " +
+                        "Either the database query is incorrect or the DB must be reinitialized.");
+            }
+            var frame = RdfStreamFrame$.MODULE$.parseFrom(jellyContent);
+            return transcoder.ingestFrame(frame.withMetadata(
+                    JellyMetadataUtil.getCounterMetadata(doc.getLong("counter"))
+            ));
         });
         return new NanopubStream(frameStream);
     }
