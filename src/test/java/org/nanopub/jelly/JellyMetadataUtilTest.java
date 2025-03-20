@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import org.junit.Test;
 import scala.Some$;
 import scala.Tuple2;
-import scala.collection.immutable.Map;
 import scala.collection.immutable.Map$;
 
 public class JellyMetadataUtilTest {
@@ -28,13 +27,15 @@ public class JellyMetadataUtilTest {
     @Test
     public void testGetCounterNoKey() {
         var m = (Object) Map$.MODULE$.empty();
-        var counter = JellyMetadataUtil.tryGetCounterFromMetadata((Map<String, ByteString>) m);
+        var counter = JellyMetadataUtil.tryGetCounterFromMetadata(
+                (scala.collection.immutable.Map<String, ByteString>) m
+        );
         assert counter == -1;
     }
 
     @Test
     public void testGetCounterEmptyArray() {
-        var m = Map.from(Some$.MODULE$.apply(
+        var m = scala.collection.immutable.Map.from(Some$.MODULE$.apply(
                 Tuple2.apply(JellyMetadataUtil.COUNTER_KEY, ByteString.copyFrom(new byte[0]))
         ));
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(m);
