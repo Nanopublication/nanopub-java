@@ -1,6 +1,5 @@
 package org.nanopub.jelly;
 
-import com.google.protobuf.ByteString;
 import eu.ostrzyciel.jelly.convert.rdf4j.Rdf4jConverterFactory$;
 import eu.ostrzyciel.jelly.core.ProtoEncoder;
 import eu.ostrzyciel.jelly.core.proto.v1.RdfStreamFrame;
@@ -11,7 +10,6 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import scala.Some$;
-import scala.collection.immutable.Map;
 import scala.collection.mutable.ListBuffer;
 
 /**

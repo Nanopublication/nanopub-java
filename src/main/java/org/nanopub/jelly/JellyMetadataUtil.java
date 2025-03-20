@@ -5,7 +5,6 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import scala.Some$;
 import scala.Tuple2;
-import scala.collection.immutable.Map;
 import scala.collection.immutable.Map$;
 
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.io.IOException;
  */
 public class JellyMetadataUtil {
     public static final String COUNTER_KEY = "c";
-    public static final Map<String, ByteString> EMPTY_METADATA = Map$.MODULE$.empty();
+    public static final scala.collection.immutable.Map<String, ByteString> EMPTY_METADATA = Map$.MODULE$.empty();
 
     /**
      * Create a metadata map with the counter key.
@@ -24,7 +23,7 @@ public class JellyMetadataUtil {
      * @param counter The counter value to store
      * @return A map with the counter key and the counter value
      */
-    public static Map<String, ByteString> getCounterMetadata(long counter) {
+    public static scala.collection.immutable.Map<String, ByteString> getCounterMetadata(long counter) {
         int size = CodedOutputStream.computeUInt64SizeNoTag(counter);
         byte[] bytes = new byte[size];
         CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(bytes);
@@ -34,7 +33,7 @@ public class JellyMetadataUtil {
             // Should not happen, really
             throw new RuntimeException(e);
         }
-        return Map.from(Some$.MODULE$.apply(
+        return scala.collection.immutable.Map.from(Some$.MODULE$.apply(
             Tuple2.apply(COUNTER_KEY, ByteString.copyFrom(bytes))
         ));
     }
@@ -45,7 +44,7 @@ public class JellyMetadataUtil {
      * @param metadata The metadata map to read from
      * @return The counter value, or -1 if it cannot be read
      */
-    public static long tryGetCounterFromMetadata(Map<String, ByteString> metadata) {
+    public static long tryGetCounterFromMetadata(scala.collection.immutable.Map<String, ByteString> metadata) {
         var maybeCounterBytes = metadata.get(COUNTER_KEY);
         if (maybeCounterBytes.isEmpty()) {
             return -1;
