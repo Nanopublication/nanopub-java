@@ -41,20 +41,27 @@ public class ExportJson {
 	private String inFormat;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		ExportJson obj = new ExportJson();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			ExportJson obj = init(args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
+		}
+	}
+
+	static ExportJson init(String[] args) {
+		ExportJson obj = new ExportJson();
+		JCommander jc = new JCommander(obj);
+		try {
+			NanopubImpl.ensureLoaded();
+			jc.parse(args);
+			return obj;
+		} catch (ParameterException ex) {
+			jc.usage();
+			throw ex;
 		}
 	}
 

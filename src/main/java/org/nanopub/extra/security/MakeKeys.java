@@ -25,6 +25,18 @@ public class MakeKeys {
 	private SignatureAlgorithm algorithm = SignatureAlgorithm.DSA;
 
 	public static void main(String[] args) throws IOException {
+		try {
+			MakeKeys obj = init(args);
+			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+	static MakeKeys init(String[] args) {
 		NanopubImpl.ensureLoaded();
 		MakeKeys obj = new MakeKeys();
 		JCommander jc = new JCommander(obj);
@@ -32,14 +44,9 @@ public class MakeKeys {
 			jc.parse(args);
 		} catch (ParameterException ex) {
 			jc.usage();
-			System.exit(1);
+			throw ex;
 		}
-		try {
-			obj.run();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.exit(1);
-		}
+		return obj;
 	}
 
 	private MakeKeys() {
@@ -47,6 +54,7 @@ public class MakeKeys {
 
 	private void run() throws IOException {
 		make(pathAndFilenamePrefix, algorithm);
+		System.out.println("Created " + algorithm + " key files at: " + pathAndFilenamePrefix);
 	}
 
 	public static void make(String pathAndFilenamePrefix, SignatureAlgorithm algorithm) throws IOException {

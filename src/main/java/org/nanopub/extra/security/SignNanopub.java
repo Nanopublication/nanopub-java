@@ -72,6 +72,18 @@ public class SignNanopub {
 	private boolean resolveCrossRefsPrefixBased = false;
 
 	public static void main(String[] args) throws IOException {
+		try {
+			SignNanopub obj = init(args);
+			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+	static SignNanopub init(String[] args) throws ParameterException {
 		NanopubImpl.ensureLoaded();
 		SignNanopub obj = new SignNanopub();
 		JCommander jc = new JCommander(obj);
@@ -79,14 +91,9 @@ public class SignNanopub {
 			jc.parse(args);
 		} catch (ParameterException ex) {
 			jc.usage();
-			System.exit(1);
+			throw ex;
 		}
-		try {
-			obj.run();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.exit(1);
-		}
+		return obj;
 	}
 
 	private KeyPair key;
@@ -94,7 +101,7 @@ public class SignNanopub {
 	private SignNanopub() {
 	}
 
-	private void run() throws Exception {
+	void run() throws Exception {
 		if (algorithm == null) {
 			if (keyFilename == null) {
 				keyFilename = "~/.nanopub/id_rsa";
