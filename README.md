@@ -1,8 +1,8 @@
-nanopub-java
-============
+nanopub-java with FDO support
+=============================
 
 This is a Java library for nanopublications (see http://nanopub.net) based on
-RDF4J.
+RDF4J, with additional support for FDOs.
 
 It implements the formal structure defined in the [official nanopublication
 guidelines](http://nanopub.net/guidelines/working_draft/).
