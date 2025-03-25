@@ -8,13 +8,6 @@ It implements the formal structure defined in the [official nanopublication
 guidelines](http://nanopub.net/guidelines/working_draft/).
 
 
-## Publication
-
-- Tobias Kuhn.  [nanopub-java: A Java Library for
-  Nanopublications](http://arxiv.org/pdf/1508.04977.pdf). In Proceedings of the
-  5th Workshop on Linked Science (LISC 2015). 2015.
-
-
 ## Usage as Java Library
 
 The easiest way to use this library in your project is to let Maven download it
@@ -24,7 +17,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.67</version>
+      <version>1.69</version>
     </dependency>
 
 Alternatively, you might want to use one of the [pre-built
@@ -63,19 +56,19 @@ DockerHub](https://hub.docker.com/repository/docker/umids/nanopub-java).
 Sign a nanopublication (`nanopub.trig` file in current dir here):
 
 ```bash
-docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data umids/nanopub-java sign /data/nanopub.trig
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java sign /data/nanopub.trig
 ```
 
 Publish a signed nanopublication:
 
 ```bash
-docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data umids/nanopub-java publish /data/signed.nanopub.trig
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java publish /data/signed.nanopub.trig
 ```
 
 Build the Docker image:
 
 ```shell
-docker build -t umids/nanopub-java .
+docker build -t nanopub/nanopub-java .
 ```
 
 ## Compilation
@@ -91,9 +84,11 @@ same commands as for the `np` script above, but using the locally compiled code
 and not the jar file).
 
 
-## Main Developer
+## Publication
 
-- Tobias Kuhn (http://www.tkuhn.org)
+- Tobias Kuhn.  [nanopub-java: A Java Library for
+  Nanopublications](http://arxiv.org/pdf/1508.04977.pdf). In Proceedings of the
+  5th Workshop on Linked Science (LISC 2015). 2015.
 
 
 ## License
