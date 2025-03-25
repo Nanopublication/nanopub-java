@@ -1,28 +1,21 @@
-FROM openjdk:8-jre
-# FROM maven:3-jdk-8
+FROM eclipse-temurin:23-alpine
+
+RUN apk add --no-cache curl
+RUN apk add --no-cache bash
+RUN apk add --no-cache maven
+RUN apk add --no-cache git
 
 WORKDIR /app
 
-## The Dockerfile download the latest jar release
-# It could also be used to build the jar file
+COPY . .
 
-## Re-download dependencies only if change to pom.xml
-# COPY ./pom.xml ./pom.xml
-# RUN mvn dependency:go-offline -B
+RUN mvn clean install
+RUN cp target/*.jar bin/
 
-COPY ./src ./src
-COPY ./bin ./bin
-COPY ./scripts ./scripts
-
-## Build  jar
-# RUN mvn clean install
-# RUN cp target/*.jar ??
-
-# Put np in the $PATH
-RUN cp bin/np /bin/np
+ENV PATH="/app/bin/:$PATH"
 
 # Download the jar using np a first time
-RUN np help
+RUN /app/bin/np help
 
 ENTRYPOINT [ "np" ]
 CMD [ "help" ]
