@@ -1,5 +1,10 @@
 package org.nanopub.extra.security;
 
+import com.beust.jcommander.ParameterException;
+import org.nanopub.CliRunner;
+import org.nanopub.Run;
+
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,14 +14,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.nanopub.NanopubImpl;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-public class MakeKeys {
+public class MakeKeys extends CliRunner {
 
 	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
 	private String pathAndFilenamePrefix = "~/.nanopub/id";
@@ -26,7 +24,7 @@ public class MakeKeys {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			MakeKeys obj = init(args);
+			MakeKeys obj = Run.initJc(new MakeKeys(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -34,22 +32,6 @@ public class MakeKeys {
 			ex.printStackTrace();
 			System.exit(1);
 		}
-	}
-
-	static MakeKeys init(String[] args) {
-		NanopubImpl.ensureLoaded();
-		MakeKeys obj = new MakeKeys();
-		JCommander jc = new JCommander(obj);
-		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			throw ex;
-		}
-		return obj;
-	}
-
-	private MakeKeys() {
 	}
 
 	private void run() throws IOException {

@@ -1,5 +1,15 @@
 package org.nanopub.op;
 
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.Run;
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,22 +17,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.trustyuri.TrustyUriException;
-
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.Rio;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-public class Count {
+public class Count extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
 	private List<File> inputNanopubs = new ArrayList<File>();
@@ -34,17 +29,11 @@ public class Count {
 	private String inFormat;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Count obj = new Count();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			Count obj = Run.initJc(new Count(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -52,11 +41,10 @@ public class Count {
 	}
 
 	public static Count getInstance(String args) throws ParameterException {
-		NanopubImpl.ensureLoaded();
-		if (args == null) args = "";
-		Count obj = new Count();
-		JCommander jc = new JCommander(obj);
-		jc.parse(args.trim().split(" "));
+		if (args == null) {
+			args = "";
+		}
+		Count obj = Run.initJc(new Count(), args.trim().split(" "));
 		return obj;
 	}
 

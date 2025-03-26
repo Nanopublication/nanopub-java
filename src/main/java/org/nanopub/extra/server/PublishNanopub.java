@@ -1,12 +1,7 @@
 package org.nanopub.extra.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -15,19 +10,17 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.*;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import net.trustyuri.TrustyUriUtils;
-
-public class PublishNanopub {
+public class PublishNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "nanopubs", required = true)
 	private List<String> nanopubs = new ArrayList<String>();
@@ -42,17 +35,11 @@ public class PublishNanopub {
 	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		PublishNanopub obj = new PublishNanopub();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			PublishNanopub obj = Run.initJc(new PublishNanopub(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -72,6 +59,7 @@ public class PublishNanopub {
 	private String artifactCode;
 
 	public PublishNanopub() {
+		super();
 	}
 
 	private void run() throws IOException {

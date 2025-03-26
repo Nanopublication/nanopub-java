@@ -1,12 +1,7 @@
 package org.nanopub;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.nanopub.extra.index.MakeIndex;
 import org.nanopub.extra.security.MakeKeys;
@@ -19,6 +14,9 @@ import org.nanopub.extra.services.RunQuery;
 import org.nanopub.extra.setting.ShowSetting;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
+
+import java.io.IOException;
+import java.util.*;
 
 public class Run {
 
@@ -62,6 +60,18 @@ public class Run {
 		addRunnableClass(org.nanopub.op.Run.class, "op");
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
+	}
+
+	public static <T extends CliRunner> T initJc(T obj, String[] args) {
+		JCommander jc = new JCommander(obj);
+		obj.setJc(jc);
+		try {
+			jc.parse(args);
+		} catch (ParameterException ex) {
+			jc.usage();
+			throw ex;
+		}
+		return obj;
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
