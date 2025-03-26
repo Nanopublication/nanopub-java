@@ -1,30 +1,19 @@
 package org.nanopub.extra.index;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import com.beust.jcommander.ParameterException;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-public class MakeIndex {
+public class MakeIndex extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files")
 	private List<File> inputFiles = new ArrayList<File>();
@@ -78,21 +67,14 @@ public class MakeIndex {
 //	private SignatureAlgorithm algorithm;
 
 	public static void main(String[] args) throws IOException {
-		NanopubImpl.ensureLoaded();
-		MakeIndex obj = new MakeIndex();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		if (obj.inputFiles.isEmpty() && obj.elements.isEmpty() && obj.subindexes.isEmpty() && obj.supersededIndex == null) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			MakeIndex obj = CliRunner.initJc(new MakeIndex(), args);
+			if (obj.inputFiles.isEmpty() && obj.elements.isEmpty() && obj.subindexes.isEmpty() && obj.supersededIndex == null) {
+				obj.getJc().usage();
+			}
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -104,9 +86,6 @@ public class MakeIndex {
 	private RDFFormat outFormat;
 	private int count;
 //	private KeyPair key;
-
-	private MakeIndex() {
-	}
 
 	private void init() throws IOException {
 		count = 0;

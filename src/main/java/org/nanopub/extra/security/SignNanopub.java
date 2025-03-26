@@ -1,20 +1,17 @@
 package org.nanopub.extra.security;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+
+import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -23,29 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.commons.io.IOUtils;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFWriter;
-import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
-import org.nanopub.NanopubWithNs;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriResource;
-
-public class SignNanopub {
+public class SignNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
 	private List<File> inputNanopubFiles = new ArrayList<File>();
@@ -73,7 +48,7 @@ public class SignNanopub {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			SignNanopub obj = init(args);
+			SignNanopub obj = CliRunner.initJc(new SignNanopub(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -83,25 +58,12 @@ public class SignNanopub {
 		}
 	}
 
-	static SignNanopub init(String[] args) throws ParameterException {
-		NanopubImpl.ensureLoaded();
-		SignNanopub obj = new SignNanopub();
-		JCommander jc = new JCommander(obj);
-		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			throw ex;
-		}
-		return obj;
-	}
-
 	private KeyPair key;
 
-	private SignNanopub() {
-	}
+	public SignNanopub() {
+    }
 
-	void run() throws Exception {
+	protected void run() throws Exception {
 		if (algorithm == null) {
 			if (keyFilename == null) {
 				keyFilename = "~/.nanopub/id_rsa";

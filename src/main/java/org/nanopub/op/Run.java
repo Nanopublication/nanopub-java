@@ -1,18 +1,14 @@
 package org.nanopub.op;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.rio.RDFParserRegistry;
 import org.eclipse.rdf4j.rio.RDFWriterRegistry;
 import org.eclipse.rdf4j.rio.turtle.TurtleParserFactory;
 import org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory;
 import org.nanopub.NanopubImpl;
+
+import java.io.IOException;
+import java.util.*;
 
 public class Run {
 

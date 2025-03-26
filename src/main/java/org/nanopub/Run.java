@@ -1,12 +1,5 @@
 package org.nanopub;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.nanopub.extra.index.MakeIndex;
 import org.nanopub.extra.security.MakeKeys;
@@ -19,6 +12,9 @@ import org.nanopub.extra.services.RunQuery;
 import org.nanopub.extra.setting.ShowSetting;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
+
+import java.io.IOException;
+import java.util.*;
 
 public class Run {
 

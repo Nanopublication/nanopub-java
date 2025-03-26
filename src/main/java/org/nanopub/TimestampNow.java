@@ -1,35 +1,23 @@
 package org.nanopub;
 
-import java.util.Date;
-
+import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.util.Date;
 
-
-public class TimestampNow {
+public class TimestampNow extends CliRunner {
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		TimestampNow obj = new TimestampNow();
-		JCommander jc = new JCommander(obj);
-		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
+		TimestampNow obj = CliRunner.initJc(new TimestampNow(), args);
 		try {
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
-	}
-
-	private TimestampNow() {
 	}
 
 	private void run() {

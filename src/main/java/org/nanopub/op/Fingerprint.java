@@ -1,33 +1,25 @@
 package org.nanopub.op;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
-
+import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
-
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.op.fingerprint.DefaultFingerprints;
-import org.nanopub.op.fingerprint.FingerprintHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
+import org.nanopub.op.fingerprint.DefaultFingerprints;
+import org.nanopub.op.fingerprint.FingerprintHandler;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
-public class Fingerprint {
+public class Fingerprint extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
 	private List<File> inputNanopubs = new ArrayList<File>();
@@ -51,30 +43,25 @@ public class Fingerprint {
 	private String handlerClass;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Fingerprint obj = new Fingerprint();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		obj.init();
-		try {
+			Fingerprint obj = CliRunner.initJc(new Fingerprint(), args);
+			obj.init();
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
 	}
 
+	private Fingerprint() {}
+
 	public static Fingerprint getInstance(String args) throws ParameterException {
-		NanopubImpl.ensureLoaded();
-		if (args == null) args = "";
-		Fingerprint obj = new Fingerprint();
-		JCommander jc = new JCommander(obj);
-		jc.parse(args.trim().split(" "));
+		if (args == null) {
+			args = "";
+		}
+		Fingerprint obj = CliRunner.initJc(new Fingerprint(), args.trim().split(" "));
 		obj.init();
 		return obj;
 	}

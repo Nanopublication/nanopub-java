@@ -1,12 +1,7 @@
 package org.nanopub.op;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Random;
-import java.util.zip.GZIPOutputStream;
-
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -14,18 +9,16 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
+import org.nanopub.*;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Random;
+import java.util.zip.GZIPOutputStream;
 
-import net.trustyuri.TrustyUriException;
-
-public class Create {
+public class Create extends CliRunner {
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -34,17 +27,11 @@ public class Create {
 	private String format;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Create obj = new Create();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			Create obj = CliRunner.initJc(new Create(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);

@@ -1,16 +1,16 @@
 package org.nanopub.extra.services;
 
+import com.beust.jcommander.ParameterException;
+import com.opencsv.exceptions.CsvValidationException;
+import org.nanopub.CliRunner;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-import com.opencsv.exceptions.CsvValidationException;
-
-public class RunQuery {
+public class RunQuery extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "query-id", required = true)
 	private String queryId;
@@ -19,16 +19,11 @@ public class RunQuery {
 	private List<String> params;
 
 	public static void main(String[] args) {
-		RunQuery obj = new RunQuery();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			RunQuery obj = CliRunner.initJc(new RunQuery(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);

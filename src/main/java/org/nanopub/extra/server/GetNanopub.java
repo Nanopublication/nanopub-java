@@ -1,40 +1,28 @@
 package org.nanopub.extra.server;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.rdf.RdfModule;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.trusty.TrustyNanopubUtils;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.util.EntityUtils;
-import org.eclipse.rdf4j.common.exception.RDF4JException;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
-import org.nanopub.trusty.TrustyNanopubUtils;
+import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfModule;
-
-public class GetNanopub {
+public class GetNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "nanopub-uris-or-artifact-codes", required = true)
 	private List<String> nanopubIds;
@@ -80,18 +68,12 @@ public class GetNanopub {
 	private boolean simUnrelConn;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		GetNanopub obj = new GetNanopub();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		simulateUnreliableConnection = obj.simUnrelConn;
-		try {
+			GetNanopub obj = CliRunner.initJc(new GetNanopub(), args);
+			simulateUnreliableConnection = obj.simUnrelConn;
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -182,18 +164,7 @@ public class GetNanopub {
 	}
 
 	public static String getArtifactCode(String uriOrArtifactCode) {
-		if (uriOrArtifactCode.indexOf(":") > 0) {
-			IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
-			if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
-				throw new IllegalArgumentException("Not a well-formed trusty URI");
-			}
-			return TrustyUriUtils.getArtifactCode(uri.toString());
-		} else {
-			if (!TrustyUriUtils.isPotentialArtifactCode(uriOrArtifactCode)) {
-				throw new IllegalArgumentException("Not a well-formed artifact code");
-			}
-			return uriOrArtifactCode;
-		}
+		return extractArtifactCode(uriOrArtifactCode);
 	}
 
 	private OutputStream outputStream = System.out;
@@ -204,10 +175,9 @@ public class GetNanopub {
 
 	private RDFFormat rdfFormat;
 
-	public GetNanopub() {
-	}
+	public GetNanopub() {}
 
-	private void run() throws IOException, RDFHandlerException, MalformedNanopubException {
+	protected void run() throws IOException, RDFHandlerException, MalformedNanopubException {
 		if (showReport) {
 			exceptions = new ArrayList<>();
 		}

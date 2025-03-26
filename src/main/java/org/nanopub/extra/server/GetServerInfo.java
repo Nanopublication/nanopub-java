@@ -1,31 +1,23 @@
 package org.nanopub.extra.server;
 
+import com.beust.jcommander.ParameterException;
+import org.nanopub.CliRunner;
+import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+
 import java.io.IOException;
 import java.util.List;
 
-import org.nanopub.NanopubImpl;
-import org.nanopub.extra.server.ServerInfo.ServerInfoException;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-public class GetServerInfo {
+public class GetServerInfo extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "server-urls", required = true)
 	private List<String> serverUrls;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		GetServerInfo obj = new GetServerInfo();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			GetServerInfo obj = CliRunner.initJc(new GetServerInfo(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);

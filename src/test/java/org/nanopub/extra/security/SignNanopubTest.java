@@ -2,34 +2,25 @@ package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
 import org.junit.jupiter.api.Test;
+import org.nanopub.CliRunner;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 class SignNanopubTest {
 
     @Test
     void initWithoutArgs() throws IOException {
-        String[] args = new String[0];
-        try {
-            SignNanopub obj = SignNanopub.init(args);
-            fail("Should have thrown a Parameter exception (Which main translates to Exit Code: 1)");
-        } catch (ParameterException e) {
-            // We assume the Usage String printed out
-            System.out.println("All good!");
-            System.out.println(e.getMessage());
-            assertTrue(true);
-        }
-
+        assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new SignNanopub(), new String[0]));
     }
 
     @Test
     void initWithValidArgs() throws Exception {
-        String[] args = new String[] {"-v", "/Users/zip/repos/pixels/nanopub-java/src/main/resources/testsuite/valid/plain/aida1.trig"};
+        String path = "src/main/resources/testsuite/valid/plain/aida1.trig";
+        String[] args = new String[] {"-v", path};
 
-        SignNanopub obj = SignNanopub.init(args);
+        CliRunner.initJc(new SignNanopub(), args);
     }
 
     // For now we assume, that most signing issues were detected by other tests

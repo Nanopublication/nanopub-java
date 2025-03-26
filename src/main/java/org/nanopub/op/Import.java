@@ -1,44 +1,24 @@
 package org.nanopub.op;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.rio.*;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.nanopub.*;
+
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandler;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubUtils;
-import org.nanopub.SimpleCreatorPattern;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
-import net.trustyuri.TrustyUriException;
-
-public class Import {
+public class Import extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-file", required = true)
 	private List<File> inputFiles = new ArrayList<File>();
@@ -56,21 +36,15 @@ public class Import {
 	private String outFormat;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Import obj = new Import();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		if (obj.inputFiles.size() != 1) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			Import obj = CliRunner.initJc(new Import(), args);
+			if (obj.inputFiles.size() != 1) {
+				obj.getJc().usage();
+				System.exit(1);
+			}
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
