@@ -5,14 +5,13 @@ import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
-import org.nanopub.Run;
 
 import java.io.IOException;
 
 public class ShowSetting extends CliRunner {
 
 	public static void main(String[] args) {
-		ShowSetting obj = Run.initJc(new ShowSetting(), args);
+		ShowSetting obj = CliRunner.initJc(new ShowSetting(), args);
 		try {
 			obj.run();
 		} catch (ParameterException ex) {

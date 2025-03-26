@@ -1,7 +1,5 @@
 package org.nanopub;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.nanopub.extra.index.MakeIndex;
 import org.nanopub.extra.security.MakeKeys;
@@ -60,18 +58,6 @@ public class Run {
 		addRunnableClass(org.nanopub.op.Run.class, "op");
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
-	}
-
-	public static <T extends CliRunner> T initJc(T obj, String[] args) {
-		JCommander jc = new JCommander(obj);
-		obj.setJc(jc);
-		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			throw ex;
-		}
-		return obj;
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {

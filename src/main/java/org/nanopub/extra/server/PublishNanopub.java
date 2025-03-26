@@ -36,7 +36,7 @@ public class PublishNanopub extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			PublishNanopub obj = Run.initJc(new PublishNanopub(), args);
+			PublishNanopub obj = CliRunner.initJc(new PublishNanopub(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

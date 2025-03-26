@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
@@ -66,7 +65,7 @@ public class IndexReuse extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			IndexReuse obj = Run.initJc(new IndexReuse(), args);
+			IndexReuse obj = CliRunner.initJc(new IndexReuse(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

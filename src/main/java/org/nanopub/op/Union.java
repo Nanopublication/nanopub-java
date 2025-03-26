@@ -7,7 +7,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.File;
@@ -36,7 +35,7 @@ public class Union extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Union obj = Run.initJc(new Union(), args);
+			Union obj = CliRunner.initJc(new Union(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

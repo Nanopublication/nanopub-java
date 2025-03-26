@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.BufferedOutputStream;
@@ -34,7 +33,7 @@ public class Tar extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Tar obj = Run.initJc(new Tar(), args);
+			Tar obj = CliRunner.initJc(new Tar(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

@@ -2,7 +2,6 @@ package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
 import org.nanopub.CliRunner;
-import org.nanopub.Run;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.File;
@@ -24,7 +23,7 @@ public class MakeKeys extends CliRunner {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			MakeKeys obj = Run.initJc(new MakeKeys(), args);
+			MakeKeys obj = CliRunner.initJc(new MakeKeys(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

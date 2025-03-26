@@ -9,7 +9,7 @@ import java.util.Date;
 public class TimestampNow extends CliRunner {
 
 	public static void main(String[] args) {
-		TimestampNow obj = Run.initJc(new TimestampNow(), args);
+		TimestampNow obj = CliRunner.initJc(new TimestampNow(), args);
 		try {
 			obj.run();
 		} catch (ParameterException ex) {

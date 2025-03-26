@@ -36,7 +36,7 @@ public class MakeTrustyNanopub extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			MakeTrustyNanopub obj = Run.initJc(new MakeTrustyNanopub(), args);
+			MakeTrustyNanopub obj = CliRunner.initJc(new MakeTrustyNanopub(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

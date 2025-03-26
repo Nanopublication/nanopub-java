@@ -69,7 +69,7 @@ public class GetNanopub extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			GetNanopub obj = Run.initJc(new GetNanopub(), args);
+			GetNanopub obj = CliRunner.initJc(new GetNanopub(), args);
 			simulateUnreliableConnection = obj.simUnrelConn;
 			obj.run();
 		} catch (ParameterException ex) {

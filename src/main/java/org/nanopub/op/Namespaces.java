@@ -8,9 +8,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class Namespaces extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Namespaces obj = Run.initJc(new Namespaces(), args);
+			Namespaces obj = CliRunner.initJc(new Namespaces(), args);
 			obj.init();
 			obj.run();
 		} catch (ParameterException ex) {
@@ -64,7 +66,7 @@ public class Namespaces extends CliRunner {
 		if (args == null) {
 			args = "";
 		}
-		Namespaces obj = Run.initJc(new Namespaces(), args.trim().split(" "));
+		Namespaces obj = CliRunner.initJc(new Namespaces(), args.trim().split(" "));
 		return obj;
 	}
 

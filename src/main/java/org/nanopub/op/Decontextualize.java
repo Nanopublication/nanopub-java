@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.op.fingerprint.FingerprintHandler;
 
@@ -34,7 +33,7 @@ public class Decontextualize extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Decontextualize obj = Run.initJc(new Decontextualize(), args);
+			Decontextualize obj = CliRunner.initJc(new Decontextualize(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

@@ -8,7 +8,6 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
-import org.nanopub.Run;
 import org.nanopub.*;
 
 import java.io.*;
@@ -40,7 +39,7 @@ public class Build extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Build obj = Run.initJc(new Build(), args);
+			Build obj = CliRunner.initJc(new Build(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

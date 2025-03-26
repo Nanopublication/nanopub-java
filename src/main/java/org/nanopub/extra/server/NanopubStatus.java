@@ -10,7 +10,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.Run;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 
@@ -34,7 +33,7 @@ public class NanopubStatus extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			NanopubStatus obj = Run.initJc(new NanopubStatus(), args);
+			NanopubStatus obj = CliRunner.initJc(new NanopubStatus(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

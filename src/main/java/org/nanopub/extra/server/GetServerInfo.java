@@ -2,7 +2,6 @@ package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
 import org.nanopub.CliRunner;
-import org.nanopub.Run;
 import org.nanopub.extra.server.ServerInfo.ServerInfoException;
 
 import java.io.IOException;
@@ -15,7 +14,7 @@ public class GetServerInfo extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			GetServerInfo obj = Run.initJc(new GetServerInfo(), args);
+			GetServerInfo obj = CliRunner.initJc(new GetServerInfo(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
