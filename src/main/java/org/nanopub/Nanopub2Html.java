@@ -33,7 +33,7 @@ public class Nanopub2Html extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Nanopub2Html obj = Run.initJc(new Nanopub2Html(), args);
+			Nanopub2Html obj = CliRunner.initJc(new Nanopub2Html(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

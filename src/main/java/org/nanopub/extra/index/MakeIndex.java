@@ -68,7 +68,7 @@ public class MakeIndex extends CliRunner {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			MakeIndex obj = Run.initJc(new MakeIndex(), args);
+			MakeIndex obj = CliRunner.initJc(new MakeIndex(), args);
 			if (obj.inputFiles.isEmpty() && obj.elements.isEmpty() && obj.subindexes.isEmpty() && obj.supersededIndex == null) {
 				obj.getJc().usage();
 			}

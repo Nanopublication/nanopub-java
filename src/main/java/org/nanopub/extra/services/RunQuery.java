@@ -3,7 +3,6 @@ package org.nanopub.extra.services;
 import com.beust.jcommander.ParameterException;
 import com.opencsv.exceptions.CsvValidationException;
 import org.nanopub.CliRunner;
-import org.nanopub.Run;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ public class RunQuery extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			RunQuery obj = Run.initJc(new RunQuery(), args);
+			RunQuery obj = CliRunner.initJc(new RunQuery(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

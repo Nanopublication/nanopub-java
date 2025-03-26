@@ -6,9 +6,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
 import org.nanopub.op.topic.DefaultTopics;
 
 import java.io.*;
@@ -35,7 +37,7 @@ public class Topic extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Topic obj = Run.initJc(new Topic(), args);
+			Topic obj = CliRunner.initJc(new Topic(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -49,7 +51,7 @@ public class Topic extends CliRunner {
 		if (args == null) {
 			args = "";
 		}
-		Topic obj = Run.initJc(new Topic(), args.trim().split(" "));
+		Topic obj = CliRunner.initJc(new Topic(), args.trim().split(" "));
 		return obj;
 	}
 

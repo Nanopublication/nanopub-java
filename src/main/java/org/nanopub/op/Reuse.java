@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.trusty.FixTrustyNanopub;
 
@@ -66,7 +65,7 @@ public class Reuse extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Reuse obj = Run.initJc(new Reuse(), args);
+			Reuse obj = CliRunner.initJc(new Reuse(), args);
 			obj.init();
 			obj.run();
 		} catch (ParameterException ex) {

@@ -2,7 +2,7 @@ package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
 import org.junit.jupiter.api.Test;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
 
 import java.io.IOException;
 
@@ -12,7 +12,7 @@ class SignNanopubTest {
 
     @Test
     void initWithoutArgs() throws IOException {
-        assertThrowsExactly(ParameterException.class, () -> Run.initJc(new SignNanopub(), new String[0]));
+        assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new SignNanopub(), new String[0]));
     }
 
     @Test
@@ -20,7 +20,7 @@ class SignNanopubTest {
         String path = "src/main/resources/testsuite/valid/plain/aida1.trig";
         String[] args = new String[] {"-v", path};
 
-        Run.initJc(new SignNanopub(), args);
+        CliRunner.initJc(new SignNanopub(), args);
     }
 
     // For now we assume, that most signing issues were detected by other tests

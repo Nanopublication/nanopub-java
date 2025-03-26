@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
-import org.nanopub.Run;
 import org.nanopub.*;
 
 import java.io.*;
@@ -38,7 +37,7 @@ public class Import extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Import obj = Run.initJc(new Import(), args);
+			Import obj = CliRunner.initJc(new Import(), args);
 			if (obj.inputFiles.size() != 1) {
 				obj.getJc().usage();
 				System.exit(1);

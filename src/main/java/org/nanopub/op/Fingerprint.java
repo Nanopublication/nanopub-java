@@ -6,9 +6,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
 import org.nanopub.op.fingerprint.DefaultFingerprints;
 import org.nanopub.op.fingerprint.FingerprintHandler;
 
@@ -42,7 +44,7 @@ public class Fingerprint extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Fingerprint obj = Run.initJc(new Fingerprint(), args);
+			Fingerprint obj = CliRunner.initJc(new Fingerprint(), args);
 			obj.init();
 			obj.run();
 		} catch (ParameterException ex) {
@@ -59,7 +61,7 @@ public class Fingerprint extends CliRunner {
 		if (args == null) {
 			args = "";
 		}
-		Fingerprint obj = Run.initJc(new Fingerprint(), args.trim().split(" "));
+		Fingerprint obj = CliRunner.initJc(new Fingerprint(), args.trim().split(" "));
 		obj.init();
 		return obj;
 	}

@@ -2,7 +2,7 @@ package org.nanopub.op;
 
 import com.beust.jcommander.ParameterException;
 import org.junit.jupiter.api.Test;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -16,7 +16,7 @@ class ExportJsonTest {
     @Test
     void initNoArgs() throws Exception {
         assertThrows(ParameterException.class, () -> {
-            Run.initJc(new ExportJson(), new String[0]);
+            CliRunner.initJc(new ExportJson(), new String[0]);
         });
     }
 
@@ -31,13 +31,13 @@ class ExportJsonTest {
 
     @Test
     void initValidArgs() throws Exception {
-        ExportJson obj = Run.initJc(new ExportJson(), new String[] {"inputFile"});
+        ExportJson obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile"});
         assertNotNull(obj);
 
-        obj = Run.initJc(new ExportJson(), new String[] {"inputFile", "-o", "outputFile"});
+        obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile", "-o", "outputFile"});
         assertNotNull(obj);
 
-        obj = Run.initJc(new ExportJson(), new String[] {"inputFile", "--in-format", "trig"});
+        obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile", "--in-format", "trig"});
         assertNotNull(obj);
     }
 

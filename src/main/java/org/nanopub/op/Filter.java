@@ -12,7 +12,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.*;
@@ -54,7 +53,7 @@ public class Filter extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Filter obj = Run.initJc(new Filter(), args);
+			Filter obj = CliRunner.initJc(new Filter(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

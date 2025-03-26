@@ -34,7 +34,7 @@ public class CheckNanopub extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			CheckNanopub obj = Run.initJc(new CheckNanopub(), args);
+			CheckNanopub obj = CliRunner.initJc(new CheckNanopub(), args);
 			obj.setLogPrintStream(System.out);
 			Report report = obj.check();
 			System.out.println("Summary: " + report.getSummary());

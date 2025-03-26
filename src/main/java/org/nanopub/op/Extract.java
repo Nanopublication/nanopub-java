@@ -5,9 +5,11 @@ import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
-import org.nanopub.*;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -46,7 +48,7 @@ public class Extract extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Extract obj = Run.initJc(new Extract(), args);
+			Extract obj = CliRunner.initJc(new Extract(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

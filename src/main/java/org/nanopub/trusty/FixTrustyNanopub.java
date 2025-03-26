@@ -26,7 +26,7 @@ public class FixTrustyNanopub extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			FixTrustyNanopub obj = Run.initJc(new FixTrustyNanopub(), args);
+			FixTrustyNanopub obj = CliRunner.initJc(new FixTrustyNanopub(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

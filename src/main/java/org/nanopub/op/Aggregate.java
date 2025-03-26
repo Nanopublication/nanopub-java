@@ -8,9 +8,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
-import org.nanopub.Run;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
 
 import java.io.*;
 import java.util.*;
@@ -38,7 +40,7 @@ public class Aggregate extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Aggregate obj = Run.initJc(new Aggregate(), args);
+			Aggregate obj = CliRunner.initJc(new Aggregate(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -52,7 +54,7 @@ public class Aggregate extends CliRunner {
 		if (args == null) {
 			args = "";
 		}
-		Aggregate obj = Run.initJc(new Aggregate(), args.trim().split(" "));
+		Aggregate obj = CliRunner.initJc(new Aggregate(), args.trim().split(" "));
 		return obj;
 	}
 

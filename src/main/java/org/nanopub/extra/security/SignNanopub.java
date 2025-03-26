@@ -48,7 +48,7 @@ public class SignNanopub extends CliRunner {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			SignNanopub obj = Run.initJc(new SignNanopub(), args);
+			SignNanopub obj = CliRunner.initJc(new SignNanopub(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);

@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.Run;
 import org.nanopub.*;
 
 import java.io.File;
@@ -29,7 +28,7 @@ public class Create extends CliRunner {
 
 	public static void main(String[] args) {
 		try {
-			Create obj = Run.initJc(new Create(), args);
+			Create obj = CliRunner.initJc(new Create(), args);
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
