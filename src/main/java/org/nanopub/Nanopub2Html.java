@@ -1,26 +1,19 @@
 package org.nanopub;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 
-public class Nanopub2Html {
+public class Nanopub2Html extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<String> inputNanopubs = new ArrayList<String>();
@@ -39,25 +32,18 @@ public class Nanopub2Html {
 	private static final Charset utf8Charset = Charset.forName("UTF8");
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Nanopub2Html obj = new Nanopub2Html();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			Nanopub2Html obj = Run.initJc(new Nanopub2Html(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	private Nanopub2Html() {
-	}
+	public Nanopub2Html() {}
 
 	private Nanopub2Html(OutputStream outputStream, boolean standalone, boolean indentContext) {
 		this.outputStream = outputStream;

@@ -95,6 +95,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		};
 	}
 
+	/**
+	 * Just ensures the class to be loaded. Probably unnecessary.
+	 */
 	public static void ensureLoaded() {
 		// ensure class is loaded; nothing left to be done
 	}

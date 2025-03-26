@@ -1,29 +1,22 @@
 package org.nanopub.extra.setting;
 
-import java.io.IOException;
-
+import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
+import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
-import org.nanopub.NanopubImpl;
+import org.nanopub.Run;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.IOException;
 
-public class ShowSetting {
+public class ShowSetting extends CliRunner {
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		ShowSetting obj = new ShowSetting();
-		JCommander jc = new JCommander(obj);
-		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
+		ShowSetting obj = Run.initJc(new ShowSetting(), args);
 		try {
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);

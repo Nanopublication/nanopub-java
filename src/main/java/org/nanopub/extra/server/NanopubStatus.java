@@ -1,26 +1,24 @@
 package org.nanopub.extra.server;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfModule;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
+import org.nanopub.Run;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfModule;
-
-public class NanopubStatus {
+public class NanopubStatus extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "nanopub-uri-or-artifact-code", required = true)
 	private List<String> nanopubIds;
@@ -35,22 +33,11 @@ public class NanopubStatus {
 	private boolean checkAllServers = false;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		NanopubStatus obj = new NanopubStatus();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		if (obj.nanopubIds.size() != 1) {
-			System.err.println("ERROR: Exactly one main argument needed");
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			NanopubStatus obj = Run.initJc(new NanopubStatus(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -58,6 +45,10 @@ public class NanopubStatus {
 	}
 
 	private static String getArtifactCode(String uriOrArtifactCode) {
+		return extractArtifactCode(uriOrArtifactCode);
+	}
+
+	static String extractArtifactCode(String uriOrArtifactCode) {
 		if (uriOrArtifactCode.indexOf(":") > 0) {
 			IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
 			if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {

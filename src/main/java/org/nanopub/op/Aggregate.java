@@ -1,42 +1,22 @@
 package org.nanopub.op;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPOutputStream;
-
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.*;
+import org.nanopub.Run;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.*;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
-import net.trustyuri.TrustyUriException;
-
-public class Aggregate {
+public class Aggregate extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
 	private List<File> inputNanopubs = new ArrayList<File>();
@@ -57,18 +37,11 @@ public class Aggregate {
 	private String inFormat;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		Aggregate obj = new Aggregate();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		obj.init();
-		try {
+			Aggregate obj = Run.initJc(new Aggregate(), args);
 			obj.run();
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -76,20 +49,15 @@ public class Aggregate {
 	}
 
 	public static Aggregate getInstance(String args) throws ParameterException {
-		NanopubImpl.ensureLoaded();
-		if (args == null) args = "";
-		Aggregate obj = new Aggregate();
-		JCommander jc = new JCommander(obj);
-		jc.parse(args.trim().split(" "));
-		obj.init();
+		if (args == null) {
+			args = "";
+		}
+		Aggregate obj = Run.initJc(new Aggregate(), args.trim().split(" "));
 		return obj;
 	}
 
 	private RDFFormat rdfInFormat;
 	private Map<Statement,Integer> headCounts, assertionCounts, provCounts, pubinfoCounts;
-
-	private void init() {
-	}
 
 	public void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {

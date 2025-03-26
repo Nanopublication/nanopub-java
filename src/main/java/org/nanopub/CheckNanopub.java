@@ -1,12 +1,7 @@
 package org.nanopub;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -19,12 +14,14 @@ import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-
-public class CheckNanopub {
+public class CheckNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
 	private List<String> inputNanopubs = new ArrayList<String>();
@@ -36,19 +33,13 @@ public class CheckNanopub {
 	private String sparqlEndpointUrl;
 
 	public static void main(String[] args) {
-		NanopubImpl.ensureLoaded();
-		CheckNanopub obj = new CheckNanopub();
-		JCommander jc = new JCommander(obj);
 		try {
-			jc.parse(args);
-		} catch (ParameterException ex) {
-			jc.usage();
-			System.exit(1);
-		}
-		try {
+			CheckNanopub obj = Run.initJc(new CheckNanopub(), args);
 			obj.setLogPrintStream(System.out);
 			Report report = obj.check();
 			System.out.println("Summary: " + report.getSummary());
+		} catch (ParameterException ex) {
+			System.exit(1);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -60,17 +51,20 @@ public class CheckNanopub {
 	private SPARQLRepository sparqlRepo;
 	private PrintStream logOut;
 
+	public CheckNanopub() {}
+
+	/**
+	 * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+	 */
 	public CheckNanopub(List<String> inputNanopubFiles) {
 		this.inputNanopubs = inputNanopubFiles;
 	}
 
-	public CheckNanopub(String...  inputNanopubFiles) {
-		for (String i : inputNanopubFiles) {
-			this.inputNanopubs.add(i);
-		}
-	}
-
+	/**
+	 * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+	 */
 	public CheckNanopub(String sparqlEndpointUrl, List<String> inputNanopubIds) {
+		super();
 		this.inputNanopubs = inputNanopubIds;
 		this.sparqlEndpointUrl = sparqlEndpointUrl;
 	}
