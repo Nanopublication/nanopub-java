@@ -1,11 +1,19 @@
 package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
+import org.nanopub.NanopubImpl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 class SignNanopubTest {
@@ -23,20 +31,44 @@ class SignNanopubTest {
         CliRunner.initJc(new SignNanopub(), args);
     }
 
-    // For now we assume, that most signing issues were detected by other tests
-    void signAndTransform() {
-    }
+    @Test
+    void signAndTransform() throws Exception {
 
-    void signAndTransformMultiNanopub() {
-    }
+        String outPath = "target/test-output/sign-nanopub";
+        new File(outPath).mkdirs();
+        File outFile = new File(outPath, "signed.trig");
 
-    void testSignAndTransformMultiNanopub() {
-    }
+        String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
+        String inFiles = "src/main/resources/testsuite/transform/signed/rsa-key1/";
+        for (File testFile : new File(inFiles).listFiles(
+                new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".in.trig");
+                }
+            }))
+        {
+            // create signed nanopub file
+            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
+                    testFile.getPath(),
+                    "-k ", keyFile,
+                    "-o ", outFile.getPath(),});
+            c.run();
+            
+            // read nanopub from file
+            NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
+            String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
-    void writeAsSignedTrustyNanopub() {
-    }
-
-    void loadKey() {
+            FileInputStream inputStream = new FileInputStream(testFile.getPath().replace("in.trig", "out.code"));
+            try {
+                String artifactCodeFromSuite = IOUtils.toString(inputStream);
+                assertEquals(testedArtifactCode+"\n", artifactCodeFromSuite);
+            } finally {
+                inputStream.close();
+            }
+            // delete target file if everything was fine
+            outFile.delete();
+        }
     }
 
 }
