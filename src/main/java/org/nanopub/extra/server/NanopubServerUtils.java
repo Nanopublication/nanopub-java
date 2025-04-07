@@ -1,16 +1,9 @@
 package org.nanopub.extra.server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -18,62 +11,12 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubUtils;
 import org.nanopub.extra.setting.NanopubSetting;
 
 public class NanopubServerUtils {
 
-	// Version numbers have the form MAJOR.MINOR (for example, 0.12 is a newer version than 0.9!)
-	public static final String requiredProtocolVersion = "0.2";
-	public static final int requiredProtocolVersionValue = getVersionValue(requiredProtocolVersion);
-
 	protected NanopubServerUtils() {
 		throw new RuntimeException("no instances allowed");
-	}
-
-	public static List<String> loadPeerList(String serverUrl) throws IOException {
-		return loadList(serverUrl + "peers");
-	}
-
-	public static List<String> loadPeerList(ServerInfo si) throws IOException {
-		return loadPeerList(si.getPublicUrl());
-	}
-
-	public static List<String> loadNanopubUriList(String serverUrl, int page) throws IOException {
-		return loadList(serverUrl + "nanopubs?page=" + page);
-	}
-
-	public static List<String> loadNanopubUriList(ServerInfo si, int page) throws IOException {
-		return loadNanopubUriList(si.getPublicUrl(), page);
-	}
-
-	public static List<String> loadList(String url) throws IOException {
-		List<String> list = new ArrayList<String>();
-		HttpGet get = null;
-		try {
-			get = new HttpGet(url);
-		} catch (IllegalArgumentException ex) {
-			throw new IOException("invalid URL: " + url);
-		}
-		get.setHeader("Content-Type", "text/plain");
-		BufferedReader r = null;
-		try {
-			HttpResponse resp = NanopubUtils.getHttpClient().execute(get);
-			int code = resp.getStatusLine().getStatusCode();
-			if (code < 200 || code > 299) {
-				EntityUtils.consumeQuietly(resp.getEntity());
-				throw new IOException("HTTP error: " + code + " " + resp.getStatusLine().getReasonPhrase());
-			}
-			InputStream in = resp.getEntity().getContent();
-			r = new BufferedReader(new InputStreamReader(in, Charset.forName("UTF-8")));
-			String line = null;
-			while ((line = r.readLine()) != null) {
-				list.add(line.trim());
-			}
-		} finally {
-			if (r != null) r.close();
-		}
-		return list;
 	}
 
 	private static final List<String> bootstrapServerList = new ArrayList<>();
@@ -89,16 +32,6 @@ public class NanopubServerUtils {
 			}
 		}
 		return bootstrapServerList;
-	}
-
-	public static int getVersionValue(String versionString) {
-		try {
-			int major = Integer.parseInt(versionString.split("\\.")[0]);
-			int minor = Integer.parseInt(versionString.split("\\.")[1]);
-			return (major * 1000) + minor;
-		} catch (Exception ex) {
-			return 0;
-		}
 	}
 
 	public static final IRI PROTECTED_NANOPUB = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/ProtectedNanopub");

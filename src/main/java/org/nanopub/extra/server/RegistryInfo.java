@@ -24,8 +24,8 @@ public class RegistryInfo implements Serializable {
 
 	}
 
-	public static RegistryInfo load(String serverUrl) throws RegistryInfoException {
-		return load(serverUrl, RegistryInfo.class);
+	public static RegistryInfo load(String registryUrl) throws RegistryInfoException {
+		return load(registryUrl, RegistryInfo.class);
 	}
 
 	protected static RegistryInfo load(String url, Class<? extends RegistryInfo> serverInfoClass) throws RegistryInfoException {
@@ -36,22 +36,21 @@ public class RegistryInfo implements Serializable {
 			throw new RegistryInfoException("invalid URL: " + url);
 		}
 		get.setHeader("Accept", "application/json");
-		RegistryInfo si = null;
+		RegistryInfo r = null;
 		try (InputStream in = NanopubUtils.getHttpClient().execute(get).getEntity().getContent()) {
-			si = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);
+			r = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);
+			r.url = url;
 		} catch (Exception ex) {
 			throw new RegistryInfoException(url);
 		}
-		if (si == null) {
-			throw new RegistryInfoException("Error accessing server");
-		}
-		return si;
+		return r;
 	}
 
 	public RegistryInfo() {
 	}
 
 	protected String url;
+	protected Long setupId;
 	protected Long trustStateCounter;
 	protected String lastTrustStateUpdate;
 	protected String trustStateHash;
@@ -67,6 +66,14 @@ public class RegistryInfo implements Serializable {
 
 	public String getUrl() {
 		return url;
+	}
+
+	public String getCollectionUrl() {
+		return url + "np/";
+	}
+
+	public Long getSetupId() {
+		return setupId;
 	}
 
 	public Long getTrustStateCounter() {
@@ -119,6 +126,22 @@ public class RegistryInfo implements Serializable {
 
 	public String asJson() {
 		return new Gson().toJson(this);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof RegistryInfo)) return false;
+		return toString().equals(obj.toString());
+	}
+
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return url;
 	}
 
 }

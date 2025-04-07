@@ -12,43 +12,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
 
-public class ServerIterator implements Iterator<ServerInfo> {
+public class ServerIterator implements Iterator<RegistryInfo> {
 
-	private static Map<String,ServerInfo> serverInfos = new HashMap<>();
+	private static Map<String,RegistryInfo> serverInfos = new HashMap<>();
 	private static long serverInfoRefreshed = System.currentTimeMillis();
 	private static final long serverInfoRefreshInterval = 24 * 60 * 60 * 1000;
 
-	private static Map<String,Boolean> serverBlackList;
-
-	static {
-		// TODO: Nanopub monitor should be contacted to see which services are up, so this hard-coded black list isn't necessary:
-		serverBlackList = new HashMap<>();
-		serverBlackList.put("http://s1.semanticscience.org:8082/", true);
-		serverBlackList.put("http://nanopub-server.ops.labs.vu.nl/", true);
-		serverBlackList.put("http://ristretto.med.yale.edu:8080/nanopub-server/", true);
-		serverBlackList.put("http://nanopubs.semanticscience.org:8082/", true);
-		serverBlackList.put("http://rdf.disgenet.org/nanopub-server", true);
-		serverBlackList.put("http://digitalduchemin.org/np/", true);
-		serverBlackList.put("http://nanopub.exynize.com/", true);
-		serverBlackList.put("http://digitalduchemin.org/np-mirror/", true);
-		serverBlackList.put("http://server.nanopubs.d2s.labs.vu.nl/", true);
-		serverBlackList.put("http://nanopubs.semanticscience.org/", true);
-		serverBlackList.put("http://nanopubs.stanford.edu/nanopub-server/", true);
-		serverBlackList.put("http://app.petapico.d2s.labs.vu.nl/nanopub-server/", true);
-		serverBlackList.put("http://sprout038.sprout.yale.edu/nanopub-server/", true);
-		serverBlackList.put("http://np.inn.ac/", true);
-		serverBlackList.put("http://nanopub.backend1.scify.org/nanopub-server/", true);
-		serverBlackList.put("http://nanopubs.restdesc.org/", true);
-	}
-
-	private List<ServerInfo> cachedServers = null;
+	private List<RegistryInfo> cachedServers = null;
 	private List<String> serversToContact = new ArrayList<>();
-	private List<String> serversToGetPeers = new ArrayList<>();
 	private Map<String,Boolean> serversContacted = new HashMap<>();
-	private Map<String,Boolean> serversPeersGot = new HashMap<>();
-	private ServerInfo next = null;
+	private RegistryInfo next = null;
 
 	public ServerIterator() {
 		this(false);
@@ -85,8 +60,8 @@ public class ServerIterator implements Iterator<ServerInfo> {
 	}
 
 	@Override
-	public ServerInfo next() {
-		ServerInfo n = next;
+	public RegistryInfo next() {
+		RegistryInfo n = next;
 		next = null;
 		if (n == null) {
 			n = getNextServer();
@@ -99,54 +74,34 @@ public class ServerIterator implements Iterator<ServerInfo> {
 		throw new UnsupportedOperationException();
 	}
 
-	private ServerInfo getNextServer() {
+	private RegistryInfo getNextServer() {
 		if (cachedServers != null) {
 			if (cachedServers.isEmpty()) return null;
 			return cachedServers.remove(0);
 		} else {
-			while (!serversToContact.isEmpty() || !serversToGetPeers.isEmpty()) {
+			while (!serversToContact.isEmpty()) {
 				if (!serversToContact.isEmpty()) {
 					String url = serversToContact.remove(0);
 					if (serversContacted.containsKey(url)) continue;
 					serversContacted.put(url, true);
-					ServerInfo info = getServerInfo(url);
+					RegistryInfo info = getServerInfo(url);
 					if (info == null) continue;
-					if (!info.getPublicUrl().equals(url)) continue;
-					serversToGetPeers.add(url);
 					return info;
-				}
-				if (!serversToGetPeers.isEmpty()) {
-					String url = serversToGetPeers.remove(0);
-					if (serversPeersGot.containsKey(url)) continue;
-					serversPeersGot.put(url, true);
-					try {
-						for (String peerUrl : NanopubServerUtils.loadPeerList(url)) {
-							if (serverBlackList.containsKey(peerUrl)) continue;
-							if (!serversContacted.containsKey(peerUrl)) {
-								serversToContact.add(peerUrl);
-							}
-							if (!serversPeersGot.containsKey(peerUrl)) {
-								serversToGetPeers.add(peerUrl);
-							}
-						}
-					} catch (IOException ex) {
-						// ignore
-					}
 				}
 			}
 		}
 		return null;
 	}
 
-	private ServerInfo getServerInfo(String url) {
+	private RegistryInfo getServerInfo(String url) {
 		if (System.currentTimeMillis() - serverInfoRefreshed > serverInfoRefreshInterval) {
 			serverInfos.clear();
 			serverInfoRefreshed = System.currentTimeMillis();
 		}
 		if (!serverInfos.containsKey(url)) {
 			try {
-				serverInfos.put(url, ServerInfo.load(url));
-			} catch (ServerInfoException ex) {
+				serverInfos.put(url, RegistryInfo.load(url));
+			} catch (RegistryInfoException ex) {
 				// ignore
 			}
 		}
@@ -163,12 +118,12 @@ public class ServerIterator implements Iterator<ServerInfo> {
 				return;
 			}
 			try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(serverListFile))) {
-				cachedServers = (List<ServerInfo>) oin.readObject();
+				cachedServers = (List<RegistryInfo>) oin.readObject();
 			}
 		}
 	}
 
-	public static void writeCachedServers(List<ServerInfo> cachedServers) throws IOException {
+	public static void writeCachedServers(List<RegistryInfo> cachedServers) throws IOException {
 		if (cachedServers.size() < 5) return;
 		File serverListFile = getServerListFile();
 		serverListFile.getParentFile().mkdir();
