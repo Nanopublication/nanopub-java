@@ -1,15 +1,6 @@
 package org.nanopub.extra.server;
 
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import net.trustyuri.TrustyUriUtils;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -20,7 +11,8 @@ import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
 
-import net.trustyuri.TrustyUriUtils;
+import java.io.OutputStream;
+import java.util.*;
 
 public class FetchIndex {
 
@@ -76,8 +68,10 @@ public class FetchIndex {
 	}
 
 	public void run() {
-		if (running) return;
-		running = true;
+		synchronized (this) {
+			if (running) return;
+			running = true;
+		}
 		while (!fetchTasks.isEmpty()) {
 			checkTasks();
 			try {
