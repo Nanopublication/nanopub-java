@@ -133,8 +133,14 @@ public class PublishNanopub extends CliRunner {
 	}
 
 	public String publishNanopub(Nanopub nanopub) throws IOException {
+		return publishNanopub(nanopub, null);
+	}
+
+	public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
 		if (registryInfo == null) {
-			if (serverUrls == null || serverUrls.isEmpty()) {
+			if (serverUrl != null) {
+				serverIterator = new ServerIterator(serverUrl);
+			} else if (serverUrls == null || serverUrls.isEmpty()) {
 				serverIterator = new ServerIterator();
 			} else {
 				serverIterator = new ServerIterator(serverUrls);
