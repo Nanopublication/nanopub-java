@@ -23,21 +23,21 @@ public class CheckValidNanopubsTest {
 	public void testPlain(String filename) throws Exception {
 		CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/valid/plain/" + filename});
 		Report report = c.check();
-		System.out.println(report.getSummary());
+		System.out.println(report.getSummary() + " " + filename);
 		assert report.areAllValid();
 	}
 
 	public void testTrusty(String filename) throws Exception {
 		CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/valid/trusty/" + filename});
 		Report report = c.check();
-		System.out.println(report.getSummary());
+		System.out.println(report.getSummary() + " " + filename);
 		assert report.areAllTrusty();
 	}
 
 	public void testSigned(String filename) throws Exception {
 		CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/valid/signed/" + filename});
 		Report report = c.check();
-		System.out.println(report.getSummary());
+		System.out.println(report.getSummary() + " " + filename);
 		assert report.areAllSigned();
 	}
 
