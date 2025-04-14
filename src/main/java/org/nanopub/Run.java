@@ -58,6 +58,7 @@ public class Run {
 		addRunnableClass(org.nanopub.op.Run.class, "op");
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
+		addRunnableClass(TimestampUpdater.class, "updateTimestamp");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
