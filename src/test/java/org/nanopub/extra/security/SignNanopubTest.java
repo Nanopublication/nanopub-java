@@ -39,7 +39,8 @@ class SignNanopubTest {
         File outFile = new File(outPath, "signed.trig");
 
         String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
-        String inFiles = "src/main/resources/testsuite/transform/signed/rsa-key1/";
+        String inFiles = "src/main/resources/testsuite/transform/plain/";
+        String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key1/";
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                 @Override
@@ -59,10 +60,11 @@ class SignNanopubTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
-            FileInputStream inputStream = new FileInputStream(testFile.getPath().replace("in.trig", "out.code"));
+            FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
             try {
                 String artifactCodeFromSuite = IOUtils.toString(inputStream);
-                assertEquals(testedArtifactCode+"\n", artifactCodeFromSuite);
+                assertEquals(testedArtifactCode, artifactCodeFromSuite);
+                System.out.println("File signed correctly: " + testFile.getName());
             } finally {
                 inputStream.close();
             }
