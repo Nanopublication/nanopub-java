@@ -3,21 +3,20 @@ package org.nanopub;
 import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-import org.nanopub.extra.security.SignNanopub;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Calendar;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TimestampUpdaterTest {
 
     @Test
     void initWithoutArgs() throws IOException {
-        assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new SignNanopub(), new String[0]));
+        assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new TimestampUpdater(), new String[0]));
     }
 
     @Test
@@ -25,7 +24,7 @@ public class TimestampUpdaterTest {
         String path = "src/main/resources/testsuite/valid/plain/aida1.trig";
         String[] args = new String[] {"-v", path};
 
-        CliRunner.initJc(new SignNanopub(), args);
+        CliRunner.initJc(new TimestampUpdater(), args);
     }
 
     @Test
@@ -33,7 +32,7 @@ public class TimestampUpdaterTest {
 
         String outPath = "target/test-output/timestamp/";
         new File(outPath).mkdirs();
-        File outFile = new File(outPath, "signed.trig");
+        File outFile = new File(outPath, "updated.trig");
 
         String inFiles = "src/main/resources/testsuite/valid/plain/";
         for (File testFile : new File(inFiles).listFiles(
@@ -54,8 +53,7 @@ public class TimestampUpdaterTest {
 
             // read created nanopub from file
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
-
-            assertTrue(testNano.getCreationTime().after(before));
+            assertFalse(before.after(testNano.getCreationTime()));
             System.out.println("Successfully updated timestamp: " + testFile.getName());
 
             // delete target file if everything was fine
