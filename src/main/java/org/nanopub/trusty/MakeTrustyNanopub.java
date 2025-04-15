@@ -1,21 +1,43 @@
 package org.nanopub.trusty;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubRdfHandler;
+import org.nanopub.NanopubUtils;
+import org.nanopub.NanopubWithNs;
+
 import com.beust.jcommander.ParameterException;
+
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfFileContent;
 import net.trustyuri.rdf.TransformRdf;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.rio.*;
-import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 public class MakeTrustyNanopub extends CliRunner {
 
@@ -145,7 +167,7 @@ public class MakeTrustyNanopub extends CliRunner {
 				r = r2;
 			}
 			NanopubRdfHandler h = new NanopubRdfHandler();
-			Map<Resource,IRI> transformMap = TransformRdf.transformAndGetMap(r, h, npUri);
+			Map<Resource,IRI> transformMap = TransformRdf.transformAndGetMap(r, h, npUri, TrustyNanopubUtils.transformRdfSetting);
 			np = h.getNanopub();
 			mergeTransformMaps(tempRefMap, transformMap);
 			mergePrefixTransformMaps(tempPrefixMap, transformMap);

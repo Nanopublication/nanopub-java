@@ -10,6 +10,7 @@ import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
 import net.trustyuri.rdf.RdfUtils;
+import net.trustyuri.rdf.TransformRdfSetting;
 
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
@@ -25,6 +26,8 @@ public class TrustyNanopubUtils {
 
 	private TrustyNanopubUtils() {}  // no instances allowed
 
+	public static final TransformRdfSetting transformRdfSetting = new TransformRdfSetting('_', '/', '/', '/');
+
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException, IOException {
 		try (OutputStreamWriter sw = new OutputStreamWriter(out, Charset.forName("UTF-8"))) {
@@ -32,9 +35,9 @@ public class TrustyNanopubUtils {
 			writer.startRDF();
 			String s = nanopub.getUri().toString();
 			writer.handleNamespace("this", s);
-			writer.handleNamespace("sub", s + RdfUtils.postAcChar);
-			if (!(RdfUtils.bnodeChar + "").matches("[A-Za-z0-9\\-_]")) {
-				writer.handleNamespace("node", s + RdfUtils.postAcChar + RdfUtils.bnodeChar);
+			writer.handleNamespace("sub", s + transformRdfSetting.getPostAcChar());
+			if (!(transformRdfSetting.getBnodeChar() + "").matches("[A-Za-z0-9\\-_]")) {
+				writer.handleNamespace("node", s + transformRdfSetting.getPostAcChar() + transformRdfSetting.getBnodeChar());
 			}
 			writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 			writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");

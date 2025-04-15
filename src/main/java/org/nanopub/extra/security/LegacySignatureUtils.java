@@ -26,6 +26,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
+import org.nanopub.trusty.TrustyNanopubUtils;
 
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
@@ -102,7 +103,7 @@ public class LegacySignatureUtils {
 
 		RdfFileContent content = new RdfFileContent(RDFFormat.TRIG);
 		NanopubUtils.propagateToHandler(preNanopub, content);
-		content = RdfPreprocessor.run(content, preNanopub.getUri());
+		content = RdfPreprocessor.run(content, preNanopub.getUri(), TrustyNanopubUtils.transformRdfSetting);
 
 		// Legacy signatures apply double digesting:
 		dsaSignature.update(RdfHasher.digest(content.getStatements()).digest());
@@ -126,7 +127,7 @@ public class LegacySignatureUtils {
 			signatureContent.handleStatement(vf.createStatement(signatureElUri, SIGNED_BY, signer, piUri));
 		}
 		signatureContent.endRDF();
-		signatureContent = RdfPreprocessor.run(signatureContent, preNanopub.getUri());
+		signatureContent = RdfPreprocessor.run(signatureContent, preNanopub.getUri(), TrustyNanopubUtils.transformRdfSetting);
 
 		RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
 		signedContent.startRDF();
@@ -134,7 +135,7 @@ public class LegacySignatureUtils {
 		signatureContent.propagate(signedContent, false);
 		signedContent.endRDF();
 		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-		TransformRdf.transformPreprocessed(signedContent, preNanopub.getUri(), nanopubHandler);
+		TransformRdf.transformPreprocessed(signedContent, preNanopub.getUri(), nanopubHandler, TrustyNanopubUtils.transformRdfSetting);
 		return nanopubHandler.getNanopub();
 	}
 

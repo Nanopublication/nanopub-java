@@ -185,7 +185,7 @@ public class SignatureUtils {
 		for (Statement st : preStatements) preContent.handleStatement(st);
 		preContent.endRDF();
 		RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
-		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri);
+		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri, TrustyNanopubUtils.transformRdfSetting);
 
 		// TODO Why do we do this?
 		try {
@@ -202,7 +202,7 @@ public class SignatureUtils {
 		// Preprocess signature statement:
 		List<Statement> sigStatementList = new ArrayList<Statement>();
 		sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
-		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri).get(0);
+		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).get(0);
 
 		// Combine all statements:
 		RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
@@ -219,7 +219,7 @@ public class SignatureUtils {
 
 		// Create nanopub object:
 		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-		IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler);
+		IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler, TrustyNanopubUtils.transformRdfSetting);
 		Map<Resource,IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));
 		c.mergeTransformMap(transformMap);
 		return nanopubHandler.getNanopub();
