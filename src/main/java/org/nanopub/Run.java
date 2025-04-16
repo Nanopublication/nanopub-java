@@ -59,6 +59,7 @@ public class Run {
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
 		addRunnableClass(TimestampUpdater.class, "updateTimestamp");
+		addRunnableClass(StripDown.class, "strip");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {
