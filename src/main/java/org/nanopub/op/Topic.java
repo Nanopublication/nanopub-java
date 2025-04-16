@@ -38,6 +38,7 @@ public class Topic extends CliRunner {
 	public static void main(String[] args) {
 		try {
 			Topic obj = CliRunner.initJc(new Topic(), args);
+			obj.init();
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -52,6 +53,7 @@ public class Topic extends CliRunner {
 			args = "";
 		}
 		Topic obj = CliRunner.initJc(new Topic(), args.trim().split(" "));
+		obj.init();
 		return obj;
 	}
 
