@@ -58,7 +58,7 @@ public class Run {
 		addRunnableClass(org.nanopub.op.Run.class, "op");
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
-		addRunnableClass(TimestampUpdater.class, "updateTimestamp");
+		addRunnableClass(TimestampUpdater.class, "udtime");
 		addRunnableClass(StripDown.class, "strip");
 	}
 
