@@ -249,14 +249,10 @@
   </build>
   <distributionManagement>
     <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <!--<snapshotRepository>
       <id>github</id>
       <name>GitHub Packages</name>
       <url>https://maven.pkg.github.com/Nanopublication/nanopub-java</url>
-    </snapshotRepository>-->
+    </snapshotRepository>
     <repository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
