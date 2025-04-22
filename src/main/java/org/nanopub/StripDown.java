@@ -14,10 +14,7 @@ import org.nanopub.extra.security.NanopubSignatureElement;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -32,6 +29,7 @@ public class StripDown extends CliRunner {
     private File singleOutputFile; // only possible if there is only one inputFile
 
     private ValueFactory vf = SimpleValueFactory.getInstance();
+    private Random random = new Random();
 
     public static void main(String[] args) {
         try {
@@ -80,10 +78,11 @@ public class StripDown extends CliRunner {
                     @Override
                     public void handleNanopub(Nanopub np) {
                         try {
-                            List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np);
+                            String replacement = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+                            List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
                             NanopubImpl oldNp = (NanopubImpl)np;
-                            Map<String, String> namespaces = removeHashFromNamespaces(oldNp);
+                            Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
 
                             NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
 
@@ -102,7 +101,7 @@ public class StripDown extends CliRunner {
         }
     }
 
-    private Map<String,String> removeHashFromNamespaces(NanopubImpl np) {
+    private Map<String,String> removeHashFromNamespaces(NanopubImpl np, String replacement) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());
         if (artifactCode == null) {
             throw new RuntimeException("No artifact code found for " + np.getUri());
@@ -110,12 +109,12 @@ public class StripDown extends CliRunner {
         Map<String, String> newNamespaces = new HashMap<String, String>();
         for (String prefix : np.getNsPrefixes()) {
             String ns = np.getNamespace(prefix);
-            newNamespaces.put(prefix, ns.replaceFirst(artifactCode+".?", ""));
+            newNamespaces.put(prefix, ns.replaceFirst("http.*"+artifactCode+".?", replacement));
         }
         return newNamespaces;
     }
 
-    private List<Statement> removeHashesAndSignaturesFromStatements(Nanopub np) {
+    private List<Statement> removeHashesAndSignaturesFromStatements(Nanopub np, String replacement) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());
         if (artifactCode == null) {
             throw new RuntimeException("No artifact code found for " + np.getUri());
@@ -134,12 +133,12 @@ public class StripDown extends CliRunner {
             if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) continue;
 
             // remove hashes
-            Resource context = transform(st.getContext(), artifactCode);
-            Resource subject = transform(st.getSubject(), artifactCode);
-            IRI predicate = transform(st.getPredicate(), artifactCode);
+            Resource context = transform(st.getContext(), artifactCode, replacement);
+            Resource subject = transform(st.getSubject(), artifactCode, replacement);
+            IRI predicate = transform(st.getPredicate(), artifactCode, replacement);
             Value object = st.getObject();
             if (object instanceof Resource) {
-                object = transform((Resource) object, artifactCode);
+                object = transform((Resource) object, artifactCode, replacement);
             }
             Statement n = vf.createStatement(subject, predicate, object, context);
             newStatements.add(n);
@@ -147,23 +146,15 @@ public class StripDown extends CliRunner {
         return newStatements;
     }
 
-    protected IRI transform (Resource r, String artifact) {
+    protected IRI transform (Resource r, String artifact, String replacement) {
         if (r == null) {
             return null;
         } else if (r instanceof BNode) {
             throw new RuntimeException("Unexpected blank node encountered");
         } else {
-            IRI transformedURI = vf.createIRI(r.toString().replaceFirst(artifact+".?", ""));
+            IRI transformedURI = vf.createIRI(r.toString().replaceFirst("http.*"+artifact+".?", replacement));
             return transformedURI;
         }
-    }
-
-    protected String removeHash(String url) {
-        String artifactCode = TrustyUriUtils.getArtifactCode(url);
-        if (artifactCode == null) {
-            return null;
-        }
-        return url.replace(artifactCode, "")   ;
     }
 
 }
