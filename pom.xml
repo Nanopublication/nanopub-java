@@ -3,7 +3,7 @@
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
   <packaging>jar</packaging>
-  <version>1.72-SNAPSHOT</version>
+  <version>1.72</version>
   <name>nanopub</name>
   <description>Java library for nanopublications based on RDF4J</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
@@ -145,7 +145,7 @@
     <url>https://github.com/Nanopublication/nanopub-java</url>
     <connection>scm:git:git@github.com:Nanopublication/nanopub-java.git</connection>
     <developerConnection>scm:git:git@github.com:Nanopublication/nanopub-java.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>nanopub-1.72</tag>
   </scm>
   <developers>
     <developer>
