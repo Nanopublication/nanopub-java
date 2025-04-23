@@ -335,7 +335,7 @@
               </execution>
             </executions>
             <configuration>
-              <executable>initialize.sh</executable>
+              <executable>./initialize.sh</executable>
             </configuration>
           </plugin>
         </plugins>
