@@ -71,7 +71,7 @@ public class MakeKeys extends CliRunner {
 		} catch (GeneralSecurityException ex) {
 			throw new RuntimeException(ex);
 		}
-		keyPairGenerator.initialize(1024, random);
+		keyPairGenerator.initialize(2048, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
 
 		try (FileOutputStream outPublic = new FileOutputStream(publicKeyFile)) {

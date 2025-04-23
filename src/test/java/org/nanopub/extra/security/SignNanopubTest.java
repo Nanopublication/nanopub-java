@@ -32,7 +32,7 @@ class SignNanopubTest {
     }
 
     @Test
-    void signAndTransform() throws Exception {
+    void signAndTransform1024RSA() throws Exception {
 
         String outPath = "target/test-output/sign-nanopub";
         new File(outPath).mkdirs();
@@ -56,6 +56,48 @@ class SignNanopubTest {
                     "-o ", outFile.getPath(),});
             c.run();
             
+            // read nanopub from file
+            NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
+            String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
+
+            FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
+            try {
+                String artifactCodeFromSuite = IOUtils.toString(inputStream);
+                assertEquals(testedArtifactCode, artifactCodeFromSuite);
+                System.out.println("File signed correctly: " + testFile.getName());
+            } finally {
+                inputStream.close();
+            }
+            // delete target file if everything was fine
+            outFile.delete();
+        }
+    }
+
+    @Test
+    void signAndTransform2048RSA() throws Exception {
+
+        String outPath = "target/test-output/sign-nanopub";
+        new File(outPath).mkdirs();
+        File outFile = new File(outPath, "signed.trig");
+
+        String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key2/key/id_rsa";
+        String inFiles = "src/main/resources/testsuite/transform/plain/";
+        String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key2/";
+        for (File testFile : new File(inFiles).listFiles(
+                new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith("in.trig");
+                    }
+                }))
+        {
+            // create signed nanopub file
+            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
+                    testFile.getPath(),
+                    "-k ", keyFile,
+                    "-o ", outFile.getPath(),});
+            c.run();
+
             // read nanopub from file
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
