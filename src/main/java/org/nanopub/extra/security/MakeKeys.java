@@ -18,8 +18,8 @@ public class MakeKeys extends CliRunner {
 	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
 	private String pathAndFilenamePrefix = "~/.nanopub/id";
 
-	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
-	private SignatureAlgorithm algorithm = SignatureAlgorithm.DSA;
+	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA, default is RSA")
+	private SignatureAlgorithm algorithm = SignatureAlgorithm.RSA;
 
 	public static void main(String[] args) throws IOException {
 		try {
