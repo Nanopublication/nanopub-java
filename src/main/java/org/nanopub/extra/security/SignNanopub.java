@@ -4,6 +4,9 @@ import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
@@ -46,6 +49,11 @@ public class SignNanopub extends CliRunner {
 	@com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
 	private boolean resolveCrossRefsPrefixBased = false;
 
+	@com.beust.jcommander.Parameter(names = "-s", description = "The orcid IRI of the signer")
+	private String signer;
+
+	private ValueFactory vf = SimpleValueFactory.getInstance();
+
 	public static void main(String[] args) throws IOException {
 		try {
 			SignNanopub obj = CliRunner.initJc(new SignNanopub(), args);
@@ -80,7 +88,11 @@ public class SignNanopub extends CliRunner {
 			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
 		}
 		key = loadKey(keyFilename, algorithm);
-		final TransformContext c = new TransformContext(algorithm, key, null, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
+		IRI signerIri = null;
+		if (signer != null) {
+			signerIri = vf.createIRI(signer);
+		}
+		final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
 		final OutputStream singleOut;
 		if (singleOutputFile != null) {
