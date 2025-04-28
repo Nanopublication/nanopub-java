@@ -39,6 +39,7 @@ class SignNanopubTest {
         File outFile = new File(outPath, "signed.trig");
 
         String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
+        String signerOrcid = "https://orcid.org/0000-0000-0000-0000";
         String inFiles = "src/main/resources/testsuite/transform/plain/";
         String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key1/";
         for (File testFile : new File(inFiles).listFiles(
@@ -53,6 +54,7 @@ class SignNanopubTest {
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
                     testFile.getPath(),
                     "-k ", keyFile,
+                    "-s ", signerOrcid,
                     "-o ", outFile.getPath(),});
             c.run();
             
@@ -63,7 +65,7 @@ class SignNanopubTest {
             FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
             try {
                 String artifactCodeFromSuite = IOUtils.toString(inputStream);
-                assertEquals(testedArtifactCode, artifactCodeFromSuite);
+                assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
                 System.out.println("File signed correctly: " + testFile.getName());
             } finally {
                 inputStream.close();
@@ -80,7 +82,7 @@ class SignNanopubTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key2/key/id_rsa";
+        String profileFile = "src/main/resources/testsuite/transform/profile.yaml";
         String inFiles = "src/main/resources/testsuite/transform/plain/";
         String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key2/";
         for (File testFile : new File(inFiles).listFiles(
@@ -94,7 +96,7 @@ class SignNanopubTest {
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
                     testFile.getPath(),
-                    "-k ", keyFile,
+                    "--profile ", profileFile,
                     "-o ", outFile.getPath(),});
             c.run();
 
@@ -105,7 +107,7 @@ class SignNanopubTest {
             FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
             try {
                 String artifactCodeFromSuite = IOUtils.toString(inputStream);
-                assertEquals(testedArtifactCode, artifactCodeFromSuite);
+                assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
                 System.out.println("File signed correctly: " + testFile.getName());
             } finally {
                 inputStream.close();

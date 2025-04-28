@@ -34,9 +34,6 @@ public class SignNanopub extends CliRunner {
 	@com.beust.jcommander.Parameter(names = "-k", description = "Path and file name of key files")
 	private String keyFilename;
 
-	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
-	private SignatureAlgorithm algorithm;
-
 	@com.beust.jcommander.Parameter(names = "-i", description = "Ignore already signed nanopubs")
 	private boolean ignoreSigned = false;
 
@@ -51,6 +48,13 @@ public class SignNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(names = "-s", description = "The orcid IRI of the signer")
 	private String signer;
+
+	@com.beust.jcommander.Parameter(names = "--profile", description = "Profile file for signer iri and key files, " +
+			"defaults to ~/.nanopub/profile.yaml")
+	private File profileFile;
+
+
+	private SignatureAlgorithm algorithm; // we guess the algorithm is RSA as long as the key name does not end in _dsa
 
 	private ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -72,25 +76,32 @@ public class SignNanopub extends CliRunner {
     }
 
 	protected void run() throws Exception {
-		if (algorithm == null) {
-			if (keyFilename == null) {
-				keyFilename = "~/.nanopub/id_rsa";
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_rsa")) {
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_dsa")) {
-				algorithm = SignatureAlgorithm.DSA;
-			} else {
-				// Assuming RSA if not other information is available
-				algorithm = SignatureAlgorithm.RSA;
-			}
-		} else if (keyFilename == null) {
-			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
+		NanopubProfile profile;
+		if (profileFile != null) {
+			profile = new NanopubProfile(profileFile.getPath());
+		} else {
+			profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
 		}
+		if (keyFilename == null) {
+			keyFilename = profile.getPrivateKeyPath();
+		}
+		if (keyFilename == null) {
+			keyFilename = "~/.nanopub/id_rsa";
+		}
+
+		if (keyFilename.endsWith("_dsa")) {
+			algorithm = SignatureAlgorithm.DSA;
+		} else {
+			// Assuming RSA if not other information is available
+			algorithm = SignatureAlgorithm.RSA;
+		}
+
 		key = loadKey(keyFilename, algorithm);
 		IRI signerIri = null;
 		if (signer != null) {
 			signerIri = vf.createIRI(signer);
+		} else if (profile.getOrcidId() != null) {
+			signerIri = vf.createIRI(profile.getOrcidId());
 		}
 		final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
