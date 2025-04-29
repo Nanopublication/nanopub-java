@@ -23,7 +23,7 @@ public abstract class QueryAccess {
 
 	protected abstract void processLine(String[] line);
 
-	public void call(String queryId, Map<String,String> params) throws IOException, CsvValidationException {
+	public void call(String queryId, Map<String,String> params) throws FailedApiCallException {
 		HttpResponse resp = QueryCall.run(queryId, params);
 		try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
 			String[] line = null;
@@ -36,10 +36,12 @@ public abstract class QueryAccess {
 					processLine(line);
 				}
 			}
+		} catch (IOException | CsvValidationException ex) {
+			throw new FailedApiCallException(ex);
 		}
 	}
 
-	public static ApiResponse get(String queryId, Map<String,String> params) throws IOException, CsvValidationException {
+	public static ApiResponse get(String queryId, Map<String,String> params) throws FailedApiCallException {
 		final ApiResponse response = new ApiResponse();
 		QueryAccess a = new QueryAccess() {
 

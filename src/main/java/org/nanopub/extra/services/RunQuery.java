@@ -1,14 +1,13 @@
 package org.nanopub.extra.services;
 
-import com.beust.jcommander.ParameterException;
-import com.opencsv.exceptions.CsvValidationException;
-import org.nanopub.CliRunner;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.nanopub.CliRunner;
+
+import com.beust.jcommander.ParameterException;
 
 public class RunQuery extends CliRunner {
 
@@ -30,7 +29,7 @@ public class RunQuery extends CliRunner {
 		}
 	}
 
-	private void run() throws IOException, CsvValidationException {
+	private void run() throws FailedApiCallException {
 		Map<String,String> paramMap = new HashMap<>();
 		if (params != null) {
 			for (String p : params) {
