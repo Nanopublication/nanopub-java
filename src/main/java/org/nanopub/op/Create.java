@@ -64,7 +64,6 @@ public class Create extends CliRunner {
 		IRI assertionIri = vf.createIRI(npUri + "assertion");
 		IRI creatorIri = vf.createIRI(npUri + "creator");
 		NanopubCreator npCreator = new NanopubCreator(nanopubIri);
-		npCreator.setAssertionUri(assertionIri);
 		npCreator.addAssertionStatement(assertionIri, RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
 		npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);
 		npCreator.addTimestampNow();
