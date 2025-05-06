@@ -61,10 +61,9 @@ public class Create extends CliRunner {
 
 		String npUri = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
 		IRI nanopubIri = vf.createIRI(npUri);
-		IRI assertionIri = vf.createIRI(npUri + "assertion");
 		IRI creatorIri = vf.createIRI(npUri + "creator");
 		NanopubCreator npCreator = new NanopubCreator(nanopubIri);
-		npCreator.addAssertionStatement(assertionIri, RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
+		npCreator.addAssertionStatement(npCreator.getAssertionUri(), RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
 		npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);
 		npCreator.addTimestampNow();
 		npCreator.addCreator(creatorIri);
