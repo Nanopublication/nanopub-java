@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class NanopubUtilsTest {
+public class NanopubUtilsTest {
 
     private final ValueFactory vf = SimpleValueFactory.getInstance();
     private final IRI anyIri = vf.createIRI("http://knowledgepixels.com/nanopubIri#any");
@@ -66,7 +66,7 @@ class NanopubUtilsTest {
         assertThat(output).contains(nanopub.getUri().toString());
     }
 
-    private Nanopub createNanopub() throws MalformedNanopubException {
+    public Nanopub createNanopub() throws MalformedNanopubException {
         NanopubCreator creator = new NanopubCreator(vf.createIRI("http://knowledgepixels.com/nanopubIri#title"));
 
         // Create valid nanopub

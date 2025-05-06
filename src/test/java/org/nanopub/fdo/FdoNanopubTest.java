@@ -8,10 +8,7 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubUtils;
+import org.nanopub.*;
 
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -49,6 +46,12 @@ public class FdoNanopubTest {
         FdoNanopub fdoNanopub = new FdoNanopub(np);
         Assert.assertEquals(FdoUtils.toIri(profileHandle), fdoNanopub.getProfile());
         Assert.assertEquals(label, fdoNanopub.getLabel());
+    }
+
+    @Test
+    void testInvalidFdoNanopub() throws MalformedNanopubException {
+        Nanopub np = new NanopubUtilsTest().createNanopub();
+        Assert.assertThrows(IllegalArgumentException.class, () -> new FdoNanopub(np));
     }
 
 }
