@@ -1,18 +1,20 @@
 package org.nanopub.extra.services;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.HttpResponse;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpResponse;
-
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
 
 /**
  * Second-generation query API access
@@ -41,6 +43,25 @@ public abstract class QueryAccess {
 		}
 	}
 
+	public static void printCvsResponse(String queryId, Map<String,String> params, Writer writer) throws FailedApiCallException {
+		ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();
+		QueryAccess a = new QueryAccess() {
+
+			@Override
+			protected void processHeader(String[] line) {
+				icsvWriter.writeNext(line);
+			}
+
+			@Override
+			protected void processLine(String[] line) {
+				icsvWriter.writeNext(line);
+			}
+
+		};
+		a.call(queryId, params);
+		icsvWriter.flushQuietly();
+	}
+
 	public static ApiResponse get(String queryId, Map<String,String> params) throws FailedApiCallException {
 		final ApiResponse response = new ApiResponse();
 		QueryAccess a = new QueryAccess() {
@@ -64,6 +85,7 @@ public abstract class QueryAccess {
 	// TODO Make a better query for this, where superseded and rejected are excluded from the start:
 	private static final String GET_NEWER_VERSIONS = "RA3qSfVzcnAeMOODdpgCg4e-bX6KjZYZ2JQXDsSwluMaI/get-newer-versions-of-np";
 
+	// TODO Is this method used anywhere, Nanodash has a copy of this.
 	public static String getLatestVersionId(String nanopubId) {
 		long currentTime = System.currentTimeMillis();
 		if (!latestVersionMap.containsKey(nanopubId) || currentTime - latestVersionMap.get(nanopubId).getLeft() > 1000*60*60) {
