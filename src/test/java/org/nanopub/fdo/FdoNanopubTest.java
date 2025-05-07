@@ -9,8 +9,13 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.nanopub.*;
+import org.nanopub.fdo.rest.HandleResolver;
+import org.nanopub.fdo.rest.ResponsePrinter;
+import org.nanopub.fdo.rest.gson.Response;
 
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
 import static java.lang.System.out;
@@ -52,6 +57,16 @@ public class FdoNanopubTest {
     void testInvalidFdoNanopub() throws MalformedNanopubException {
         Nanopub np = new NanopubUtilsTest().createNanopub();
         Assert.assertThrows(IllegalArgumentException.class, () -> new FdoNanopub(np));
+    }
+
+    @Test
+    void exampleRestCall() throws URISyntaxException, IOException, InterruptedException {
+//        String id = "4263537/4000";
+        String id = "21.T11967/39b0ec87d17a4856c5f7";
+        Response response = new HandleResolver().call(id);
+
+
+        ResponsePrinter.print(response);
     }
 
 }
