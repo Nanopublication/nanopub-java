@@ -1,11 +1,15 @@
 package org.nanopub;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 
 /**
  * @author Tobias Kuhn
@@ -54,4 +58,11 @@ public interface Nanopub {
 
 	public long getByteCount();
 
+	public default void writeToStream(OutputStream out, RDFFormat format) throws RDFHandlerException {
+		NanopubUtils.writeToStream(this, out, format);
+	}
+
+	public default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
+		return NanopubUtils.writeToString(this, format);
+	}
 }
