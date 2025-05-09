@@ -11,7 +11,7 @@ import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.security.*;
