@@ -5,7 +5,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.util.Calendar;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
