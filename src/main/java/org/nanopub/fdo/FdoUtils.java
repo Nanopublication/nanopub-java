@@ -49,4 +49,17 @@ public class FdoUtils {
         return false;
     }
 
+    /**
+     * Create an IRI by prefixing a handle with https://hdl.handle.net/ if it's a handle,
+     * or by just converting an url.
+     */
+    public static IRI createIri(String handleOrUrl) {
+        if (looksLikeHandle(handleOrUrl)) {
+            return vf.createIRI(FDO_URI_PREFIX + handleOrUrl);
+        } else if (looksLikeUrl(handleOrUrl)) {
+            return vf.createIRI(handleOrUrl);
+        }
+        throw new IllegalArgumentException("Neither handle nor url found: " + handleOrUrl);
+    }
+
 }

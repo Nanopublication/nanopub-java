@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 
 public class HandleResolver {
 
-    private final static String BASE_URI = "https://hdl.handle.net/api/handles/";
+    public final static String BASE_URI = "https://hdl.handle.net/api/handles/";
 
     private HttpClient client = HttpClient.newHttpClient();
 
