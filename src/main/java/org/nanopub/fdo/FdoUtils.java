@@ -30,4 +30,23 @@ public class FdoUtils {
         }
         return null;
     }
+
+    /**
+     * We here assume that a handle starts with 2 digits (minimal prefix),
+     * no whitespaces, and contains at least one "/".
+     */
+    public static boolean looksLikeHandle(String potentialHandle) {
+        if (potentialHandle.matches("\\d\\d\\S*/+\\S*")){
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean looksLikeUrl(String potentialUrl) {
+        if (potentialUrl.matches("http(s)?://\\S+\\.[a-z]{2,}.*")){
+            return true;
+        }
+        return false;
+    }
+
 }

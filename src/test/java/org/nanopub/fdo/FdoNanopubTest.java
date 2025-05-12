@@ -65,8 +65,29 @@ public class FdoNanopubTest {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         Response response = new HandleResolver().call(id);
 
-
         ResponsePrinter.print(response);
+    }
+
+    @Test
+    void testLooksLikeHandle () {
+        Assert.assertTrue(FdoUtils.looksLikeHandle("21.T11967/39b0ec87d17a4856c5f7"));
+        Assert.assertTrue(FdoUtils.looksLikeHandle("21.T11966/82045bd97a0acce88378"));
+        Assert.assertTrue(FdoUtils.looksLikeHandle("4263537/4000"));
+
+        Assert.assertFalse(FdoUtils.looksLikeHandle("this is not a valid handle"));
+        Assert.assertFalse(FdoUtils.looksLikeHandle("https://this_is_no_handle"));
+        Assert.assertFalse(FdoUtils.looksLikeHandle("21.T11966"));
+    }
+
+    @Test
+    void testLooksLikeUrl () {
+        Assert.assertTrue(FdoUtils.looksLikeUrl("https://this_may_be_an_url.com"));
+        Assert.assertTrue(FdoUtils.looksLikeUrl("https://www.knowledgepixesl.com"));
+        Assert.assertTrue(FdoUtils.looksLikeUrl("https://hdl.handle.net/api/handles/4263537/4000"));
+        Assert.assertTrue(FdoUtils.looksLikeUrl("https://hdl.handle.net"));
+
+        Assert.assertFalse(FdoUtils.looksLikeUrl("https://this_is_no_url"));
+        Assert.assertFalse(FdoUtils.looksLikeUrl("this is not a valid url"));
     }
 
 }
