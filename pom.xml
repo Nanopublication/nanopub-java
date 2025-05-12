@@ -199,9 +199,9 @@
         <executions>
           <execution>
             <phase>package</phase>
-              <goals>
-                <goal>single</goal>
-              </goals>
+            <goals>
+              <goal>single</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -355,6 +355,7 @@
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <version>3.5.0</version>
+            <inherited>false</inherited>
             <executions>
               <execution>
                 <phase>initialize</phase>
@@ -365,7 +366,13 @@
               </execution>
             </executions>
             <configuration>
-              <executable>./initialize.sh</executable>
+              <executable>git</executable>
+              <arguments>
+                <argument>submodule</argument>
+                <argument>update</argument>
+                <argument>--init</argument>
+                <argument>--recursive</argument>
+              </arguments>
             </configuration>
           </plugin>
         </plugins>
