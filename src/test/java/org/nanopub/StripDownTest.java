@@ -18,7 +18,7 @@ class StripDownTest {
         String outPath = "target/test-output/strip/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
-        String inFiles = "src/main/resources/testsuite/valid/signed";
+        String inFiles = "src/test/resources/testsuite/valid/signed";
 
         for (File testFile : new File(inFiles).listFiles()) {
             // create signed nanopub file

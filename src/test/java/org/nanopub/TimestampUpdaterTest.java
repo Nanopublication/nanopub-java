@@ -21,7 +21,7 @@ public class TimestampUpdaterTest {
 
     @Test
     void initWithValidArgs() throws Exception {
-        String path = "src/main/resources/testsuite/valid/plain/aida1.trig";
+        String path = "src/test/resources/testsuite/valid/plain/aida1.trig";
         String[] args = new String[] {"-v", path};
 
         CliRunner.initJc(new TimestampUpdater(), args);
@@ -34,7 +34,7 @@ public class TimestampUpdaterTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
 
-        String inFiles = "src/main/resources/testsuite/valid/plain/";
+        String inFiles = "src/test/resources/testsuite/valid/plain/";
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                     @Override

@@ -25,7 +25,7 @@ class SignNanopubTest {
 
     @Test
     void initWithValidArgs() throws Exception {
-        String path = "src/main/resources/testsuite/valid/plain/aida1.trig";
+        String path = "src/test/resources/testsuite/valid/plain/aida1.trig";
         String[] args = new String[] {"-v", path};
 
         CliRunner.initJc(new SignNanopub(), args);
@@ -38,10 +38,10 @@ class SignNanopubTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String keyFile = "src/main/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
+        String keyFile = "src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
         String signerOrcid = "https://orcid.org/0000-0000-0000-0000";
-        String inFiles = "src/main/resources/testsuite/transform/plain/";
-        String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key1/";
+        String inFiles = "src/test/resources/testsuite/transform/plain/";
+        String signedFiles = "src/test/resources/testsuite/transform/signed/rsa-key1/";
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                 @Override
@@ -82,9 +82,9 @@ class SignNanopubTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String profileFile = "src/main/resources/testsuite/transform/profile.yaml";
-        String inFiles = "src/main/resources/testsuite/transform/plain/";
-        String signedFiles = "src/main/resources/testsuite/transform/signed/rsa-key2/";
+        String profileFile = "src/test/resources/testsuite/transform/profile.yaml";
+        String inFiles = "src/test/resources/testsuite/transform/plain/";
+        String signedFiles = "src/test/resources/testsuite/transform/signed/rsa-key2/";
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                     @Override

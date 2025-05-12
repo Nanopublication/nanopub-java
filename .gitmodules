@@ -1,4 +1,4 @@
 [submodule "src/main/resources/testsuite"]
-	path = src/main/resources/testsuite
+	path = src/test/resources/testsuite
 	url = https://github.com/Nanopublication/nanopub-testsuite.git
 	branch = main
