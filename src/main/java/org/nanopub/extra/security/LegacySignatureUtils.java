@@ -13,7 +13,7 @@ import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;

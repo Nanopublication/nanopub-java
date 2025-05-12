@@ -3,7 +3,7 @@ package org.nanopub.extra.security;
 import com.beust.jcommander.ParameterException;
 import org.nanopub.CliRunner;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
