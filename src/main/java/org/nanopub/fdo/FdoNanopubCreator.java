@@ -23,26 +23,30 @@ public class FdoNanopubCreator {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    private Random random = new Random();
+    private static final Random random = new Random();
 
-    private NanopubCreator creator;
-
-    public FdoNanopubCreator(IRI fdoIri, IRI profileIri, String label) {
+    public static NanopubCreator createWithFdoIri(IRI fdoIri, IRI profileIri, String label) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-        creator = new NanopubCreator(npIri);
+        return prepareNanopubCreator(profileIri, label, fdoIri, npIri);
+    }
+
+    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, IRI profileIri, String label) {
+        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+        String fdoIriString = npIriString + fdoSuffix;
+        IRI fdoIri = vf.createIRI(fdoIriString);
+        IRI npIri = vf.createIRI(npIriString);
+
+        return prepareNanopubCreator(profileIri, label, fdoIri, npIri);
+    }
+
+    private static NanopubCreator prepareNanopubCreator(IRI profileIri, String label, IRI fdoIri, IRI npIri) {
+        NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
         creator.addAssertionStatement(fdoIri, FdoUtils.RDF_FDO_PROFILE, profileIri);
         creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
         creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
-    }
-
-    public FdoNanopubCreator(String fdoHandle, String profileHandle, String label) throws MalformedNanopubException {
-        this(FdoUtils.toIri(fdoHandle), FdoUtils.toIri(profileHandle), label);
-    }
-
-    public NanopubCreator getNanopubCreator() {
         return creator;
     }
 
@@ -67,7 +71,7 @@ public class FdoNanopubCreator {
                 profile = String.valueOf(v.data.value);
             }
         }
-        NanopubCreator creator = new FdoNanopubCreator(fdoIri, FdoUtils.createIri(profile), label).getNanopubCreator();
+        NanopubCreator creator = createWithFdoIri(fdoIri, FdoUtils.createIri(profile), label);
 
         for (Value v: response.values) {
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("FdoProfile") && !v.type.equals("id")) {

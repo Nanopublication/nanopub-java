@@ -25,32 +25,52 @@ public class FdoNanopubTest {
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Test
-    void example() throws MalformedNanopubException {
-        FdoNanopubCreator creator = new FdoNanopubCreator("21.T11967/39b0ec87d17a4856c5f7", "21.T11966/365ff9576c26ca6053db","NumberFdo1" );
+    void exampleWithFdoIri() throws MalformedNanopubException {
+        String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
+        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoLabel = "NumberFdo1";
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
+                FdoUtils.createIri(fdoProfile), fdoLabel);
 
-        NanopubCreator underlyingNpCreator = creator.getNanopubCreator();
-        underlyingNpCreator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
-        Nanopub np = underlyingNpCreator.finalizeNanopub(true);
+        Nanopub np = creator.finalizeNanopub(true);
 
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
         NanopubUtils.propagateToHandler(np, w);
+    }
 
+    @Test
+    void exampleWithFdoIriSuffix() throws MalformedNanopubException {
+        String fdoSuffix = "abc-table";
+        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoLabel = "abc-table-fdo";
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(fdoSuffix,
+                FdoUtils.createIri(fdoProfile), fdoLabel);
+
+        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+
+        Nanopub np = creator.finalizeNanopub(true);
+
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        NanopubUtils.propagateToHandler(np, w);
     }
 
     @Test
     void testFdoNanopub() throws MalformedNanopubException {
-        String profileHandle = "21.T11966/365ff9576c26ca6053db";
-        String label = "NumberFdo1";
-        FdoNanopubCreator creator = new FdoNanopubCreator("21.T11967/39b0ec87d17a4856c5f7", profileHandle, label);
+        String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
+        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoLabel = "NumberFdo1";
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
+                FdoUtils.createIri(fdoProfile),"NumberFdo1" );
 
-        NanopubCreator underlyingNpCreator = creator.getNanopubCreator();
-        underlyingNpCreator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
-        Nanopub np = underlyingNpCreator.finalizeNanopub(true);
+        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+
+        Nanopub np = creator.finalizeNanopub(true);
 
         FdoNanopub fdoNanopub = new FdoNanopub(np);
-        Assert.assertEquals(FdoUtils.toIri(profileHandle), fdoNanopub.getProfile());
-        Assert.assertEquals(label, fdoNanopub.getLabel());
+        Assert.assertEquals(FdoUtils.toIri(fdoProfile), fdoNanopub.getProfile());
+        Assert.assertEquals(fdoLabel, fdoNanopub.getLabel());
     }
 
     @Test
