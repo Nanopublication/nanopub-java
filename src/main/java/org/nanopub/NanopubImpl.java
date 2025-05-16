@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import com.google.common.collect.ImmutableSet;
+import jakarta.activation.MimetypesFileTypeMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -19,7 +20,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 
-import jakarta.activation.MimetypesFileTypeMap;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -45,6 +45,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.trix.TriXWriterFactory");
 		tryToLoadParserFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory");
 		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.turtle.TurtleParserFactory");
+		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory");
 	}
 
 	private static void tryToLoadParserFactory(String className) {
