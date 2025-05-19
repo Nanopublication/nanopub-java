@@ -50,6 +50,12 @@ public class FdoNanopubCreator {
         return creator;
     }
 
+    // TODO Additional method to connect to FdoMetadta class.
+    public static NanopubCreator createWithMetadata(FdoMetadata fdoMetadata) {
+    	// TODO Create with given metadata. This can also be used to update an FDO nanopub (Op.Update).
+    	return null;
+    }
+
     /**
      * Experimental creation of Nanopub from handle system.
      */

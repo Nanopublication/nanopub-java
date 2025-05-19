@@ -58,4 +58,12 @@ public class FdoNanopub {
         return label;
     }
 
+    // TODO Return FdoMetadata object, extracting the triples from the assertion.
+    //      This can be used as a first step to update an FDO, as the FdoMetadata object
+    //      is changeable and can later be used to create a new FdoNanopub object.
+    public FdoMetadata getFdoMetadata() {
+    	// TODO
+    	return null;
+    }
+
 }
