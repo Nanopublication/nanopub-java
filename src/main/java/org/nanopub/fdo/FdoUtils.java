@@ -1,6 +1,7 @@
 package org.nanopub.fdo;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
@@ -23,7 +24,7 @@ public class FdoUtils {
      * Remove the prefix "https://hdl.handle.net/" from the IRI and returns the handle as string.
      * returns null if the prefix is not there.
      */
-    public static String extractHandle(IRI iri) {
+    public static String extractHandle(Resource iri) {
         String iriString = iri.toString();
         if (iriString.startsWith(FDO_URI_PREFIX)) {
             return iriString.substring(FDO_URI_PREFIX.length());

@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.fdo.FdoMetadata;
 import org.nanopub.fdo.FdoNanopubCreator;
+import org.nanopub.fdo.RetrieveFdo;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -16,12 +18,13 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import static java.lang.System.out;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * Integration Tests must have suffix "IT".
  */
-public class HelloWorldIT {
+public class TheseTestsRequireOtherSystemsIT {
 
     @Test
     public void testSimpleQuery() throws Exception {
@@ -43,6 +46,17 @@ public class HelloWorldIT {
 
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
         NanopubUtils.propagateToHandler(np, w);
+    }
+
+    @Test
+    void retrieveMetadataFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+        String id = "21.T11967/39b0ec87d17a4856c5f7";
+        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
+        assertEquals(id, metadata.getId());
+
+        Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
+        assertEquals(metadata.getStatements().size(), np.getAssertion().size());
+        // it would be great to compare all statements here
     }
 
 }

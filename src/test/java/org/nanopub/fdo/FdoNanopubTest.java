@@ -25,7 +25,7 @@ public class FdoNanopubTest {
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Test
-    void exampleWithFdoIri() throws MalformedNanopubException {
+    void exampleCreateWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
@@ -41,7 +41,7 @@ public class FdoNanopubTest {
     }
 
     @Test
-    void exampleWithFdoIriSuffix() throws MalformedNanopubException {
+    void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "abc-table-fdo";
@@ -57,7 +57,7 @@ public class FdoNanopubTest {
     }
 
     @Test
-    void testFdoNanopub() throws MalformedNanopubException {
+    void testFdoNanopubCreation() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";

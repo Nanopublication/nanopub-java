@@ -1,6 +1,7 @@
 package org.nanopub.fdo;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
@@ -27,7 +28,7 @@ public class FdoNanopubCreator {
 
     public static NanopubCreator createWithFdoIri(IRI fdoIri, IRI profileIri, String label) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-        return prepareNanopubCreator(profileIri, label, fdoIri, npIri);
+        return prepareNanopubCreator(profileIri, npIri, fdoIri, label);
     }
 
     public static NanopubCreator createWithFdoSuffix(String fdoSuffix, IRI profileIri, String label) {
@@ -36,24 +37,33 @@ public class FdoNanopubCreator {
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
 
-        return prepareNanopubCreator(profileIri, label, fdoIri, npIri);
+        return prepareNanopubCreator(profileIri, npIri, fdoIri, label);
     }
 
-    private static NanopubCreator prepareNanopubCreator(IRI profileIri, String label, IRI fdoIri, IRI npIri) {
+    private static NanopubCreator prepareNanopubCreator(IRI profileIri, IRI npIri, IRI fdoIri, String label) {
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
         creator.addAssertionStatement(fdoIri, FdoUtils.RDF_FDO_PROFILE, profileIri);
-        creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
+        if (label != null) {
+            creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
+        }
         creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
         return creator;
     }
 
-    // TODO Additional method to connect to FdoMetadta class.
     public static NanopubCreator createWithMetadata(FdoMetadata fdoMetadata) {
-    	// TODO Create with given metadata. This can also be used to update an FDO nanopub (Op.Update).
-    	return null;
+        IRI profileIri = fdoMetadata.getProfile();
+        String label = fdoMetadata.getLabel();
+        String id = fdoMetadata.getId();
+        NanopubCreator creator = createWithFdoIri(FdoUtils.toIri(id), profileIri, label);
+        for (Statement st : fdoMetadata.getStatements()) {
+            if (!st.getPredicate().equals(RDF.TYPE) && !st.getPredicate().equals(FdoUtils.RDF_TYPE_FDO) && !st.getPredicate().equals(RDF.TYPE)) {
+                creator.addAssertionStatement(st.getSubject(), st.getPredicate(), st.getObject());
+            }
+        }
+        return creator;
     }
 
     /**
