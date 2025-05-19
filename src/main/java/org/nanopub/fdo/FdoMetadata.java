@@ -57,19 +57,17 @@ public class FdoMetadata implements Serializable {
 	}
 
 	public IRI getProfile() {
-		for (var entry: tuples.entrySet()) {
-			if (entry.getKey().equals(FdoUtils.RDF_FDO_PROFILE)) {
-				return vf.createIRI(entry.getValue().stringValue());
-			}
+		Value profile = tuples.get(FdoUtils.RDF_FDO_PROFILE);
+		if (profile != null) {
+			return vf.createIRI(profile.stringValue());
 		}
 		return null;
 	}
 
 	public String getLabel() {
-		for (var entry: tuples.entrySet()) {
-			if (entry.getKey().equals(RDFS.LABEL)) {
-				return entry.getValue().stringValue();
-			}
+		Value label = tuples.get(RDFS.LABEL);
+		if (label != null) {
+			return label.stringValue();
 		}
 		return null;
 	}
