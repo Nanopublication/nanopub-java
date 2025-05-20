@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
@@ -135,11 +136,30 @@ public class NanopubCreator {
 		}
 	}
 
+	public void addAssertionStatements(Iterable<Statement> statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Statement st : statements) {
+			assertion.add(st);
+		}
+	}
+
 	public void addAssertionStatement(Resource subj, IRI pred, Value obj) {
 		addAssertionStatements(vf.createStatement(subj, pred, obj));
 	}
 
+	public void addAssertionStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		assertion.add(statement);
+	}
+
 	public void addProvenanceStatements(Statement... statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Statement st : statements) {
+			provenance.add(st);
+		}
+	}
+
+	public void addProvenanceStatements(Iterable<Statement> statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
 			provenance.add(st);
@@ -156,7 +176,19 @@ public class NanopubCreator {
 		assertionUriFixed = true;
 	}
 
+	public void addProvenanceStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		provenance.add(statement);
+	}
+
 	public void addPubinfoStatements(Statement... statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Statement st : statements) {
+			pubinfo.add(st);
+		}
+	}
+
+	public void addPubinfoStatements(Iterable<Statement> statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
 			pubinfo.add(st);
@@ -171,6 +203,11 @@ public class NanopubCreator {
 		if (nanopubUri == null) throw new RuntimeException("Nanopublication URI not yet set");
 		addPubinfoStatement(nanopubUri, pred, obj);
 		nanopubUriFixed = true;
+	}
+
+	public void addPubinfoStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		pubinfo.add(statement);
 	}
 
 	public void addTimestamp(Date date) {
@@ -213,6 +250,26 @@ public class NanopubCreator {
 
 	public void addNamespace(String prefix, IRI namespace) {
 		addNamespace(prefix, namespace.toString());
+	}
+
+	public void addNamespace(Namespace namespace) {
+		addNamespace(namespace.getPrefix(), namespace.getName());
+	}
+
+	public void addNamespaces(Namespace... namespaces) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Namespace namespace : namespaces) {
+			nsPrefixes.add(namespace.getPrefix());
+			ns.put(namespace.getPrefix(), namespace.getName());
+		}
+	}
+
+	public void addNamespaces(Iterable<Namespace> namespaces) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Namespace namespace : namespaces) {
+			nsPrefixes.add(namespace.getPrefix());
+			ns.put(namespace.getPrefix(), namespace.getName());
+		}
 	}
 
 	public void addDefaultNamespaces() {
