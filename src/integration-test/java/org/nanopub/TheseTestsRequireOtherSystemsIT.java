@@ -1,9 +1,15 @@
 package org.nanopub;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Test;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.security.SignatureAlgorithm;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
@@ -16,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.security.KeyPair;
 import java.util.List;
 
 import static java.lang.System.out;
@@ -47,6 +54,19 @@ public class TheseTestsRequireOtherSystemsIT {
 
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
         NanopubUtils.propagateToHandler(np, w);
+    }
+
+    void exampleForFublishingFdoNanopub() throws Exception {
+        String id = "21.T11967/39b0ec87d17a4856c5f7"; // TODO enter the handle id
+        Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
+
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        String signer = "https://orcid.org/0009-0008-3635-347X"; // TODO enter your orcid
+
+        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
+        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
+        Nanopub signedNp = SignNanopub.signAndTransform(np, context);
+        PublishNanopub.publish(signedNp);
     }
 
     @Test
