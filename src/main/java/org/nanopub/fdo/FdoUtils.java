@@ -11,7 +11,9 @@ public class FdoUtils {
 
     public static final String FDO_URI_PREFIX = "https://hdl.handle.net/";
     public static final IRI RDF_TYPE_FDO = vf.createIRI("https://w3id.org/fdof/ontology#FAIRDigitalObject");
-    public static final IRI RDF_FDO_PROFILE = vf.createIRI("https://hdl.handle.net/0.FDO/Profile");
+    public static final IRI RDF_FDO_PROFILE_MAIN = vf.createIRI(FDO_URI_PREFIX + "0.FDO/Profile");
+    public static final IRI RDF_FDO_PROFILE_1 = vf.createIRI(FDO_URI_PREFIX + "Profile");
+    public static final IRI RDF_FDO_PROFILE_2 = vf.createIRI(FDO_URI_PREFIX + "21.T11966/Profile");
 
     /**
      * Add the prefix "https://hdl.handle.net/" to the fdoHandle and returns it as IRI.

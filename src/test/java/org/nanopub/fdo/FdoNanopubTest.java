@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.*;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.ResponsePrinter;
-import org.nanopub.fdo.rest.gson.Response;
+import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -83,7 +83,7 @@ public class FdoNanopubTest {
     void exampleRestCall() throws URISyntaxException, IOException, InterruptedException {
 //        String id = "4263537/4000";
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        Response response = new HandleResolver().call(id);
+        ParsedJsonResponse response = new HandleResolver().call(id);
 
         ResponsePrinter.print(response);
     }

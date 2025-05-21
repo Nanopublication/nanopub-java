@@ -1,7 +1,7 @@
 package org.nanopub.fdo.rest;
 
 import com.google.gson.Gson;
-import org.nanopub.fdo.rest.gson.Response;
+import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,12 +16,12 @@ public class HandleResolver {
 
     private HttpClient client = HttpClient.newHttpClient();
 
-    public Response call(String id) throws URISyntaxException, IOException, InterruptedException {
+    public ParsedJsonResponse call(String id) throws URISyntaxException, IOException, InterruptedException {
 
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(BASE_URI + id)).build();
         HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-        Response r = new Gson().fromJson(httpResponse.body(), Response.class);
+        ParsedJsonResponse r = new Gson().fromJson(httpResponse.body(), ParsedJsonResponse.class);
         return r;
     }
 }

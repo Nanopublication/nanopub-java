@@ -1,6 +1,6 @@
 package org.nanopub.fdo.rest.gson;
 
-public class Response {
+public class ParsedJsonResponse {
     public String handle;
     public Value[] values;
 }

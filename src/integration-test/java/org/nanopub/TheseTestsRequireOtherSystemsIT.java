@@ -10,6 +10,7 @@ import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.fdo.FdoMetadata;
 import org.nanopub.fdo.FdoNanopubCreator;
 import org.nanopub.fdo.RetrieveFdo;
+import org.nanopub.fdo.ValidateFdo;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -57,6 +58,13 @@ public class TheseTestsRequireOtherSystemsIT {
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
         assertEquals(metadata.getStatements().size(), np.getAssertion().size());
         // it would be great to compare all statements here
+    }
+
+//     @Test // TODO
+    void validateFdo () throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+        String id = "21.T11967/39b0ec87d17a4856c5f7";
+        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
+        ValidateFdo.isValid(metadata);
     }
 
 }

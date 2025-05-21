@@ -22,6 +22,7 @@ import org.nanopub.NanopubImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Using Shacl to validate a Nanopub against a Shape.
@@ -51,7 +52,7 @@ public class ShaclValidator extends CliRunner {
      *
      * @return true, iff the data respects the specification of the shape.
      */
-    public static boolean validateShacl(Nanopub shape, Nanopub data) {
+    public static boolean validateShacl(Set<Statement> shape, Set<Statement> data) {
         ShaclSail shaclSail = new ShaclSail(new MemoryStore());
         Repository repo = new SailRepository(shaclSail);
 
@@ -59,14 +60,14 @@ public class ShaclValidator extends CliRunner {
 
         // add shape
         connection.begin();
-        for (Statement st: shape.getAssertion()) {
+        for (Statement st : shape) {
             connection.add(st, RDF4J.SHACL_SHAPE_GRAPH);
         }
         connection.commit();
 
         connection.begin();
         // add data to be validated
-        for (Statement st: data.getAssertion()) {
+        for (Statement st : data) {
             connection.add(st);
         }
         try {
@@ -87,6 +88,15 @@ public class ShaclValidator extends CliRunner {
             }
             throw new RuntimeException(cause);
         }
+    }
+
+    /**
+     * Logs constraints validation to System.out
+     *
+     * @return true, iff the data respects the specification of the shape.
+     */
+    public static boolean validateShacl(Nanopub shape, Nanopub data) {
+        return validateShacl(shape.getAssertion(), data.getAssertion());
     }
 
     public void run () throws MalformedNanopubException, IOException {

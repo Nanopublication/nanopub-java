@@ -5,7 +5,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
 
-import static org.nanopub.fdo.FdoUtils.RDF_FDO_PROFILE;
+import static org.nanopub.fdo.FdoUtils.*;
 
 /**
  * Wrapper for nanopubs which allows to extract specific FDO fields.
@@ -26,7 +26,7 @@ public class FdoNanopub {
     public FdoNanopub(Nanopub nanopub) {
         this.nanopub = nanopub;
         for (Statement st: nanopub.getAssertion()) {
-            if (st.getPredicate().equals(RDF_FDO_PROFILE)) {
+            if (st.getPredicate().equals(RDF_FDO_PROFILE_MAIN) || st.getPredicate().equals(RDF_FDO_PROFILE_1) || st.getPredicate().equals(RDF_FDO_PROFILE_2)) {
                 if (st.getObject() instanceof IRI) {
                     this.profile = (IRI) st.getObject();
                     break;

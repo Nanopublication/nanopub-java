@@ -11,7 +11,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
 import org.nanopub.fdo.rest.HandleResolver;
-import org.nanopub.fdo.rest.gson.Response;
+import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.fdo.rest.gson.Value;
 
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class FdoNanopubCreator {
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addAssertionStatement(fdoIri, FdoUtils.RDF_FDO_PROFILE, profileIri);
+        creator.addAssertionStatement(fdoIri, FdoUtils.RDF_FDO_PROFILE_MAIN, profileIri);
         if (label != null) {
             creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
         }
@@ -54,15 +54,16 @@ public class FdoNanopubCreator {
     }
 
     public static NanopubCreator createWithMetadata(FdoMetadata fdoMetadata) {
-        IRI profileIri = fdoMetadata.getProfile();
-        String label = fdoMetadata.getLabel();
-        String id = fdoMetadata.getId();
-        NanopubCreator creator = createWithFdoIri(FdoUtils.toIri(id), profileIri, label);
-        for (Statement st : fdoMetadata.getStatements()) {
-            if (!st.getPredicate().equals(RDF.TYPE) && !st.getPredicate().equals(FdoUtils.RDF_TYPE_FDO) && !st.getPredicate().equals(RDF.TYPE)) {
-                creator.addAssertionStatement(st.getSubject(), st.getPredicate(), st.getObject());
-            }
-        }
+        IRI fdoIri = vf.createIRI(fdoMetadata.getId());
+        IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
+
+        NanopubCreator creator = new NanopubCreator(npIri);
+        creator.addDefaultNamespaces();
+        creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
+        creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
+        creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
+        creator.addAssertionStatements(fdoMetadata.getStatements().toArray(new Statement[0]));
+
         return creator;
     }
 
@@ -72,7 +73,7 @@ public class FdoNanopubCreator {
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
         IRI fdoIri = FdoUtils.createIri(id);
 
-        Response response = new HandleResolver().call(id);
+        ParsedJsonResponse response = new HandleResolver().call(id);
         String label = null;
         String profile = null;
 
@@ -83,7 +84,7 @@ public class FdoNanopubCreator {
             if (v.type.equals("name")) {
                 label = String.valueOf(v.data.value);
             }
-            if (v.type.equals("FdoProfile")) {
+            if (v.type.equals("FdoProfile") || v.type.equals("21.T11966/FdoProfile") || v.type.equals("0.FDO/Profile")) {
                 profile = String.valueOf(v.data.value);
             }
         }
