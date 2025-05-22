@@ -176,7 +176,7 @@ public class NanopubUtils {
 			if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
 				npTitle += " " + obj.stringValue();
 			}
-			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
 				introMap.put((IRI) obj, true);
 			}
 		}
@@ -232,7 +232,7 @@ public class NanopubUtils {
 					npDef += "\n" + obj.stringValue();
 				}
 			} else {
-				if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) {
+				if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) {
 					introMap.put((IRI) obj, true);
 				}
 			}
@@ -304,7 +304,7 @@ public class NanopubUtils {
 			if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
 				types.add((IRI) obj);
 			}
-			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
 				introMap.put((IRI) obj, true);
 			}
 		}
@@ -368,9 +368,11 @@ public class NanopubUtils {
 	}
 
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
-	private static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
-	private static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
-	private static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
+
+	public static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
+	public static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
+	public static final IRI EMBEDS = vf.createIRI("http://purl.org/nanopub/x/embeds");
+	public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
 	private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
 	private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
 
