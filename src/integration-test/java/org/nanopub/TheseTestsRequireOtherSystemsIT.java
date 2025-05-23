@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
@@ -80,11 +81,19 @@ public class TheseTestsRequireOtherSystemsIT {
         // it would be great to compare all statements here
     }
 
-//     @Test // TODO
-    void validateFdo () throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
-        String id = "21.T11967/39b0ec87d17a4856c5f7";
+    @Test
+    void validateValidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+        String id = "21.T11966/82045bd97a0acce88378";
         FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
-        ValidateFdo.isValid(metadata);
+
+        Assert.assertTrue(ValidateFdo.isValid(metadata));
     }
 
+    @Test
+    void validateInvalidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+        String id = "21.T11967/39b0ec87d17a4856c5f7";
+        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
+
+        Assert.assertFalse(ValidateFdo.isValid(metadata));
+    }
 }

@@ -47,12 +47,26 @@ public class ShaclValidator extends CliRunner {
         }
     }
 
+
+    private static void printStatements(Set<Statement> statements) {
+        for (Statement s : statements) {
+            System.out.println(s.getSubject().toString() + " " + s.getPredicate().toString() + " " + s.getObject().toString());
+        }
+    }
+
     /**
      * Logs constraints validation to System.out
      *
      * @return true, iff the data respects the specification of the shape.
      */
     public static boolean validateShacl(Set<Statement> shape, Set<Statement> data) {
+
+//        // Debug info
+//        System.out.println("Validating Data ");
+//        printStatements(data);
+//        System.out.println("Against Schema ");
+//        printStatements(shape);
+
         ShaclSail shaclSail = new ShaclSail(new MemoryStore());
         Repository repo = new SailRepository(shaclSail);
 

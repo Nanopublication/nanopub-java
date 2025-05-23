@@ -89,7 +89,7 @@ public class FdoMetadata implements Serializable {
 		Value schemaEntry = tuples.get(vf.createIRI(FDO_TYPE_PREFIX + "21.T11966/JsonSchema"));
 		if (schemaEntry != null) {
 			// assume the entry looks like {"$ref": "https://the-url"}
-			String url = schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 3);
+			String url = schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);
 			return url;
 		}
 		return null;
