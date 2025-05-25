@@ -255,10 +255,6 @@ public class FetchIndex {
 			return lastRegistry;
 		}
 
-		public void ignoreServer(RegistryInfo r) {
-			registries.add(r);
-		}
-
 		public void prepareForTryingServer(RegistryInfo r) {
 			registries.add(r);
 			lastRegistry = r;

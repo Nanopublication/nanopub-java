@@ -6,23 +6,22 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.RdfUtils;
-import net.trustyuri.rdf.TransformRdfSetting;
-
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubUtils;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdfSetting;
 
 public class TrustyNanopubUtils {
 
-	public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true);
+	public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true, false);
 
 	private TrustyNanopubUtils() {}  // no instances allowed
 

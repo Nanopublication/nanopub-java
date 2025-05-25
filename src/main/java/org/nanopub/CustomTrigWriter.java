@@ -39,7 +39,7 @@ public class CustomTrigWriter extends TriGWriter {
 	}
 
 	public CustomTrigWriter(Set<String> usedPrefixes) {
-		super(NullOutputStream.NULL_OUTPUT_STREAM);
+		super(NullOutputStream.INSTANCE);
 		this.usedPrefixes = usedPrefixes;
 	}
 
