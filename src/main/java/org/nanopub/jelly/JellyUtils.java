@@ -10,7 +10,6 @@ import eu.neverblink.jelly.core.proto.v1.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
@@ -21,19 +20,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
-import static eu.neverblink.jelly.convert.rdf4j.rio.JellyFormat.JELLY;
-
 /**
  * Utility functions for working with Jelly RDF data.
  */
 public class JellyUtils {
-
-    /**
-     * Jelly RDF format for use with RDF4J Rio.
-     */
-    public static final RDFFormat JELLY_FORMAT = JELLY;
-
-    public static final RdfStreamOptions defaultSupportedOptions = JellyOptions.DEFAULT_SUPPORTED_OPTIONS;
 
     /**
      * Options for Jelly RDF streams that are written to the database.
@@ -147,6 +137,6 @@ public class JellyUtils {
             }
         };
 
-        return Rdf4jConverterFactory.getInstance().quadsDecoder(handler, defaultSupportedOptions);
+        return Rdf4jConverterFactory.getInstance().quadsDecoder(handler, JellyOptions.DEFAULT_SUPPORTED_OPTIONS);
     }
 }
