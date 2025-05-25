@@ -1,10 +1,10 @@
 package org.nanopub.jelly;
 
 import com.google.protobuf.ByteString;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
 import org.junit.Test;
-import scala.Some$;
-import scala.Tuple2;
-import scala.collection.immutable.Map$;
+
+import java.util.List;
 
 public class JellyMetadataUtilTest {
 
@@ -16,28 +16,28 @@ public class JellyMetadataUtilTest {
 
         for (long testCase : testCases) {
             var m = JellyMetadataUtil.getCounterMetadata(testCase);
-            assert m.contains(JellyMetadataUtil.COUNTER_KEY);
-            assert m.size() == 1;
+            assert m.getKey().equals(JellyMetadataUtil.COUNTER_KEY);
+            assert m.getValue() != null;
             // Parsing
-            var counter = JellyMetadataUtil.tryGetCounterFromMetadata(m);
+            var counter = JellyMetadataUtil.tryGetCounterFromMetadata(List.of(m));
             assert counter == testCase;
         }
     }
 
     @Test
     public void testGetCounterNoKey() {
-        var m = (Object) Map$.MODULE$.empty();
-        var counter = JellyMetadataUtil.tryGetCounterFromMetadata(
-                (scala.collection.immutable.Map<String, ByteString>) m
-        );
+        var counter = JellyMetadataUtil.tryGetCounterFromMetadata(List.of());
         assert counter == -1;
     }
 
     @Test
     public void testGetCounterEmptyArray() {
-        var m = scala.collection.immutable.Map.from(Some$.MODULE$.apply(
-                Tuple2.apply(JellyMetadataUtil.COUNTER_KEY, ByteString.copyFrom(new byte[0]))
-        ));
+        var m = List.<RdfStreamFrame.MetadataEntry>of(
+                RdfStreamFrame.MetadataEntry.newInstance()
+                    .setKey(JellyMetadataUtil.COUNTER_KEY)
+                    .setValue(ByteString.copyFrom(new byte[0]))
+        );
+
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(m);
         assert counter == -1;
     }

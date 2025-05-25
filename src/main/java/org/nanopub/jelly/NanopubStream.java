@@ -1,20 +1,19 @@
 package org.nanopub.jelly;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.mongodb.client.MongoCursor;
-import eu.ostrzyciel.jelly.core.ProtoTranscoder;
-import eu.ostrzyciel.jelly.core.ProtoTranscoder$;
-import eu.ostrzyciel.jelly.core.proto.v1.*;
+import eu.neverblink.jelly.core.JellyTranscoderFactory;
+import eu.neverblink.jelly.core.ProtoTranscoder;
+import eu.neverblink.jelly.core.proto.v1.*;
 import org.bson.Document;
 import org.bson.types.Binary;
-import scala.Option;
-import scala.collection.mutable.ListBuffer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.Vector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -34,15 +33,21 @@ public class NanopubStream {
         //
         // "unsafe" here is 100% fine, because we are parsing trusted input. The data comes from the DB,
         // and it was written there by the nanopub-registry itself.
-        ProtoTranscoder transcoder = ProtoTranscoder$.MODULE$.fastMergingTranscoderUnsafe(
+        ProtoTranscoder transcoder = JellyTranscoderFactory.fastMergingTranscoderUnsafe(
                 JellyUtils.jellyOptionsForTransmission
         );
+
         Stream<RdfStreamFrame> frameStream = jellyStream.map(jellyContent -> {
             if (jellyContent == null) {
                 throw new RuntimeException("Jelly content stored in DB is null. " +
                         "Either the database query is incorrect or the DB must be reinitialized.");
             }
-            return transcoder.ingestFrame(RdfStreamFrame$.MODULE$.parseFrom(jellyContent));
+
+            try {
+                return transcoder.ingestFrame(RdfStreamFrame.parseFrom(jellyContent));
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+            }
         });
         return new NanopubStream(frameStream);
     }
@@ -57,19 +62,25 @@ public class NanopubStream {
         Stream<Document> jellyStream = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(cursor, Spliterator.ORDERED), false);
 
-        ProtoTranscoder transcoder = ProtoTranscoder$.MODULE$.fastMergingTranscoderUnsafe(
+        ProtoTranscoder transcoder = JellyTranscoderFactory.fastMergingTranscoderUnsafe(
                 JellyUtils.jellyOptionsForTransmission
         );
+
         Stream<RdfStreamFrame> frameStream = jellyStream.map(doc -> {
             var jellyContent = ((Binary) doc.get("jelly")).getData();
             if (jellyContent == null) {
                 throw new RuntimeException("Jelly content stored in DB is null. " +
                         "Either the database query is incorrect or the DB must be reinitialized.");
             }
-            var frame = RdfStreamFrame$.MODULE$.parseFrom(jellyContent);
-            return transcoder.ingestFrame(frame.withMetadata(
-                    JellyMetadataUtil.getCounterMetadata(doc.getLong("counter"))
-            ));
+            try {
+                final var frame = RdfStreamFrame.parseFrom(jellyContent)
+                    .clone()
+                    .addMetadata(JellyMetadataUtil.getCounterMetadata(doc.getLong("counter")));
+
+                return transcoder.ingestFrame(frame);
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+            }
         });
         return new NanopubStream(frameStream);
     }
@@ -81,9 +92,16 @@ public class NanopubStream {
      * @return NanopubStream
      */
     public static NanopubStream fromByteStream(InputStream is) {
-        Stream<RdfStreamFrame> stream = Stream.generate(() -> RdfStreamFrame$.MODULE$.parseDelimitedFrom(is))
-            .takeWhile(Option::isDefined)
-            .map(Option::get);
+        Stream<RdfStreamFrame> stream = Stream
+            .generate(() -> {
+                try {
+                    return RdfStreamFrame.parseDelimitedFrom(is);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .takeWhile(Objects::nonNull);
+
         return new NanopubStream(stream);
     }
 
@@ -99,7 +117,13 @@ public class NanopubStream {
      * @param os OutputStream
      */
     public void writeToByteStream(OutputStream os) {
-        frameStream.forEach(frame -> frame.writeDelimitedTo(os));
+        frameStream.forEach(frame -> {
+            try {
+                frame.writeDelimitedTo(os);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**
