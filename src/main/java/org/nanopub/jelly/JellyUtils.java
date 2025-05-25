@@ -1,25 +1,23 @@
 package org.nanopub.jelly;
 
-import eu.ostrzyciel.jelly.convert.rdf4j.Rdf4jConverterFactory$;
-import eu.ostrzyciel.jelly.convert.rdf4j.rio.package$;
-import eu.ostrzyciel.jelly.core.JellyOptions$;
-import eu.ostrzyciel.jelly.core.ProtoDecoder;
-import eu.ostrzyciel.jelly.core.proto.v1.*;
+import com.google.protobuf.InvalidProtocolBufferException;
+import eu.neverblink.jelly.convert.rdf4j.Rdf4jConverterFactory;
+import eu.neverblink.jelly.convert.rdf4j.Rdf4jDatatype;
+import eu.neverblink.jelly.core.JellyOptions;
+import eu.neverblink.jelly.core.ProtoDecoder;
+import eu.neverblink.jelly.core.RdfHandler;
+import eu.neverblink.jelly.core.proto.v1.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
-import scala.Option;
-import scala.Some;
-import scala.jdk.CollectionConverters;
-import scala.runtime.BoxedUnit;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 
 /**
@@ -28,26 +26,20 @@ import java.util.stream.Stream;
 public class JellyUtils {
 
     /**
-     * Jelly RDF format for use with RDF4J Rio.
-     */
-    public final static RDFFormat JELLY_FORMAT = package$.MODULE$.JELLY();
-
-    public final static Option<RdfStreamOptions> defaultSupportedOptions =
-        Some.apply(JellyOptions$.MODULE$.defaultSupportedOptions());
-
-    /**
      * Options for Jelly RDF streams that are written to the database.
      */
-    public static RdfStreamOptions jellyOptionsForDB = JellyOptions$.MODULE$.smallStrict()
-        .withPhysicalType(PhysicalStreamType.QUADS$.MODULE$)
-        .withLogicalType(LogicalStreamType.DATASETS$.MODULE$);
+    public static final RdfStreamOptions jellyOptionsForDB = JellyOptions.SMALL_STRICT
+        .clone()
+        .setPhysicalType(PhysicalStreamType.QUADS)
+        .setLogicalType(LogicalStreamType.DATASETS);
 
     /**
      * Options for Jelly RDF streams that are transmitted between services.
      */
-    public static RdfStreamOptions jellyOptionsForTransmission = JellyOptions$.MODULE$.bigStrict()
-        .withPhysicalType(PhysicalStreamType.QUADS$.MODULE$)
-        .withLogicalType(LogicalStreamType.DATASETS$.MODULE$);
+    public static final RdfStreamOptions jellyOptionsForTransmission = JellyOptions.BIG_STRICT
+        .clone()
+        .setPhysicalType(PhysicalStreamType.QUADS)
+        .setLogicalType(LogicalStreamType.DATASETS);
 
     /**
      * Write a Nanopub to bytes in the Jelly format to be stored in the database.
@@ -72,8 +64,12 @@ public class JellyUtils {
      * @throws MalformedNanopubException if this is not a valid Nanopub
      */
     public static Nanopub readFromDB(byte[] jellyBytes) throws MalformedNanopubException {
-        RdfStreamFrame frame = RdfStreamFrame$.MODULE$.parseFrom(jellyBytes);
-        return readFromFrame(frame);
+        try {
+            RdfStreamFrame frame = RdfStreamFrame.parseFrom(jellyBytes);
+            return readFromFrame(frame);
+        } catch (InvalidProtocolBufferException e) {
+            throw new MalformedNanopubException("Failed to parse Jelly RDF bytes as a Nanopub: " + e.getMessage());
+        }
     }
 
     /**
@@ -84,33 +80,39 @@ public class JellyUtils {
      * @throws MalformedNanopubException if this is not a valid Nanopub
      */
     public static Nanopub readFromInputStream(InputStream is) throws MalformedNanopubException {
-        RdfStreamFrame frame = RdfStreamFrame$.MODULE$.parseDelimitedFrom(is).get();
-        return readFromFrame(frame);
+        try {
+            RdfStreamFrame frame = RdfStreamFrame.parseDelimitedFrom(is);
+            return readFromFrame(frame);
+        } catch (IOException e) {
+            throw new MalformedNanopubException("Failed to read Jelly RDF from InputStream: " + e.getMessage());
+        }
     }
 
     static Nanopub readFromFrame(RdfStreamFrame frame) throws MalformedNanopubException {
-        final Vector<Statement> statements = new Vector<>();
-        final Vector<Pair<String, String>> namespaces = new Vector<>();
-        final ProtoDecoder<Statement> decoder = getDecoder(namespaces);
+        final ArrayList<Statement> statements = new ArrayList<>();
+        final ArrayList<Pair<String, String>> namespaces = new ArrayList<>();
 
-        parseStatements(frame, decoder, statements);
+        final var decoder = getDecoder(statements, namespaces);
+        frame.getRows().forEach(decoder::ingestRow);
+
         return new NanopubImpl(statements, namespaces);
     }
 
     static Stream<MaybeNanopub> readFromFrameStream(Stream<RdfStreamFrame> frameStream) {
-        final Vector<Statement> statements = new Vector<>();
-        final Vector<Pair<String, String>> namespaces = new Vector<>();
-        final ProtoDecoder<Statement> decoder = getDecoder(namespaces);
+        final ArrayList<Statement> statements = new ArrayList<>();
+        final ArrayList<Pair<String, String>> namespaces = new ArrayList<>();
+        final var decoder = getDecoder(statements, namespaces);
 
         return frameStream.map(frame -> {
             try {
                 statements.clear();
                 namespaces.clear();
-                parseStatements(frame, decoder, statements);
+
+                frame.getRows().forEach(decoder::ingestRow);
                 return new MaybeNanopub(
                         new NanopubImpl(statements, namespaces),
                         // Extract the counter metadata from the frame
-                        JellyMetadataUtil.tryGetCounterFromMetadata(frame.metadata())
+                        JellyMetadataUtil.tryGetCounterFromMetadata(frame.getMetadata())
                 );
             } catch (MalformedNanopubException e) {
                 return new MaybeNanopub(e);
@@ -118,24 +120,23 @@ public class JellyUtils {
         });
     }
 
-    private static ProtoDecoder<Statement> getDecoder(Vector<Pair<String, String>> namespaces) {
-        return Rdf4jConverterFactory$.MODULE$.quadsDecoder(
-                defaultSupportedOptions,
-                ((String prefix, Value node) -> {
-                    namespaces.add(Pair.of(prefix, node.stringValue()));
-                    return BoxedUnit.UNIT;
-                })
-        );
-    }
-
-    private static void parseStatements(
-            RdfStreamFrame frame, ProtoDecoder<Statement> decoder, Vector<Statement> statements
+    private static ProtoDecoder<Value, Rdf4jDatatype> getDecoder(
+        ArrayList<Statement> statements,
+        ArrayList<Pair<String, String>> namespaces
     ) {
-        CollectionConverters.SeqHasAsJava(frame.rows()).asJava().forEach(row -> {
-            Statement maybeSt = (Statement) decoder.ingestRowFlat(row);
-            if (maybeSt != null) {
-                statements.add(maybeSt);
+        final var quadMaker = Rdf4jConverterFactory.getInstance().decoderConverter();
+        final var handler = new RdfHandler.QuadHandler<Value>() {
+            @Override
+            public void handleNamespace(String prefix, Value namespace) {
+                namespaces.add(Pair.of(prefix, namespace.stringValue()));
             }
-        });
+
+            @Override
+            public void handleQuad(Value subject, Value predicate, Value object, Value graph) {
+                statements.add(quadMaker.makeQuad(subject, predicate, object, graph));
+            }
+        };
+
+        return Rdf4jConverterFactory.getInstance().quadsDecoder(handler, JellyOptions.DEFAULT_SUPPORTED_OPTIONS);
     }
 }
