@@ -83,6 +83,16 @@ The library features can then be accessed by calling `scripts/run.sh` (with the
 same commands as for the `np` script above, but using the locally compiled code
 and not the jar file).
 
+## Test Coverage
+Create the file target/jacoco.exec which includes the test coverage information in a binary format.
+```bash
+mvn clean verify
+```
+To create a html report out of jacoco.exec (target/site/jacoco/index.html) use:
+```bash
+mvn jacoco:report
+```
+
 
 ## Publication
 
