@@ -30,7 +30,7 @@ public class FdoNanopubTest {
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
-                FdoUtils.createIri(fdoProfile), fdoLabel);
+                fdoProfile, fdoLabel);
 
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
@@ -46,7 +46,7 @@ public class FdoNanopubTest {
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "abc-table-fdo";
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(fdoSuffix,
-                FdoUtils.createIri(fdoProfile), fdoLabel);
+                fdoProfile, fdoLabel);
 
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
@@ -62,14 +62,14 @@ public class FdoNanopubTest {
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
-                FdoUtils.createIri(fdoProfile),"NumberFdo1" );
+                fdoProfile,"NumberFdo1" );
 
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
 
         FdoNanopub fdoNanopub = new FdoNanopub(np);
-        Assert.assertEquals(FdoUtils.toIri(fdoProfile), fdoNanopub.getProfile());
+        Assert.assertEquals(fdoProfile, fdoNanopub.getProfile());
         Assert.assertEquals(fdoLabel, fdoNanopub.getLabel());
     }
 

@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
+import static org.nanopub.fdo.FdoUtils.*;
 
 // TODO class that provides the Op.Validate operations.
 //      See https://fdo-connect.gitlab.io/ap1/architecture-documentation/main/operation-specification/
@@ -42,7 +43,7 @@ public class ValidateFdo {
 	// TODO Just a boolean as return value. Later probably an object that also includes errors/warnings.
 	public static boolean isValid(FdoMetadata fdoMetadata) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 
-		String profileId = FdoUtils.extractHandle(fdoMetadata.getProfile());
+		String profileId = fdoMetadata.getProfile();
 		String schemaUrl = RetrieveFdo.retrieveMetadataFromHandle(profileId).getSchemaUrl();
 
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();
@@ -74,7 +75,11 @@ public class ValidateFdo {
 			i++;
 			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX+i), SHACL_MAX_COUNT, vf.createLiteral(1)));
 			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX+i), SHACL_MIN_COUNT, vf.createLiteral(1)));
-			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX+i), SHACL_PATH, vf.createIRI(FDO_TYPE_PREFIX + s)));
+			if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
+				shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX + i), SHACL_PATH, PROFILE_IRI));
+			} else {
+				shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX + i), SHACL_PATH, vf.createIRI(FDO_TYPE_PREFIX + s)));
+			}
 			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX), SHACL_PROPERTY, vf.createIRI(SUBJ_PREFIX+i)));
 		}
 		shaclShape.add(vf.createStatement(FdoUtils.createIri(SUBJ_PREFIX), SHACL_TARGET, TEMP_TYPE));

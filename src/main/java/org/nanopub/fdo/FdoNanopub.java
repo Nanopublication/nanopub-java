@@ -1,11 +1,11 @@
 package org.nanopub.fdo;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
 
-import static org.nanopub.fdo.FdoUtils.*;
+import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
+import static org.nanopub.fdo.FdoUtils.PROFILE_IRI;
 
 /**
  * Wrapper for nanopubs which allows to extract specific FDO fields.
@@ -15,10 +15,13 @@ public class FdoNanopub {
     private final Nanopub nanopub;
 
     /** the profile is mandatory */
-    private IRI profile;
+    private String profile;
 
     /** the label is optional */
     private String label;
+
+    /** the data-ref is optional */
+    private String dataref;
 
     /**
      * @throws IllegalArgumentException if the nanopub does not contain a FDO profile
@@ -26,11 +29,9 @@ public class FdoNanopub {
     public FdoNanopub(Nanopub nanopub) {
         this.nanopub = nanopub;
         for (Statement st: nanopub.getAssertion()) {
-            if (st.getPredicate().equals(RDF_FDO_PROFILE_MAIN) || st.getPredicate().equals(RDF_FDO_PROFILE_1) || st.getPredicate().equals(RDF_FDO_PROFILE_2)) {
-                if (st.getObject() instanceof IRI) {
-                    this.profile = (IRI) st.getObject();
-                    break;
-                }
+            if (st.getPredicate().equals(PROFILE_IRI)) {
+                this.profile = st.getObject().stringValue();
+                break;
             }
         }
         if (profile == null) {
@@ -39,7 +40,9 @@ public class FdoNanopub {
         for (Statement st: nanopub.getAssertion()) {
             if (st.getPredicate().equals(RDFS.LABEL)) {
                 this.label = st.getObject().stringValue();
-                break;
+            }
+            if (st.getPredicate().equals(DATA_REF_IRI)) {
+                this.dataref = st.getObject().stringValue();
             }
         }
     }
@@ -47,7 +50,7 @@ public class FdoNanopub {
     /**
      * @return the profile IRI
      */
-    public IRI getProfile() {
+    public String getProfile() {
         return profile;
     }
 

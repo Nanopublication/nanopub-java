@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Random;
 
+import static org.nanopub.fdo.FdoUtils.*;
+
 public class FdoNanopubCreator {
 
     public static final String FDO_TYPE_PREFIX = "https://w3id.org/kpxl/handle/terms/";
@@ -26,26 +28,26 @@ public class FdoNanopubCreator {
 
     private static final Random random = new Random();
 
-    public static NanopubCreator createWithFdoIri(IRI fdoIri, IRI profileIri, String label) {
+    public static NanopubCreator createWithFdoIri(IRI fdoIri, String profile, String label) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-        return prepareNanopubCreator(profileIri, npIri, fdoIri, label);
+        return prepareNanopubCreator(profile, npIri, fdoIri, label);
     }
 
-    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, IRI profileIri, String label) {
+    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, String profile, String label) {
         String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
 
-        return prepareNanopubCreator(profileIri, npIri, fdoIri, label);
+        return prepareNanopubCreator(profile, npIri, fdoIri, label);
     }
 
-    private static NanopubCreator prepareNanopubCreator(IRI profileIri, IRI npIri, IRI fdoIri, String label) {
+    private static NanopubCreator prepareNanopubCreator(String profile, IRI npIri, IRI fdoIri, String label) {
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addAssertionStatement(fdoIri, FdoUtils.RDF_FDO_PROFILE_MAIN, profileIri);
+        creator.addAssertionStatement(fdoIri, FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
         if (label != null) {
             creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
         }
@@ -84,14 +86,21 @@ public class FdoNanopubCreator {
             if (v.type.equals("name")) {
                 label = String.valueOf(v.data.value);
             }
-            if (v.type.equals("FdoProfile") || v.type.equals("21.T11966/FdoProfile") || v.type.equals("0.FDO/Profile")) {
+            if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2)) {
+                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
                 profile = String.valueOf(v.data.value);
             }
         }
-        NanopubCreator creator = createWithFdoIri(fdoIri, FdoUtils.createIri(profile), label);
+        NanopubCreator creator = createWithFdoIri(fdoIri, profile, label);
 
         for (Value v: response.values) {
-            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("FdoProfile") && !v.type.equals("id")) {
+            if (v.type.equals(DATA_REF_HANDLE)) {
+                creator.addAssertionStatement(fdoIri, DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
+                continue;
+            }
+            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
+                    !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
+                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
                 creator.addAssertionStatement(fdoIri, vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(String.valueOf(v.data.value)));
             }
         }

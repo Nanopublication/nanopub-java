@@ -16,8 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
-import static org.nanopub.fdo.FdoUtils.RDF_FDO_PROFILE_1;
-import static org.nanopub.fdo.FdoUtils.RDF_FDO_PROFILE_2;
 
 /**
  * This class stores a changeable metadata record of an FDO. It can come from an existing Handle-based FDO,
@@ -47,9 +45,7 @@ public class FdoMetadata implements Serializable {
 	public FdoMetadata(Set<Statement> statements) {
 		for (Statement st: statements) {
 			tuples.put(st.getPredicate(), st.getObject());
-			if (st.getPredicate().equals(FdoUtils.RDF_FDO_PROFILE_MAIN) ||
-					st.getPredicate().equals(RDF_FDO_PROFILE_1) ||
-					st.getPredicate().equals(RDF_FDO_PROFILE_2)) { // a profile must be there
+			if (st.getPredicate().equals(FdoUtils.PROFILE_IRI)) { // a profile must be there
 				id = FdoUtils.extractHandle(st.getSubject());
 			}
 		}
@@ -63,18 +59,9 @@ public class FdoMetadata implements Serializable {
 		return statements;
 	}
 
-	public IRI getProfile() {
-		Value profile = tuples.get(FdoUtils.RDF_FDO_PROFILE_MAIN);
-		if (profile == null) {
-			profile = tuples.get(RDF_FDO_PROFILE_1);
-		}
-		if (profile == null) {
-			profile = tuples.get(RDF_FDO_PROFILE_2);
-		}
-		if (profile != null) {
-			return vf.createIRI(profile.stringValue());
-		}
-		return null;
+	public String getProfile() {
+		String profile = tuples.get(FdoUtils.PROFILE_IRI).stringValue();
+		return profile;
 	}
 
 	public String getLabel() {

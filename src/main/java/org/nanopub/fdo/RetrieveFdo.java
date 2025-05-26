@@ -38,13 +38,16 @@ public class RetrieveFdo {
 		return null;
 	}
 
-	public static InputStream retrieveContentFromId(String iriOrHandle) {
-		// TODO To be implemented later.
-		return null;
+	public static InputStream retrieveContentFromId(String iriOrHandle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+		if (FdoUtils.looksLikeHandle(iriOrHandle)) {
+			return retrieveContentFromHandle(iriOrHandle);
+		}
+		throw new RuntimeException("Retrieving from nanopub network is not yet implemented.");
 	}
 
-	public static InputStream retrieveContentFromHandle(String handle) {
-		// TODO To be implemented later.
+	public static InputStream retrieveContentFromHandle(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+		FdoNanopub fdo = new FdoNanopub(FdoNanopubCreator.createFromHandleSystem(handle));
+		// TODO
 		return null;
 	}
 
