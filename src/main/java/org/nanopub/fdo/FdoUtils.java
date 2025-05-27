@@ -29,14 +29,14 @@ public class FdoUtils {
 
     /**
      * Remove the prefix "https://hdl.handle.net/" from the IRI and returns the handle as string.
-     * returns null if the prefix is not there.
+     * returns the iri as string otherwise.
      */
     public static String extractHandle(Resource iri) {
         String iriString = iri.toString();
         if (iriString.startsWith(FDO_URI_PREFIX)) {
             return iriString.substring(FDO_URI_PREFIX.length());
         }
-        return null;
+        return iriString;
     }
 
     /**

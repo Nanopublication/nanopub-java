@@ -89,6 +89,25 @@ public class FdoNanopubTest {
     }
 
     @Test
+    void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException {
+        String fdoSuffix = "example-fdo-01";
+        String profile = "https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile";
+        String label = "ExampleFdo01";
+        // intermediate creator to get FdoMetadata Object
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(fdoSuffix, profile, label);
+        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000")); // required to finalize Nanopub
+        FdoMetadata fdoMetadata = new FdoMetadata(creator.finalizeNanopub());
+        fdoMetadata.setDataRef("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
+        // real creator
+        NanopubCreator creator2 = FdoNanopubCreator.createWithMetadata(fdoMetadata);
+        creator2.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        Nanopub np = creator2.finalizeNanopub(true);
+
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        NanopubUtils.propagateToHandler(np, w);
+    }
+
+    @Test
     void testLooksLikeHandle () {
         Assert.assertTrue(FdoUtils.looksLikeHandle("21.T11967/39b0ec87d17a4856c5f7"));
         Assert.assertTrue(FdoUtils.looksLikeHandle("21.T11966/82045bd97a0acce88378"));
