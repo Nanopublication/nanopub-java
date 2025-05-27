@@ -30,19 +30,27 @@ public class FdoNanopubCreator {
 
     public static NanopubCreator createWithFdoIri(IRI fdoIri, String profile, String label) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-        return prepareNanopubCreator(profile, npIri, fdoIri, label);
+        return prepareNanopubCreator(profile, npIri, fdoIri, label, null);
     }
 
-    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, String profile, String label) {
+    /**
+     * Builds a NanopubCreator with the given values.
+     * @param fdoSuffix
+     * @param profile
+     * @param label may be null
+     * @param dataRef may be null
+     * @return
+     */
+    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, String profile, String label, String dataRef) {
         String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
 
-        return prepareNanopubCreator(profile, npIri, fdoIri, label);
+        return prepareNanopubCreator(profile, npIri, fdoIri, label, dataRef);
     }
 
-    private static NanopubCreator prepareNanopubCreator(String profile, IRI npIri, IRI fdoIri, String label) {
+    private static NanopubCreator prepareNanopubCreator(String profile, IRI npIri, IRI fdoIri, String label, String dataRef) {
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
@@ -50,6 +58,9 @@ public class FdoNanopubCreator {
         creator.addAssertionStatement(fdoIri, FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
         if (label != null) {
             creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
+        }
+        if (dataRef != null) {
+            creator.addAssertionStatement(fdoIri, DATA_REF_IRI, vf.createLiteral(dataRef));
         }
         creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
         return creator;
