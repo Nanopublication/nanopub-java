@@ -11,14 +11,8 @@ guidelines](http://nanopub.net/guidelines/working_draft/).
 ## Usage as Java Library
 
 The easiest way to use this library in your project is to let Maven download it
-from The Central Repository. Just include the following lines in your `pom.xml`
-file:
-
-    <dependency>
-      <groupId>org.nanopub</groupId>
-      <artifactId>nanopub</artifactId>
-      <version>1.76</version>
-    </dependency>
+from The Central Repository, with an entry in your pom.xml file as shown
+[here](https://central.sonatype.com/artifact/org.nanopub/nanopub).
 
 Alternatively, you might want to use one of the [pre-built
 jar files](https://github.com/Nanopublication/nanopub-java/releases).
