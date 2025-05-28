@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -391,6 +392,13 @@ public class NanopubUtils {
 					.setConnectionManager(connManager).build();
 		}
 		return httpClient;
+	}
+
+
+	private static Random random = new Random();
+
+	public static IRI createTempNanopubIri() {
+		return vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
 	}
 
 }

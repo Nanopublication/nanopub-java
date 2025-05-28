@@ -1,7 +1,11 @@
 package org.nanopub.op;
 
-import com.beust.jcommander.ParameterException;
-import net.trustyuri.TrustyUriException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.GZIPOutputStream;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -9,14 +13,15 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.NanopubUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Random;
-import java.util.zip.GZIPOutputStream;
+import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriException;
 
 public class Create extends CliRunner {
 
@@ -40,7 +45,6 @@ public class Create extends CliRunner {
 
 	private RDFFormat rdfOutFormat;
 	private OutputStream outputStream = System.out;
-	private Random random = new Random();
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,
 			MalformedNanopubException, TrustyUriException {
@@ -59,9 +63,8 @@ public class Create extends CliRunner {
 			}
 		}
 
-		String npUri = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
-		IRI nanopubIri = vf.createIRI(npUri);
-		IRI creatorIri = vf.createIRI(npUri + "creator");
+		IRI nanopubIri = NanopubUtils.createTempNanopubIri();
+		IRI creatorIri = vf.createIRI(nanopubIri.stringValue() + "creator");
 		NanopubCreator npCreator = new NanopubCreator(nanopubIri);
 		npCreator.addAssertionStatement(npCreator.getAssertionUri(), RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
 		npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);

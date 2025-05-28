@@ -23,6 +23,27 @@ file:
 Alternatively, you might want to use one of the [pre-built
 jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
+## Quickstart Java Instructions
+
+In a nutshell, this is how nanopublications can be created and published
+programmatically:
+ 
+    System.err.println("# Creating nanopub...");
+    NanopubCreator npCreator = new NanopubCreator(true);
+    final IRI anne = vf.createIRI("https://example.com/anne");
+    npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+    npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
+    npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+    Nanopub np = npCreator.finalizeNanopub(true);
+    System.err.println("# Nanopub before signing:");
+    NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+    Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+    System.err.println("# Final nanopub after signing:");
+    NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+    System.err.println("# Publishing to test server...");
+    PublishNanopub.publishToTestServer(signedNp);
+    //System.err.println("# Publishing to real server...");
+    //PublishNanopub.publish(signedNp);
 
 ## Usage on Unix Command-Line
 

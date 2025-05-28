@@ -47,6 +47,13 @@ public class NanopubCreator {
 		init();
 	}
 
+	public NanopubCreator(boolean initWithTempNanopubIris) {
+		this();
+		if (initWithTempNanopubIris) {
+			setNanopubUri(NanopubUtils.createTempNanopubIri());
+		}
+	}
+
 	public NanopubCreator(IRI nanopubUri) {
 		this();
 		setNanopubUri(nanopubUri);

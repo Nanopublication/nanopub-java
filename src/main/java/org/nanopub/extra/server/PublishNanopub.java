@@ -50,6 +50,17 @@ public class PublishNanopub extends CliRunner {
 		return new PublishNanopub().publishNanopub(nanopub);
 	}
 
+	public static String publish(Nanopub nanopub, String serverUrl) throws IOException {
+		return new PublishNanopub().publishNanopub(nanopub, serverUrl);
+	}
+
+	// TODO Make this dynamic/configureable:
+	public static final String TEST_SERVER_URL = "https://test.registry.knowledgepixels.com/";
+
+	public static String publishToTestServer(Nanopub nanopub) throws IOException {
+		return new PublishNanopub().publishNanopub(nanopub, TEST_SERVER_URL);
+	}
+
 	private ServerIterator serverIterator = null;
 	private RegistryInfo registryInfo = null;
 	private Map<String,Integer> usedServers = new HashMap<>();

@@ -1,20 +1,25 @@
 package org.nanopub;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Set;
+
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.PublishNanopub;
 
 public class NanopubUtilsTest {
 
@@ -172,5 +177,28 @@ public class NanopubUtilsTest {
         client = NanopubUtils.getHttpClient();
         assertThat(client).isNotNull();
     }
+ 
+// TODO: Using this as quickstart code in the README. Should probably be made executable somewhere, but not sure where...
+//    @Test
+//    void demoNanopubCreationExample() throws Exception {
+//    	System.err.println("==========");
+//    	System.err.println("# Creating nanopub...");
+//    	NanopubCreator npCreator = new NanopubCreator(true);
+//    	final IRI anne = vf.createIRI("https://example.com/anne");
+//    	npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+//    	npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
+//    	npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+//    	Nanopub np = npCreator.finalizeNanopub(true);
+//    	System.err.println("# Nanopub before signing:");
+//    	NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+//    	Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+//    	System.err.println("# Final nanopub after signing:");
+//    	NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+//    	System.err.println("# Publishing to test server...");
+//    	PublishNanopub.publishToTestServer(signedNp);
+//    	//System.err.println("# Publishing to real server...");
+//    	//PublishNanopub.publish(signedNp);
+//    	System.err.println("==========");
+//    }
 
 }
