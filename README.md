@@ -17,7 +17,7 @@ file:
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub</artifactId>
-      <version>1.69</version>
+      <version>1.76</version>
     </dependency>
 
 Alternatively, you might want to use one of the [pre-built
@@ -39,13 +39,17 @@ programmatically:
     Nanopub np = npCreator.finalizeNanopub(true);
     System.err.println("# Nanopub before signing:");
     NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+
+    System.err.println("# Signing nanopub...");
     Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
     System.err.println("# Final nanopub after signing:");
     NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
     System.err.println("# Publishing to test server...");
     PublishNanopub.publishToTestServer(signedNp);
     //System.err.println("# Publishing to real server...");
     //PublishNanopub.publish(signedNp);
+    System.err.println("# Published");
 ```
 
 ## Usage on Unix Command-Line
