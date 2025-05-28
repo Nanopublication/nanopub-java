@@ -27,9 +27,11 @@ jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
 In a nutshell, this is how nanopublications can be created and published
 programmatically:
- 
+
+    ```java
     System.err.println("# Creating nanopub...");
     NanopubCreator npCreator = new NanopubCreator(true);
+    final ValueFactory vf = SimpleValueFactory.getInstance();
     final IRI anne = vf.createIRI("https://example.com/anne");
     npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
     npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
@@ -44,6 +46,7 @@ programmatically:
     PublishNanopub.publishToTestServer(signedNp);
     //System.err.println("# Publishing to real server...");
     //PublishNanopub.publish(signedNp);
+    ```
 
 ## Usage on Unix Command-Line
 
