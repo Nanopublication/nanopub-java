@@ -15,8 +15,10 @@ import java.security.SecureRandom;
 
 public class MakeKeys extends CliRunner {
 
+	public static final String DEFAULT_KEYFILE_PREFIX = "~/.nanopub/id";
+
 	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
-	private String pathAndFilenamePrefix = "~/.nanopub/id";
+	private String pathAndFilenamePrefix = DEFAULT_KEYFILE_PREFIX;
 
 	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA, default is RSA")
 	private SignatureAlgorithm algorithm = SignatureAlgorithm.RSA;

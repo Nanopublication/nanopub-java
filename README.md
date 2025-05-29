@@ -19,8 +19,14 @@ jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
 ## Quickstart Java Instructions
 
-In a nutshell, this is how nanopublications can be created and published
-programmatically:
+In a nutshell, to create and publish nanopublications, you need to first make sure you have a
+local keypair. To create such a keypair, run just once:
+
+```java
+    MakeKeys.make("~/.nanopub/id", SignatureAlgorithm.RSA);
+```
+
+And then nanopublications can be created and published programmatically like this:
 
 ```java
     System.err.println("# Creating nanopub...");
