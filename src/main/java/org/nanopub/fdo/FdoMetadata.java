@@ -90,6 +90,10 @@ public class FdoMetadata implements Serializable {
 		tuples.put(FdoUtils.DATA_REF_IRI, vf.createIRI(dataRef));
 	}
 
+	public Value getDataRef() {
+		return tuples.get(FdoUtils.DATA_REF_IRI);
+	}
+
 	public FdoNanopub createFdoNanopub() throws MalformedNanopubException {
 		NanopubCreator creator = FdoNanopubCreator.createWithMetadata(this);
 		Nanopub np = creator.finalizeNanopub(true);

@@ -40,6 +40,14 @@ public class FdoUtils {
     }
 
     /**
+     * Test if the iri starts with "https://hdl.handle.net/" followed by a handle.
+     */
+    public static boolean isHandleIri(Resource iri) {
+        String potentialHandle = extractHandle(iri);
+        return looksLikeHandle(potentialHandle);
+    }
+
+    /**
      * We here assume that a handle starts with 2 digits (minimal prefix),
      * no whitespaces, and contains at least one "/".
      */
