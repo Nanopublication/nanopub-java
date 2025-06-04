@@ -52,6 +52,8 @@ And then nanopublications can be created and published programmatically like thi
     System.err.println("# Published");
 ```
 
+For the complete code checkout ``UsageExamples.java``. 
+
 ## Usage on Unix Command-Line
 
 To use this library on the command line, just download the [np

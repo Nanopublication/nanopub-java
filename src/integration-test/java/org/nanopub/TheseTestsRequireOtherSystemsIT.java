@@ -57,7 +57,7 @@ public class TheseTestsRequireOtherSystemsIT {
         NanopubUtils.propagateToHandler(np, w);
     }
 
-    void exampleForFublishingFdoNanopub() throws Exception {
+    void exampleForPublishingFdoNanopub() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7"; // TODO enter the handle id
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
 

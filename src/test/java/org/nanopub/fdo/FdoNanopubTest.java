@@ -34,7 +34,7 @@ public class FdoNanopubTest {
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Test
-    void exampleCreateWithFdoIri() throws MalformedNanopubException {
+    public void exampleCreateWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
@@ -50,7 +50,7 @@ public class FdoNanopubTest {
     }
 
     @Test
-    void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
+   public void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
         String fdoProfile = "21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "abc-table-fdo";
@@ -98,7 +98,7 @@ public class FdoNanopubTest {
     }
 
     @Test
-    void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
+    public void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
         String fdoSuffix = "example-fdo-01";
         String profile = "https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile";
         String label = "ExampleFdo01";
@@ -113,10 +113,14 @@ public class FdoNanopubTest {
         // enter your key
         KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
+        // signing
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
 
+        // output to System.out
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-        NanopubUtils.propagateToHandler(np, w);
+
+        System.out.println("\nSigned Nanopub:");
+        NanopubUtils.propagateToHandler(signedNp, w);
     }
 
     @Test
