@@ -66,8 +66,8 @@ public class FdoNanopubCreator {
         return creator;
     }
 
-    public static NanopubCreator createWithMetadata(FdoMetadata fdoMetadata) {
-        IRI fdoIri = vf.createIRI(fdoMetadata.getId());
+    public static NanopubCreator createWithFdoRecord(FdoRecord fdoRecord) {
+        IRI fdoIri = vf.createIRI(fdoRecord.getId());
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
 
         NanopubCreator creator = new NanopubCreator(npIri);
@@ -75,7 +75,7 @@ public class FdoNanopubCreator {
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
         creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
-        creator.addAssertionStatements(fdoMetadata.getStatements().toArray(new Statement[0]));
+        creator.addAssertionStatements(fdoRecord.getStatements().toArray(new Statement[0]));
 
         return creator;
     }

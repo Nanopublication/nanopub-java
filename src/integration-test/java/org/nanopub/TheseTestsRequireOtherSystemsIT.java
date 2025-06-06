@@ -14,8 +14,8 @@ import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
-import org.nanopub.fdo.FdoMetadata;
 import org.nanopub.fdo.FdoNanopubCreator;
+import org.nanopub.fdo.FdoRecord;
 import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.fdo.ValidateFdo;
 
@@ -71,29 +71,29 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void retrieveMetadataFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+    void retrieveRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
-        assertEquals(id, metadata.getId());
+        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
+        assertEquals(id, record.getId());
 
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
-        assertEquals(metadata.getStatements().size(), np.getAssertion().size());
+        assertEquals(record.getStatements().size(), np.getAssertion().size());
         // it would be great to compare all statements here
     }
 
     @Test
     void validateValidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         String id = "21.T11966/82045bd97a0acce88378";
-        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
+        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
-        Assert.assertTrue(ValidateFdo.isValid(metadata));
+        Assert.assertTrue(ValidateFdo.isValid(record));
     }
 
     @Test
     void validateInvalidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        FdoMetadata metadata = RetrieveFdo.retrieveMetadataFromId(id);
+        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
-        Assert.assertFalse(ValidateFdo.isValid(metadata));
+        Assert.assertFalse(ValidateFdo.isValid(record));
     }
 }

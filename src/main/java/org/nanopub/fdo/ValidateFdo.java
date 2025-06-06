@@ -41,25 +41,25 @@ public class ValidateFdo {
 	private ValidateFdo() {}  // no instances allowed
 
 	// TODO Just a boolean as return value. Later probably an object that also includes errors/warnings.
-	public static boolean isValid(FdoMetadata fdoMetadata) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	public static boolean isValid(FdoRecord fdoRecord) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 
-		String profileId = fdoMetadata.getProfile();
-		String schemaUrl = RetrieveFdo.retrieveMetadataFromHandle(profileId).getSchemaUrl();
+		String profileId = fdoRecord.getProfile();
+		String schemaUrl = RetrieveFdo.retrieveRecordFromHandle(profileId).getSchemaUrl();
 
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();
 		HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
 
 		Set<Statement> shaclShape = createShaclShapeFromJson(httpResponse);
-		Set<Statement> data = addTypeStatement(fdoMetadata);
+		Set<Statement> data = addTypeStatement(fdoRecord);
 
-		System.out.println("Validating FdoMetadata " + fdoMetadata.getId());
+		System.out.println("Validating FdoRecord " + fdoRecord.getId());
 		System.out.println("Against Schema " + schemaUrl);
 
 		return ShaclValidator.validateShacl(shaclShape, data);
 	}
 
-	private static Set<Statement> addTypeStatement(FdoMetadata fdoMetadata) {
-		Set<Statement> data = fdoMetadata.getStatements();
+	private static Set<Statement> addTypeStatement(FdoRecord fdoRecord) {
+		Set<Statement> data = fdoRecord.getStatements();
 		Statement first = data.toArray(new Statement[0])[0];
 		data.add(vf.createStatement(first.getSubject(), RDF.TYPE, TEMP_TYPE));
 		return data;

@@ -62,12 +62,12 @@ public class FdoNanopub {
     }
 
     /**
-     * Return FdoMetadata object, extracting the triples from the assertion.
-     * This can be used as a first step to update an FDO, as the FdoMetadata object
+     * Return FdoRecord object, extracting the triples from the assertion.
+     * This can be used as a first step to update an FDO, as the FdoRecord object
      * is changeable and can later be used to create a new FdoNanopub object.
      */
-    public FdoMetadata getFdoMetadata() {
-    	return new FdoMetadata(this.nanopub);
+    public FdoRecord getFdoRecord() {
+    	return new FdoRecord(this.nanopub);
     }
 
 }

@@ -26,11 +26,11 @@ public class RetrieveFdo {
 	/**
 	 * Retrieve the NP from the handle system, if iriOrHandle looks like a handle.
 	 */
-	 public static FdoMetadata retrieveMetadataFromId(String iriOrHandle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	 public static FdoRecord retrieveRecordFromId(String iriOrHandle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 		if (FdoUtils.looksLikeHandle(iriOrHandle)) {
-			return retrieveMetadataFromHandle(iriOrHandle);
+			return retrieveRecordFromHandle(iriOrHandle);
 		} else if (FdoUtils.isHandleIri(vf.createIRI(iriOrHandle))) {
-			return retrieveMetadataFromHandle(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
+			return retrieveRecordFromHandle(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
 		}
 		throw new RuntimeException("Retrieving from nanopub network is not yet implemented.");
 	}
@@ -38,14 +38,14 @@ public class RetrieveFdo {
 	/**
 	 * Retrieve the data from the handle system.
 	 */
-	public static FdoMetadata retrieveMetadataFromHandle(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	public static FdoRecord retrieveRecordFromHandle(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 		Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
-		return new FdoMetadata(np);
+		return new FdoRecord(np);
 	}
 
-	public static FdoMetadata retrieveMetadataFromIri(IRI iri) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	public static FdoRecord retrieveRecordFromIri(IRI iri) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 		if (FdoUtils.isHandleIri(iri)) {
-			return retrieveMetadataFromHandle(FdoUtils.extractHandle(iri));
+			return retrieveRecordFromHandle(FdoUtils.extractHandle(iri));
 		}
 		throw new RuntimeException("Retrieving from nanopub network is not yet implemented.");
 	}
@@ -53,7 +53,7 @@ public class RetrieveFdo {
 	public static InputStream retrieveContentFromHandle(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 		FdoNanopub fdo = new FdoNanopub(FdoNanopubCreator.createFromHandleSystem(handle));
 
-		Value contentUrl = fdo.getFdoMetadata().getDataRef();
+		Value contentUrl = fdo.getFdoRecord().getDataRef();
 		if (contentUrl == null) {
 			throw new RuntimeException("FDO has no file / DataRef.");
 		}

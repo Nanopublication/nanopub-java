@@ -18,12 +18,12 @@ import java.util.Set;
 import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
 
 /**
- * This class stores a changeable metadata record of an FDO. It can come from an existing Handle-based FDO,
- * a nanopub-based one, or of an FDO that is still being created. The metadata record may be viewed as a set of
+ * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
+ * a nanopub-based one, or of an FDO that is still being created. The record may be viewed as a set of
  * RDF Statements (corresponding to  the assertion graph of an FDO nanopub). Internally it's represented as a
  * Map of tuples <IRI, Value>
  */
-public class FdoMetadata implements Serializable {
+public class FdoRecord implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
@@ -31,10 +31,10 @@ public class FdoMetadata implements Serializable {
 	private String id = null;
 	private final HashMap<IRI, Value> tuples = new HashMap<>();
 
-	public FdoMetadata() {
+	public FdoRecord() {
 	}
 
-	public FdoMetadata(Nanopub np) {
+	public FdoRecord(Nanopub np) {
 		Statement anyAssertion = np.getAssertion().iterator().next();
 		this.id = FdoUtils.extractHandle(anyAssertion.getSubject());
 		for (Statement st: np.getAssertion()) {
@@ -42,7 +42,7 @@ public class FdoMetadata implements Serializable {
 		}
 	}
 
-	public FdoMetadata(Set<Statement> statements) {
+	public FdoRecord(Set<Statement> statements) {
 		for (Statement st: statements) {
 			tuples.put(st.getPredicate(), st.getObject());
 			if (st.getPredicate().equals(FdoUtils.PROFILE_IRI)) { // a profile must be there
@@ -95,7 +95,7 @@ public class FdoMetadata implements Serializable {
 	}
 
 	public FdoNanopub createFdoNanopub() throws MalformedNanopubException {
-		NanopubCreator creator = FdoNanopubCreator.createWithMetadata(this);
+		NanopubCreator creator = FdoNanopubCreator.createWithFdoRecord(this);
 		Nanopub np = creator.finalizeNanopub(true);
 		return new FdoNanopub(np);
 	}
