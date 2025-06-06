@@ -13,8 +13,10 @@ import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.fdo.FdoNanopubTest;
+import org.nanopub.fdo.RetrieveFdo;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -53,6 +55,12 @@ public class UsageExamples {
         //System.err.println("# Publishing to real server...");
         //PublishNanopub.publish(signedNp);
         System.err.println("# Published");
+    }
+
+    void retrieveContentFromNpNetwork() throws Exception {
+        String id = "https://w3id.org/np/RAsSeIyT03LnZt3QvtwUqIHSCJHWW1YeLkyu66Lg4FeBk/nanodash-readme";
+        InputStream in = RetrieveFdo.retrieveContentFromId(id);
+        in.transferTo(System.out);
     }
 
     void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {

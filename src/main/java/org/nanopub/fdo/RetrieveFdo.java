@@ -1,6 +1,5 @@
 package org.nanopub.fdo;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -27,7 +26,7 @@ import java.util.Map;
 //      See https://fdo-connect.gitlab.io/ap1/architecture-documentation/main/operation-specification/
 public class RetrieveFdo {
 
-	public final static String GET_FDO_QUERY_ID = "RAbmaOhAIkABVWo10zx6552K2g1KxFnnFReDLDAGapZ8g/get-fdo-by-id";
+	public final static String GET_FDO_QUERY_ID = "RAs0HI_KRAds4w_OOEMl-_ed0nZHFWdfePPXsDHf4kQkU/get-fdo-by-id";
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
 	private RetrieveFdo() {}  // no instances allowed
@@ -35,17 +34,21 @@ public class RetrieveFdo {
 	/**
 	 * Retrieve the NP/FdoRecord from the nanopub network or handle system, always check nanopub network first.
 	 */
-	 public static FdoRecord retrieveRecordFromId(String iriOrHandle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, FailedApiCallException {
-		 Nanopub np = retrieveFromNanopubNetwork(iriOrHandle);
-		 if (np != null) {
-			 return new FdoRecord(np);
+	 public static FdoRecord retrieveRecordFromId(String iriOrHandle) throws FdoNotFoundException {
+		 try {
+			 Nanopub np = retrieveFromNanopubNetwork(iriOrHandle);
+			 if (np != null) {
+				 return new FdoRecord(np);
+			 }
+			 if (FdoUtils.looksLikeHandle(iriOrHandle)) {
+				 return retrieveRecordFromHandleSystem(iriOrHandle);
+			 } else if (FdoUtils.isHandleIri(vf.createIRI(iriOrHandle))) {
+				 return retrieveRecordFromHandleSystem(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
+			 }
+		 } catch (Exception e) {
+			throw new FdoNotFoundException(e);
 		 }
-		 if (FdoUtils.looksLikeHandle(iriOrHandle)) {
-			 return retrieveRecordFromHandleSystem(iriOrHandle);
-		 } else if (FdoUtils.isHandleIri(vf.createIRI(iriOrHandle))) {
-			 return retrieveRecordFromHandleSystem(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
-		 }
-		 throw new RuntimeException("Record not found: " + iriOrHandle);
+		 throw new FdoNotFoundException("Could not find fdo: " + iriOrHandle);
 	}
 
 	/**
@@ -73,23 +76,19 @@ public class RetrieveFdo {
 		return new FdoRecord(np);
 	}
 
-	public static InputStream retrieveContentFromHandle(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
-		FdoNanopub fdo = new FdoNanopub(FdoNanopubCreator.createFromHandleSystem(handle));
+	/**
+	 * Retrieve the NP/FdoRecord Content (DataRef) from the nanopub network or handle system, always check nanopub network first.
+	 */
+	public static InputStream retrieveContentFromId(String iriOrHandle) throws URISyntaxException, IOException, InterruptedException, FdoNotFoundException {
+		FdoRecord fdo = retrieveRecordFromId(iriOrHandle);
 
-		Value contentUrl = fdo.getFdoRecord().getDataRef();
+		Value contentUrl = fdo.getDataRef();
 		if (contentUrl == null) {
-			throw new RuntimeException("FDO has no file / DataRef.");
+			throw new FdoNotFoundException("FDO has no file / DataRef.");
 		}
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(contentUrl.stringValue())).build();
 		HttpResponse<InputStream> httpResponse = HttpClient.newHttpClient().send(req, responseInfo -> HttpResponse.BodySubscribers.ofInputStream());
 		return httpResponse.body();
-	}
-
-	public static InputStream retrieveContentFromIri(IRI iri) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
-		if (FdoUtils.isHandleIri(iri)) {
-			return retrieveContentFromHandle(FdoUtils.extractHandle(iri));
-		}
-		throw new RuntimeException("Retrieving from nanopub network is not yet implemented.");
 	}
 
 }

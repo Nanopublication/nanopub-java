@@ -1,5 +1,6 @@
 package org.nanopub;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -22,6 +23,7 @@ import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.fdo.ValidateFdo;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -54,10 +56,9 @@ public class TheseTestsRequireOtherSystemsIT {
 
     @Test
     public void testQueryNanopubNetworkWithFdoHandle () throws Exception {
-        String queryId = "RAbmaOhAIkABVWo10zx6552K2g1KxFnnFReDLDAGapZ8g/get-fdo-by-id";
         Map<String, String> params = new HashMap<>();
         params.put("fdoid", "21.T11967/39b0ec87d17a4856c5f7");
-        ApiResponse apiResponse = QueryAccess.get(queryId, params);
+        ApiResponse apiResponse = QueryAccess.get(RetrieveFdo.GET_FDO_QUERY_ID, params);
         List<ApiResponseEntry> data = apiResponse.getData();
         String npref = data.get(0).get("np");
 
@@ -68,10 +69,9 @@ public class TheseTestsRequireOtherSystemsIT {
 
     @Test
     public void testQueryNanopubNetworkNpUriForFdo () throws FailedApiCallException {
-        String queryId = "RAbmaOhAIkABVWo10zx6552K2g1KxFnnFReDLDAGapZ8g/get-fdo-by-id";
         Map<String, String> params = new HashMap<>();
         params.put("fdoid", "https://w3id.org/np/RAsSeIyT03LnZt3QvtwUqIHSCJHWW1YeLkyu66Lg4FeBk/nanodash-readme");
-        ApiResponse apiResponse = QueryAccess.get(queryId, params);
+        ApiResponse apiResponse = QueryAccess.get(RetrieveFdo.GET_FDO_QUERY_ID, params);
         List<ApiResponseEntry> data = apiResponse.getData();
         String npref = data.get(0).get("np");
 
@@ -103,7 +103,17 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void retrieveRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
+    void testRetrieveContentFromNpNetwork() throws Exception {
+        String id = "https://w3id.org/np/RAsSeIyT03LnZt3QvtwUqIHSCJHWW1YeLkyu66Lg4FeBk/nanodash-readme";
+        InputStream in = RetrieveFdo.retrieveContentFromId(id);
+        byte[] buffer = new byte[256];
+        IOUtils.readFully(in, buffer);
+        String result = new String(buffer, Charset.forName("UTF-8"));
+        Assert.assertTrue(result.startsWith("Nanodash"));
+    }
+
+    @Test
+    void retrieveRecordFromHandleSystem() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
         assertEquals(id, record.getId());
@@ -114,7 +124,7 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void validateValidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
+    void validateValidFdo() throws Exception {
         String id = "21.T11966/82045bd97a0acce88378";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
@@ -122,7 +132,7 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void validateInvalidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
+    void validateInvalidFdo() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
