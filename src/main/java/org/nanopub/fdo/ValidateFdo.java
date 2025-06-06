@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
+import org.nanopub.extra.services.FailedApiCallException;
 import org.nanopub.fdo.rest.gson.ParsedSchemaResponse;
 
 import java.io.IOException;
@@ -41,10 +42,10 @@ public class ValidateFdo {
 	private ValidateFdo() {}  // no instances allowed
 
 	// TODO Just a boolean as return value. Later probably an object that also includes errors/warnings.
-	public static boolean isValid(FdoRecord fdoRecord) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	public static boolean isValid(FdoRecord fdoRecord) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, FailedApiCallException {
 
 		String profileId = fdoRecord.getProfile();
-		String schemaUrl = RetrieveFdo.retrieveRecordFromHandle(profileId).getSchemaUrl();
+		String schemaUrl = RetrieveFdo.retrieveRecordFromId(profileId).getSchemaUrl();
 
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();
 		HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());

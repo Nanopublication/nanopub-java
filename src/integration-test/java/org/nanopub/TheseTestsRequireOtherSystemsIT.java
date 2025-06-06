@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
+import org.nanopub.extra.services.FailedApiCallException;
 import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.fdo.FdoNanopubCreator;
 import org.nanopub.fdo.FdoRecord;
@@ -24,7 +26,9 @@ import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.System.out;
 import static org.junit.Assert.assertEquals;
@@ -46,6 +50,34 @@ public class TheseTestsRequireOtherSystemsIT {
             String result = entry.get("pred");
             assertNotNull(result);
         }
+    }
+
+    @Test
+    public void testQueryNanopubNetworkWithFdoHandle () throws Exception {
+        String queryId = "RAbmaOhAIkABVWo10zx6552K2g1KxFnnFReDLDAGapZ8g/get-fdo-by-id";
+        Map<String, String> params = new HashMap<>();
+        params.put("fdoid", "21.T11967/39b0ec87d17a4856c5f7");
+        ApiResponse apiResponse = QueryAccess.get(queryId, params);
+        List<ApiResponseEntry> data = apiResponse.getData();
+        String npref = data.get(0).get("np");
+
+        Nanopub np = GetNanopub.get(npref);
+        System.out.println("npref: " + npref);
+        assertEquals(npref, np.getUri().stringValue());
+    }
+
+    @Test
+    public void testQueryNanopubNetworkNpUriForFdo () throws FailedApiCallException {
+        String queryId = "RAbmaOhAIkABVWo10zx6552K2g1KxFnnFReDLDAGapZ8g/get-fdo-by-id";
+        Map<String, String> params = new HashMap<>();
+        params.put("fdoid", "https://w3id.org/np/RAsSeIyT03LnZt3QvtwUqIHSCJHWW1YeLkyu66Lg4FeBk/nanodash-readme");
+        ApiResponse apiResponse = QueryAccess.get(queryId, params);
+        List<ApiResponseEntry> data = apiResponse.getData();
+        String npref = data.get(0).get("np");
+
+        Nanopub np = GetNanopub.get(npref);
+        System.out.println("npref: " + npref);
+        assertEquals(npref, np.getUri().stringValue());
     }
 
     @Test
@@ -71,7 +103,7 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void retrieveRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+    void retrieveRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
         assertEquals(id, record.getId());
@@ -82,7 +114,7 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void validateValidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+    void validateValidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
         String id = "21.T11966/82045bd97a0acce88378";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
@@ -90,7 +122,7 @@ public class TheseTestsRequireOtherSystemsIT {
     }
 
     @Test
-    void validateInvalidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+    void validateInvalidFdo() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, FailedApiCallException {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
 
