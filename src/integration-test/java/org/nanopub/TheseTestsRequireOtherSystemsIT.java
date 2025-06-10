@@ -115,7 +115,7 @@ public class TheseTestsRequireOtherSystemsIT {
     @Test
     void retrieveRecordFromHandleSystem() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
+        FdoRecord record = RetrieveFdo.resolveId(id);
         assertEquals(id, record.getId());
 
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
@@ -126,7 +126,7 @@ public class TheseTestsRequireOtherSystemsIT {
     @Test
     void validateValidFdo() throws Exception {
         String id = "21.T11966/82045bd97a0acce88378";
-        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
+        FdoRecord record = RetrieveFdo.resolveId(id);
 
         Assert.assertTrue(ValidateFdo.isValid(record));
     }
@@ -134,7 +134,7 @@ public class TheseTestsRequireOtherSystemsIT {
     @Test
     void validateInvalidFdo() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        FdoRecord record = RetrieveFdo.retrieveRecordFromId(id);
+        FdoRecord record = RetrieveFdo.resolveId(id);
 
         Assert.assertFalse(ValidateFdo.isValid(record));
     }

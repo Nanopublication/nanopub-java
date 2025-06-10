@@ -34,16 +34,16 @@ public class RetrieveFdo {
 	/**
 	 * Retrieve the NP/FdoRecord from the nanopub network or handle system, always check nanopub network first.
 	 */
-	 public static FdoRecord retrieveRecordFromId(String iriOrHandle) throws FdoNotFoundException {
+	 public static FdoRecord resolveId(String iriOrHandle) throws FdoNotFoundException {
 		 try {
-			 Nanopub np = retrieveFromNanopubNetwork(iriOrHandle);
+			 Nanopub np = resolveInNanopubNetwork(iriOrHandle);
 			 if (np != null) {
 				 return new FdoRecord(np);
 			 }
 			 if (FdoUtils.looksLikeHandle(iriOrHandle)) {
-				 return retrieveRecordFromHandleSystem(iriOrHandle);
+				 return resolveInHandleSystem(iriOrHandle);
 			 } else if (FdoUtils.isHandleIri(vf.createIRI(iriOrHandle))) {
-				 return retrieveRecordFromHandleSystem(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
+				 return resolveInHandleSystem(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
 			 }
 		 } catch (Exception e) {
 			throw new FdoNotFoundException(e);
@@ -55,7 +55,7 @@ public class RetrieveFdo {
 	 * Retrieve the newest corresponding Nanopub from the Nanopub network.
 	 * @return null if not available
 	 */
-	public static Nanopub retrieveFromNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
+	public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
 		Map<String, String> params = new HashMap<>();
 		params.put("fdoid", iriOrHandle);
 		ApiResponse apiResponse = QueryAccess.get(GET_FDO_QUERY_ID, params);
@@ -71,7 +71,7 @@ public class RetrieveFdo {
 	/**
 	 * Retrieve the data from the handle system.
 	 */
-	public static FdoRecord retrieveRecordFromHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+	public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
 		Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
 		return new FdoRecord(np);
 	}
@@ -80,7 +80,7 @@ public class RetrieveFdo {
 	 * Retrieve the NP/FdoRecord Content (DataRef) from the nanopub network or handle system, always check nanopub network first.
 	 */
 	public static InputStream retrieveContentFromId(String iriOrHandle) throws URISyntaxException, IOException, InterruptedException, FdoNotFoundException {
-		FdoRecord fdo = retrieveRecordFromId(iriOrHandle);
+		FdoRecord fdo = resolveId(iriOrHandle);
 
 		Value contentUrl = fdo.getDataRef();
 		if (contentUrl == null) {

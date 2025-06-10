@@ -43,7 +43,7 @@ public class ValidateFdo {
 	public static boolean isValid(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
 
 		String profileId = fdoRecord.getProfile();
-		String schemaUrl = RetrieveFdo.retrieveRecordFromId(profileId).getSchemaUrl();
+		String schemaUrl = RetrieveFdo.resolveId(profileId).getSchemaUrl();
 
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();
 		HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
