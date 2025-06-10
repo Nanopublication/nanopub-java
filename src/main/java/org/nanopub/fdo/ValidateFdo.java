@@ -58,7 +58,7 @@ public class ValidateFdo {
 	}
 
 	private static Set<Statement> addTypeStatement(FdoRecord fdoRecord) {
-		Set<Statement> data = fdoRecord.getStatements();
+		Set<Statement> data = fdoRecord.buildStatements();
 		Statement first = data.toArray(new Statement[0])[0];
 		data.add(vf.createStatement(first.getSubject(), RDF.TYPE, TEMP_TYPE));
 		return data;

@@ -6,7 +6,6 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
@@ -28,60 +27,34 @@ public class FdoNanopubCreator {
 
     private static final Random random = new Random();
 
-    public static NanopubCreator createWithFdoIri(IRI fdoIri, String profile, String label) {
+    public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-        return prepareNanopubCreator(profile, npIri, fdoIri, label, null);
+        return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
-    /**
-     * Builds a NanopubCreator with the given values.
-     * @param fdoSuffix
-     * @param profile
-     * @param label may be null
-     * @param dataRef may be null
-     * @return
-     */
-    public static NanopubCreator createWithFdoSuffix(String fdoSuffix, String profile, String label, String dataRef) {
+    public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
         String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
 
-        return prepareNanopubCreator(profile, npIri, fdoIri, label, dataRef);
+        return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
-    private static NanopubCreator prepareNanopubCreator(String profile, IRI npIri, IRI fdoIri, String label, String dataRef) {
-        NanopubCreator creator = new NanopubCreator(npIri);
-        creator.addDefaultNamespaces();
-        creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
-        creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addAssertionStatement(fdoIri, FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
-        if (label != null) {
-            creator.addAssertionStatement(fdoIri, RDFS.LABEL, vf.createLiteral(label));
-        }
-        if (dataRef != null) {
-            creator.addAssertionStatement(fdoIri, DATA_REF_IRI, vf.createLiteral(dataRef));
-        }
-        creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
-        return creator;
-    }
-
-    public static NanopubCreator createWithFdoRecord(FdoRecord fdoRecord) {
-        IRI fdoIri = vf.createIRI(fdoRecord.getId());
-        IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
-
+    private static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
+        fdoRecord.setId(fdoIri);
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
         creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
-        creator.addAssertionStatements(fdoRecord.getStatements().toArray(new Statement[0]));
+        creator.addAssertionStatements(fdoRecord.buildStatements().toArray(new Statement[0]));
 
         return creator;
     }
 
     /**
-     * Experimental creation of Nanopub from handle system.
+     * Creation of Nanopub from handle system.
      */
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
         IRI fdoIri = FdoUtils.createIri(id);
@@ -104,11 +77,12 @@ public class FdoNanopubCreator {
                 }
             }
         }
-        NanopubCreator creator = createWithFdoIri(fdoIri, profile, label);
+
+        FdoRecord record = new FdoRecord(profile, label, null);
 
         for (Value v: response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
-                creator.addAssertionStatement(fdoIri, DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
+                record.addTuple(DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
                 continue;
             }
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
@@ -121,10 +95,11 @@ public class FdoNanopubCreator {
                 } else {
                     dataValueToImport = dataValue;
                 }
-                creator.addAssertionStatement(fdoIri, vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
+                record.addTuple(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
             }
         }
 
+        NanopubCreator creator = createWithFdoIri(record, fdoIri);
         creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+id));
         Nanopub np = creator.finalizeNanopub(true);
         return np;

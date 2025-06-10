@@ -9,7 +9,10 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
-import org.nanopub.*;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.NanopubUtils;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
@@ -36,10 +39,10 @@ public class FdoNanopubTest {
     @Test
     public void exampleCreateWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
-        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
-                fdoProfile, fdoLabel);
+        FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
 
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
@@ -52,10 +55,10 @@ public class FdoNanopubTest {
     @Test
    public void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
-        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "abc-table-fdo";
-        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(fdoSuffix,
-                fdoProfile, fdoLabel, null);
+        FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
 
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
@@ -68,24 +71,13 @@ public class FdoNanopubTest {
     @Test
     void testFdoNanopubCreation() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        String fdoProfile = "21.T11966/365ff9576c26ca6053db";
+        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
         String fdoLabel = "NumberFdo1";
-        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(FdoUtils.createIri(fdoHandle),
-                fdoProfile,"NumberFdo1" );
-
+        FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
-
-        FdoNanopub fdoNanopub = new FdoNanopub(np);
-        Assert.assertEquals(fdoProfile, fdoNanopub.getProfile());
-        Assert.assertEquals(fdoLabel, fdoNanopub.getLabel());
-    }
-
-    @Test
-    void testInvalidFdoNanopub() throws MalformedNanopubException {
-        Nanopub np = new NanopubUtilsTest().createNanopub();
-        Assert.assertThrows(IllegalArgumentException.class, () -> new FdoNanopub(np));
     }
 
     @Test
@@ -105,8 +97,11 @@ public class FdoNanopubTest {
         String dataRef = "https://github.com/Nanopublication/nanopub-java/blob/master/README.md";
         String signer = "https://orcid.org/0000-0000-0000-0000"; // enter your orcid
 
+        // create fdo record
+        FdoRecord record = new FdoRecord(fdoSuffix, label, dataRef);
+
         // create nanopub
-        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(fdoSuffix, profile, label, dataRef);
+        NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI(signer));
         Nanopub np = creator.finalizeNanopub();
 

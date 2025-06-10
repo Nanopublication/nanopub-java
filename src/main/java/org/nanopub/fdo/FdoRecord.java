@@ -5,10 +5,9 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
+import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
 
 /**
  * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
@@ -28,35 +28,46 @@ public class FdoRecord implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-	private String id = null;
+	private IRI id = null;
 	private final HashMap<IRI, Value> tuples = new HashMap<>();
 
-	public FdoRecord() {
+	/**
+	 * Constructor for building an FDO Record
+	 * @param profile required, use complete url not only id
+	 * @param label optional
+	 * @param dataRef optional
+	 */
+	public FdoRecord (String profile, String label, String dataRef) {
+		this.addTuple(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
+		this.addTuple(FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
+		if (label != null) {
+			this.addTuple(RDFS.LABEL, vf.createLiteral(label));
+		}
+		if (dataRef != null) {
+			this.addTuple(DATA_REF_IRI, vf.createLiteral(dataRef));
+		}
 	}
 
 	public FdoRecord(Nanopub np) {
 		Statement anyAssertion = np.getAssertion().iterator().next();
-		this.id = FdoUtils.extractHandle(anyAssertion.getSubject());
+		this.id = vf.createIRI(anyAssertion.getSubject().stringValue());
 		for (Statement st: np.getAssertion()) {
 			tuples.put(st.getPredicate(), st.getObject());
 		}
 	}
 
-	public FdoRecord(Set<Statement> statements) {
-		for (Statement st: statements) {
-			tuples.put(st.getPredicate(), st.getObject());
-			if (st.getPredicate().equals(FdoUtils.PROFILE_IRI)) { // a profile must be there
-				id = FdoUtils.extractHandle(st.getSubject());
-			}
-		}
-	}
-
-	public Set<Statement> getStatements() {
+	/** Build statements out of tuples, requires the id (fdoIri) to be set */
+	public Set<Statement> buildStatements() {
 		Set<Statement> statements = new HashSet<>();
 		for (var entry: tuples.entrySet()) {
-			statements.add(vf.createStatement(FdoUtils.createIri(this.id), entry.getKey(), entry.getValue()));
+			statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));
 		}
 		return statements;
+	}
+
+	public FdoRecord addTuple(IRI iri, Value val) {
+		tuples.put(iri, val);
+		return this;
 	}
 
 	public String getProfile() {
@@ -82,8 +93,12 @@ public class FdoRecord implements Serializable {
 		return null;
 	}
 
-	public String getId() {
+	public IRI getId() {
 		return id;
+	}
+
+	public void setId(IRI id) {
+		this.id = id;
 	}
 
 	public void setDataRef(String dataRef) {
@@ -92,12 +107,6 @@ public class FdoRecord implements Serializable {
 
 	public Value getDataRef() {
 		return tuples.get(FdoUtils.DATA_REF_IRI);
-	}
-
-	public FdoNanopub createFdoNanopub() throws MalformedNanopubException {
-		NanopubCreator creator = FdoNanopubCreator.createWithFdoRecord(this);
-		Nanopub np = creator.finalizeNanopub(true);
-		return new FdoNanopub(np);
 	}
 
 }

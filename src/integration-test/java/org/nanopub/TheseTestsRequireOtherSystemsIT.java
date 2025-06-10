@@ -17,10 +17,7 @@ import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.FailedApiCallException;
 import org.nanopub.extra.services.QueryAccess;
-import org.nanopub.fdo.FdoNanopubCreator;
-import org.nanopub.fdo.FdoRecord;
-import org.nanopub.fdo.RetrieveFdo;
-import org.nanopub.fdo.ValidateFdo;
+import org.nanopub.fdo.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,10 +113,10 @@ public class TheseTestsRequireOtherSystemsIT {
     void retrieveRecordFromHandleSystem() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.resolveId(id);
-        assertEquals(id, record.getId());
+        assertEquals(FdoUtils.createIri(id), record.getId());
 
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
-        assertEquals(record.getStatements().size(), np.getAssertion().size());
+        assertEquals(record.buildStatements().size(), np.getAssertion().size());
         // it would be great to compare all statements here
     }
 
