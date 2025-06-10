@@ -99,7 +99,12 @@ public class FdoNanopubCreator {
             }
             if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2)) {
                 // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
-                profile = String.valueOf(v.data.value);
+                String profileValue = String.valueOf(v.data.value);
+                if (looksLikeHandle(profileValue)) {
+                    profile = toIri(profileValue).stringValue();
+                } else {
+                    profile = profileValue;
+                }
             }
         }
         NanopubCreator creator = createWithFdoIri(fdoIri, profile, label);
