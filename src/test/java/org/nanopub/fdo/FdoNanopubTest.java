@@ -1,6 +1,7 @@
 package org.nanopub.fdo;
 
 import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
@@ -94,7 +95,7 @@ public class FdoNanopubTest {
         String fdoSuffix = "example-fdo-01";
         String profile = "https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile";
         String label = "ExampleFdo01";
-        String dataRef = "https://github.com/Nanopublication/nanopub-java/blob/master/README.md";
+        IRI dataRef = vf.createIRI("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
         String signer = "https://orcid.org/0000-0000-0000-0000"; // enter your orcid
 
         // create fdo record
