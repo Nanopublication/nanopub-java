@@ -91,9 +91,6 @@ public class FdoNanopubCreator {
         String profile = null;
 
         for (Value v: response.values) {
-            if (v.type.equals("HS_ADMIN")) {
-                continue;
-            }
             if (v.type.equals("name")) {
                 label = String.valueOf(v.data.value);
             }
@@ -117,7 +114,14 @@ public class FdoNanopubCreator {
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
                     !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
                 // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
-                creator.addAssertionStatement(fdoIri, vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(String.valueOf(v.data.value)));
+                String dataValue = String.valueOf(v.data.value);
+                String dataValueToImport;
+                if (looksLikeHandle(dataValue)) {
+                    dataValueToImport = toIri(dataValue).stringValue();
+                } else {
+                    dataValueToImport = dataValue;
+                }
+                creator.addAssertionStatement(fdoIri, vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
             }
         }
 
