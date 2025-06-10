@@ -13,7 +13,7 @@ public class ShaclValidationTest {
         Nanopub shape = new NanopubImpl(new File("./src/test/resources/fdo/shape.trig"));
         Nanopub data = new NanopubImpl(new File("./src/test/resources/fdo/validPerson.trig"));
 
-        Assert.assertTrue(ShaclValidator.validateShacl(shape, data));
+        Assert.assertTrue(ShaclValidator.validateShacl(shape, data).isValid());
     }
 
     @Test
@@ -21,7 +21,7 @@ public class ShaclValidationTest {
         Nanopub shape = new NanopubImpl(new File("./src/test/resources/fdo/shape.trig"));
         Nanopub data = new NanopubImpl(new File("./src/test/resources/fdo/invalidPerson.trig"));
 
-        Assert.assertFalse(ShaclValidator.validateShacl(shape, data));
+        Assert.assertFalse(ShaclValidator.validateShacl(shape, data).isValid());
     }
 
     @Test

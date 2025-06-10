@@ -39,8 +39,7 @@ public class ValidateFdo {
 
 	private ValidateFdo() {}  // no instances allowed
 
-	// TODO Just a boolean as return value. Later probably an object that also includes errors/warnings.
-	public static boolean isValid(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
+	public static ValidationResult isValid(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
 
 		String profileId = fdoRecord.getProfile();
 		String schemaUrl = RetrieveFdo.resolveId(profileId).getSchemaUrl();

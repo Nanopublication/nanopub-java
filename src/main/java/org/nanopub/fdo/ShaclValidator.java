@@ -59,7 +59,7 @@ public class ShaclValidator extends CliRunner {
      *
      * @return true, iff the data respects the specification of the shape.
      */
-    public static boolean validateShacl(Set<Statement> shape, Set<Statement> data) {
+    public static ValidationResult validateShacl(Set<Statement> shape, Set<Statement> data) {
 
 //        // Debug info
 //        System.out.println("Validating Data ");
@@ -86,7 +86,7 @@ public class ShaclValidator extends CliRunner {
         }
         try {
             connection.commit();
-            return true;
+            return new ValidationResult();
         } catch (RepositoryException exception) {
             Throwable cause = exception.getCause();
             if (cause instanceof ValidationException) {
@@ -98,7 +98,9 @@ public class ShaclValidator extends CliRunner {
                         .set(BasicWriterSettings.PRETTY_PRINT, true);
 
                 Rio.write(validationReportModel, System.out, RDFFormat.TURTLE, writerConfig);
-                return false;
+                ValidationResult failure = new ValidationResult();
+                failure.setShacleValidationException(exception);
+                return failure;
             }
             throw new RuntimeException(cause);
         }
@@ -109,14 +111,14 @@ public class ShaclValidator extends CliRunner {
      *
      * @return true, iff the data respects the specification of the shape.
      */
-    public static boolean validateShacl(Nanopub shape, Nanopub data) {
+    public static ValidationResult validateShacl(Nanopub shape, Nanopub data) {
         return validateShacl(shape.getAssertion(), data.getAssertion());
     }
 
     public void run () throws MalformedNanopubException, IOException {
         Nanopub shape = new NanopubImpl(shapeFile);
         Nanopub data = new NanopubImpl(nanopubFile);
-        if (validateShacl(shape, data)) {
+        if (validateShacl(shape, data).isValid()) {
             System.out.println("Validation successful.");
         } else {
             System.out.println("Validation not successful.");
