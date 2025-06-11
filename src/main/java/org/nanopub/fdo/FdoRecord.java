@@ -38,13 +38,13 @@ public class FdoRecord implements Serializable {
 	 * @param dataRef optional
 	 */
 	public FdoRecord (String profile, String label, IRI dataRef) {
-		this.addTuple(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-		this.addTuple(FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
+		this.setAttribute(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
+		this.setAttribute(FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
 		if (label != null) {
-			this.addTuple(RDFS.LABEL, vf.createLiteral(label));
+			this.setAttribute(RDFS.LABEL, vf.createLiteral(label));
 		}
 		if (dataRef != null) {
-			this.addTuple(DATA_REF_IRI, dataRef);
+			this.setAttribute(DATA_REF_IRI, dataRef);
 		}
 	}
 
@@ -65,8 +65,21 @@ public class FdoRecord implements Serializable {
 		return statements;
 	}
 
-	public FdoRecord addTuple(IRI iri, Value val) {
+	/**
+	 * Set the attribute. If the key (iri) was already there, the old value is removed.
+	 * @return the FdoRecord for chaining
+	 */
+	public FdoRecord setAttribute(IRI iri, Value val) {
 		tuples.put(iri, val);
+		return this;
+	}
+
+	/**
+	 * Remove the attribute.
+	 * @return the FdoRecord for chaining
+	 */
+	public FdoRecord removeAttribute(IRI iri) {
+		tuples.remove(iri);
 		return this;
 	}
 

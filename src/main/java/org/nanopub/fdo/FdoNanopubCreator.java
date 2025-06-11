@@ -82,7 +82,7 @@ public class FdoNanopubCreator {
 
         for (Value v: response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
-                record.addTuple(DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
+                record.setAttribute(DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
                 continue;
             }
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
@@ -95,7 +95,7 @@ public class FdoNanopubCreator {
                 } else {
                     dataValueToImport = dataValue;
                 }
-                record.addTuple(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
+                record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
             }
         }
 
