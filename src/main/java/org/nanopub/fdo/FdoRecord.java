@@ -65,6 +65,14 @@ public class FdoRecord implements Serializable {
 		return statements;
 	}
 
+
+	/**
+	 * @return the value of the attribute, or null
+	 */
+	public Value getAttribute(IRI iri) {
+		return tuples.get(iri);
+	}
+
 	/**
 	 * Set the attribute. If the key (iri) was already there, the old value is removed.
 	 * @return the FdoRecord for chaining
