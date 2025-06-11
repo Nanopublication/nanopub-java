@@ -125,7 +125,7 @@ public class TheseTestsRequireOtherSystemsIT {
         String id = "21.T11966/82045bd97a0acce88378";
         FdoRecord record = RetrieveFdo.resolveId(id);
 
-        Assert.assertTrue(ValidateFdo.isValid(record).isValid());
+        Assert.assertTrue(ValidateFdo.validate(record).isValid());
     }
 
     @Test
@@ -133,6 +133,6 @@ public class TheseTestsRequireOtherSystemsIT {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.resolveId(id);
 
-        Assert.assertFalse(ValidateFdo.isValid(record).isValid());
+        Assert.assertFalse(ValidateFdo.validate(record).isValid());
     }
 }

@@ -39,7 +39,7 @@ public class ValidateFdo {
 
 	private ValidateFdo() {}  // no instances allowed
 
-	public static ValidationResult isValid(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
+	public static ValidationResult validate(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
 
 		String profileId = fdoRecord.getProfile();
 		String schemaUrl = RetrieveFdo.resolveId(profileId).getSchemaUrl();
