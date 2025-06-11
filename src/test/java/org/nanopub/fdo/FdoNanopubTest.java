@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
@@ -79,6 +80,19 @@ public class FdoNanopubTest {
         creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
+        Assert.assertTrue(FdoUtils.isFdoNanopub(np));
+    }
+
+    @Test
+    void testNonFdoNanopub () throws MalformedNanopubException {
+        NanopubCreator npCreator = new NanopubCreator(true);
+        final IRI nonFdoNanopub = vf.createIRI("https://example.com/nonFdoNanopub");
+        npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, vf.createIRI("https://schema.org/Any"));
+        npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, nonFdoNanopub);
+        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+        Nanopub np = npCreator.finalizeNanopub(true);
+
+        Assert.assertFalse(FdoUtils.isFdoNanopub(np));
     }
 
     @Test

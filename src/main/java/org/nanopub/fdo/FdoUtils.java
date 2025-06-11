@@ -2,8 +2,11 @@ package org.nanopub.fdo;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.Nanopub;
 
 public class FdoUtils {
 
@@ -76,6 +79,18 @@ public class FdoUtils {
             return vf.createIRI(handleOrUrl);
         }
         throw new IllegalArgumentException("Neither handle nor url found: " + handleOrUrl);
+    }
+
+    /**
+     * Check if the given Nanopub is a FDO Nanopub.
+     */
+    public static boolean isFdoNanopub(Nanopub np) {
+        for (Statement st: np.getAssertion()) {
+            if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(RDF_TYPE_FDO)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
