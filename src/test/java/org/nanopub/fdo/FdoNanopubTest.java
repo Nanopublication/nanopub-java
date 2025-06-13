@@ -41,7 +41,7 @@ public class FdoNanopubTest {
     @Test
     public void exampleCreateWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
+        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
@@ -57,7 +57,7 @@ public class FdoNanopubTest {
     @Test
    public void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
-        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
+        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "abc-table-fdo";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
@@ -73,7 +73,7 @@ public class FdoNanopubTest {
     @Test
     void testFdoNanopubCreation() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        String fdoProfile = "https://hdl.handle.net/21.T11966/365ff9576c26ca6053db";
+        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
@@ -107,13 +107,13 @@ public class FdoNanopubTest {
     @Test
     public void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
         String fdoSuffix = "example-fdo-01";
-        String profile = "https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile";
+        IRI profile = vf.createIRI("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
         String label = "ExampleFdo01";
         IRI dataRef = vf.createIRI("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
         String signer = "https://orcid.org/0000-0000-0000-0000"; // enter your orcid
 
         // create fdo record
-        FdoRecord record = new FdoRecord(fdoSuffix, label, dataRef);
+        FdoRecord record = new FdoRecord(profile, label, dataRef);
 
         // create nanopub
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);

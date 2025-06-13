@@ -37,9 +37,9 @@ public class FdoRecord implements Serializable {
 	 * @param label optional
 	 * @param dataRef optional
 	 */
-	public FdoRecord (String profile, String label, IRI dataRef) {
+	public FdoRecord (IRI profile, String label, IRI dataRef) {
 		this.setAttribute(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-		this.setAttribute(FdoUtils.PROFILE_IRI, vf.createLiteral(profile));
+		this.setAttribute(FdoUtils.PROFILE_IRI, profile);
 		if (label != null) {
 			this.setAttribute(RDFS.LABEL, vf.createLiteral(label));
 		}

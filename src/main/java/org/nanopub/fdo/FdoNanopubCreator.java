@@ -61,7 +61,7 @@ public class FdoNanopubCreator {
 
         ParsedJsonResponse response = new HandleResolver().call(id);
         String label = null;
-        String profile = null;
+        IRI profile = null;
 
         for (Value v: response.values) {
             if (v.type.equals("name")) {
@@ -71,9 +71,9 @@ public class FdoNanopubCreator {
                 // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
                 String profileValue = String.valueOf(v.data.value);
                 if (looksLikeHandle(profileValue)) {
-                    profile = toIri(profileValue).stringValue();
+                    profile = toIri(profileValue);
                 } else {
-                    profile = profileValue;
+                    profile = vf.createIRI(profileValue);
                 }
             }
         }
@@ -82,7 +82,7 @@ public class FdoNanopubCreator {
 
         for (Value v: response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
-                record.setAttribute(DATA_REF_IRI, vf.createLiteral(String.valueOf(v.data.value)));
+                record.setAttribute(DATA_REF_IRI, vf.createIRI(String.valueOf(v.data.value)));
                 continue;
             }
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
@@ -95,7 +95,11 @@ public class FdoNanopubCreator {
                 } else {
                     dataValueToImport = dataValue;
                 }
-                record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
+                if (looksLikeUrl(dataValueToImport)) {
+                    record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createIRI(dataValueToImport));
+                } else {
+                    record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
+                }
             }
         }
 
