@@ -2,14 +2,20 @@ package org.nanopub;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.util.Calendar;
 import java.util.Set;
 
+import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.PublishNanopub;
 
 /**
  * @author Tobias Kuhn
@@ -64,5 +70,17 @@ public interface Nanopub {
 
 	public default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
 		return NanopubUtils.writeToString(this, format);
+	}
+
+	public default String publish() throws IOException {
+		return PublishNanopub.publish(this);
+	}
+
+	public default String publish(String serverUrl) throws IOException {
+		return PublishNanopub.publish(this, serverUrl);
+	}
+
+	public default Nanopub sign(TransformContext context) throws TrustyUriException, SignatureException, InvalidKeyException {
+		return SignNanopub.signAndTransform(this, context);
 	}
 }
