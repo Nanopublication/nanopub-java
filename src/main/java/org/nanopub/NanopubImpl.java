@@ -501,6 +501,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	/**
 	 * @return a copy of the namespaces map
 	 */
+	@Override
 	public Map<String, String> getNs() {
 		return new HashMap<>(ns);
 	}
