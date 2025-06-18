@@ -1,10 +1,8 @@
 package org.nanopub.extra.index;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import com.google.common.collect.ImmutableMap;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
@@ -225,4 +223,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		}
 	}
 
+	@Override
+	public Map<String, String> getNs() {
+		if (np instanceof NanopubWithNs) {
+			return ((NanopubWithNs) np).getNs();
+		} else {
+			return ImmutableMap.of();
+		}
+	}
 }
