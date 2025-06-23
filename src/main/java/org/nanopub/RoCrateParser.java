@@ -63,7 +63,7 @@ public class RoCrateParser {
         npCreator.addAssertionStatements(handler.getStatements());
 
         npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ metadataFile));
-        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleRoCreateNanopub"));
+        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
 
         return npCreator.finalizeNanopub(true);
     }
