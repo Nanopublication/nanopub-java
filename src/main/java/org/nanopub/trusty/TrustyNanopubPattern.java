@@ -10,8 +10,6 @@ import org.nanopub.NanopubPattern;
 
 public class TrustyNanopubPattern implements NanopubPattern {
 
-	private static final long serialVersionUID = -678743536297253350L;
-
 	public TrustyNanopubPattern() {
 	}
 

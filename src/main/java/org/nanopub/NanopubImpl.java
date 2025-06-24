@@ -34,8 +34,6 @@ import java.util.*;
  */
 public class NanopubImpl implements NanopubWithNs, Serializable {
 
-	private static final long serialVersionUID = -1514452524339132128L;
-
 	static {
 		tryToLoadParserFactory("org.eclipse.rdf4j.rio.trig.TriGParserFactory");
 		RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());

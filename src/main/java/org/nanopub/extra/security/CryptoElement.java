@@ -8,8 +8,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public abstract class CryptoElement implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	public static final IRI CRYPTO_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/CryptoElement");
 	public static final IRI HAS_ALGORITHM = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasAlgorithm");
 	public static final IRI HAS_PUBLIC_KEY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasPublicKey");

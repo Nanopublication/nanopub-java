@@ -7,8 +7,6 @@ import java.util.List;
 
 public class ApiResponse implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	private String[] header;
 	private List<ApiResponseEntry> data = new ArrayList<>();
 

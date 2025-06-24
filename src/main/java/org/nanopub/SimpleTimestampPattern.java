@@ -14,8 +14,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class SimpleTimestampPattern implements NanopubPattern {
 
-	private static final long serialVersionUID = -3210304976446322675L;
-
 	@Override
 	public String getName() {
 		return "Basic timestamp information";

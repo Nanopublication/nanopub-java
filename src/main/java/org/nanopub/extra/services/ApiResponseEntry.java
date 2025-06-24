@@ -8,8 +8,6 @@ import java.util.Set;
 
 public class ApiResponseEntry implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	private Map<String,String> data = new HashMap<>();
 
 	public ApiResponseEntry() {

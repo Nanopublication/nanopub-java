@@ -34,8 +34,6 @@ import net.trustyuri.TrustyUriUtils;
 
 public class IntroNanopub implements Serializable {
 
-	private static final long serialVersionUID = -2760220283018515835L;
-
 	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
 		return get(userId, (HttpClient) null);
 	}
@@ -167,8 +165,6 @@ public class IntroNanopub implements Serializable {
 
 
 	public static class IntroExtractor extends AbstractRDFHandler implements Serializable {
-
-		private static final long serialVersionUID = 1L;
 
 		private String userId;
 		private Nanopub introNanopub;

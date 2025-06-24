@@ -20,8 +20,6 @@ import org.nanopub.NanopubImpl;
 
 public class NanopubSetting implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	private static ValueFactory vf = SimpleValueFactory.getInstance();
 
 	public static final IRI HAS_AGENTS = vf.createIRI("http://purl.org/nanopub/x/hasAgents");

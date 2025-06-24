@@ -12,11 +12,7 @@ import com.google.gson.Gson;
 
 public class RegistryInfo implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	public static class RegistryInfoException extends Exception {
-
-		private static final long serialVersionUID = 1L;
 
 		public RegistryInfoException(String url) {
 			super(url);

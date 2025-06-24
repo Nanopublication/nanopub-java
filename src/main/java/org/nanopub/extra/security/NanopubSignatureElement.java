@@ -14,8 +14,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class NanopubSignatureElement extends CryptoElement {
 
-	private static final long serialVersionUID = 1L;
-
 	public static final IRI SIGNATURE_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubSignatureElement");
 	public static final IRI HAS_SIGNATURE_TARGET = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignatureTarget");
 	public static final IRI HAS_SIGNATURE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignature");

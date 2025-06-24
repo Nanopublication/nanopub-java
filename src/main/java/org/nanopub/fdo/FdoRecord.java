@@ -25,7 +25,6 @@ import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
  */
 public class FdoRecord implements Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
 	private IRI id = null;
