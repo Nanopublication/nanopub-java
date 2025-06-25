@@ -53,8 +53,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			RDFParserRegistry.getInstance().add(pf);
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
-		};
-	}
+		}
+    }
 
 	private static void tryToLoadWriterFactory(String className) {
 		try {
@@ -62,8 +62,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			RDFWriterRegistry.getInstance().add(wf);
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
-		};
-	}
+		}
+    }
 
 	/**
 	 * Just ensures the class to be loaded. Probably unnecessary.

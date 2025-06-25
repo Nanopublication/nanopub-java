@@ -275,7 +275,7 @@ public class FetchIndex {
 				running = false;
 				if (serverTried) {
 					synchronized (FetchIndex.class) {
-						if (cancelled == true) {
+						if (cancelled) {
 							// Sibling already did the work...
 						} else {
 							for (FetchNanopubTask s : siblings) {

@@ -55,17 +55,11 @@ public class FdoUtils {
      * no whitespaces, and contains at least one "/".
      */
     public static boolean looksLikeHandle(String potentialHandle) {
-        if (potentialHandle.matches("\\d\\d\\S*/+\\S*")){
-            return true;
-        }
-        return false;
+        return potentialHandle.matches("\\d\\d\\S*/+\\S*");
     }
 
     public static boolean looksLikeUrl(String potentialUrl) {
-        if (potentialUrl.matches("http(s)?://\\S+\\.[a-z]{2,}.*")){
-            return true;
-        }
-        return false;
+        return potentialUrl.matches("http(s)?://\\S+\\.[a-z]{2,}.*");
     }
 
     /**

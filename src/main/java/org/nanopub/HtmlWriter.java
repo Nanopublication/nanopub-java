@@ -1,19 +1,6 @@
 package org.nanopub;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeHtml4;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.Set;
-
-import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.util.Literals;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -23,6 +10,14 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.util.Set;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 // Contains copied code from TurtleWriter, TrigWriter, and CustomTrigWriter
 

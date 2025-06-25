@@ -1,8 +1,8 @@
 package org.nanopub.extra.index;
 
-import java.util.*;
-
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
@@ -14,8 +14,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.*;
 
 public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 
@@ -143,9 +142,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	@Override
 	public long getByteCount() {
 		return np.getByteCount();
-	};
+	}
 
-	@Override
+    @Override
 	public Set<IRI> getElements() {
 		return elementSet;
 	}

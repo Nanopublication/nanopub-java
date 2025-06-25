@@ -1,17 +1,12 @@
 package org.nanopub;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
 public class SimpleCreatorPattern implements NanopubPattern {
 
@@ -102,11 +97,10 @@ public class SimpleCreatorPattern implements NanopubPattern {
 				authorMap.put(i, (IRI) st.getObject());
 			}
 			int i = 1;
-			while (true) {
-				if (!authorMap.containsKey(i)) break;
-				authorList.add(authorMap.get(i));
-				i = i + 1;
-			}
+            while (authorMap.containsKey(i)) {
+                authorList.add(authorMap.get(i));
+                i = i + 1;
+            }
 		}
 		for (IRI a : authorSet) {
 			// TODO This is not efficient (but lists should be small...)

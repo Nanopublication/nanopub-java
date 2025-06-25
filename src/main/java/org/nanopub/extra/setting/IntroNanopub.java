@@ -1,13 +1,6 @@
 package org.nanopub.extra.setting;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import net.trustyuri.TrustyUriUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -30,7 +23,13 @@ import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
 
-import net.trustyuri.TrustyUriUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class IntroNanopub implements Serializable {
 
@@ -185,9 +184,9 @@ public class IntroNanopub implements Serializable {
 			} else if (st.getPredicate().stringValue().equals(RDFS.LABEL.stringValue())) {
 				name = st.getObject().stringValue();
 			}
-		};
+		}
 
-		public Nanopub getIntroNanopub() {
+        public Nanopub getIntroNanopub() {
 			return introNanopub;
 		}
 

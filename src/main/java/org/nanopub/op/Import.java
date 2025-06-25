@@ -134,9 +134,9 @@ public class Import extends CliRunner {
 
 		public List<Nanopub> getNanopubs();
 
-	};
+	}
 
-	public static class CedarNanopubImporter implements NanopubImporter {
+    public static class CedarNanopubImporter implements NanopubImporter {
 
 		private String npIriString;
 		private IRI npIri;
