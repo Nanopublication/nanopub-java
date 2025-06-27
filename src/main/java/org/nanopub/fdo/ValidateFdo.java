@@ -33,6 +33,7 @@ public class ValidateFdo {
 	private static final IRI SHACL_TARGET = vf.createIRI("http://www.w3.org/ns/shacl#targetClass");
 	private static final IRI SHACL_PROPERTY = vf.createIRI("http://www.w3.org/ns/shacl#property");
 	private static final IRI SHACL_NODE_SHAPE = vf.createIRI("http://www.w3.org/ns/shacl#NodeShape");
+	private static final String SHACL_PROPERTY_SHAPE = "propertyShape";
 
 	private static HttpClient client = HttpClient.newHttpClient();
 
@@ -84,24 +85,25 @@ public class ValidateFdo {
 		ParsedSchemaResponse r = new Gson().fromJson(httpResponse.body(), ParsedSchemaResponse.class);
 
 		Set<Statement> shaclShape = new HashSet<>();
-
+		IRI nodeShape = vf.createIRI(subjPrefix + "nodeShape");
 		List<String> reqired = Arrays.asList(r.required);
 		int i = 0;
 		for (String s: r.properties.keySet()) {
 			i++;
-			shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix+i), SHACL_MAX_COUNT, vf.createLiteral(1)));
+			IRI propertyShape = vf.createIRI(subjPrefix + SHACL_PROPERTY_SHAPE + i);
+			shaclShape.add(vf.createStatement(propertyShape, SHACL_MAX_COUNT, vf.createLiteral(1)));
 			if (reqired.contains(s)) {
-				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix+i), SHACL_MIN_COUNT, vf.createLiteral(1)));
+				shaclShape.add(vf.createStatement(propertyShape, SHACL_MIN_COUNT, vf.createLiteral(1)));
 			}
 			if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
-				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix + i), SHACL_PATH, PROFILE_IRI));
+				shaclShape.add(vf.createStatement(propertyShape, SHACL_PATH, PROFILE_IRI));
 			} else {
-				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix + i), SHACL_PATH, vf.createIRI(FDO_URI_PREFIX + s)));
+				shaclShape.add(vf.createStatement(propertyShape, SHACL_PATH, vf.createIRI(FDO_URI_PREFIX + s)));
 			}
-			shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix), SHACL_PROPERTY, vf.createIRI(subjPrefix+i)));
+			shaclShape.add(vf.createStatement(nodeShape, SHACL_PROPERTY, propertyShape));
 		}
-		shaclShape.add(vf.createStatement(FdoUtils.createIri(subjPrefix), SHACL_TARGET, RDF_TYPE_FDO));
-		shaclShape.add(vf.createStatement(FdoUtils.createIri(subjPrefix), RDF.TYPE, SHACL_NODE_SHAPE));
+		shaclShape.add(vf.createStatement(nodeShape, SHACL_TARGET, RDF_TYPE_FDO));
+		shaclShape.add(vf.createStatement(nodeShape, RDF.TYPE, SHACL_NODE_SHAPE));
 
 		return shaclShape;
 	}

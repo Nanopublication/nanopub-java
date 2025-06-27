@@ -166,12 +166,12 @@ public class TheseTestsRequireOtherSystemsIT {
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(fdoRecord, fdoIri);
         creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+profileId));
 
-        String shapeIri = creator.getNanopubUri().stringValue()+"nodeShape";
+        String shapeIri = creator.getNanopubUri().stringValue();
         Set<Statement> shaclShape = createShaclValidationShapeFromJson(httpResponse, shapeIri);
         creator.addAssertionStatements(shaclShape);
 
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.PROFILE_CLASS_IRI);
-        creator.addAssertionStatement(fdoIri, FdoUtils.SHAPE_LINK_IRI, vf.createIRI(shapeIri));
+        creator.addAssertionStatement(fdoIri, FdoUtils.SHAPE_LINK_IRI, vf.createIRI(shapeIri+"nodeShape"));
 
         creator.addPubinfoStatement(HAS_NANOPUB_TYPE, vf.createIRI("https://w3id.org/np/o/ntemplate/AssertionTemplate"));
         creator.addNamespace("shacl", vf.createIRI("http://www.w3.org/ns/shacl#"));
@@ -180,7 +180,7 @@ public class TheseTestsRequireOtherSystemsIT {
 
         NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
 
-//        PublishNanopub.publish(signedNp);
+        PublishNanopub.publish(signedNp);
     }
 
 }
