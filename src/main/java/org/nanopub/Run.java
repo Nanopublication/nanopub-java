@@ -62,6 +62,7 @@ public class Run {
 		addRunnableClass(TimestampUpdater.class, "udtime");
 		addRunnableClass(StripDown.class, "strip");
 		addRunnableClass(ShaclValidator.class, "shacl");
+		addRunnableClass(RoCrateImporter.class, "rocrate");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {

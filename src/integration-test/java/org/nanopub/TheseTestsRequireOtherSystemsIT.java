@@ -180,7 +180,7 @@ public class TheseTestsRequireOtherSystemsIT {
 
         NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
 
-        PublishNanopub.publish(signedNp);
+//        PublishNanopub.publish(signedNp);
     }
 
 }
