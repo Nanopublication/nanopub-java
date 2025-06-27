@@ -15,10 +15,13 @@ public class FdoUtils {
     public static final String FDO_URI_PREFIX = "https://hdl.handle.net/";
     public static final IRI RDF_TYPE_FDO = vf.createIRI("https://w3id.org/fdof/ontology#FAIRDigitalObject");
 
+    public static final IRI PROFILE_CLASS_IRI = vf.createIRI("https://w3id.org/fdoc/o/terms/FdoProfile");
     public static final IRI PROFILE_IRI = vf.createIRI("http://purl.org/dc/terms/conformsTo");
     public static final String PROFILE_HANDLE_2 = "0.FDO/Profile";
     public static final String PROFILE_HANDLE_1 = "FdoProfile";
     public static final String PROFILE_HANDLE = "21.T11966/FdoProfile";
+
+    public static final IRI SHAPE_LINK_IRI = vf.createIRI("https://w3id.org/fdoc/o/terms/hasShape");
 
     public static final IRI DATA_REF_IRI = vf.createIRI("https://w3id.org/fdof/ontology#isMaterializedBy");
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";

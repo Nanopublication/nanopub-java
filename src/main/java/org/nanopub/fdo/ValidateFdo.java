@@ -14,10 +14,11 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
 import static org.nanopub.fdo.FdoUtils.*;
 
 // TODO class that provides the Op.Validate operations.
@@ -33,8 +34,6 @@ public class ValidateFdo {
 	private static final IRI SHACL_PROPERTY = vf.createIRI("http://www.w3.org/ns/shacl#property");
 	private static final IRI SHACL_NODE_SHAPE = vf.createIRI("http://www.w3.org/ns/shacl#NodeShape");
 
-	private static final IRI TEMP_TYPE = vf.createIRI("https://w3id.org/kpxl/temptype");
-
 	private static HttpClient client = HttpClient.newHttpClient();
 
 	private ValidateFdo() {}  // no instances allowed
@@ -47,7 +46,7 @@ public class ValidateFdo {
 		HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();
 		HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-		Set<Statement> shaclShape = createShaclShapeFromJson(httpResponse);
+		Set<Statement> shaclShape = createShaclValidationShapeFromJson(httpResponse);
 		Set<Statement> data = addTypeStatement(fdoRecord);
 
 		System.out.println("Validating FdoRecord " + fdoRecord.getId());
@@ -59,29 +58,50 @@ public class ValidateFdo {
 	private static Set<Statement> addTypeStatement(FdoRecord fdoRecord) {
 		Set<Statement> data = fdoRecord.buildStatements();
 		Statement first = data.toArray(new Statement[0])[0];
-		data.add(vf.createStatement(first.getSubject(), RDF.TYPE, TEMP_TYPE));
+		data.add(vf.createStatement(first.getSubject(), RDF.TYPE, RDF_TYPE_FDO));
 		return data;
 	}
 
-	public static Set<Statement> createShaclShapeFromJson(HttpResponse<String> httpResponse) {
+	/**
+	 * Read all the *property* fields from the profile.json in the httpResponse and convert them to a set of statements
+	 * for shacl validation. *required* fields have min-count 1, the others do not have a min-count. (We assume that
+	 * additionalProperties is always true.)
+	 * When we just want to validate a shape, this method is fine. If the profile should be published as a nanopub,
+	 * we want to specify the subject-prefix for the statements with the surrounding nanopub uri by useing
+	 * @createShaclValidationShapeFromJson(httpResponse, subjPrefix)
+	 */
+	public static Set<Statement> createShaclValidationShapeFromJson(HttpResponse<String> httpResponse) {
+		return createShaclValidationShapeFromJson(httpResponse, "https://w3id.org/kpxl/shacl/temp/");
+	}
+
+	/**
+	 * Read all the *property* fields from the profile.json in the httpResponse and convert them to a set of statements
+	 * for shacl validation. *required* fields have min-count 1, the others do not have a min-count. (We assume that
+	 * additionalProperties is always true.)
+	 * If the profile should be published as a nanopub, we want to specify the subject-prefix for the statements with the surrounding nanopub uri
+	 */
+	public static Set<Statement> createShaclValidationShapeFromJson(HttpResponse<String> httpResponse, String subjPrefix) {
 		ParsedSchemaResponse r = new Gson().fromJson(httpResponse.body(), ParsedSchemaResponse.class);
 
 		Set<Statement> shaclShape = new HashSet<>();
-		String SUBJ_PREFIX = "https://w3id.org/kpxl/shacl/temp/";
+
+		List<String> reqired = Arrays.asList(r.required);
 		int i = 0;
-		for (String s: r.required) {
+		for (String s: r.properties.keySet()) {
 			i++;
-			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX+i), SHACL_MAX_COUNT, vf.createLiteral(1)));
-			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX+i), SHACL_MIN_COUNT, vf.createLiteral(1)));
-			if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
-				shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX + i), SHACL_PATH, PROFILE_IRI));
-			} else {
-				shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX + i), SHACL_PATH, vf.createIRI(FDO_TYPE_PREFIX + s)));
+			shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix+i), SHACL_MAX_COUNT, vf.createLiteral(1)));
+			if (reqired.contains(s)) {
+				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix+i), SHACL_MIN_COUNT, vf.createLiteral(1)));
 			}
-			shaclShape.add(vf.createStatement(vf.createIRI(SUBJ_PREFIX), SHACL_PROPERTY, vf.createIRI(SUBJ_PREFIX+i)));
+			if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
+				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix + i), SHACL_PATH, PROFILE_IRI));
+			} else {
+				shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix + i), SHACL_PATH, vf.createIRI(FDO_URI_PREFIX + s)));
+			}
+			shaclShape.add(vf.createStatement(vf.createIRI(subjPrefix), SHACL_PROPERTY, vf.createIRI(subjPrefix+i)));
 		}
-		shaclShape.add(vf.createStatement(FdoUtils.createIri(SUBJ_PREFIX), SHACL_TARGET, TEMP_TYPE));
-		shaclShape.add(vf.createStatement(FdoUtils.createIri(SUBJ_PREFIX), RDF.TYPE, SHACL_NODE_SHAPE));
+		shaclShape.add(vf.createStatement(FdoUtils.createIri(subjPrefix), SHACL_TARGET, RDF_TYPE_FDO));
+		shaclShape.add(vf.createStatement(FdoUtils.createIri(subjPrefix), RDF.TYPE, SHACL_NODE_SHAPE));
 
 		return shaclShape;
 	}

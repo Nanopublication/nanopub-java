@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.nanopub.fdo.FdoNanopubCreator.FDO_TYPE_PREFIX;
 import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
+import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 
 /**
  * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
@@ -104,7 +104,7 @@ public class FdoRecord implements Serializable {
 	}
 
 	public String getSchemaUrl() {
-		Value schemaEntry = tuples.get(vf.createIRI(FDO_TYPE_PREFIX + "21.T11966/JsonSchema"));
+		Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + "21.T11966/JsonSchema"));
 		if (schemaEntry != null) {
 			// assume the entry looks like {"$ref": "https://the-url"}
 			String url = schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);

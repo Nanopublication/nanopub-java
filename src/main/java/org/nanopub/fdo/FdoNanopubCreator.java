@@ -57,8 +57,16 @@ public class FdoNanopubCreator {
      * Creation of Nanopub from handle system.
      */
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
-        IRI fdoIri = FdoUtils.createIri(id);
+        FdoRecord record = createFdoRecordFromHandleSystem(id);
 
+        IRI fdoIri = FdoUtils.createIri(id);
+        NanopubCreator creator = createWithFdoIri(record, fdoIri);
+        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+id));
+        Nanopub np = creator.finalizeNanopub(true);
+        return np;
+    }
+
+    public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException {
         ParsedJsonResponse response = new HandleResolver().call(id);
         String label = null;
         IRI profile = null;
@@ -95,18 +103,20 @@ public class FdoNanopubCreator {
                 } else {
                     dataValueToImport = dataValue;
                 }
-                if (looksLikeUrl(dataValueToImport)) {
-                    record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createIRI(dataValueToImport));
+                IRI fdoHandleIri;
+                if (v.type.contains("/")) {
+                    fdoHandleIri = vf.createIRI(FDO_URI_PREFIX + v.type);
                 } else {
-                    record.setAttribute(vf.createIRI(FDO_TYPE_PREFIX + v.type), vf.createLiteral(dataValueToImport));
+                    fdoHandleIri = vf.createIRI(FDO_TYPE_PREFIX + v.type);
+                }
+                if (looksLikeUrl(dataValueToImport)) {
+                    record.setAttribute(fdoHandleIri, vf.createIRI(dataValueToImport));
+                } else {
+                    record.setAttribute(fdoHandleIri, vf.createLiteral(dataValueToImport));
                 }
             }
         }
-
-        NanopubCreator creator = createWithFdoIri(record, fdoIri);
-        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+id));
-        Nanopub np = creator.finalizeNanopub(true);
-        return np;
+        return record;
     }
 
 }
