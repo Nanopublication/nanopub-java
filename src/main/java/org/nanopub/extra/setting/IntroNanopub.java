@@ -94,11 +94,10 @@ public class IntroNanopub implements Serializable {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
-			if (!(st.getObject() instanceof IRI)) continue;
+			if (!(st.getObject() instanceof IRI obj)) continue;
 			IRI subj = (IRI) st.getSubject();
 			IRI pred = st.getPredicate();
-			IRI obj = (IRI) st.getObject();
-			if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+            if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
 				KeyDeclaration d;
 				if (keyDeclarations.containsKey(subj)) {
 					d = keyDeclarations.get(subj);
@@ -138,7 +137,7 @@ public class IntroNanopub implements Serializable {
 				}
 			}
 		}
-		for (IRI kdi : new ArrayList<IRI>(keyDeclarations.keySet())) {
+		for (IRI kdi : new ArrayList<>(keyDeclarations.keySet())) {
 			KeyDeclaration kd = keyDeclarations.get(kdi);
 			if (kd.getPublicKeyString() == null || kd.getPublicKeyString().isEmpty() || kd.getDeclarers().isEmpty()) {
 				keyDeclarations.remove(kdi);

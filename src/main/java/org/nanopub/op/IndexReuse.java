@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 public class IndexReuse extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-cache", required = true)
-	private List<File> inputNanopubCache = new ArrayList<File>();
+	private List<File> inputNanopubCache = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-x", description = "Index nanopubs to be reused (need to be sorted; no subindex supported)")
 	private File reuseIndexFile;
@@ -145,14 +145,10 @@ public class IndexReuse extends CliRunner {
 					public void handleNanopub(Nanopub np) {
 						try {
 							processIndexNanopub(np);
-						} catch (IOException ex) {
-							throw new RuntimeException(ex);
-						} catch (RDFHandlerException ex) {
-							throw new RuntimeException(ex);
-						} catch (MalformedNanopubException ex) {
+						} catch (IOException | MalformedNanopubException | RDFHandlerException ex) {
 							throw new RuntimeException(ex);
 						}
-					}
+                    }
 		
 				});
 			}

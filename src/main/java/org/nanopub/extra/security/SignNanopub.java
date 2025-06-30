@@ -26,7 +26,7 @@ import java.util.zip.GZIPOutputStream;
 public class SignNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-	private List<File> inputNanopubFiles = new ArrayList<File>();
+	private List<File> inputNanopubFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File singleOutputFile;
@@ -142,20 +142,11 @@ public class SignNanopub extends CliRunner {
 							if (verbose) {
 								System.out.println("Nanopub URI: " + np.getUri());
 							}
-						} catch (RDFHandlerException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (TrustyUriException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (InvalidKeyException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (SignatureException ex) {
+						} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 							ex.printStackTrace();
 							throw new RuntimeException(ex);
 						}
-					}
+                    }
 	
 				});
 			}
@@ -197,20 +188,11 @@ public class SignNanopub extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						writeAsSignedTrustyNanopub(np, format, c, out);
-					} catch (RDFHandlerException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (InvalidKeyException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (SignatureException ex) {
+					} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 						ex.printStackTrace();
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 	
 			});
 		}

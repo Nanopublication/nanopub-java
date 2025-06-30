@@ -23,7 +23,7 @@ import java.util.zip.GZIPOutputStream;
 public class Namespaces extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-h", description = "Output file for namespaces used in head graph")
 	private File headOutputFile;
@@ -103,12 +103,10 @@ public class Namespaces extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (IOException ex) {
+					} catch (RDFHandlerException | IOException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 

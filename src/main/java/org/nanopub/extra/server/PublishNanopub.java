@@ -23,7 +23,7 @@ import java.util.Map;
 public class PublishNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "nanopubs", required = true)
-	private List<String> nanopubs = new ArrayList<String>();
+	private List<String> nanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
@@ -197,16 +197,12 @@ public class PublishNanopub extends CliRunner {
 						System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
 					}
 				}
-			} catch (IOException ex) {
-				if (verbose) {
-					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
-				}
-			} catch (RDF4JException ex) {
+			} catch (IOException | RDF4JException ex) {
 				if (verbose) {
 					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				}
 			}
-			registryInfo = serverIterator.next();
+            registryInfo = serverIterator.next();
 		}
 		registryInfo = null;
 		throw new RuntimeException("Failed to publish the nanopub");

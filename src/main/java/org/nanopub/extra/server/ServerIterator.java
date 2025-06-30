@@ -1,18 +1,9 @@
 package org.nanopub.extra.server;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+
+import java.io.*;
+import java.util.*;
 
 public class ServerIterator implements Iterator<RegistryInfo> {
 
@@ -42,9 +33,7 @@ public class ServerIterator implements Iterator<RegistryInfo> {
 	}
 
 	public ServerIterator(String... bootstrapServers) {
-		for (String s : bootstrapServers) {
-			serversToContact.add(s);
-		}
+        serversToContact.addAll(Arrays.asList(bootstrapServers));
 	}
 
 	public ServerIterator(List<String> bootstrapServers) {

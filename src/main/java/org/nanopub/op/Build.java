@@ -20,7 +20,7 @@ import java.util.zip.GZIPOutputStream;
 public class Build extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-rdf-files", required = true)
-	private List<File> inputRdfdFiles = new ArrayList<File>();
+	private List<File> inputRdfdFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-d", description = "Point to the URI of the resource the created nanopublications are derived from")
 	private String derivedFrom;

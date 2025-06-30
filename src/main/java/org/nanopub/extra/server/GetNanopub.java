@@ -110,14 +110,10 @@ public class GetNanopub extends CliRunner {
 				if (np != null) {
 					return np;
 				}
-			} catch (IOException ex) {
-				// ignore
-			} catch (RDF4JException ex) {
-				// ignore
-			} catch (MalformedNanopubException ex) {
+			} catch (IOException | MalformedNanopubException | RDF4JException ex) {
 				// ignore
 			}
-		}
+        }
 		return null;
 	}
 
@@ -253,12 +249,12 @@ public class GetNanopub extends CliRunner {
 			System.err.println("Used servers:");
 			List<RegistryInfo> usedServers = fetchIndex.getRegistries();
 			final FetchIndex fi = fetchIndex;
-			Collections.sort(usedServers, new Comparator<RegistryInfo>() {
-				@Override
-				public int compare(RegistryInfo o1, RegistryInfo o2) {
-					return fi.getServerUsage(o2) - fi.getServerUsage(o1);
-				}
-			});
+			usedServers.sort(new Comparator<>() {
+                @Override
+                public int compare(RegistryInfo o1, RegistryInfo o2) {
+                    return fi.getServerUsage(o2) - fi.getServerUsage(o1);
+                }
+            });
 			int usedServerCount = 0;
 			for (RegistryInfo si : usedServers) {
 				if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;

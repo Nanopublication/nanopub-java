@@ -23,7 +23,7 @@ import java.util.zip.GZIPOutputStream;
 public class StripDown extends CliRunner {
 
     @com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-    private List<File> inputNanopubFiles = new ArrayList<File>();
+    private List<File> inputNanopubFiles = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-o", description = "Output file")
     private File singleOutputFile; // only possible if there is only one inputFile
@@ -106,7 +106,7 @@ public class StripDown extends CliRunner {
         if (artifactCode == null) {
             throw new RuntimeException("No artifact code found for " + np.getUri());
         }
-        Map<String, String> newNamespaces = new HashMap<String, String>();
+        Map<String, String> newNamespaces = new HashMap<>();
         for (String prefix : np.getNsPrefixes()) {
             String ns = np.getNamespace(prefix);
             newNamespaces.put(prefix, ns.replaceFirst("http.*"+artifactCode+".?", replacement));

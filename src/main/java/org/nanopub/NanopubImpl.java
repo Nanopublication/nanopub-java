@@ -130,26 +130,21 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		try (RepositoryConnection connection = repo.getConnection()) {
 			String q = nanopubViaSPARQLQuery.replaceAll("@", nanopubUri.toString());
 			TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, q);
-			TupleQueryResult result = tupleQuery.evaluate();
-			try {
-				while (result.hasNext()) {
-					BindingSet bs = result.next();
-					Resource g = (Resource) bs.getBinding("G").getValue();
-					Resource s = (Resource) bs.getBinding("S").getValue();
-					IRI p = (IRI) bs.getBinding("P").getValue();
-					Value o = bs.getBinding("O").getValue();
-					Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
-					statements.add(st);
-				}
-			} finally {
-				result.close();
-			}
-		} catch (MalformedQueryException ex) {
-			ex.printStackTrace();
-		} catch (QueryEvaluationException ex) {
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bs = result.next();
+                    Resource g = (Resource) bs.getBinding("G").getValue();
+                    Resource s = (Resource) bs.getBinding("S").getValue();
+                    IRI p = (IRI) bs.getBinding("P").getValue();
+                    Value o = bs.getBinding("O").getValue();
+                    Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
+                    statements.add(st);
+                }
+            }
+		} catch (MalformedQueryException | QueryEvaluationException ex) {
 			ex.printStackTrace();
 		}
-		init();
+        init();
 	}
 
 	public NanopubImpl(Repository repo, IRI nanopubUri)
@@ -166,7 +161,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	public NanopubImpl(File file) throws MalformedNanopubException, RDF4JException, IOException {
 		String n = file.getName();
 		Optional<RDFFormat> format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));
-		if (!format.isPresent() || !format.get().supportsContexts()) {
+		if (format.isEmpty() || !format.get().supportsContexts()) {
 			format = Rio.getParserFormatForFileName(n);
 		}
 		RDFFormat f = format.get();
@@ -190,7 +185,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		if (contentTypeHeader != null) {
 			format = Rio.getParserFormatForMIMEType(contentTypeHeader.getValue());
 		}
-		if (format == null || !format.isPresent() || !format.get().supportsContexts()) {
+		if (format == null || format.isEmpty() || !format.get().supportsContexts()) {
 			format = Rio.getParserFormatForFileName(url.toString());
 		}
 		RDFFormat f = format.get();

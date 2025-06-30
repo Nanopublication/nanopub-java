@@ -21,7 +21,7 @@ import java.util.zip.GZIPOutputStream;
 public class Topic extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;

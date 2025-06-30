@@ -53,7 +53,7 @@ public class QueryCall {
 
 	public static List<String> getApiInstances() {
 		if (checkedApiInstances != null) return checkedApiInstances;
-		checkedApiInstances = new ArrayList<String>();
+		checkedApiInstances = new ArrayList<>();
 		for (String a : queryApiInstances) {
 			try {
 				System.err.println("Checking API instance: " + a);

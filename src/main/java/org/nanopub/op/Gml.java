@@ -24,7 +24,7 @@ import java.util.zip.GZIPOutputStream;
 public class Gml extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -75,12 +75,10 @@ public class Gml extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (IOException ex) {
+					} catch (RDFHandlerException | IOException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 

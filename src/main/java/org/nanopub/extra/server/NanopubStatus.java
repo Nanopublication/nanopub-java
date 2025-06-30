@@ -115,16 +115,12 @@ public class NanopubStatus extends CliRunner {
 				if (verbose && !recursive) {
 					System.out.println("CONNECTION ERROR: " + registryInfo);
 				}
-			} catch (RDF4JException ex) {
-				if (verbose && !recursive) {
-					System.out.println("VALIDATION ERROR: " + registryInfo);
-				}
-			} catch (MalformedNanopubException ex) {
+			} catch (RDF4JException | MalformedNanopubException ex) {
 				if (verbose && !recursive) {
 					System.out.println("VALIDATION ERROR: " + registryInfo);
 				}
 			}
-		}
+        }
 		if (checkAllServers) {
 			String text = "Found on " + count + " nanopub server" + (count!=1?"s":"");
 			if (!recursive) {

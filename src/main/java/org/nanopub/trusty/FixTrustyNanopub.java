@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 public class FixTrustyNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
@@ -64,12 +64,10 @@ public class FixTrustyNanopub extends CliRunner {
 									System.err.print(count + " nanopubs...\r");
 								}
 							}
-						} catch (RDFHandlerException ex) {
-							throw new RuntimeException(ex);
-						} catch (TrustyUriException ex) {
+						} catch (RDFHandlerException | TrustyUriException ex) {
 							throw new RuntimeException(ex);
 						}
-					}
+                    }
 	
 				});
 			}
@@ -91,12 +89,10 @@ public class FixTrustyNanopub extends CliRunner {
 			String oldArtifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 			RdfUtils.fixTrustyRdf(r, oldArtifactCode, h);
 			np = h.getNanopub();
-		} catch (RDFHandlerException ex) {
-			throw new TrustyUriException(ex);
-		} catch (MalformedNanopubException ex) {
+		} catch (RDFHandlerException | MalformedNanopubException ex) {
 			throw new TrustyUriException(ex);
 		}
-		return np;
+        return np;
 	}
 
 	public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out)
@@ -114,12 +110,10 @@ public class FixTrustyNanopub extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						writeAsFixedNanopub(np, format, out);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
+					} catch (RDFHandlerException | TrustyUriException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 	
 			});
 		}

@@ -47,7 +47,7 @@ public class FetchIndex {
 		while (serverIterator.hasNext()) {
 			RegistryInfo registryInfo = serverIterator.next();
 			registries.add(registryInfo);
-			serverLoad.put(registryInfo, new HashSet<FetchNanopubTask>());
+			serverLoad.put(registryInfo, new HashSet<>());
 			serverUsage.put(registryInfo, 0);
 		}
 		try {
@@ -57,7 +57,7 @@ public class FetchIndex {
 			try {
 				localRegistryInfo = RegistryInfo.load(localRegistryUrl);
 				registries.add(localRegistryInfo);
-				serverLoad.put(localRegistryInfo, new HashSet<FetchNanopubTask>());
+				serverLoad.put(localRegistryInfo, new HashSet<>());
 				serverUsage.put(localRegistryInfo, 0);
 			} catch (RegistryInfoException ex) {
 				ex.printStackTrace();

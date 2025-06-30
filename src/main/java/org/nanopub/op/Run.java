@@ -17,7 +17,7 @@ public class Run {
 	public static void main(String[] args) throws IOException, RDF4JException {
 		NanopubImpl.ensureLoaded();
 		
-		// Not sure why this isnt' done automatically...:
+		// Not sure why this isn't done automatically...:
 		RDFParserRegistry.getInstance().add(new TurtleParserFactory());
 		RDFWriterRegistry.getInstance().add(new TurtleWriterFactory());
 

@@ -30,8 +30,8 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 			throw new MalformedNanopubException("Nanopub is not a nanopub index");
 		}
 		IRI appendedIndex = null;
-		Set<IRI> elementSet = new HashSet<IRI>();
-		Set<IRI> subIndexSet = new HashSet<IRI>();
+		Set<IRI> elementSet = new HashSet<>();
+		Set<IRI> subIndexSet = new HashSet<>();
 		for (Statement st : np.getAssertion()) {
 			if (!st.getSubject().equals(np.getUri())) continue;
 			if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {

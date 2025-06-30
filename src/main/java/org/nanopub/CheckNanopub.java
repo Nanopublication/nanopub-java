@@ -24,7 +24,7 @@ import java.util.List;
 public class CheckNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<String> inputNanopubs = new ArrayList<String>();
+	private List<String> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;

@@ -24,7 +24,7 @@ import java.util.zip.GZIPOutputStream;
 public class TimestampUpdater extends CliRunner {
 
     @com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-    private List<File> inputNanopubFiles = new ArrayList<File>();
+    private List<File> inputNanopubFiles = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-o", description = "Output file")
     private File singleOutputFile; // only possible if there is only one inputFile
@@ -116,8 +116,7 @@ public class TimestampUpdater extends CliRunner {
             if (!st.getContext().equals(np.getPubinfoUri())) continue;
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!SimpleTimestampPattern.isCreationTimeProperty(st.getPredicate())) continue;
-            if (!(st.getObject() instanceof Literal)) continue;
-            Literal l = (Literal) st.getObject();
+            if (!(st.getObject() instanceof Literal l)) continue;
             if (!l.getDatatype().equals(SimpleTimestampPattern.XSD_DATETIME)) continue;
             statementsToRemove.add(st);
         }

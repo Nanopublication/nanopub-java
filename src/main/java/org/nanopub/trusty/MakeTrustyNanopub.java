@@ -42,7 +42,7 @@ import net.trustyuri.rdf.TransformRdf;
 public class MakeTrustyNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-	private List<File> inputNanopubsFiles = new ArrayList<File>();
+	private List<File> inputNanopubsFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File singleOutputFile;
@@ -171,12 +171,10 @@ public class MakeTrustyNanopub extends CliRunner {
 			np = h.getNanopub();
 			mergeTransformMaps(tempRefMap, transformMap);
 			mergePrefixTransformMaps(tempPrefixMap, transformMap);
-		} catch (RDFHandlerException ex) {
-			throw new TrustyUriException(ex);
-		} catch (MalformedNanopubException ex) {
+		} catch (RDFHandlerException | MalformedNanopubException ex) {
 			throw new TrustyUriException(ex);
 		}
-		if (np instanceof NanopubWithNs) {
+        if (np instanceof NanopubWithNs) {
 			((NanopubWithNs) np).removeUnusedPrefixes();
 		}
 		return np;
@@ -215,12 +213,10 @@ public class MakeTrustyNanopub extends CliRunner {
 						// TODO temporary URI ref resolution not yet supported here
 						// TODO prefix-based cross-ref resolution also not yet supported
 						writeAsTrustyNanopub(np, format, out, tempRefMap, null);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
+					} catch (RDFHandlerException | TrustyUriException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 	
 			});
 		}

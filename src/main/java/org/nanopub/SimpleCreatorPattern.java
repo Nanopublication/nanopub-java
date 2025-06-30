@@ -76,7 +76,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
 	}
 
 	public static List<IRI> getAuthorList(Nanopub nanopub) {
-		List<IRI> authorList = new ArrayList<IRI>();
+		List<IRI> authorList = new ArrayList<>();
 		Set<IRI> authorSet = new HashSet<>();
 		Map<Integer,IRI> authorMap = new HashMap<>();
 		IRI authorListId = null;

@@ -27,14 +27,14 @@ public class FdoUtils {
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";
 
     /**
-     * Add the prefix "https://hdl.handle.net/" to the fdoHandle and returns it as IRI.
+     * Add the prefix "<a href="https://hdl.handle.net/">...</a>" to the fdoHandle and returns it as IRI.
      */
     public static IRI toIri(String fdoHandle) {
         return vf.createIRI(FDO_URI_PREFIX + fdoHandle);
     }
 
     /**
-     * Remove the prefix "https://hdl.handle.net/" from the IRI and returns the handle as string.
+     * Remove the prefix "<a href="https://hdl.handle.net/">...</a>" from the IRI and returns the handle as string.
      * returns the iri as string otherwise.
      */
     public static String extractHandle(Resource iri) {
@@ -46,7 +46,7 @@ public class FdoUtils {
     }
 
     /**
-     * Test if the iri starts with "https://hdl.handle.net/" followed by a handle.
+     * Test if the iri starts with "<a href="https://hdl.handle.net/">...</a>" followed by a handle.
      */
     public static boolean isHandleIri(Resource iri) {
         String potentialHandle = extractHandle(iri);
@@ -66,7 +66,7 @@ public class FdoUtils {
     }
 
     /**
-     * Create an IRI by prefixing a handle with https://hdl.handle.net/ if it's a handle,
+     * Create an IRI by prefixing a handle with <a href="https://hdl.handle.net/">...</a> if it's a handle,
      * or by just converting an url.
      */
     public static IRI createIri(String handleOrUrl) {

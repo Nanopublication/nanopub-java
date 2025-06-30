@@ -1,10 +1,10 @@
 package org.nanopub.extra.index;
 
-import java.util.Set;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
+
+import java.util.Set;
 
 /**
  * A nanopublication index is a nanopublication that refers to the URIs of other nanopublications,
@@ -17,8 +17,9 @@ import org.nanopub.Nanopub;
  * can define a first incomlete index with 1000 nanopubs, then a second incomplete one that appends
  * the first and refers to the next 1000 nanopubs, and finally a complete index that appends the
  * second and adds the remaining 500 nanopubs, thereby containing in total 2500 of them.
- *
- * See the following paper for a description of the general approach: http://arxiv.org/pdf/1411.2749
+ * <p>
+ * See the following paper for a description of the general approach:
+ * <a href="http://arxiv.org/pdf/1411.2749"></a>...</a>
  *
  * @author Tobias Kuhn
  */

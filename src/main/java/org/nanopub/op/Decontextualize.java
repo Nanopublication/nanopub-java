@@ -23,7 +23,7 @@ public class Decontextualize extends CliRunner {
 	public static final IRI graphPlaceholer = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/placeholders/graph");
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;

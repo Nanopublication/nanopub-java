@@ -82,18 +82,18 @@ public class NanopubUtils {
 	}
 
 	private static List<Statement> getSortedList(Set<Statement> s) {
-		List<Statement> l = new ArrayList<Statement>(s);
-		Collections.sort(l, new Comparator<Statement>() {
+		List<Statement> l = new ArrayList<>(s);
+		l.sort(new Comparator<>() {
 
-			@Override
-			public int compare(Statement st1, Statement st2) {
-				// TODO better sorting
-				// it works fine for now, since AbstractStatement has a valid toString()
-				// implementation, which does not consist of any runtime object references
-				return st1.toString().compareTo(st2.toString());
-			}
+            @Override
+            public int compare(Statement st1, Statement st2) {
+                // TODO better sorting
+                // it works fine for now, since AbstractStatement has a valid toString()
+                // implementation, which does not consist of any runtime object references
+                return st1.toString().compareTo(st2.toString());
+            }
 
-		});
+        });
 		return l;
 	}
 
@@ -127,9 +127,8 @@ public class NanopubUtils {
 	public static void propagateToHandler(Nanopub nanopub, RDFHandler handler)
 			throws RDFHandlerException {
 		handler.startRDF();
-		if (nanopub instanceof NanopubWithNs && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
-			NanopubWithNs np = (NanopubWithNs) nanopub;
-			for (String p : np.getNsPrefixes()) {
+		if (nanopub instanceof NanopubWithNs np && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
+            for (String p : np.getNsPrefixes()) {
 				handler.handleNamespace(p, np.getNamespace(p));
 			}
 		} else {
@@ -146,12 +145,12 @@ public class NanopubUtils {
 
 	public static RDFParser getParser(RDFFormat format) {
 		RDFParser p = Rio.createParser(format);
-		p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet<Namespace>());
+		p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet<>());
 		return p;
 	}
 
 	public static Set<String> getUsedPrefixes(NanopubWithNs np) {
-		Set<String> usedPrefixes = new HashSet<String>();
+		Set<String> usedPrefixes = new HashSet<>();
 		CustomTrigWriter writer = new CustomTrigWriter(usedPrefixes);
 		try {
 			NanopubUtils.propagateToHandler(np, writer);

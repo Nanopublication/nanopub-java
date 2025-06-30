@@ -21,7 +21,7 @@ import java.util.zip.GZIPOutputStream;
 public class Import extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-file", required = true)
-	private List<File> inputFiles = new ArrayList<File>();
+	private List<File> inputFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-t", description = "Input type (currently supported: cedar)", required = true)
 	private String type = null;

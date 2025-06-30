@@ -21,7 +21,7 @@ import java.util.zip.GZIPOutputStream;
 public class Aggregate extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-h", description = "Output file for aggregation of head graph")
 	private File headOutputFile;
@@ -83,12 +83,10 @@ public class Aggregate extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (IOException ex) {
+					} catch (RDFHandlerException | IOException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 
@@ -155,12 +153,12 @@ public class Aggregate extends CliRunner {
 		if (statementCounts == null) return;
 		BufferedWriter w = makeWriter(outputFile);
 		List<Statement> statementList = new ArrayList<>(statementCounts.keySet());
-		Collections.sort(statementList, new Comparator<Statement>() {
-			@Override
-			public int compare(Statement st1, Statement st2) {
-				return -statementCounts.get(st1).compareTo(statementCounts.get(st2));
-			}
-		});
+		statementList.sort(new Comparator<>() {
+            @Override
+            public int compare(Statement st1, Statement st2) {
+                return -statementCounts.get(st1).compareTo(statementCounts.get(st2));
+            }
+        });
 		for (Statement st : statementList) {
 			w.write(statementCounts.get(st) + " " + st.toString().replaceAll("http://example.org/npop-dummy-uri/", "") + "\n");
 		}

@@ -49,9 +49,8 @@ public class SimpleTimestampPattern implements NanopubPattern {
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(nanopub.getUri())) continue;
 			if (!isCreationTimeProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof Literal)) continue;
-			Literal l = (Literal) st.getObject();
-			if (!l.getDatatype().equals(XSD_DATETIME)) continue;
+			if (!(st.getObject() instanceof Literal l)) continue;
+            if (!l.getDatatype().equals(XSD_DATETIME)) continue;
 			s = l.stringValue();
 			break;
 		}

@@ -20,7 +20,7 @@ import java.util.zip.GZIPOutputStream;
 public class Extract extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-a", description = "Extract assertion triples")
 	private boolean extractAssertion = false;

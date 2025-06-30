@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 public class Filter extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-f", description = "Filter by URI or literal")
 	private String filter = null;

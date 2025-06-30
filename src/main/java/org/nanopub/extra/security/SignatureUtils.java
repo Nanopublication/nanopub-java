@@ -149,9 +149,8 @@ public class SignatureUtils {
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
 		IRI piUri = preNanopub.getPubinfoUri();
 		Map<String,String> nsMap = new HashMap<>();
-		if (preNanopub instanceof NanopubWithNs) {
-			NanopubWithNs preNanopubNs = (NanopubWithNs) preNanopub;
-			for (String prefix : preNanopubNs.getNsPrefixes()) {
+		if (preNanopub instanceof NanopubWithNs preNanopubNs) {
+            for (String prefix : preNanopubNs.getNsPrefixes()) {
 				nsMap.put(prefix, preNanopubNs.getNamespace(prefix));
 			}
 		}
@@ -200,7 +199,7 @@ public class SignatureUtils {
 		Literal signatureLiteral = vf.createLiteral(DatatypeConverter.printBase64Binary(signatureBytes));
 
 		// Preprocess signature statement:
-		List<Statement> sigStatementList = new ArrayList<Statement>();
+		List<Statement> sigStatementList = new ArrayList<>();
 		sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
 		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).get(0);
 

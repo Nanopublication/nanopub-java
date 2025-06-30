@@ -24,7 +24,7 @@ import java.util.zip.GZIPOutputStream;
 public class ExportJson extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -76,12 +76,10 @@ public class ExportJson extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (IOException ex) {
+					} catch (RDFHandlerException | IOException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 
@@ -124,9 +122,8 @@ public class ExportJson extends CliRunner {
 		writer.write("  \"s\": \"" + escape(st.getSubject()) + "\",\n");
 		writer.write("  \"p\": \"" + escape(st.getPredicate()) + "\",\n");
 		writer.write("  \"o\": \"" + escape(st.getObject()) + "\",\n");
-		if (st.getObject() instanceof Literal) {
-			Literal l = (Literal) st.getObject();
-			if (l.getLanguage() != null) {
+		if (st.getObject() instanceof Literal l) {
+            if (l.getLanguage() != null) {
 				writer.write("  \"dt\": \"" + escape(l.getDatatype()) + "\",\n");
 			} else {
 				writer.write("  \"l\": \"" + l.getLanguage() + "\",\n");

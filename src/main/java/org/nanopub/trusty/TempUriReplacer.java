@@ -13,7 +13,7 @@ import org.nanopub.Nanopub;
 
 /**
  * You can use temporary URIs for your nanopublications that start with
- * "http://purl.org/nanopub/temp/". These then become "https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/"
+ * "<a href="http://purl.org/nanopub/temp/">...</a>". T<a href="hese">then become "https://w3id.org/np/ARTIFAC</a>TCODE-PLACEHOLDER/"
  * before being transformed to trusty nanopublications, and as final trusty nanopublications have
  * the actual artifact code instead of the placeholder.
  *

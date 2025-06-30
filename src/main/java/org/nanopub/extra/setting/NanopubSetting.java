@@ -68,9 +68,8 @@ public class NanopubSetting implements Serializable {
 				name = st.getObject().stringValue();
 				continue;
 			}
-			if (!(st.getObject() instanceof IRI)) continue;
-			IRI obj = (IRI) st.getObject();
-			if (pred.equals(HAS_AGENTS)) {
+			if (!(st.getObject() instanceof IRI obj)) continue;
+            if (pred.equals(HAS_AGENTS)) {
 				if (agentIntroCollection != null) throw new RuntimeException("Two agent intro collections found: " + nanopub.getUri());
 				agentIntroCollection = obj;
 			} else if (pred.equals(HAS_SERVICES)) {
