@@ -1,25 +1,20 @@
 package org.nanopub;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Set;
-
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.PROV;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-import org.nanopub.extra.security.SignNanopub;
-import org.nanopub.extra.security.TransformContext;
-import org.nanopub.extra.server.PublishNanopub;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class NanopubUtilsTest {
 

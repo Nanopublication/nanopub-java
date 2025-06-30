@@ -8,7 +8,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.Nanopub;
 
-public class FdoUtils {
+public final class FdoUtils {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -25,6 +25,10 @@ public class FdoUtils {
 
     public static final IRI DATA_REF_IRI = vf.createIRI("https://w3id.org/fdof/ontology#isMaterializedBy");
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";
+
+    private FdoUtils() {
+        // no instances
+    }
 
     /**
      * Add the prefix "<a href="https://hdl.handle.net/">...</a>" to the fdoHandle and returns it as IRI.

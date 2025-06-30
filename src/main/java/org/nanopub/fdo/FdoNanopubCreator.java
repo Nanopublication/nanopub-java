@@ -68,25 +68,7 @@ public class FdoNanopubCreator {
 
     public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException {
         ParsedJsonResponse response = new HandleResolver().call(id);
-        String label = null;
-        IRI profile = null;
-
-        for (Value v: response.values) {
-            if (v.type.equals("name")) {
-                label = String.valueOf(v.data.value);
-            }
-            if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2)) {
-                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
-                String profileValue = String.valueOf(v.data.value);
-                if (looksLikeHandle(profileValue)) {
-                    profile = toIri(profileValue);
-                } else {
-                    profile = vf.createIRI(profileValue);
-                }
-            }
-        }
-
-        FdoRecord record = new FdoRecord(profile, label, null);
+        FdoRecord record = initFdoRecord(response);
 
         for (Value v: response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
@@ -116,6 +98,29 @@ public class FdoNanopubCreator {
                 }
             }
         }
+        return record;
+    }
+
+    private static FdoRecord initFdoRecord(ParsedJsonResponse response) {
+        String label = null;
+        IRI profile = null;
+
+        for (Value v: response.values) {
+            if (v.type.equals("name")) {
+                label = String.valueOf(v.data.value);
+            }
+            if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2)) {
+                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
+                String profileValue = String.valueOf(v.data.value);
+                if (looksLikeHandle(profileValue)) {
+                    profile = toIri(profileValue);
+                } else {
+                    profile = vf.createIRI(profileValue);
+                }
+            }
+        }
+
+        FdoRecord record = new FdoRecord(profile, label, null);
         return record;
     }
 
