@@ -63,8 +63,8 @@ public class RetrieveFdo {
 		if (data.isEmpty()) {
 			return null;
 		}
-		String npref = data.get(0).get("np");
-		Nanopub np = GetNanopub.get(npref);
+		String npRef = data.getFirst().get("np");
+		Nanopub np = GetNanopub.get(npRef);
 		return np;
 	}
 

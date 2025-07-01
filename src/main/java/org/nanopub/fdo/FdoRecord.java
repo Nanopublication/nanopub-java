@@ -8,12 +8,17 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.nanopub.Nanopub.SUPERSEDES;
 import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 
@@ -29,6 +34,9 @@ public class FdoRecord implements Serializable {
 
 	private IRI id = null;
 	private final HashMap<IRI, Value> tuples = new HashMap<>();
+
+	/** When teh FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it. */
+	private Nanopub originalNanopub = null;
 
 	/**
 	 * Constructor for building an FDO Record
@@ -53,6 +61,7 @@ public class FdoRecord implements Serializable {
 		for (Statement st: np.getAssertion()) {
 			tuples.put(st.getPredicate(), st.getObject());
 		}
+		this.originalNanopub = np;
 	}
 
 	/** Build statements out of tuples, requires the id (fdoIri) to be set */
@@ -127,6 +136,36 @@ public class FdoRecord implements Serializable {
 
 	public Value getDataRef() {
 		return tuples.get(FdoUtils.DATA_REF_IRI);
+	}
+
+	public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
+		return createUpdatedNanopub(TransformContext.makeDefault());
+	}
+
+	public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
+		if (originalNanopub == null) {
+			throw new MalformedCryptoElementException("There is no original nanopub to update.");
+		}
+		String oldPubKey = SignatureUtils.getSignatureElement(originalNanopub).getPublicKeyString();
+		String newPubKey = SignatureUtils.encodePublicKey(tc.getKey().getPublic());
+		if (!oldPubKey.equals(newPubKey)) {
+			throw new MalformedCryptoElementException("The old public key does not match the new public key");
+		}
+		NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(this, this.getId());
+		IRI assertionUri = creator.getAssertionUri();
+		for (Statement st : originalNanopub.getProvenance()) {
+			creator.addProvenanceStatement(assertionUri, st.getPredicate(), st.getObject());
+		}
+		creator.addPubinfoStatement(SUPERSEDES, originalNanopub.getUri());
+		return creator;
+	}
+
+	/**
+	 * If this FdoRecord was created by a Nanopub, we return that Nanopub.
+	 * null otherwise.
+	 */
+	public Nanopub getOriginalNanopub() {
+		return originalNanopub;
 	}
 
 }
