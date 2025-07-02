@@ -34,6 +34,7 @@ public class FdoRecord implements Serializable {
 
 	private IRI id = null;
 	private final HashMap<IRI, Value> tuples = new HashMap<>();
+	private final Set<IRI> aggregates = new HashSet<>();
 
 	/** When teh FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it. */
 	private Nanopub originalNanopub = null;
@@ -69,6 +70,12 @@ public class FdoRecord implements Serializable {
 		Set<Statement> statements = new HashSet<>();
 		for (var entry: tuples.entrySet()) {
 			statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));
+		}
+		if (tuples.containsKey(DATA_REF_IRI) && !aggregates.isEmpty()) {
+			throw new RuntimeException("Complex FDOs cannot have DATA_REF");
+		}
+		for (IRI aggregate: aggregates) {
+			statements.add(vf.createStatement(this.id, FdoUtils.FDO_HAS_PART, aggregate));
 		}
 		return statements;
 	}
@@ -136,6 +143,10 @@ public class FdoRecord implements Serializable {
 
 	public Value getDataRef() {
 		return tuples.get(FdoUtils.DATA_REF_IRI);
+	}
+
+	public void addAggregatedFdo(IRI fdoUri) {
+		aggregates.add(fdoUri);
 	}
 
 	public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
