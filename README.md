@@ -81,7 +81,7 @@ the `curl` command is invoked.
 ## Usage with Docker
 
 You can use this [image from
-DockerHub](https://hub.docker.com/repository/docker/umids/nanopub-java).
+DockerHub](https://hub.docker.com/r/nanopub/nanopub-java).
 
 Sign a nanopublication (`nanopub.trig` file in current dir here):
 
