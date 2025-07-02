@@ -9,3 +9,6 @@
 /.project
 /.settings
 .DS_Store
+
+site/
+venv/
