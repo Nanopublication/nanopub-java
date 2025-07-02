@@ -35,6 +35,7 @@ public class FdoRecord implements Serializable {
 	private IRI id = null;
 	private final HashMap<IRI, Value> tuples = new HashMap<>();
 	private final Set<IRI> aggregates = new HashSet<>();
+	private final Set<IRI> derivesFrom = new HashSet<>();
 
 	/** When teh FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it. */
 	private Nanopub originalNanopub = null;
@@ -76,6 +77,9 @@ public class FdoRecord implements Serializable {
 		}
 		for (IRI aggregate: aggregates) {
 			statements.add(vf.createStatement(this.id, FdoUtils.FDO_HAS_PART, aggregate));
+		}
+		for (IRI derive: derivesFrom) {
+			statements.add(vf.createStatement(this.id, FdoUtils.FDO_DERIVES_FROM, derive));
 		}
 		return statements;
 	}
@@ -147,6 +151,10 @@ public class FdoRecord implements Serializable {
 
 	public void addAggregatedFdo(IRI fdoUri) {
 		aggregates.add(fdoUri);
+	}
+
+	public void addDerivedFromFdo(IRI fdoUri) {
+		derivesFrom.add(fdoUri);
 	}
 
 	public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {

@@ -15,6 +15,7 @@ public final class FdoUtils {
     public static final String FDO_URI_PREFIX = "https://hdl.handle.net/";
     public static final IRI RDF_TYPE_FDO = vf.createIRI("https://w3id.org/fdof/ontology#FAIRDigitalObject");
     public static final IRI FDO_HAS_PART = vf.createIRI("https://purl.org/dc/terms/hasPart");
+    public static final IRI FDO_DERIVES_FROM = vf.createIRI("https://www.w3.org/ns/prov#wasDerivedFrom");
 
     public static final IRI PROFILE_CLASS_IRI = vf.createIRI("https://w3id.org/fdoc/o/terms/FdoProfile");
     public static final IRI PROFILE_IRI = vf.createIRI("http://purl.org/dc/terms/conformsTo");
