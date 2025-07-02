@@ -4,17 +4,13 @@ site_author: Robin Richardson, Sven van der Burg, Vincent Emonet
 site_url: https://nanopublication.github.io/nanopub-java
 repo_name: Nanopublication/nanopub-java
 repo_url: https://github.com/Nanopublication/nanopub-java
-edit_uri: "edit/main/docs/"
-copyright: Copyright &copy; 2020 Robin Richardson, Sven van der Burg
 
 nav:
-  - Getting started:
+  - Home:
       - Getting started: index.md
       - What are Nanopublications?: getting-started/what-are-nanopubs.md
       - Setup instructions: getting-started/setup.md
-  - Create: create.md
-  - Sign: sign.md
-  - Publish: publish.md
+  - Quick start: quickstart.md
 
 theme:
   name: "material"
@@ -39,9 +35,9 @@ theme:
         name: Switch to light mode
   features:
     - content.code.annotate
+    - content.code.copy
     - navigation.indexes
     - navigation.sections
-    - navigation.tabs
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -71,6 +67,7 @@ watch:
 
 # Styled blocks: https://squidfunk.github.io/mkdocs-material/reference/admonitions/#supported-types
 markdown_extensions:
+  - attr_list
   - admonition
   - pymdownx.highlight:
       anchor_linenums: true
@@ -80,7 +77,9 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
-  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - smarty
 
 
@@ -92,6 +91,7 @@ markdown_extensions:
   #- assets/solid.min.js
 
 extra:
+  generator: false
   social:
     #- icon: fontawesome/brands/python
     #  link: https://pypi.org/project/nanopub
@@ -99,3 +99,6 @@ extra:
       link: https://github.com/Nanopublication/nanopub-java
     - icon: fontawesome/brands/docker
       link: https://hub.docker.com/r/nanopub/nanopub-java
+
+copyright: |
+  &copy; 2025 <a target="_blank" rel="noopener" href="https://knowledgepixels.com/">Knowledge Pixels</a>
