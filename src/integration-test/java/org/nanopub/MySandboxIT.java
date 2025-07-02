@@ -37,7 +37,7 @@ public class MySandboxIT {
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, "FdoExample");
 
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
 //        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
@@ -65,7 +65,7 @@ public class MySandboxIT {
         record.addAggregatedFdo(aggregate3);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, "complexFdoExample001");
 
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
@@ -91,7 +91,7 @@ public class MySandboxIT {
         record.addDerivedFromFdo(deriveFrom2);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, "exampleDerivedFdo");
 
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
         RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));

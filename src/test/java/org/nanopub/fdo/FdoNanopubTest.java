@@ -46,7 +46,7 @@ public class FdoNanopubTest {
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
 
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -62,7 +62,7 @@ public class FdoNanopubTest {
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
 
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -77,7 +77,7 @@ public class FdoNanopubTest {
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
         Assert.assertTrue(FdoUtils.isFdoNanopub(np));
@@ -117,7 +117,7 @@ public class FdoNanopubTest {
 
         // create nanopub
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
-        creator.addProvenanceStatement(PROV.ATTRIBUTION, vf.createIRI(signer));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI(signer));
         Nanopub np = creator.finalizeNanopub();
 
         // enter your key
