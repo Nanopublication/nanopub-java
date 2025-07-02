@@ -135,16 +135,17 @@ public class TheseTestsRequireOtherSystemsIT {
         }
     }
 
-//    @Test
+    // @Test
     void exampleForUpdatingFdoNanopub() throws Exception {
-        String id = "21.T11967/39b0ec87d17a4856c5f7";
+        String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
         FdoRecord record = RetrieveFdo.resolveId(id);
         record.setAttribute(FdoUtils.toIri("handleToUpdate"),
                 vf.createLiteral("New-Value-" + random.nextInt()));
         String signer = "https://orcid.org/0009-0008-3635-347X"; // TODO enter your orcid
-        // here we use the test key, not a real one
-        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
-        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
+        // for updating the original nanopub must be signed with the same key
+//        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
+//        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
+        TransformContext context = TransformContext.makeDefault();
         NanopubCreator creator = record.createUpdatedNanopub(context);
 
         Nanopub newNp = creator.finalizeNanopub(true);
