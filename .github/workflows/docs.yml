@@ -4,6 +4,9 @@ on:
   push:
     branches: [ master, main ]
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
