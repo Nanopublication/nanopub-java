@@ -1,6 +1,6 @@
 # Setup instructions
 
-The tool is released to Maven central as Maven artifact and Docker image. There is also a CLI available.
+The tool is released to Maven central as a Maven artifact and Docker image. There is also a CLI available.
 
 ## :package: Install from Maven Central
 

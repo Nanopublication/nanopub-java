@@ -23,7 +23,7 @@ Nanopub np = npCreator.finalizeNanopub(true);
 
     Before you can sign and publish you should [setup your profile](/nanopub/getting-started/setup), check if it is properly set by running `np profile` in your terminal.
 
-``` Java
+```java
 Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
 ```
 
@@ -32,18 +32,18 @@ Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault
 !!! info "Prerequisite for creating/publishing"
 
 	To create and publish nanopublications, you need to first make sure you have a local keypair. To create such a keypair, run just once:
-    ``` Java
+    ```java
     MakeKeys.make("~/.nanopub/id", SignatureAlgorithm.RSA);
     ```
 
 ### Publish to the Test Server
 
-``` Java
+```java
 PublishNanopub.publishToTestServer(signedNp);
 ```
 
 ### Publish to the Production Server
 
-``` Java
+```java
 PublishNanopub.publish(signedNp);
 ```
