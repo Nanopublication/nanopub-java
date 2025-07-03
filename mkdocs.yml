@@ -15,7 +15,7 @@ nav:
 theme:
   name: "material"
   favicon: assets/icon.png
-  logo: assets/icon.png
+  logo: assets/nanopub-icon.svg
   # icon:
   #   logo: material/microscope
   language: en
