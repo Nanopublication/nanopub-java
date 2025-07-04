@@ -149,8 +149,14 @@ public class FdoRecord implements Serializable {
 		return tuples.get(FdoUtils.DATA_REF_IRI);
 	}
 
-	public void addAggregatedFdo(IRI fdoUri) {
-		aggregates.add(fdoUri);
+	public void addAggregatedFdo(String uriOrHandle) {
+		if (FdoUtils.looksLikeUrl(uriOrHandle)) {
+			aggregates.add(vf.createIRI(uriOrHandle));
+		} else if (FdoUtils.looksLikeHandle(uriOrHandle)) {
+			aggregates.add(FdoUtils.toIri(uriOrHandle));
+		} else {
+			throw new RuntimeException("uriOrHandle is neither uri nor handle: " + uriOrHandle);
+		}
 	}
 
 	public void addDerivedFromFdo(IRI fdoUri) {
