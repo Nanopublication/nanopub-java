@@ -10,7 +10,9 @@ nav:
       - Getting started: index.md
       - What are Nanopublications?: getting-started/what-are-nanopubs.md
       - Setup instructions: getting-started/setup.md
-  - Quick start: quickstart.md
+  - Quick start:
+    - Java: quick-start/java.md
+    - UNIX Command-Line (CLI): quick-start/cli.md
 
 theme:
   name: "material"
