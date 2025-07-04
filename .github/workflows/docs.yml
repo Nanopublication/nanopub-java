@@ -3,6 +3,11 @@ name: Publish docs
 on:
   push:
     branches: [ master, main ]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'pyproject.toml'
+      - 'poetry.lock'
 
 permissions:
   contents: write
