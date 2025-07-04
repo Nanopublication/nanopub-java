@@ -12,7 +12,10 @@ import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.FailedApiCallException;
 import org.nanopub.fdo.FdoNanopubTest;
+import org.nanopub.fdo.FdoQuery;
 import org.nanopub.fdo.RetrieveFdo;
 
 import java.io.IOException;
@@ -82,6 +85,21 @@ public class UsageExamples {
 
     void examplesWithHandleSystem() throws MalformedNanopubException {
         // look at
-        new TheseTestsRequireOtherSystemsIT();
+        new GeneralIntegrationTestsIT();
+    }
+
+    void examplesForQueryingFdo () throws FailedApiCallException {
+        // This query performs a full-text search on the FDO nanopublications.
+        ApiResponse response1 = FdoQuery.textSearch("myText");
+
+        // This query returns the FDOs whose records refer to the given PID / handle
+        ApiResponse response2 = FdoQuery.findByRef("21.T11966/82045bd97a0acce88378");
+
+        // This query returns the latest FDOs from the specified creator.
+        ApiResponse response3 = FdoQuery.getFeed("https://orcid.org/0009-0008-3635-347X");
+
+        // This query returns the things the given user has declared to be their favorites (using cito:likes).
+        ApiResponse response4 = FdoQuery.getFavoriteThings("https://orcid.org/0000-0002-1267-0234");
+
     }
 }

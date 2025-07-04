@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.ApiResponseEntry;
+import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.fdo.FdoNanopubCreator;
 import org.nanopub.fdo.FdoRecord;
 
@@ -20,6 +23,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.List;
+import java.util.Map;
 
 public class MySandboxIT {
 
@@ -125,4 +130,23 @@ public class MySandboxIT {
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
         PublishNanopub.publish(signedNp);
     }
+
+//    @Test
+    void specificQuery() throws Exception {
+        String textSearch = "RAkYh4UPJryajbtIDbLG-Bfd6A4JD2SbU9bmZdvaEdFRY/fdo-text-search";
+        String findByRef = "RAQiQjx3OiO9ra9ImWl9kpuDpT8d3EiBSrftckOAAwGKc/find-fdos-by-ref";
+        String getFeed = "RAP1G35VvTs3gfMaucv_xZUMZuvjB9lxM8tWUGttr5mmo/get-fdo-feed";
+        String getFavorites = "RAsyc6zFFnE8mblnDfdCCNRsrcN1CSCBDW9I4Ppidgk9g/get-favorite-things";
+
+        ApiResponse apiResponse = QueryAccess.get(getFeed, Map.of("creator","https://orcid.org/0009-0008-3635-347X"));
+        List<ApiResponseEntry> data = apiResponse.getData();
+        for (ApiResponseEntry entry : data) {
+            for (String k: entry.getKeys()) {
+                System.out.println(k + ": " + entry.get(k));
+            }
+            System.out.println();
+        }
+
+    }
+
 }
