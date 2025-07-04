@@ -8,6 +8,7 @@ on:
       - 'mkdocs.yml'
       - 'pyproject.toml'
       - 'poetry.lock'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: write
@@ -37,4 +38,4 @@ jobs:
       - name: Deploy MkDocs on GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: poetry run mkdocs gh-deploy
+        run: poetry run mkdocs gh-deploy --force
