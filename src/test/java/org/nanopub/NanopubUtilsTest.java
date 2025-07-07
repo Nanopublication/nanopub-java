@@ -87,6 +87,13 @@ public class NanopubUtilsTest {
     }
 
     @Test
+    void testEquality() throws Exception {
+        Nanopub np1 = createNanopub();
+        Nanopub np2 = createNanopub();
+        assertThat(np1.equals(np2)).isTrue();
+    }
+
+    @Test
     void writeToString() throws MalformedNanopubException, IOException {
         Nanopub nanopub = createNanopub();
 
