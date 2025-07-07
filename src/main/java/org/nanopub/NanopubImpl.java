@@ -522,4 +522,14 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		return byteCount;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof NanopubImpl nanopub)) return false;
+        return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved && tripleCount == nanopub.tripleCount && byteCount == nanopub.byteCount && Objects.equals(nanopubUri, nanopub.nanopubUri) && Objects.equals(headUri, nanopub.headUri) && Objects.equals(assertionUri, nanopub.assertionUri) && Objects.equals(provenanceUri, nanopub.provenanceUri) && Objects.equals(pubinfoUri, nanopub.pubinfoUri) && Objects.equals(graphUris, nanopub.graphUris) && Objects.equals(head, nanopub.head) && Objects.equals(assertion, nanopub.assertion) && Objects.equals(provenance, nanopub.provenance) && Objects.equals(pubinfo, nanopub.pubinfo) && Objects.equals(statements, nanopub.statements) && Objects.equals(nsPrefixes, nanopub.nsPrefixes) && Objects.equals(ns, nanopub.ns);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(nanopubUri, headUri, assertionUri, provenanceUri, pubinfoUri, graphUris, head, assertion, provenance, pubinfo, statements, nsPrefixes, ns, unusedPrefixesRemoved, tripleCount, byteCount);
+	}
 }
