@@ -35,6 +35,7 @@ implementing that command.
 - rocrate / RoCrateImporter
 
 Some commands are grouped as subcommands of the `op` command.
+
 - filter / Filter
 - extract / Extract
 - gml / Gml
