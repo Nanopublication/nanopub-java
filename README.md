@@ -61,6 +61,8 @@ For the complete code checkout ``UsageExamples.java``.
 See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
 source code documentation.
 
+The FDO-specific classes are documented [here](https://javadoc.io/doc/org.nanopub/nanopub/latest/org/nanopub/fdo/package-summary.html).
+
 
 ## Usage on Unix Command-Line
 
