@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A class to read the nanopub profile file, which is a YAML file.
+ */
 public class NanopubProfile {
     // For writing profile file see:
     // https://stackoverflow.com/questions/24949505/how-do-i-write-to-a-yaml-file-using-snakeyaml
@@ -17,6 +20,11 @@ public class NanopubProfile {
 
     private Map<String, Object> map;
 
+    /**
+     * Constructor that reads the profile file from the default location.
+     *
+     * @param profileFileName the name of the profile file to read.
+     */
     public NanopubProfile(String profileFileName) {
         File profileFile = new File(profileFileName);
         if (profileFile.exists()) {
@@ -32,6 +40,8 @@ public class NanopubProfile {
     }
 
     /**
+     * Returns the value of the private key in the profile.yaml file.
+     *
      * @return the value of private_key in the profile.yaml, iff the file is there and the value is defined.
      * null otherwise.
      */
@@ -40,6 +50,8 @@ public class NanopubProfile {
     }
 
     /**
+     * Returns the value of the orcid_id in the profile.yaml file.
+     *
      * @return the value of orcid_id in the profile.yaml, iff the file is there and the value is defined.
      * null otherwise.
      */

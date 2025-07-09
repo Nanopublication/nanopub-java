@@ -10,6 +10,7 @@ import java.util.Map;
  */
 public interface NanopubWithNs extends Nanopub {
 
+
 	public List<String> getNsPrefixes();
 
 	public Map<String, String> getNs();
