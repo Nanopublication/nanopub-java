@@ -171,11 +171,7 @@ public class FdoRecord implements Serializable {
 		if (originalNanopub == null) {
 			throw new MalformedCryptoElementException("There is no original nanopub to update.");
 		}
-		String oldPubKey = SignatureUtils.getSignatureElement(originalNanopub).getPublicKeyString();
-		String newPubKey = SignatureUtils.encodePublicKey(tc.getKey().getPublic());
-		if (!oldPubKey.equals(newPubKey)) {
-			throw new MalformedCryptoElementException("The old public key does not match the new public key");
-		}
+		SignatureUtils.assertMatchingPubkeys(tc, originalNanopub);
 		NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(this, this.getId());
 		IRI assertionUri = creator.getAssertionUri();
 		for (Statement st : originalNanopub.getProvenance()) {

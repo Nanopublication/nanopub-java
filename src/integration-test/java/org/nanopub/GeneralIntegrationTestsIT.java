@@ -91,7 +91,7 @@ public class GeneralIntegrationTestsIT {
         }
     }
 
-    // @Test
+//     @Test
     void exampleForUpdatingFdoNanopub() throws Exception {
         String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
         FdoRecord record = RetrieveFdo.resolveId(id);

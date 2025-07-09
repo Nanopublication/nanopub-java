@@ -11,6 +11,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
@@ -146,7 +147,15 @@ public class MySandboxIT {
             }
             System.out.println();
         }
+    }
 
+//    @Test
+    void retractNanopubTest() throws Exception {
+        Nanopub original = GetNanopub.get("https://w3id.org/np/RA1Lhd0Rt5xuz63vjeUYgGJrgeUvH-7QKwAiPgj44WWgg");
+        Nanopub retraction = NanopubRetractor.createRetraction(original, TransformContext.makeDefault());
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+        NanopubUtils.propagateToHandler(retraction, w);
+        PublishNanopub.publish(retraction);
     }
 
 }
