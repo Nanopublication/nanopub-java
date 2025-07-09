@@ -19,12 +19,3 @@ Undo failed release attempt:
 Update Dependencies:
 
     $ mvn versions:use-latest-versions && mvn versions:update-properties
-
-
-## Copyright Main Branch
-
-Copyright lines of main branch contributions (MIT License):
-
-    Copyright (c) 2013-2022 by Tobias Kuhn
-    Copyright (c) 2023-2025 by Knowledge Pixels
-
