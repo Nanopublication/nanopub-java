@@ -1,10 +1,11 @@
-# nanopub-java with FDO support
+# nanopub-java-fdo
 
 This is a Java library for nanopublications (see http://nanopub.net) based on
-RDF4J, with additional support for FDOs.
+RDF4J, with additional support for FAIR Digital Objects (FDOs).
 
 It implements the formal structure defined in the [official nanopublication
-guidelines](http://nanopub.net/guidelines/working_draft/).
+guidelines](http://nanopub.net/guidelines/working_draft/) and the specification
+for FDOs as defined by the [FDO Forum](https://fairdo.org/).
 
 
 ## Usage as Java Library
@@ -129,13 +130,6 @@ To create a html report out of jacoco.exec (target/site/jacoco/index.html) use:
 ```bash
 mvn jacoco:report
 ```
-
-
-## Publication
-
-- Tobias Kuhn.  [nanopub-java: A Java Library for
-  Nanopublications](http://arxiv.org/pdf/1508.04977.pdf). In Proceedings of the
-  5th Workshop on Linked Science (LISC 2015). 2015.
 
 
 ## License
