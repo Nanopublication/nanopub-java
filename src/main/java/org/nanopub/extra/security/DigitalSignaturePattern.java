@@ -9,8 +9,6 @@ import org.nanopub.NanopubPattern;
 
 public class DigitalSignaturePattern implements NanopubPattern {
 
-	private static final long serialVersionUID = 669651544354988407L;
-
 	@Override
 	public String getName() {
 		return "Digitally signed nanopublication";

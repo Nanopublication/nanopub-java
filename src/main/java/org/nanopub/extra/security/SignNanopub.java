@@ -4,11 +4,14 @@ import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.security.*;
@@ -23,16 +26,13 @@ import java.util.zip.GZIPOutputStream;
 public class SignNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
-	private List<File> inputNanopubFiles = new ArrayList<File>();
+	private List<File> inputNanopubFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File singleOutputFile;
 
 	@com.beust.jcommander.Parameter(names = "-k", description = "Path and file name of key files")
 	private String keyFilename;
-
-	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
-	private SignatureAlgorithm algorithm;
 
 	@com.beust.jcommander.Parameter(names = "-i", description = "Ignore already signed nanopubs")
 	private boolean ignoreSigned = false;
@@ -45,6 +45,18 @@ public class SignNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
 	private boolean resolveCrossRefsPrefixBased = false;
+
+	@com.beust.jcommander.Parameter(names = "-s", description = "The orcid IRI of the signer")
+	private String signer;
+
+	@com.beust.jcommander.Parameter(names = "--profile", description = "Profile file for signer iri and key files, " +
+			"defaults to ~/.nanopub/profile.yaml")
+	private File profileFile;
+
+
+	private SignatureAlgorithm algorithm; // we guess the algorithm is RSA as long as the key name does not end in _dsa
+
+	private ValueFactory vf = SimpleValueFactory.getInstance();
 
 	public static void main(String[] args) throws IOException {
 		try {
@@ -64,23 +76,34 @@ public class SignNanopub extends CliRunner {
     }
 
 	protected void run() throws Exception {
-		if (algorithm == null) {
-			if (keyFilename == null) {
-				keyFilename = "~/.nanopub/id_rsa";
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_rsa")) {
-				algorithm = SignatureAlgorithm.RSA;
-			} else if (keyFilename.endsWith("_dsa")) {
-				algorithm = SignatureAlgorithm.DSA;
-			} else {
-				// Assuming RSA if not other information is available
-				algorithm = SignatureAlgorithm.RSA;
-			}
-		} else if (keyFilename == null) {
-			keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
+		NanopubProfile profile;
+		if (profileFile != null) {
+			profile = new NanopubProfile(profileFile.getPath());
+		} else {
+			profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
 		}
+		if (keyFilename == null) {
+			keyFilename = profile.getPrivateKeyPath();
+		}
+		if (keyFilename == null) {
+			keyFilename = "~/.nanopub/id_rsa";
+		}
+
+		if (keyFilename.endsWith("_dsa")) {
+			algorithm = SignatureAlgorithm.DSA;
+		} else {
+			// Assuming RSA if not other information is available
+			algorithm = SignatureAlgorithm.RSA;
+		}
+
 		key = loadKey(keyFilename, algorithm);
-		final TransformContext c = new TransformContext(algorithm, key, null, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
+		IRI signerIri = null;
+		if (signer != null) {
+			signerIri = vf.createIRI(signer);
+		} else if (profile.getOrcidId() != null) {
+			signerIri = vf.createIRI(profile.getOrcidId());
+		}
+		final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
 		final OutputStream singleOut;
 		if (singleOutputFile != null) {
@@ -119,20 +142,11 @@ public class SignNanopub extends CliRunner {
 							if (verbose) {
 								System.out.println("Nanopub URI: " + np.getUri());
 							}
-						} catch (RDFHandlerException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (TrustyUriException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (InvalidKeyException ex) {
-							ex.printStackTrace();
-							throw new RuntimeException(ex);
-						} catch (SignatureException ex) {
+						} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 							ex.printStackTrace();
 							throw new RuntimeException(ex);
 						}
-					}
+                    }
 	
 				});
 			}
@@ -174,20 +188,11 @@ public class SignNanopub extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						writeAsSignedTrustyNanopub(np, format, c, out);
-					} catch (RDFHandlerException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (InvalidKeyException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (SignatureException ex) {
+					} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 						ex.printStackTrace();
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 	
 			});
 		}

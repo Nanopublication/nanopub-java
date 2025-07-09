@@ -109,12 +109,12 @@ public abstract class NanopubIndexCreator {
 	}
 
 	/**
-	 * This method should return the base URI of the nanopublication index. This should ideally
-	 * be the URL of a nanopub server, such as http://np.inn.ac/, which makes the resulting
-	 * trusty URIs resolvable.
-	 *
-	 * @return The base URI as a string.
-	 */
+     * This method should return the base URI of the nanopublication index. This should ideally
+     * be the URL of a nanopub server, such as <a href="http://np.inn.ac/">...</a>, which makes the resulting
+     * trusty URIs resolvable.
+     *
+     * @return The base URI as a string.
+     */
 	public abstract String getBaseUri();
 
 	/**

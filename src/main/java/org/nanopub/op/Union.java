@@ -22,7 +22,7 @@ import java.util.zip.GZIPOutputStream;
 public class Union extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -47,7 +47,7 @@ public class Union extends CliRunner {
 
 	private RDFFormat rdfInFormat, rdfOutFormat;
 	private OutputStream outputStream = System.out;
-	private Map<String,Boolean> seen = new HashMap<String,Boolean>();
+	private Map<String,Boolean> seen = new HashMap<>();
 	private int duplicates = 0;
 
 	private void run() throws IOException, RDFParseException, RDFHandlerException,

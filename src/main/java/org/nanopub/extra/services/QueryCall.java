@@ -20,7 +20,7 @@ import org.nanopub.NanopubUtils;
 public class QueryCall {
 
 	private static int parallelCallCount = 2;
-	private static int maxRetryCount = 5;
+	private static int maxRetryCount = 3;
 
 	public static HttpResponse run(String queryId, Map<String,String> params) {
 		int retryCount = 0;
@@ -53,7 +53,7 @@ public class QueryCall {
 
 	public static List<String> getApiInstances() {
 		if (checkedApiInstances != null) return checkedApiInstances;
-		checkedApiInstances = new ArrayList<String>();
+		checkedApiInstances = new ArrayList<>();
 		for (String a : queryApiInstances) {
 			try {
 				System.err.println("Checking API instance: " + a);

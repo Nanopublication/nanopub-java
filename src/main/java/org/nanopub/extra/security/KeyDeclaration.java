@@ -8,8 +8,6 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class KeyDeclaration extends CryptoElement {
 
-	private static final long serialVersionUID = 1L;
-
 	public static final IRI DECLARED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/declaredBy");
 	public static final IRI HAS_KEY_LOCATION = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasKeyLocation");
 

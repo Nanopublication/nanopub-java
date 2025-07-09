@@ -89,10 +89,9 @@ public class NanopubStatus extends CliRunner {
 		ServerIterator serverIterator = new ServerIterator();
 		Nanopub nanopub = null;
 		while (serverIterator.hasNext()) {
-			ServerInfo serverInfo = serverIterator.next();
-			String serverUrl = serverInfo.getPublicUrl();
+			RegistryInfo registryInfo = serverIterator.next();
 			try {
-				Nanopub np = GetNanopub.get(ac, serverUrl);
+				Nanopub np = GetNanopub.get(ac, registryInfo);
 				if (np != null) {
 					if (checkIndexContent && !IndexUtils.isIndex(np)) {
 						System.err.println("ERROR. Not an index: " + nanopubId);
@@ -100,7 +99,7 @@ public class NanopubStatus extends CliRunner {
 					}
 					if (nanopub == null) nanopub = np;
 					if (!recursive || verbose) {
-						System.out.println("URL: " + serverUrl + ac);
+						System.out.println("URL: " + registryInfo.getCollectionUrl() + ac);
 					}
 					if (checkAllServers) {
 						count++;
@@ -110,22 +109,18 @@ public class NanopubStatus extends CliRunner {
 				}
 			} catch (FileNotFoundException ex) {
 				if (verbose && !recursive) {
-					System.out.println("NOT FOUND ON: " + serverUrl);
+					System.out.println("NOT FOUND ON: " + registryInfo);
 				}
 			} catch (IOException ex) {
 				if (verbose && !recursive) {
-					System.out.println("CONNECTION ERROR: " + serverUrl);
+					System.out.println("CONNECTION ERROR: " + registryInfo);
 				}
-			} catch (RDF4JException ex) {
+			} catch (RDF4JException | MalformedNanopubException ex) {
 				if (verbose && !recursive) {
-					System.out.println("VALIDATION ERROR: " + serverUrl);
-				}
-			} catch (MalformedNanopubException ex) {
-				if (verbose && !recursive) {
-					System.out.println("VALIDATION ERROR: " + serverUrl);
+					System.out.println("VALIDATION ERROR: " + registryInfo);
 				}
 			}
-		}
+        }
 		if (checkAllServers) {
 			String text = "Found on " + count + " nanopub server" + (count!=1?"s":"");
 			if (!recursive) {

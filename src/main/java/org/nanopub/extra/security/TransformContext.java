@@ -1,5 +1,7 @@
 package org.nanopub.extra.security;
 
+import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
+
 import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,7 +9,10 @@ import java.util.Map;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.NanopubProfile;
 import org.nanopub.trusty.CrossRefResolver;
 
 import net.trustyuri.TrustyUriUtils;
@@ -16,6 +21,23 @@ import net.trustyuri.rdf.RdfFileContent;
 public class TransformContext {
 
 	// TODO: Use this also for MakeTrustyNanopub
+
+	private static ValueFactory vf = SimpleValueFactory.getInstance();
+
+	public static TransformContext makeDefault() {
+		IRI signerIri = null;
+		NanopubProfile profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
+		if (profile.getOrcidId() != null) {
+			signerIri = vf.createIRI(profile.getOrcidId());
+		}
+		KeyPair key = null;
+		try {
+			key = SignNanopub.loadKey("~/.nanopub/id_rsa", RSA);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return new TransformContext(RSA, key, signerIri, false, false, false);
+	}
 
 	private SignatureAlgorithm algorithm;
 	private KeyPair key;

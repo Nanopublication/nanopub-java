@@ -5,7 +5,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.util.Calendar;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -13,8 +13,6 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class SimpleTimestampPattern implements NanopubPattern {
-
-	private static final long serialVersionUID = -3210304976446322675L;
 
 	@Override
 	public String getName() {
@@ -51,9 +49,8 @@ public class SimpleTimestampPattern implements NanopubPattern {
 		for (Statement st : nanopub.getPubinfo()) {
 			if (!st.getSubject().equals(nanopub.getUri())) continue;
 			if (!isCreationTimeProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof Literal)) continue;
-			Literal l = (Literal) st.getObject();
-			if (!l.getDatatype().equals(XSD_DATETIME)) continue;
+			if (!(st.getObject() instanceof Literal l)) continue;
+            if (!l.getDatatype().equals(XSD_DATETIME)) continue;
 			s = l.stringValue();
 			break;
 		}

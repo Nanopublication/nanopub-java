@@ -1,20 +1,12 @@
 package org.nanopub;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
+
+import java.util.*;
 
 /**
  * This class allows for the programmatic creation of nanopubs in a step-wise fashion.
@@ -47,6 +39,13 @@ public class NanopubCreator {
 		init();
 	}
 
+	public NanopubCreator(boolean initWithTempNanopubIris) {
+		this();
+		if (initWithTempNanopubIris) {
+			setNanopubUri(NanopubUtils.createTempNanopubIri());
+		}
+	}
+
 	public NanopubCreator(IRI nanopubUri) {
 		this();
 		setNanopubUri(nanopubUri);
@@ -58,12 +57,12 @@ public class NanopubCreator {
 	}
 
 	private void init() {
-		assertion = new ArrayList<Statement>();
-		provenance = new ArrayList<Statement>();
-		pubinfo = new ArrayList<Statement>();
+		assertion = new ArrayList<>();
+		provenance = new ArrayList<>();
+		pubinfo = new ArrayList<>();
 
-		nsPrefixes = new ArrayList<String>();
-		ns = new HashMap<String,String>();
+		nsPrefixes = new ArrayList<>();
+		ns = new HashMap<>();
 	}
 
 	public void setNanopubUri(IRI nanopubUri) {
@@ -130,6 +129,11 @@ public class NanopubCreator {
 
 	public void addAssertionStatements(Statement... statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
+        assertion.addAll(Arrays.asList(statements));
+	}
+
+	public void addAssertionStatements(Iterable<Statement> statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
 			assertion.add(st);
 		}
@@ -139,7 +143,17 @@ public class NanopubCreator {
 		addAssertionStatements(vf.createStatement(subj, pred, obj));
 	}
 
+	public void addAssertionStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		assertion.add(statement);
+	}
+
 	public void addProvenanceStatements(Statement... statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
+        provenance.addAll(Arrays.asList(statements));
+	}
+
+	public void addProvenanceStatements(Iterable<Statement> statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
 			provenance.add(st);
@@ -156,7 +170,17 @@ public class NanopubCreator {
 		assertionUriFixed = true;
 	}
 
+	public void addProvenanceStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		provenance.add(statement);
+	}
+
 	public void addPubinfoStatements(Statement... statements) {
+		if (finalized) throw new RuntimeException("Already finalized");
+        pubinfo.addAll(Arrays.asList(statements));
+	}
+
+	public void addPubinfoStatements(Iterable<Statement> statements) {
 		if (finalized) throw new RuntimeException("Already finalized");
 		for (Statement st : statements) {
 			pubinfo.add(st);
@@ -171,6 +195,11 @@ public class NanopubCreator {
 		if (nanopubUri == null) throw new RuntimeException("Nanopublication URI not yet set");
 		addPubinfoStatement(nanopubUri, pred, obj);
 		nanopubUriFixed = true;
+	}
+
+	public void addPubinfoStatement(Statement statement) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		pubinfo.add(statement);
 	}
 
 	public void addTimestamp(Date date) {
@@ -215,6 +244,26 @@ public class NanopubCreator {
 		addNamespace(prefix, namespace.toString());
 	}
 
+	public void addNamespace(Namespace namespace) {
+		addNamespace(namespace.getPrefix(), namespace.getName());
+	}
+
+	public void addNamespaces(Namespace... namespaces) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Namespace namespace : namespaces) {
+			nsPrefixes.add(namespace.getPrefix());
+			ns.put(namespace.getPrefix(), namespace.getName());
+		}
+	}
+
+	public void addNamespaces(Iterable<Namespace> namespaces) {
+		if (finalized) throw new RuntimeException("Already finalized");
+		for (Namespace namespace : namespaces) {
+			nsPrefixes.add(namespace.getPrefix());
+			ns.put(namespace.getPrefix(), namespace.getName());
+		}
+	}
+
 	public void addDefaultNamespaces() {
 		addNamespace("this", nanopubUri);
 		for (Pair<String,String> p : NanopubUtils.getDefaultNamespaces()) {
@@ -248,30 +297,30 @@ public class NanopubCreator {
 	}
 
 	/**
-	 * Finalizes the nanopub and gives it a trusty URI. See http://arxiv.org/abs/1401.5775 and
-	 * https://github.com/trustyuri/trustyuri-java
-	 * 
-	 * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
-	 * uncomment the entry in the pom file.
-	 */
+     * Finalizes the nanopub and gives it a trusty URI. S<a href="ee">http://arxiv.org/abs/1401.5</a>775 and
+     * <a href="https://github.com/trustyuri/trustyuri-java">...</a>
+     * <p>
+     * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+     * uncomment the entry in the pom file.
+     */
 	public Nanopub finalizeTrustyNanopub() throws Exception {
 		return finalizeTrustyNanopub(false);
 	}
 
 	/**
-	 * Finalizes the nanopub and gives it a trusty URI. See http://arxiv.org/abs/1401.5775 and
-	 * https://github.com/trustyuri/trustyuri-java
-	 * 
-	 * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
-	 * uncomment the entry in the pom file.
-	 */
+     * Finalizes the nanopub and gives it a trusty URI. S<a href="ee">http://arxiv.org/abs/1401.5</a>775 and
+     * <a href="https://github.com/trustyuri/trustyuri-java">...</a>
+     * <p>
+     * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+     * uncomment the entry in the pom file.
+     */
 	public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
 		Nanopub preNanopub = finalizeNanopub(addTimestamp);
 		return MakeTrustyNanopub.transform(preNanopub);
 	}
 
 	private void collectStatements() {
-		statements = new ArrayList<Statement>();
+		statements = new ArrayList<>();
 		addStatement(nanopubUri, RDF.TYPE, Nanopub.NANOPUB_TYPE_URI, headUri);
 		addStatement(nanopubUri, Nanopub.HAS_ASSERTION_URI, assertionUri, headUri);
 		addStatement(nanopubUri, Nanopub.HAS_PROVENANCE_URI, provenanceUri, headUri);
@@ -292,15 +341,15 @@ public class NanopubCreator {
 	}
 
 	public List<Statement> getCurrentAssertionStatements() {
-		return new ArrayList<Statement>(assertion);
+		return new ArrayList<>(assertion);
 	}
 
 	public List<Statement> getCurrentProvenanceStatements() {
-		return new ArrayList<Statement>(provenance);
+		return new ArrayList<>(provenance);
 	}
 
 	public List<Statement> getCurrentPubinfoStatements() {
-		return new ArrayList<Statement>(pubinfo);
+		return new ArrayList<>(pubinfo);
 	}
 
 }

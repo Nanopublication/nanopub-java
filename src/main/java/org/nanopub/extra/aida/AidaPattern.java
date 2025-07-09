@@ -13,8 +13,6 @@ import org.nanopub.NanopubPattern;
 
 public class AidaPattern implements NanopubPattern {
 
-	private static final long serialVersionUID = -164193908921728662L;
-
 	@Override
 	public String getName() {
 		return "AIDA nanopublication";

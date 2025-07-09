@@ -3,7 +3,7 @@ package org.nanopub.extra.security;
 import com.beust.jcommander.ParameterException;
 import org.nanopub.CliRunner;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,11 +15,13 @@ import java.security.SecureRandom;
 
 public class MakeKeys extends CliRunner {
 
-	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
-	private String pathAndFilenamePrefix = "~/.nanopub/id";
+	public static final String DEFAULT_KEYFILE_PREFIX = "~/.nanopub/id";
 
-	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA")
-	private SignatureAlgorithm algorithm = SignatureAlgorithm.DSA;
+	@com.beust.jcommander.Parameter(names = "-f", description = "Path and file name prefix of key files")
+	private String pathAndFilenamePrefix = DEFAULT_KEYFILE_PREFIX;
+
+	@com.beust.jcommander.Parameter(names = "-a", description = "Signature algorithm: either RSA or DSA, default is RSA")
+	private SignatureAlgorithm algorithm = SignatureAlgorithm.RSA;
 
 	public static void main(String[] args) throws IOException {
 		try {
@@ -71,7 +73,7 @@ public class MakeKeys extends CliRunner {
 		} catch (GeneralSecurityException ex) {
 			throw new RuntimeException(ex);
 		}
-		keyPairGenerator.initialize(1024, random);
+		keyPairGenerator.initialize(2048, random);
 		KeyPair keyPair = keyPairGenerator.genKeyPair();
 
 		try (FileOutputStream outPublic = new FileOutputStream(publicKeyFile)) {

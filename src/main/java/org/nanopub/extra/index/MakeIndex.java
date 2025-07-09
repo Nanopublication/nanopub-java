@@ -16,7 +16,7 @@ import java.util.zip.GZIPOutputStream;
 public class MakeIndex extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopub-files")
-	private List<File> inputFiles = new ArrayList<File>();
+	private List<File> inputFiles = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
 			"as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")

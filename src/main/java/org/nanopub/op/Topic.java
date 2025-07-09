@@ -21,7 +21,7 @@ import java.util.zip.GZIPOutputStream;
 public class Topic extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -38,6 +38,7 @@ public class Topic extends CliRunner {
 	public static void main(String[] args) {
 		try {
 			Topic obj = CliRunner.initJc(new Topic(), args);
+			obj.init();
 			obj.run();
 		} catch (ParameterException ex) {
 			System.exit(1);
@@ -52,6 +53,7 @@ public class Topic extends CliRunner {
 			args = "";
 		}
 		Topic obj = CliRunner.initJc(new Topic(), args.trim().split(" "));
+		obj.init();
 		return obj;
 	}
 

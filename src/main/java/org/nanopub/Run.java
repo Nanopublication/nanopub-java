@@ -10,6 +10,7 @@ import org.nanopub.extra.server.NanopubStatus;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.RunQuery;
 import org.nanopub.extra.setting.ShowSetting;
+import org.nanopub.fdo.ShaclValidator;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
 
@@ -58,6 +59,10 @@ public class Run {
 		addRunnableClass(org.nanopub.op.Run.class, "op");
 		addRunnableClass(ShowSetting.class, "setting");
 		addRunnableClass(RunQuery.class, "query");
+		addRunnableClass(TimestampUpdater.class, "udtime");
+		addRunnableClass(StripDown.class, "strip");
+		addRunnableClass(ShaclValidator.class, "shacl");
+		addRunnableClass(RoCrateImporter.class, "rocrate");
 	}
 
 	public static void run(String[] command) throws IOException, RDF4JException {

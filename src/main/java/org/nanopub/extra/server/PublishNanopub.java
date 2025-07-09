@@ -23,7 +23,7 @@ import java.util.Map;
 public class PublishNanopub extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "nanopubs", required = true)
-	private List<String> nanopubs = new ArrayList<String>();
+	private List<String> nanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
 	private boolean verbose = false;
@@ -50,8 +50,19 @@ public class PublishNanopub extends CliRunner {
 		return new PublishNanopub().publishNanopub(nanopub);
 	}
 
+	public static String publish(Nanopub nanopub, String serverUrl) throws IOException {
+		return new PublishNanopub().publishNanopub(nanopub, serverUrl);
+	}
+
+	// TODO Make this dynamic/configureable:
+	public static final String TEST_SERVER_URL = "https://test.registry.knowledgepixels.com/";
+
+	public static String publishToTestServer(Nanopub nanopub) throws IOException {
+		return new PublishNanopub().publishNanopub(nanopub, TEST_SERVER_URL);
+	}
+
 	private ServerIterator serverIterator = null;
-	private ServerInfo serverInfo = null;
+	private RegistryInfo registryInfo = null;
 	private Map<String,Integer> usedServers = new HashMap<>();
 	private int count;
 	private boolean failed;
@@ -133,13 +144,19 @@ public class PublishNanopub extends CliRunner {
 	}
 
 	public String publishNanopub(Nanopub nanopub) throws IOException {
-		if (serverInfo == null) {
-			if (serverUrls == null || serverUrls.isEmpty()) {
+		return publishNanopub(nanopub, null);
+	}
+
+	public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
+		if (registryInfo == null) {
+			if (serverUrl != null) {
+				serverIterator = new ServerIterator(serverUrl);
+			} else if (serverUrls == null || serverUrls.isEmpty()) {
 				serverIterator = new ServerIterator();
 			} else {
 				serverIterator = new ServerIterator(serverUrls);
 			}
-			serverInfo = serverIterator.next();
+			registryInfo = serverIterator.next();
 		}
 		artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
 		if (verbose) {
@@ -149,65 +166,57 @@ public class PublishNanopub extends CliRunner {
 		if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
 			throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
 		}
-		while (serverInfo != null) {
-			String serverUrl = serverInfo.getPublicUrl();
-			if (!serverInfo.isPostNanopubsEnabled()) {
-				serverInfo = serverIterator.next();
-				continue;
-			}
-			if (!serverInfo.getNanopubSurfacePattern().matchesUri(nanopub.getUri().stringValue())) {
-				continue;
-			}
+		while (registryInfo != null) {
+			String url = registryInfo.getUrl();
+
+			// TODO Check here whether nanopub type is covered at given registry.
+
 			if (verbose) {
-				System.out.println("Trying server: " + serverUrl);
+				System.out.println("Trying server: " + url);
 			}
 			try {
-				HttpPost post = new HttpPost(serverUrl);
+				HttpPost post = new HttpPost(registryInfo.getUrl());
 				String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
 				post.setEntity(new StringEntity(nanopubString, "UTF-8"));
 				post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
 				HttpResponse response = NanopubUtils.getHttpClient().execute(post);
 				int code = response.getStatusLine().getStatusCode();
 				if (code >= 200 && code < 300) {
-					if (usedServers.containsKey(serverUrl)) {
-						usedServers.put(serverUrl, usedServers.get(serverUrl) + 1);
+					if (usedServers.containsKey(url)) {
+						usedServers.put(url, usedServers.get(url) + 1);
 					} else {
-						usedServers.put(serverUrl, 1);
+						usedServers.put(url, 1);
 					}
-					String url = serverUrl + artifactCode;
+					String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
 					if (verbose) {
-						System.out.println("Published: " + url);
+						System.out.println("Published: " + nanopubUrl);
 					}
-					return url;
+					return nanopubUrl;
 				} else {
 					if (verbose) {
 						System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
 					}
 				}
-			} catch (IOException ex) {
-				if (verbose) {
-					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
-				}
-			} catch (RDF4JException ex) {
+			} catch (IOException | RDF4JException ex) {
 				if (verbose) {
 					System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
 				}
 			}
-			serverInfo = serverIterator.next();
+            registryInfo = serverIterator.next();
 		}
-		serverInfo = null;
+		registryInfo = null;
 		throw new RuntimeException("Failed to publish the nanopub");
 	}
 
-	public ServerInfo getUsedServer() {
-		return serverInfo;
+	public RegistryInfo getUsedServer() {
+		return registryInfo;
 	}
 
 	public String getPublishedNanopubUrl() {
-		if (serverInfo == null || artifactCode == null) {
+		if (registryInfo == null || artifactCode == null) {
 			return null;
 		}
-		return serverInfo.getPublicUrl() + artifactCode;
+		return registryInfo.getCollectionUrl() + artifactCode;
 	}
 
 }

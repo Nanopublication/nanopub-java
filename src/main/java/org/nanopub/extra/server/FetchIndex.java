@@ -1,15 +1,6 @@
 package org.nanopub.extra.server;
 
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import net.trustyuri.TrustyUriUtils;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -18,9 +9,10 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
 
-import net.trustyuri.TrustyUriUtils;
+import java.io.OutputStream;
+import java.util.*;
 
 public class FetchIndex {
 
@@ -31,47 +23,43 @@ public class FetchIndex {
 	private boolean writeIndex, writeContent;
 	private boolean running = false;
 	private List<FetchNanopubTask> fetchTasks;
-	private List<ServerInfo> servers;
-	private ServerInfo localServerInfo;
-	private Map<String,Set<FetchNanopubTask>> serverLoad;
-	private Map<String,NanopubSurfacePattern> serverPatterns;
-	private Map<String,Integer> serverUsage;
+	private List<RegistryInfo> registries;
+	private RegistryInfo localRegistryInfo;
+	private Map<RegistryInfo,Set<FetchNanopubTask>> serverLoad;
+	private Map<RegistryInfo,Integer> serverUsage;
 	private int nanopubCount;
 	private Listener listener;
 
 	protected FetchIndex() {
 	}
 
-	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent, String localServer) {
+	public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent, String localRegistryUrl) {
 		this.out = out;
 		this.format = format;
 		this.writeIndex = writeIndex;
 		this.writeContent = writeContent;
 		fetchTasks = new ArrayList<>();
 		fetchTasks.add(new FetchNanopubTask(indexUri, true));
-		servers = new ArrayList<>();
+		registries = new ArrayList<>();
 		serverLoad = new HashMap<>();
-		serverPatterns = new HashMap<>();
 		serverUsage = new HashMap<>();
 		ServerIterator serverIterator = new ServerIterator();
 		while (serverIterator.hasNext()) {
-			ServerInfo serverInfo = serverIterator.next();
-			servers.add(serverInfo);
-			serverLoad.put(serverInfo.getPublicUrl(), new HashSet<FetchNanopubTask>());
-			serverPatterns.put(serverInfo.getPublicUrl(), new NanopubSurfacePattern(serverInfo));
-			serverUsage.put(serverInfo.getPublicUrl(), 0);
+			RegistryInfo registryInfo = serverIterator.next();
+			registries.add(registryInfo);
+			serverLoad.put(registryInfo, new HashSet<>());
+			serverUsage.put(registryInfo, 0);
 		}
 		try {
-			ServerIterator.writeCachedServers(servers);
+			ServerIterator.writeCachedServers(registries);
 		} catch (Exception ex) {}
-		if (localServer != null) {
+		if (localRegistryUrl != null) {
 			try {
-				localServerInfo = ServerInfo.load(localServer);
-				servers.add(localServerInfo);
-				serverLoad.put(localServer, new HashSet<FetchNanopubTask>());
-				serverPatterns.put(localServer, new NanopubSurfacePattern(localServerInfo));
-				serverUsage.put(localServer, 0);
-			} catch (ServerInfoException ex) {
+				localRegistryInfo = RegistryInfo.load(localRegistryUrl);
+				registries.add(localRegistryInfo);
+				serverLoad.put(localRegistryInfo, new HashSet<>());
+				serverUsage.put(localRegistryInfo, 0);
+			} catch (RegistryInfoException ex) {
 				ex.printStackTrace();
 				return;
 			}
@@ -80,8 +68,10 @@ public class FetchIndex {
 	}
 
 	public void run() {
-		if (running) return;
-		running = true;
+		synchronized (this) {
+			if (running) return;
+			running = true;
+		}
 		while (!fetchTasks.isEmpty()) {
 			checkTasks();
 			try {
@@ -95,36 +85,31 @@ public class FetchIndex {
 			if (task.isRunning()) continue;
 			if (task.isCancelled()) {
 				fetchTasks.remove(task);
-				serverLoad.get(task.getLastServerUrl()).remove(task);
+				serverLoad.get(task.getLastRegistry()).remove(task);
 				continue;
 			}
-			if (task.getLastServerUrl() != null) {
-				serverLoad.get(task.getLastServerUrl()).remove(task);
+			if (task.getLastRegistry() != null) {
+				serverLoad.get(task.getLastRegistry()).remove(task);
 			}
 			if (task.getNanopub() == null) {
-				if (task.getTriedServersCount() == servers.size()) {
+				if (task.getTriedServersCount() == registries.size()) {
 					System.err.println("Failed to get " + task.getNanopubUri());
 					fetchTasks.remove(task);
 					continue;
 				}
-				if (localServerInfo != null && !task.hasServerBeenTried(localServerInfo.getPublicUrl())) {
-					assignTask(task, localServerInfo.getPublicUrl());
+				if (localRegistryInfo != null && !task.hasServerBeenTried(localRegistryInfo)) {
+					assignTask(task, localRegistryInfo);
 					break;
 				}
-				List<ServerInfo> shuffledServers = new ArrayList<>(servers);
+				List<RegistryInfo> shuffledServers = new ArrayList<>(registries);
 				Collections.shuffle(shuffledServers);
-				for (ServerInfo serverInfo : shuffledServers) {
-					String serverUrl = serverInfo.getPublicUrl();
-					if (task.hasServerBeenTried(serverUrl)) continue;
-					if (!serverPatterns.get(serverUrl).matchesUri(task.getNanopubUri())) {
-						task.ignoreServer(serverUrl);
-						continue;
-					}
-					int load = serverLoad.get(serverUrl).size();
+				for (RegistryInfo registryInfo : shuffledServers) {
+					if (task.hasServerBeenTried(registryInfo)) continue;
+					int load = serverLoad.get(registryInfo).size();
 					if (load >= maxParallelRequestsPerServer) {
 						continue;
 					}
-					assignTask(task, serverUrl);
+					assignTask(task, registryInfo);
 					break;
 				}
 			} else if (task.isIndex()) {
@@ -191,26 +176,26 @@ public class FetchIndex {
 		return nanopubCount;
 	}
 
-	public List<ServerInfo> getServers() {
-		return new ArrayList<>(servers);
+	public List<RegistryInfo> getRegistries() {
+		return new ArrayList<>(registries);
 	}
 
-	public int getServerUsage(ServerInfo si) {
-		return serverUsage.get(si.getPublicUrl());
+	public int getServerUsage(RegistryInfo r) {
+		return serverUsage.get(r);
 	}
 
 	public void setProgressListener(Listener l) {
 		listener = l;
 	}
 
-	private void assignTask(final FetchNanopubTask task, final String serverUrl) {
-		task.prepareForTryingServer(serverUrl);
-		serverLoad.get(serverUrl).add(task);
+	private void assignTask(final FetchNanopubTask task, final RegistryInfo r) {
+		task.prepareForTryingServer(r);
+		serverLoad.get(r).add(task);
 		Runnable runFetchTask = new Runnable() {
 
 			@Override
 			public void run() {
-				task.tryServer(serverUrl);
+				task.tryServer(r);
 			}
 
 		};
@@ -223,10 +208,10 @@ public class FetchIndex {
 		private String npUri;
 		private boolean isIndex;
 		private Nanopub nanopub;
-		private Set<String> servers = new HashSet<>();
+		private Set<RegistryInfo> registries = new HashSet<>();
 		private boolean running = false;
 		private boolean cancelled = false;
-		private String lastServerUrl;
+		private RegistryInfo lastRegistry;
 		private Set<FetchNanopubTask> siblings;
 
 		public FetchNanopubTask(String npUri, boolean isIndex, FetchNanopubTask... siblings) {
@@ -258,49 +243,45 @@ public class FetchIndex {
 			return cancelled;
 		}
 
-		public boolean hasServerBeenTried(String serverUrl) {
-			return servers.contains(serverUrl);
+		public boolean hasServerBeenTried(RegistryInfo r) {
+			return registries.contains(r);
 		}
 
 		public int getTriedServersCount() {
-			return servers.size();
+			return registries.size();
 		}
 
-		public String getLastServerUrl() {
-			return lastServerUrl;
+		public RegistryInfo getLastRegistry() {
+			return lastRegistry;
 		}
 
-		public void ignoreServer(String serverUrl) {
-			servers.add(serverUrl);
-		}
-
-		public void prepareForTryingServer(String serverUrl) {
-			servers.add(serverUrl);
-			lastServerUrl = serverUrl;
+		public void prepareForTryingServer(RegistryInfo r) {
+			registries.add(r);
+			lastRegistry = r;
 			running = true;
 		}
 
-		public void tryServer(String serverUrl) {
+		public void tryServer(RegistryInfo r) {
 			boolean serverTried = false;
 			try {
 				serverTried = true;
-				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), serverUrl);
+				nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), r);
 			} catch (ConnectionPoolTimeoutException ex) {
 				serverTried = false;
 				// too many connection attempts; try again later
 			} catch (Exception ex) {
-				if (listener != null) listener.exceptionHappened(ex, serverUrl, TrustyUriUtils.getArtifactCode(npUri));
+				if (listener != null) listener.exceptionHappened(ex, r, TrustyUriUtils.getArtifactCode(npUri));
 			} finally {
 				running = false;
 				if (serverTried) {
 					synchronized (FetchIndex.class) {
-						if (cancelled == true) {
+						if (cancelled) {
 							// Sibling already did the work...
 						} else {
 							for (FetchNanopubTask s : siblings) {
 								s.cancelled = true;
 							}
-							serverUsage.put(serverUrl, serverUsage.get(serverUrl) + 1);
+							serverUsage.put(r, serverUsage.get(r) + 1);
 						}
 					}
 				}
@@ -314,7 +295,7 @@ public class FetchIndex {
 
 		public void progress(int count);
 
-		public void exceptionHappened(Exception ex, String serverUrl, String artifactCode);
+		public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode);
 
 	}
 

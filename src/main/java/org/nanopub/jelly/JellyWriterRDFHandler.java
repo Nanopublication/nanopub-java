@@ -1,39 +1,42 @@
 package org.nanopub.jelly;
 
-import eu.ostrzyciel.jelly.convert.rdf4j.Rdf4jConverterFactory$;
-import eu.ostrzyciel.jelly.core.ProtoEncoder;
-import eu.ostrzyciel.jelly.core.proto.v1.RdfStreamFrame;
-import eu.ostrzyciel.jelly.core.proto.v1.RdfStreamFrame$;
-import eu.ostrzyciel.jelly.core.proto.v1.RdfStreamOptions;
-import eu.ostrzyciel.jelly.core.proto.v1.RdfStreamRow;
+import eu.neverblink.jelly.convert.rdf4j.Rdf4jConverterFactory;
+import eu.neverblink.jelly.core.ProtoDecoderConverter;
+import eu.neverblink.jelly.core.ProtoEncoder;
+import eu.neverblink.jelly.core.memory.RowBuffer;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamOptions;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
-import scala.Some$;
-import scala.collection.mutable.ListBuffer;
 
 /**
  * RDF4J Rio RDFHandler that converts nanopubs into Jelly RdfStreamFrames.
  */
 public class JellyWriterRDFHandler extends AbstractRDFHandler {
-    private final ProtoEncoder<Value, Statement, Statement, ?> encoder;
-    private final ListBuffer<RdfStreamRow> rowBuffer = new ListBuffer<>();
+    private final ProtoDecoderConverter<Value, ?> decoderConverter;
+    private final ProtoEncoder<Value> encoder;
+    private final RowBuffer rowBuffer = RowBuffer.newLazyImmutable();
 
     JellyWriterRDFHandler(RdfStreamOptions options) {
+        this.decoderConverter = Rdf4jConverterFactory.getInstance().decoderConverter();
+
         // Enabling namespace declarations -- so we are using Jelly 1.1.0 here.
-        this.encoder = Rdf4jConverterFactory$.MODULE$.encoder(ProtoEncoder.Params.apply(
-            options, true, Some$.MODULE$.apply(rowBuffer)
+        this.encoder = Rdf4jConverterFactory.getInstance().encoder(ProtoEncoder.Params.of(
+            options,
+            true,
+            rowBuffer
         ));
     }
 
     @Override
     public void handleStatement(Statement st) {
-        encoder.addQuadStatement(st);
+        encoder.handleQuad(st.getSubject(), st.getPredicate(), st.getObject(), st.getContext());
     }
 
     @Override
     public void handleNamespace(String prefix, String uri) {
-        encoder.declareNamespace(prefix, uri);
+        encoder.handleNamespace(prefix, decoderConverter.makeIriNode(uri));
     }
 
     /**
@@ -51,12 +54,18 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
      * @return RdfStreamFrame
      */
     public RdfStreamFrame getFrame(long counter) {
-        var rows = rowBuffer.toList();
+        var rows = rowBuffer.getRows();
         rowBuffer.clear();
-        var metadata = JellyMetadataUtil.EMPTY_METADATA;
-        if (counter >= 0) {
-            metadata = JellyMetadataUtil.getCounterMetadata(counter);
+
+        final var frame = RdfStreamFrame.newInstance();
+        for (final var row : rows) {
+            frame.addRows(row);
         }
-        return RdfStreamFrame$.MODULE$.apply(rows, metadata);
+
+        if (counter >= 0) {
+            frame.addMetadata(JellyMetadataUtil.getCounterMetadata(counter));
+        }
+
+        return frame;
     }
 }

@@ -6,24 +6,26 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.RdfUtils;
-
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubUtils;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdfSetting;
 
 public class TrustyNanopubUtils {
 
-	public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true);
+	public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true, false);
 
 	private TrustyNanopubUtils() {}  // no instances allowed
+
+	public static final TransformRdfSetting transformRdfSetting = new TransformRdfSetting('_', '/', '/', '/');
 
 	public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format)
 			throws RDFHandlerException, IOException {
@@ -32,9 +34,9 @@ public class TrustyNanopubUtils {
 			writer.startRDF();
 			String s = nanopub.getUri().toString();
 			writer.handleNamespace("this", s);
-			writer.handleNamespace("sub", s + RdfUtils.postAcChar);
-			if (!(RdfUtils.bnodeChar + "").matches("[A-Za-z0-9\\-_]")) {
-				writer.handleNamespace("node", s + RdfUtils.postAcChar + RdfUtils.bnodeChar);
+			writer.handleNamespace("sub", s + transformRdfSetting.getPostAcChar());
+			if (!(transformRdfSetting.getBnodeChar() + "").matches("[A-Za-z0-9\\-_]")) {
+				writer.handleNamespace("node", s + transformRdfSetting.getPostAcChar() + transformRdfSetting.getBnodeChar());
 			}
 			writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 			writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");

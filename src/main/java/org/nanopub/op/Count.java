@@ -22,7 +22,7 @@ import java.util.List;
 public class Count extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-r", description = "Append line to this table file")
 	private File tableFile;

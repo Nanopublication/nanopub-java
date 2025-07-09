@@ -2,7 +2,7 @@ package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
 import org.nanopub.CliRunner;
-import org.nanopub.extra.server.ServerInfo.ServerInfoException;
+import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,24 +24,23 @@ public class GetServerInfo extends CliRunner {
 		}
 	}
 
-	private void run() throws ServerInfoException, IOException {
+	private void run() throws RegistryInfoException, IOException {
 		for (String url : serverUrls) {
-			ServerInfo si = ServerInfo.load(url);
-			System.out.println("Server URL:          " + si.getPublicUrl());
-			System.out.println("Protocol version:    " + si.getProtocolVersion());
-			System.out.println("Description:         " + si.getDescription());
-			String ad = si.getAdmin();
-			System.out.println("Admin:               " + (ad == null || ad.isEmpty() ? "(unknown)" : ad));
-			System.out.println("Journal ID:          " + si.getJournalId());
-			System.out.println("Page size:           " + si.getPageSize());
-			System.out.println("Post peers:          " + (si.isPostPeersEnabled() ? "enabled" : "disabled"));
-			System.out.println("Post nanopubs:       " + (si.isPostNanopubsEnabled() ? "enabled" : "disabled"));
-			System.out.println("Nanopub count:       " + (si.getNextNanopubNo()-1));
-			System.out.println("Max nanopubs:        " + (si.getMaxNanopubs() == null ? "unrestricted" : si.getMaxNanopubs()));
-			System.out.println("Max triples/nanopub: " + (si.getMaxNanopubTriples() == null ? "unrestricted" : si.getMaxNanopubTriples()));
-			System.out.println("Max bytes/nanopub:   " + (si.getMaxNanopubBytes() == null ? "unrestricted" : si.getMaxNanopubBytes()));
-			System.out.println("URI pattern:         " + (si.getUriPattern() == null ? "(everything)" : si.getUriPattern()));
-			System.out.println("Hash pattern:        " + (si.getHashPattern() == null ? "(everything)" : si.getHashPattern()));
+			RegistryInfo si = RegistryInfo.load(url);
+			System.out.println("URL:                  " + si.getUrl());
+			System.out.println("setupId:              " + si.getSetupId());
+			System.out.println("trustStateCounter:    " + si.getTrustStateCounter());
+			System.out.println("lastTrustStateUpdate: " + si.getLastTrustStateUpdate());
+			System.out.println("trustStateHash:       " + si.getTrustStateHash());
+			System.out.println("status:               " + si.getStatus());
+			System.out.println("coverageTypes:        " + si.getCoverageTypes());
+			System.out.println("coverageAgents:       " + si.getCoverageAgents());
+			System.out.println("currentSetting:       " + si.getCurrentSetting());
+			System.out.println("originalSetting:      " + si.getOriginalSetting());
+			System.out.println("agentCount:           " + si.getAgentCount());
+			System.out.println("accountCount:         " + si.getAccountCount());
+			System.out.println("nanopubCount:         " + si.getNanopubCount());
+			System.out.println("loadCounter:          " + si.getLoadCounter());
 			System.out.println();
 		}
 	}

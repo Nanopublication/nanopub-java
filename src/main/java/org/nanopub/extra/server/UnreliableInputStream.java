@@ -97,8 +97,6 @@ public class UnreliableInputStream extends InputStream {
 	
 	public class SimulatedIOException extends IOException {
 
-		private static final long serialVersionUID = -5015619781395185104L;
-
 		public SimulatedIOException(String text) {
 			super(text);
 		}

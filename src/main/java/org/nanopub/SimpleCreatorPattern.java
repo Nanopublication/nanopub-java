@@ -1,21 +1,14 @@
 package org.nanopub;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
-public class SimpleCreatorPattern implements NanopubPattern {
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
-	private static final long serialVersionUID = -3210304976446322675L;
+public class SimpleCreatorPattern implements NanopubPattern {
 
 	@Override
 	public String getName() {
@@ -83,7 +76,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
 	}
 
 	public static List<IRI> getAuthorList(Nanopub nanopub) {
-		List<IRI> authorList = new ArrayList<IRI>();
+		List<IRI> authorList = new ArrayList<>();
 		Set<IRI> authorSet = new HashSet<>();
 		Map<Integer,IRI> authorMap = new HashMap<>();
 		IRI authorListId = null;
@@ -104,11 +97,10 @@ public class SimpleCreatorPattern implements NanopubPattern {
 				authorMap.put(i, (IRI) st.getObject());
 			}
 			int i = 1;
-			while (true) {
-				if (!authorMap.containsKey(i)) break;
-				authorList.add(authorMap.get(i));
-				i = i + 1;
-			}
+            while (authorMap.containsKey(i)) {
+                authorList.add(authorMap.get(i));
+                i = i + 1;
+            }
 		}
 		for (IRI a : authorSet) {
 			// TODO This is not efficient (but lists should be small...)

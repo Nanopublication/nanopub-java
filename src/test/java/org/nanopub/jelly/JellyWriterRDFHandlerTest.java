@@ -10,9 +10,9 @@ public class JellyWriterRDFHandlerTest {
                 JellyUtils.jellyOptionsForDB
         );
         var frame = handler.getFrame();
-        assert frame.rows().isEmpty();
-        assert frame.metadata() != null;
-        assert frame.metadata() == JellyMetadataUtil.EMPTY_METADATA;
+        assert frame.getRows().isEmpty();
+        assert frame.getMetadata() != null;
+        assert frame.getMetadata().isEmpty();
     }
 
     @Test
@@ -21,11 +21,10 @@ public class JellyWriterRDFHandlerTest {
                 JellyUtils.jellyOptionsForDB
         );
         var frame = handler.getFrame(42);
-        assert frame.rows().isEmpty();
-        assert frame.metadata() != null;
-        assert frame.metadata().contains(JellyMetadataUtil.COUNTER_KEY);
-        assert frame.metadata().size() == 1;
-        var counter = JellyMetadataUtil.tryGetCounterFromMetadata(frame.metadata());
+        assert frame.getRows().isEmpty();
+        assert frame.getMetadata() != null;
+        assert frame.getMetadata().size() == 1;
+        var counter = JellyMetadataUtil.tryGetCounterFromMetadata(frame.getMetadata());
         assert counter == 42;
     }
 }

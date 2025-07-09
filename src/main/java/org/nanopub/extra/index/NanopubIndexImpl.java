@@ -1,10 +1,8 @@
 package org.nanopub.extra.index;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
@@ -16,8 +14,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.*;
 
 public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 
@@ -33,8 +30,8 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 			throw new MalformedNanopubException("Nanopub is not a nanopub index");
 		}
 		IRI appendedIndex = null;
-		Set<IRI> elementSet = new HashSet<IRI>();
-		Set<IRI> subIndexSet = new HashSet<IRI>();
+		Set<IRI> elementSet = new HashSet<>();
+		Set<IRI> subIndexSet = new HashSet<>();
 		for (Statement st : np.getAssertion()) {
 			if (!st.getSubject().equals(np.getUri())) continue;
 			if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {
@@ -145,9 +142,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 	@Override
 	public long getByteCount() {
 		return np.getByteCount();
-	};
+	}
 
-	@Override
+    @Override
 	public Set<IRI> getElements() {
 		return elementSet;
 	}
@@ -225,4 +222,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
 		}
 	}
 
+	@Override
+	public Map<String, String> getNs() {
+		if (np instanceof NanopubWithNs) {
+			return ((NanopubWithNs) np).getNs();
+		} else {
+			return ImmutableMap.of();
+		}
+	}
 }

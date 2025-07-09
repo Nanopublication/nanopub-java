@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,18 +82,18 @@ public class NanopubUtils {
 	}
 
 	private static List<Statement> getSortedList(Set<Statement> s) {
-		List<Statement> l = new ArrayList<Statement>(s);
-		Collections.sort(l, new Comparator<Statement>() {
+		List<Statement> l = new ArrayList<>(s);
+		l.sort(new Comparator<>() {
 
-			@Override
-			public int compare(Statement st1, Statement st2) {
-				// TODO better sorting
-				// it works fine for now, since AbstractStatement has a valid toString()
-				// implementation, which does not consist of any runtime object references
-				return st1.toString().compareTo(st2.toString());
-			}
+            @Override
+            public int compare(Statement st1, Statement st2) {
+                // TODO better sorting
+                // it works fine for now, since AbstractStatement has a valid toString()
+                // implementation, which does not consist of any runtime object references
+                return st1.toString().compareTo(st2.toString());
+            }
 
-		});
+        });
 		return l;
 	}
 
@@ -126,9 +127,8 @@ public class NanopubUtils {
 	public static void propagateToHandler(Nanopub nanopub, RDFHandler handler)
 			throws RDFHandlerException {
 		handler.startRDF();
-		if (nanopub instanceof NanopubWithNs && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
-			NanopubWithNs np = (NanopubWithNs) nanopub;
-			for (String p : np.getNsPrefixes()) {
+		if (nanopub instanceof NanopubWithNs np && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
+            for (String p : np.getNsPrefixes()) {
 				handler.handleNamespace(p, np.getNamespace(p));
 			}
 		} else {
@@ -145,12 +145,12 @@ public class NanopubUtils {
 
 	public static RDFParser getParser(RDFFormat format) {
 		RDFParser p = Rio.createParser(format);
-		p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet<Namespace>());
+		p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet<>());
 		return p;
 	}
 
 	public static Set<String> getUsedPrefixes(NanopubWithNs np) {
-		Set<String> usedPrefixes = new HashSet<String>();
+		Set<String> usedPrefixes = new HashSet<>();
 		CustomTrigWriter writer = new CustomTrigWriter(usedPrefixes);
 		try {
 			NanopubUtils.propagateToHandler(np, writer);
@@ -176,7 +176,7 @@ public class NanopubUtils {
 			if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
 				npTitle += " " + obj.stringValue();
 			}
-			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
 				introMap.put((IRI) obj, true);
 			}
 		}
@@ -232,7 +232,7 @@ public class NanopubUtils {
 					npDef += "\n" + obj.stringValue();
 				}
 			} else {
-				if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) {
+				if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) {
 					introMap.put((IRI) obj, true);
 				}
 			}
@@ -304,7 +304,7 @@ public class NanopubUtils {
 			if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
 				types.add((IRI) obj);
 			}
-			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES)) && obj instanceof IRI) {
+			if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
 				introMap.put((IRI) obj, true);
 			}
 		}
@@ -368,9 +368,11 @@ public class NanopubUtils {
 	}
 
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
-	private static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
-	private static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
-	private static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
+
+	public static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
+	public static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
+	public static final IRI EMBEDS = vf.createIRI("http://purl.org/nanopub/x/embeds");
+	public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
 	private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
 	private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
 
@@ -389,6 +391,13 @@ public class NanopubUtils {
 					.setConnectionManager(connManager).build();
 		}
 		return httpClient;
+	}
+
+
+	private static Random random = new Random();
+
+	public static IRI createTempNanopubIri() {
+		return vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
 	}
 
 }

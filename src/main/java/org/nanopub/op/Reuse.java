@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 public class Reuse extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-x", description = "Nanopubs to be reused (if not given, an initial dataset is created)")
 	private File reuseNanopubFile;
@@ -177,12 +177,10 @@ public class Reuse extends CliRunner {
 						if (allOutputFile != null) {
 							reuseNanopubMap.put(fp, NanopubUtils.writeToString(np, rdfOutFormat));
 						}
-					} catch (IOException ex) {
-						throw new RuntimeException(ex);
-					} catch (RDFHandlerException ex) {
+					} catch (IOException | RDFHandlerException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 	
 			});
 		}

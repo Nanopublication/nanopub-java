@@ -1,13 +1,6 @@
 package org.nanopub.extra.setting;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import net.trustyuri.TrustyUriUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -30,11 +23,15 @@ import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
 
-import net.trustyuri.TrustyUriUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class IntroNanopub implements Serializable {
-
-	private static final long serialVersionUID = -2760220283018515835L;
 
 	public static IntroNanopub get(String userId) throws IOException, RDF4JException {
 		return get(userId, (HttpClient) null);
@@ -97,11 +94,10 @@ public class IntroNanopub implements Serializable {
 		this.nanopub = nanopub;
 		this.user = user;
 		for (Statement st : nanopub.getAssertion()) {
-			if (!(st.getObject() instanceof IRI)) continue;
+			if (!(st.getObject() instanceof IRI obj)) continue;
 			IRI subj = (IRI) st.getSubject();
 			IRI pred = st.getPredicate();
-			IRI obj = (IRI) st.getObject();
-			if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+            if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
 				KeyDeclaration d;
 				if (keyDeclarations.containsKey(subj)) {
 					d = keyDeclarations.get(subj);
@@ -141,7 +137,7 @@ public class IntroNanopub implements Serializable {
 				}
 			}
 		}
-		for (IRI kdi : new ArrayList<IRI>(keyDeclarations.keySet())) {
+		for (IRI kdi : new ArrayList<>(keyDeclarations.keySet())) {
 			KeyDeclaration kd = keyDeclarations.get(kdi);
 			if (kd.getPublicKeyString() == null || kd.getPublicKeyString().isEmpty() || kd.getDeclarers().isEmpty()) {
 				keyDeclarations.remove(kdi);
@@ -168,8 +164,6 @@ public class IntroNanopub implements Serializable {
 
 	public static class IntroExtractor extends AbstractRDFHandler implements Serializable {
 
-		private static final long serialVersionUID = 1L;
-
 		private String userId;
 		private Nanopub introNanopub;
 		private String name;
@@ -189,9 +183,9 @@ public class IntroNanopub implements Serializable {
 			} else if (st.getPredicate().stringValue().equals(RDFS.LABEL.stringValue())) {
 				name = st.getObject().stringValue();
 			}
-		};
+		}
 
-		public Nanopub getIntroNanopub() {
+        public Nanopub getIntroNanopub() {
 			return introNanopub;
 		}
 

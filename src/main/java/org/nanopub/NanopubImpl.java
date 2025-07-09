@@ -1,29 +1,7 @@
 package org.nanopub;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Serializable;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.activation.MimetypesFileTypeMap;
-
+import com.google.common.collect.ImmutableSet;
+import jakarta.activation.MimetypesFileTypeMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -35,26 +13,18 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.MalformedQueryException;
-import org.eclipse.rdf4j.query.QueryEvaluationException;
-import org.eclipse.rdf4j.query.QueryLanguage;
-import org.eclipse.rdf4j.query.TupleQuery;
-import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.RDFParserFactory;
-import org.eclipse.rdf4j.rio.RDFParserRegistry;
-import org.eclipse.rdf4j.rio.RDFWriterFactory;
-import org.eclipse.rdf4j.rio.RDFWriterRegistry;
-import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 
-import com.google.common.collect.ImmutableSet;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.*;
 
 /**
  * Implementation of the Nanopub interface.
@@ -63,8 +33,6 @@ import com.google.common.collect.ImmutableSet;
  * @author Eelke van der Horst
  */
 public class NanopubImpl implements NanopubWithNs, Serializable {
-
-	private static final long serialVersionUID = -1514452524339132128L;
 
 	static {
 		tryToLoadParserFactory("org.eclipse.rdf4j.rio.trig.TriGParserFactory");
@@ -75,6 +43,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.trix.TriXWriterFactory");
 		tryToLoadParserFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory");
 		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory");
+		tryToLoadParserFactory("org.eclipse.rdf4j.rio.turtle.TurtleParserFactory");
+		tryToLoadWriterFactory("org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory");
 	}
 
 	private static void tryToLoadParserFactory(String className) {
@@ -83,8 +53,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			RDFParserRegistry.getInstance().add(pf);
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
-		};
-	}
+		}
+    }
 
 	private static void tryToLoadWriterFactory(String className) {
 		try {
@@ -92,8 +62,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 			RDFWriterRegistry.getInstance().add(wf);
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
-		};
-	}
+		}
+    }
 
 	/**
 	 * Just ensures the class to be loaded. Probably unnecessary.
@@ -160,26 +130,21 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		try (RepositoryConnection connection = repo.getConnection()) {
 			String q = nanopubViaSPARQLQuery.replaceAll("@", nanopubUri.toString());
 			TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, q);
-			TupleQueryResult result = tupleQuery.evaluate();
-			try {
-				while (result.hasNext()) {
-					BindingSet bs = result.next();
-					Resource g = (Resource) bs.getBinding("G").getValue();
-					Resource s = (Resource) bs.getBinding("S").getValue();
-					IRI p = (IRI) bs.getBinding("P").getValue();
-					Value o = bs.getBinding("O").getValue();
-					Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
-					statements.add(st);
-				}
-			} finally {
-				result.close();
-			}
-		} catch (MalformedQueryException ex) {
-			ex.printStackTrace();
-		} catch (QueryEvaluationException ex) {
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bs = result.next();
+                    Resource g = (Resource) bs.getBinding("G").getValue();
+                    Resource s = (Resource) bs.getBinding("S").getValue();
+                    IRI p = (IRI) bs.getBinding("P").getValue();
+                    Value o = bs.getBinding("O").getValue();
+                    Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);
+                    statements.add(st);
+                }
+            }
+		} catch (MalformedQueryException | QueryEvaluationException ex) {
 			ex.printStackTrace();
 		}
-		init();
+        init();
 	}
 
 	public NanopubImpl(Repository repo, IRI nanopubUri)
@@ -196,7 +161,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 	public NanopubImpl(File file) throws MalformedNanopubException, RDF4JException, IOException {
 		String n = file.getName();
 		Optional<RDFFormat> format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));
-		if (!format.isPresent() || !format.get().supportsContexts()) {
+		if (format.isEmpty() || !format.get().supportsContexts()) {
 			format = Rio.getParserFormatForFileName(n);
 		}
 		RDFFormat f = format.get();
@@ -220,7 +185,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		if (contentTypeHeader != null) {
 			format = Rio.getParserFormatForMIMEType(contentTypeHeader.getValue());
 		}
-		if (format == null || !format.isPresent() || !format.get().supportsContexts()) {
+		if (format == null || format.isEmpty() || !format.get().supportsContexts()) {
 			format = Rio.getParserFormatForFileName(url.toString());
 		}
 		RDFFormat f = format.get();
@@ -526,6 +491,14 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		return ns.get(prefix);
 	}
 
+	/**
+	 * @return a copy of the namespaces map
+	 */
+	@Override
+	public Map<String, String> getNs() {
+		return new HashMap<>(ns);
+	}
+
 	@Override
 	public void removeUnusedPrefixes() {
 		if (unusedPrefixesRemoved) return;
@@ -549,4 +522,14 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 		return byteCount;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof NanopubImpl nanopub)) return false;
+        return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved && tripleCount == nanopub.tripleCount && byteCount == nanopub.byteCount && Objects.equals(nanopubUri, nanopub.nanopubUri) && Objects.equals(headUri, nanopub.headUri) && Objects.equals(assertionUri, nanopub.assertionUri) && Objects.equals(provenanceUri, nanopub.provenanceUri) && Objects.equals(pubinfoUri, nanopub.pubinfoUri) && Objects.equals(graphUris, nanopub.graphUris) && Objects.equals(head, nanopub.head) && Objects.equals(assertion, nanopub.assertion) && Objects.equals(provenance, nanopub.provenance) && Objects.equals(pubinfo, nanopub.pubinfo) && Objects.equals(statements, nanopub.statements) && Objects.equals(nsPrefixes, nanopub.nsPrefixes) && Objects.equals(ns, nanopub.ns);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(nanopubUri, headUri, assertionUri, provenanceUri, pubinfoUri, graphUris, head, assertion, provenance, pubinfo, statements, nsPrefixes, ns, unusedPrefixesRemoved, tripleCount, byteCount);
+	}
 }

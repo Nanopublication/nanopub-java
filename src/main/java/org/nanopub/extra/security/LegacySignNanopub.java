@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -50,7 +50,7 @@ import net.trustyuri.TrustyUriUtils;
 public class LegacySignNanopub {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-k", description = "Path and file name of key files")
 	private String keyFilename = "~/.nanopub/id_dsa";
@@ -101,20 +101,11 @@ public class LegacySignNanopub {
 						if (verbose) {
 							System.out.println("Nanopub URI: " + np.getUri());
 						}
-					} catch (RDFHandlerException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (TrustyUriException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (InvalidKeyException ex) {
-						ex.printStackTrace();
-						throw new RuntimeException(ex);
-					} catch (SignatureException ex) {
+					} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 						ex.printStackTrace();
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 			out.close();
@@ -159,20 +150,11 @@ public class LegacySignNanopub {
 			public void handleNanopub(Nanopub np) {
 				try {
 					writeAsSignedTrustyNanopub(np, format, key, out);
-				} catch (RDFHandlerException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (TrustyUriException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (InvalidKeyException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				} catch (SignatureException ex) {
+				} catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
 					ex.printStackTrace();
 					throw new RuntimeException(ex);
 				}
-			}
+            }
 
 		});
 		out.close();

@@ -22,7 +22,7 @@ import java.util.zip.GZIPOutputStream;
 public class Fingerprint extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs")
-	private List<File> inputNanopubs = new ArrayList<File>();
+	private List<File> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
 	private File outputFile;
@@ -114,12 +114,10 @@ public class Fingerprint extends CliRunner {
 				public void handleNanopub(Nanopub np) {
 					try {
 						writer.write(np.getUri() + " " + getFingerprint(np) + "\n");
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					} catch (IOException ex) {
+					} catch (RDFHandlerException | IOException ex) {
 						throw new RuntimeException(ex);
 					}
-				}
+                }
 
 			});
 

@@ -1,7 +1,19 @@
 package org.nanopub.extra.server;
 
-import com.beust.jcommander.ParameterException;
-import net.trustyuri.rdf.RdfModule;
+import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -10,17 +22,16 @@ import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
+import com.beust.jcommander.ParameterException;
 
-import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
+import net.trustyuri.rdf.RdfModule;
 
 public class GetNanopub extends CliRunner {
 
@@ -93,20 +104,16 @@ public class GetNanopub extends CliRunner {
 			throw new IllegalArgumentException("Not a trusty URI of type RA");
 		}
 		while (serverIterator.hasNext()) {
-			ServerInfo serverInfo = serverIterator.next();
+			RegistryInfo registryInfo = serverIterator.next();
 			try {
-				Nanopub np = get(ac, serverInfo, httpClient);
+				Nanopub np = get(ac, registryInfo, httpClient);
 				if (np != null) {
 					return np;
 				}
-			} catch (IOException ex) {
-				// ignore
-			} catch (RDF4JException ex) {
-				// ignore
-			} catch (MalformedNanopubException ex) {
+			} catch (IOException | MalformedNanopubException | RDF4JException ex) {
 				// ignore
 			}
-		}
+        }
 		return null;
 	}
 
@@ -118,28 +125,18 @@ public class GetNanopub extends CliRunner {
 		return db.getNanopub(ac);
 	}
 
-	public static Nanopub get(String artifactCode, ServerInfo serverInfo)
+	public static Nanopub get(String artifactCode, RegistryInfo registryInfo)
 			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverInfo.getPublicUrl(), NanopubUtils.getHttpClient());
+		return get(artifactCode, registryInfo, NanopubUtils.getHttpClient());
 	}
 
-	public static Nanopub get(String artifactCode, ServerInfo serverInfo, HttpClient httpClient)
-			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverInfo.getPublicUrl(), httpClient);
-	}
-
-	public static Nanopub get(String artifactCode, String serverUrl)
-			throws IOException, RDF4JException, MalformedNanopubException {
-		return get(artifactCode, serverUrl, NanopubUtils.getHttpClient());
-	}
-
-	public static Nanopub get(String artifactCode, String serverUrl, HttpClient httpClient)
+	public static Nanopub get(String artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
 			throws IOException, RDF4JException, MalformedNanopubException {
 		HttpGet get = null;
 		try {
-			get = new HttpGet(serverUrl + artifactCode);
+			get = new HttpGet(registryInfo.getCollectionUrl() + artifactCode);
 		} catch (IllegalArgumentException ex) {
-			throw new IOException("invalid URL: " + serverUrl + artifactCode);
+			throw new IOException("invalid URL: " + registryInfo.getCollectionUrl() + artifactCode);
 		}
 		get.setHeader("Accept", "application/trig");
 		InputStream in = null;
@@ -217,13 +214,13 @@ public class GetNanopub extends CliRunner {
 						}
 	
 						@Override
-						public void exceptionHappened(Exception ex, String serverUrl, String artifactCode) {
+						public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode) {
 							if (showReport) {
 								exceptions.add(ex);
 							}
 							if (errorStream != null) {
 								String exString = ex.toString().replaceAll("\\n", "\\\\n");
-								errorStream.println(serverUrl + " " + artifactCode + " " + exString);
+								errorStream.println(r + " " + artifactCode + " " + exString);
 							}
 						}
 	
@@ -250,18 +247,18 @@ public class GetNanopub extends CliRunner {
 		if (showReport && fetchIndex != null) {
 			System.err.println("Number of retries: " + exceptions.size());
 			System.err.println("Used servers:");
-			List<ServerInfo> usedServers = fetchIndex.getServers();
+			List<RegistryInfo> usedServers = fetchIndex.getRegistries();
 			final FetchIndex fi = fetchIndex;
-			Collections.sort(usedServers, new Comparator<ServerInfo>() {
-				@Override
-				public int compare(ServerInfo o1, ServerInfo o2) {
-					return fi.getServerUsage(o2) - fi.getServerUsage(o1);
-				}
-			});
+			usedServers.sort(new Comparator<>() {
+                @Override
+                public int compare(RegistryInfo o1, RegistryInfo o2) {
+                    return fi.getServerUsage(o2) - fi.getServerUsage(o1);
+                }
+            });
 			int usedServerCount = 0;
-			for (ServerInfo si : usedServers) {
+			for (RegistryInfo si : usedServers) {
 				if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;
-				System.err.format("%8d %s%n", fetchIndex.getServerUsage(si), si.getPublicUrl());
+				System.err.format("%8d %s%n", fetchIndex.getServerUsage(si), si.getUrl());
 			}
 			System.err.format("Number of servers used: " + usedServerCount);
 		}

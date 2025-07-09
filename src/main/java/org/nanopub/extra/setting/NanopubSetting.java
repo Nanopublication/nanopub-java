@@ -20,8 +20,6 @@ import org.nanopub.NanopubImpl;
 
 public class NanopubSetting implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-
 	private static ValueFactory vf = SimpleValueFactory.getInstance();
 
 	public static final IRI HAS_AGENTS = vf.createIRI("http://purl.org/nanopub/x/hasAgents");
@@ -70,9 +68,8 @@ public class NanopubSetting implements Serializable {
 				name = st.getObject().stringValue();
 				continue;
 			}
-			if (!(st.getObject() instanceof IRI)) continue;
-			IRI obj = (IRI) st.getObject();
-			if (pred.equals(HAS_AGENTS)) {
+			if (!(st.getObject() instanceof IRI obj)) continue;
+            if (pred.equals(HAS_AGENTS)) {
 				if (agentIntroCollection != null) throw new RuntimeException("Two agent intro collections found: " + nanopub.getUri());
 				agentIntroCollection = obj;
 			} else if (pred.equals(HAS_SERVICES)) {

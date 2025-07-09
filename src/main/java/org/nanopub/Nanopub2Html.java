@@ -16,7 +16,7 @@ import java.util.List;
 public class Nanopub2Html extends CliRunner {
 
 	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<String> inputNanopubs = new ArrayList<String>();
+	private List<String> inputNanopubs = new ArrayList<>();
 
 	@com.beust.jcommander.Parameter(names = "-s", description = "Stand-alone HTML")
 	private boolean standalone = false;
@@ -91,9 +91,8 @@ public class Nanopub2Html extends CliRunner {
 		}
 		try (printHtml) {
 			HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);
-			if (np instanceof NanopubWithNs) {
-				NanopubWithNs npNs = (NanopubWithNs) np;
-				for (String prefix : npNs.getNsPrefixes()) {
+			if (np instanceof NanopubWithNs npNs) {
+                for (String prefix : npNs.getNsPrefixes()) {
 					htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));
 				}
 			}
@@ -164,7 +163,7 @@ public class Nanopub2Html extends CliRunner {
 		try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {
 			createHtml(nanopubs, htmlOut, standalone, indentContext);
 			htmlOut.flush();
-			return new String(htmlOut.toByteArray(), utf8Charset);
+			return htmlOut.toString(utf8Charset);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			return "";
@@ -179,7 +178,7 @@ public class Nanopub2Html extends CliRunner {
 		try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {
 			createHtml(np, htmlOut, standalone, indentContext);
 			htmlOut.flush();
-			return new String(htmlOut.toByteArray(), utf8Charset);
+			return htmlOut.toString(utf8Charset);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			return "";

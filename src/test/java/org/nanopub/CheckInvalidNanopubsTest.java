@@ -9,13 +9,13 @@ public class CheckInvalidNanopubsTest {
  
 	@Test
 	public void runTest() throws Exception {
-		for (File testFile : new File("src/main/resources/testsuite/invalid/plain/").listFiles()) {
+		for (File testFile : new File("src/test/resources/testsuite/invalid/plain/").listFiles()) {
 			testPlain(testFile.getName());
 		}
-		for (File testFile : new File("src/main/resources/testsuite/invalid/trusty/").listFiles()) {
+		for (File testFile : new File("src/test/resources/testsuite/invalid/trusty/").listFiles()) {
 			testTrusty(testFile.getName());
 		}
-		for (File testFile : new File("src/main/resources/testsuite/invalid/signed/").listFiles()) {
+		for (File testFile : new File("src/test/resources/testsuite/invalid/signed/").listFiles()) {
 			testSigned(testFile.getName());
 		}
 	}
@@ -23,7 +23,7 @@ public class CheckInvalidNanopubsTest {
 	public void testPlain(String filename) throws Exception {
 		Report report = null;
 		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/invalid/plain/" + filename});
+			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/plain/" + filename});
 			report = c.check();
 			System.out.println(report.getSummary());
 		} catch (Exception ex) {}
@@ -33,7 +33,7 @@ public class CheckInvalidNanopubsTest {
 	public void testTrusty(String filename) throws Exception {
 		Report report = null;
 		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/invalid/trusty/" + filename});
+			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/trusty/" + filename});
 			report = c.check();
 			System.out.println(report.getSummary());
 		} catch (Exception ex) {}
@@ -43,7 +43,7 @@ public class CheckInvalidNanopubsTest {
 	public void testSigned(String filename) throws Exception {
 		Report report = null;
 		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/main/resources/testsuite/invalid/signed/" + filename});
+			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/signed/" + filename});
 			report = c.check();
 			System.out.println(report.getSummary());
 		} catch (Exception ex) {}

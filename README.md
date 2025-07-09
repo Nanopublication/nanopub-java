@@ -11,18 +11,48 @@ guidelines](http://nanopub.net/guidelines/working_draft/).
 ## Usage as Java Library
 
 The easiest way to use this library in your project is to let Maven download it
-from The Central Repository. Just include the following lines in your `pom.xml`
-file:
-
-    <dependency>
-      <groupId>org.nanopub</groupId>
-      <artifactId>nanopub</artifactId>
-      <version>1.69</version>
-    </dependency>
+from The Central Repository, with an entry in your pom.xml file as shown
+[here](https://central.sonatype.com/artifact/org.nanopub/nanopub).
 
 Alternatively, you might want to use one of the [pre-built
 jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
+## Quickstart Java Instructions
+
+In a nutshell, to create and publish nanopublications, you need to first make sure you have a
+local keypair. To create such a keypair, run just once:
+
+```java
+    MakeKeys.make("~/.nanopub/id", SignatureAlgorithm.RSA);
+```
+
+And then nanopublications can be created and published programmatically like this:
+
+```java
+    System.err.println("# Creating nanopub...");
+    NanopubCreator npCreator = new NanopubCreator(true);
+    final ValueFactory vf = SimpleValueFactory.getInstance();
+    final IRI anne = vf.createIRI("https://example.com/anne");
+    npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+    npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
+    npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+    Nanopub np = npCreator.finalizeNanopub(true);
+    System.err.println("# Nanopub before signing:");
+    NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+
+    System.err.println("# Signing nanopub...");
+    Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+    System.err.println("# Final nanopub after signing:");
+    NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
+    System.err.println("# Publishing to test server...");
+    PublishNanopub.publishToTestServer(signedNp);
+    //System.err.println("# Publishing to real server...");
+    //PublishNanopub.publish(signedNp);
+    System.err.println("# Published");
+```
+
+For the complete code checkout ``UsageExamples.java``. 
 
 ## Usage on Unix Command-Line
 
@@ -51,7 +81,7 @@ the `curl` command is invoked.
 ## Usage with Docker
 
 You can use this [image from
-DockerHub](https://hub.docker.com/repository/docker/umids/nanopub-java).
+DockerHub](https://hub.docker.com/r/nanopub/nanopub-java).
 
 Sign a nanopublication (`nanopub.trig` file in current dir here):
 
@@ -82,6 +112,16 @@ mvn clean package
 The library features can then be accessed by calling `scripts/run.sh` (with the
 same commands as for the `np` script above, but using the locally compiled code
 and not the jar file).
+
+## Test Coverage
+Create the file target/jacoco.exec which includes the test coverage information in a binary format.
+```bash
+mvn clean verify
+```
+To create a html report out of jacoco.exec (target/site/jacoco/index.html) use:
+```bash
+mvn jacoco:report
+```
 
 
 ## Publication

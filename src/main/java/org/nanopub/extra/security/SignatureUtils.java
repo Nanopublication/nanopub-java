@@ -1,8 +1,19 @@
 package org.nanopub.extra.security;
 
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE;
-import static org.nanopub.extra.security.NanopubSignatureElement.HAS_SIGNATURE_TARGET;
-import static org.nanopub.extra.security.NanopubSignatureElement.SIGNED_BY;
+import jakarta.xml.bind.DatatypeConverter;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdf;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.trusty.TrustyNanopubUtils;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -15,32 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.DatatypeConverter;
-
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubRdfHandler;
-import org.nanopub.NanopubUtils;
-import org.nanopub.NanopubWithNs;
-import org.nanopub.trusty.TempUriReplacer;
-import org.nanopub.trusty.TrustyNanopubUtils;
-
-import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfFileContent;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.TransformRdf;
+import static org.nanopub.extra.security.NanopubSignatureElement.*;
 
 public class SignatureUtils {
 
@@ -149,9 +135,8 @@ public class SignatureUtils {
 		List<Statement> preStatements = NanopubUtils.getStatements(preNanopub);
 		IRI piUri = preNanopub.getPubinfoUri();
 		Map<String,String> nsMap = new HashMap<>();
-		if (preNanopub instanceof NanopubWithNs) {
-			NanopubWithNs preNanopubNs = (NanopubWithNs) preNanopub;
-			for (String prefix : preNanopubNs.getNsPrefixes()) {
+		if (preNanopub instanceof NanopubWithNs preNanopubNs) {
+            for (String prefix : preNanopubNs.getNsPrefixes()) {
 				nsMap.put(prefix, preNanopubNs.getNamespace(prefix));
 			}
 		}
@@ -169,7 +154,7 @@ public class SignatureUtils {
 
 		// Adding signature element:
 		IRI signatureElUri = vf.createIRI(npUri + "sig");
-		String publicKeyString = DatatypeConverter.printBase64Binary(c.getKey().getPublic().getEncoded()).replaceAll("\\s", "");
+		String publicKeyString = encodePublicKey(c.getKey().getPublic());
 		Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
 		preStatements.add(vf.createStatement(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
 		preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
@@ -185,7 +170,7 @@ public class SignatureUtils {
 		for (Statement st : preStatements) preContent.handleStatement(st);
 		preContent.endRDF();
 		RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
-		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri);
+		RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri, TrustyNanopubUtils.transformRdfSetting);
 
 		// TODO Why do we do this?
 		try {
@@ -200,9 +185,9 @@ public class SignatureUtils {
 		Literal signatureLiteral = vf.createLiteral(DatatypeConverter.printBase64Binary(signatureBytes));
 
 		// Preprocess signature statement:
-		List<Statement> sigStatementList = new ArrayList<Statement>();
+		List<Statement> sigStatementList = new ArrayList<>();
 		sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
-		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri).get(0);
+		Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).get(0);
 
 		// Combine all statements:
 		RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);
@@ -219,10 +204,14 @@ public class SignatureUtils {
 
 		// Create nanopub object:
 		NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
-		IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler);
+		IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler, TrustyNanopubUtils.transformRdfSetting);
 		Map<Resource,IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));
 		c.mergeTransformMap(transformMap);
 		return nanopubHandler.getNanopub();
+	}
+
+	public static String encodePublicKey(PublicKey publicKey) {
+		return DatatypeConverter.printBase64Binary(publicKey.getEncoded()).replaceAll("\\s", "");
 	}
 
 	// ----------
