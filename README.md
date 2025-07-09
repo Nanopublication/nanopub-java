@@ -1,5 +1,4 @@
-nanopub-java
-============
+# nanopub-java
 
 This is a Java library for nanopublications (see http://nanopub.net) based on
 RDF4J.
@@ -16,6 +15,7 @@ from The Central Repository, with an entry in your pom.xml file as shown
 
 Alternatively, you might want to use one of the [pre-built
 jar files](https://github.com/Nanopublication/nanopub-java/releases).
+
 
 ## Quickstart Java Instructions
 
@@ -53,6 +53,13 @@ And then nanopublications can be created and published programmatically like thi
 ```
 
 For the complete code checkout ``UsageExamples.java``. 
+
+
+## Documentation
+
+See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
+source code documentation.
+
 
 ## Usage on Unix Command-Line
 
@@ -135,3 +142,4 @@ mvn jacoco:report
 
 nanopub-java is free software under the MIT License. See LICENSE.txt.
 
+For an overview of the dependencies and their licenses, run `mvn project-info-reports:dependencies` and then visit `target/reports/dependencies.html`.
