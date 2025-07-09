@@ -14,7 +14,7 @@ import java.util.Set;
  * indexes and do not define a meaningful set on their own are called "incomplete". Indexes that
  * are not appended by other indexes or despite being appended define a meaningful set of nanopubs
  * on their own, are called "complete". For example, to define a set of 2500 nanopublications, one
- * can define a first incomlete index with 1000 nanopubs, then a second incomplete one that appends
+ * can define a first incomplete index with 1000 nanopubs, then a second incomplete one that appends
  * the first and refers to the next 1000 nanopubs, and finally a complete index that appends the
  * second and adds the remaining 500 nanopubs, thereby containing in total 2500 of them.
  * <p>
@@ -25,27 +25,28 @@ import java.util.Set;
  */
 public interface NanopubIndex extends Nanopub {
 
-	public static final IRI NANOPUB_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubIndex");
-	public static final IRI INCOMPLETE_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IncompleteIndex");
-	public static final IRI INDEX_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IndexAssertion");
-	public static final IRI INCLUDES_ELEMENT_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesElement");
-	public static final IRI INCLUDES_SUBINDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesSubindex");
-	public static final IRI APPENDS_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/appendsIndex");
+    public static final IRI NANOPUB_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubIndex");
+    public static final IRI INCOMPLETE_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IncompleteIndex");
+    public static final IRI INDEX_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IndexAssertion");
+    public static final IRI INCLUDES_ELEMENT_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesElement");
+    public static final IRI INCLUDES_SUBINDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesSubindex");
+    public static final IRI APPENDS_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/appendsIndex");
 
-	public static final int MAX_SIZE = 1000;
+    public static final int MAX_SIZE = 1000;
 
-	public Set<IRI> getElements();
 
-	public Set<IRI> getSubIndexes();
+    public Set<IRI> getElements();
 
-	public IRI getAppendedIndex();
+    public Set<IRI> getSubIndexes();
 
-	public boolean isIncomplete();
+    public IRI getAppendedIndex();
 
-	public String getName();
+    public boolean isIncomplete();
 
-	public String getDescription();
+    public String getName();
 
-	public Set<IRI> getSeeAlsoUris();
+    public String getDescription();
+
+    public Set<IRI> getSeeAlsoUris();
 
 }
