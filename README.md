@@ -7,7 +7,6 @@ RDF4J.
 It implements the formal structure defined in the [official nanopublication
 guidelines](http://nanopub.net/guidelines/working_draft/).
 
-
 ## Usage as Java Library
 
 The easiest way to use this library in your project is to let Maven download it
@@ -53,6 +52,11 @@ And then nanopublications can be created and published programmatically like thi
 ```
 
 For the complete code checkout ``UsageExamples.java``. 
+
+## Documentation
+
+See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
+source code documentation.
 
 ## Usage on Unix Command-Line
 
