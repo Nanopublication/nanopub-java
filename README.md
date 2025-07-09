@@ -134,6 +134,6 @@ mvn jacoco:report
 
 ## License
 
-nanopub-java is free software under the MIT License. See LICENSE.txt.
+nanopub-java is free software under the MIT License. See [LICENSE.txt](LICENSE.txt).
 
 For an overview of the dependencies and their licenses, run `mvn project-info-reports:dependencies` and then visit `target/reports/dependencies.html`.
