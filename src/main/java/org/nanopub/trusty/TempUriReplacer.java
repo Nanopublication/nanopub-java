@@ -13,7 +13,7 @@ import org.nanopub.Nanopub;
 
 /**
  * You can use temporary URIs for your nanopublications that start with
- * "<a href="http://purl.org/nanopub/temp/">...</a>". T<a href="hese">then become "https://w3id.org/np/ARTIFAC</a>TCODE-PLACEHOLDER/"
+ * "<a href="">...</a>". T<a href="hese">then become "https://w3id.org/np/ARTIFAC</a>TCODE-PLACEHOLDER/"
  * before being transformed to trusty nanopublications, and as final trusty nanopublications have
  * the actual artifact code instead of the placeholder.
  *
@@ -21,63 +21,105 @@ import org.nanopub.Nanopub;
  */
 public class TempUriReplacer implements RDFHandler {
 
-	public static final String tempUri = "http://purl.org/nanopub/temp/";
-	public static final String normUri = "https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/";
+    /**
+     * The temporary URI prefix for nanopublications.
+     */
+    public static final String tempUri = "http://purl.org/nanopub/temp/";
 
-	private String uriPrefix;
-	private RDFHandler nestedHandler;
-	private Map<Resource,IRI> transformMap;
+    /**
+     * The normalized URI prefix for nanopublications, which is used in the
+     */
+    public static final String normUri = "https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/";
 
-	public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<Resource,IRI> transformMap) {
-		this.uriPrefix = np.getUri().stringValue();
-		this.nestedHandler = nestedHandler;
-		this.transformMap = transformMap;
-	}
+    private String uriPrefix;
+    private RDFHandler nestedHandler;
+    private Map<Resource, IRI> transformMap;
 
-	public static boolean hasTempUri(Nanopub np) {
-		return np.getUri().stringValue().startsWith(tempUri);
-	}
+    /**
+     * Creates a new temporary URI replacer.
+     *
+     * @param np            The nanopublication to be transformed.
+     * @param nestedHandler The nested RDF handler that will receive the transformed statements.
+     */
+    public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<Resource, IRI> transformMap) {
+        this.uriPrefix = np.getUri().stringValue();
+        this.nestedHandler = nestedHandler;
+        this.transformMap = transformMap;
+    }
 
-	@Override
-	public void handleStatement(Statement st) throws RDFHandlerException {
-		nestedHandler.handleStatement(SimpleValueFactory.getInstance().createStatement(
-				(Resource) replace(st.getSubject()),
-				(IRI) replace(st.getPredicate()),
-				replace(st.getObject()),
-				(Resource) replace(st.getContext())));
-	}
+    /**
+     * Checks whether the given nanopublication has a temporary URI.
+     *
+     * @param np The nanopublication to check.
+     * @return True if the nanopublication has a temporary URI, false otherwise.
+     */
+    public static boolean hasTempUri(Nanopub np) {
+        return np.getUri().stringValue().startsWith(tempUri);
+    }
 
-	@Override
-	public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-		if (uri.startsWith(uriPrefix)) {
-			uri = uri.replace(uriPrefix, normUri);
-		}
-		nestedHandler.handleNamespace(prefix, uri);
-	}
+    /**
+     * Handles a statement by replacing temporary URIs with the normalized URI prefix.
+     *
+     * @param st The statement to handle.
+     */
+    @Override
+    public void handleStatement(Statement st) throws RDFHandlerException {
+        nestedHandler.handleStatement(SimpleValueFactory.getInstance().createStatement((Resource) replace(st.getSubject()), (IRI) replace(st.getPredicate()), replace(st.getObject()), (Resource) replace(st.getContext())));
+    }
 
-	private Value replace(Value v) {
-		if (v instanceof IRI && v.stringValue().startsWith(uriPrefix)) {
-			IRI i = SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));
-			if (transformMap != null) transformMap.put((IRI) v, i);
-			return i;
-		} else {
-			return v;
-		}
-	}
+    /**
+     * Handles a namespace by replacing the temporary URI prefix with the normalized URI prefix.
+     *
+     * @param prefix The namespace prefix.
+     * @param uri    The namespace URI.
+     */
+    @Override
+    public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+        if (uri.startsWith(uriPrefix)) {
+            uri = uri.replace(uriPrefix, normUri);
+        }
+        nestedHandler.handleNamespace(prefix, uri);
+    }
 
-	@Override
-	public void startRDF() throws RDFHandlerException {
-		nestedHandler.startRDF();
-	}
+    private Value replace(Value v) {
+        if (v instanceof IRI && v.stringValue().startsWith(uriPrefix)) {
+            IRI i = SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));
+            if (transformMap != null) transformMap.put((IRI) v, i);
+            return i;
+        } else {
+            return v;
+        }
+    }
 
-	@Override
-	public void endRDF() throws RDFHandlerException {
-		nestedHandler.endRDF();
-	}
+    /**
+     * Starts the RDF processing by calling the startRDF method of the nested handler.
+     *
+     * @throws RDFHandlerException If an error occurs during the start of RDF processing.
+     */
+    @Override
+    public void startRDF() throws RDFHandlerException {
+        nestedHandler.startRDF();
+    }
 
-	@Override
-	public void handleComment(String comment) throws RDFHandlerException {
-		nestedHandler.handleComment(comment);
-	}
+    /**
+     * Ends the RDF processing by calling the endRDF method of the nested handler.
+     *
+     * @throws RDFHandlerException If an error occurs during the end of RDF processing.
+     */
+    @Override
+    public void endRDF() throws RDFHandlerException {
+        nestedHandler.endRDF();
+    }
+
+    /**
+     * Handles a comment by passing it to the nested handler.
+     *
+     * @param comment The comment to handle.
+     * @throws RDFHandlerException If an error occurs while handling the comment.
+     */
+    @Override
+    public void handleComment(String comment) throws RDFHandlerException {
+        nestedHandler.handleComment(comment);
+    }
 
 }
