@@ -3,7 +3,7 @@
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
   <packaging>jar</packaging>
-  <version>1.78-SNAPSHOT</version>
+  <version>1.79-SNAPSHOT</version>
   <name>nanopub</name>
   <description>Java library for nanopublications based on RDF4J</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
@@ -222,7 +222,7 @@
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>
-          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <nexusUrl>https://ossrh-staging-api.central.sonatype.com/</nexusUrl>
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>

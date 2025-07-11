@@ -1,0 +1,46 @@
+package org.nanopub;
+
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
+
+import java.security.GeneralSecurityException;
+
+import static org.nanopub.SimpleCreatorPattern.DCT_CREATOR;
+import static org.nanopub.SimpleCreatorPattern.PROV_WASATTRIBUTEDTO;
+
+/**
+ * <p>
+ * Handles Retracting of Nanopublications
+ * </p>
+ * The retraction is a separate np, which must be signed with the same key as the original np.
+ */
+public class NanopubRetractor {
+
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+
+    public static final IRI RETRACTION = vf.createIRI("http://purl.org/nanopub/x/retracts");
+
+
+    /**
+     * Create a retraction np out of the original np and a transformation context
+     *
+     * @param originalNp The Nanopublication to be retracted
+     * @param tc The transfomation context with the public key
+     * @return the retraction np, which can be published afterward
+     */
+    public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException {
+        SignatureUtils.assertMatchingPubkeys(tc, originalNp);
+        NanopubCreator c = new NanopubCreator(true);
+        c.addAssertionStatement(tc.getSigner(), RETRACTION, originalNp.getUri());
+        c.addProvenanceStatement(PROV_WASATTRIBUTEDTO, tc.getSigner());
+        c.addPubinfoStatement(DCT_CREATOR, tc.getSigner());
+
+        Nanopub retractionNp = c.finalizeNanopub(true);
+        return SignatureUtils.createSignedNanopub(retractionNp, tc);
+    }
+}

@@ -5,7 +5,7 @@
 Release new version:
 
     $ mvn release:clean release:prepare
-    $ mvn release:perform
+    $ mvn -e -X release:perform
 
 Undo failed release attempt:
 

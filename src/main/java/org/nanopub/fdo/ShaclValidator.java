@@ -57,6 +57,8 @@ public class ShaclValidator extends CliRunner {
     /**
      * Logs constraints validation to System.out
      *
+     * @param shape the SHACL shape to validate against
+     * @param data  the data to be validated
      * @return true, iff the data respects the specification of the shape.
      */
     public static ValidationResult validateShacl(Set<Statement> shape, Set<Statement> data) {
@@ -92,10 +94,7 @@ public class ShaclValidator extends CliRunner {
             if (cause instanceof ValidationException) {
                 Model validationReportModel = ((ValidationException) cause).validationReportAsModel();
 
-                WriterConfig writerConfig = new WriterConfig()
-                        .set(BasicWriterSettings.INLINE_BLANK_NODES, true)
-                        .set(BasicWriterSettings.XSD_STRING_TO_PLAIN_LITERAL, true)
-                        .set(BasicWriterSettings.PRETTY_PRINT, true);
+                WriterConfig writerConfig = new WriterConfig().set(BasicWriterSettings.INLINE_BLANK_NODES, true).set(BasicWriterSettings.XSD_STRING_TO_PLAIN_LITERAL, true).set(BasicWriterSettings.PRETTY_PRINT, true);
 
                 Rio.write(validationReportModel, System.out, RDFFormat.TURTLE, writerConfig);
                 ValidationResult failure = new ValidationResult();
@@ -109,13 +108,21 @@ public class ShaclValidator extends CliRunner {
     /**
      * Logs constraints validation to System.out
      *
+     * @param shape the SHACL shape to validate against
+     * @param data  the Nanopub containing the data to be validated
      * @return true, iff the data respects the specification of the shape.
      */
     public static ValidationResult validateShacl(Nanopub shape, Nanopub data) {
         return validateShacl(shape.getAssertion(), data.getAssertion());
     }
 
-    public void run () throws MalformedNanopubException, IOException {
+    /**
+     * Runs the Shacl validation process.
+     *
+     * @throws MalformedNanopubException if the Nanopub is malformed
+     * @throws IOException               if there is an error reading the files
+     */
+    public void run() throws MalformedNanopubException, IOException {
         Nanopub shape = new NanopubImpl(shapeFile);
         Nanopub data = new NanopubImpl(nanopubFile);
         if (validateShacl(shape, data).isValid()) {

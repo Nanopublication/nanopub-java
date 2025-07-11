@@ -7,12 +7,13 @@ import org.nanopub.extra.security.TransformContext;
 
 public class RoCrateIT {
 
-    void createNpFromRoCrate (String url, String metadata) throws Exception {
+    Nanopub createNpFromRoCrate (String url, String metadata) throws Exception {
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(url, metadata);
 
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
         NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+        return signedNp;
     }
 
     @Test
@@ -39,5 +40,16 @@ public class RoCrateIT {
         //        String metadata4 = "ro-crate-metadata.json";
         //        createNpFromRoCrate(url4, metadata4);
     }
+
+//    @Test
+    void moreExamples() throws Exception {
+        String p0 = "https://mod.paradisec.org.au/repository/46/0d/05/87/db/45/55/64/09/01/35/fa/21/da/c5/43/10/48/b3/28/84/2e/1e/c9/c4/9e/f2/81/f2/92/cd/d1/de/9d/8a/e8/f1/37/e8/5f/66/d1/06/c8/e7/0d/82/71/d9/c0/f1/36/97/71/9a/24/7a/7e/d1/ab/75/fa/46/4a/v1/content/";
+        String p1 = "https://mod.paradisec.org.au/repository/00/8a/19/78/29/09/bf/18/98/da/3c/03/88/99/f1/9d/f9/32/35/97/4d/86/be/6c/84/99/39/31/32/d9/3a/b3/0a/c2/5e/93/4a/12/65/57/ef/aa/a0/9b/da/bb/0b/ad/3b/fa/5d/3e/da/67/77/d0/66/c7/6d/d9/1d/4c/07/b0/v1/content/ro-crate-metadata.json";
+        String m0 = "ro-crate-metadata.json";
+        Nanopub np = createNpFromRoCrate(p0, m0);
+//        PublishNanopub.publish(np);
+    }
+
+    //
 
 }
