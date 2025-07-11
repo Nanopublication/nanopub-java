@@ -25,28 +25,88 @@ import java.util.Set;
  */
 public interface NanopubIndex extends Nanopub {
 
+    /**
+     * The URI of the nanopublication index type.
+     */
     public static final IRI NANOPUB_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubIndex");
+
+    /**
+     * The URI of the nanopublication index incomplete type.
+     */
     public static final IRI INCOMPLETE_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IncompleteIndex");
+
+    /**
+     * The URI of the nanopublication index assertion.
+     */
     public static final IRI INDEX_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IndexAssertion");
+
+    /**
+     * The URI of the nanopublication index includes element.
+     */
     public static final IRI INCLUDES_ELEMENT_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesElement");
+
+    /**
+     * The URI of the nanopublication index includes sub-index.
+     */
     public static final IRI INCLUDES_SUBINDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesSubindex");
+
+    /**
+     * The URI of the nanopublication index appends index.
+     */
     public static final IRI APPENDS_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/appendsIndex");
 
+    /**
+     * The maximum number of elements.
+     */
     public static final int MAX_SIZE = 1000;
 
-
+    /**
+     * Returns the set of IRIs that are included as elements in this index.
+     *
+     * @return a set of IRIs representing the elements of this index
+     */
     public Set<IRI> getElements();
 
+    /**
+     * Returns the set of IRIs that are included as sub-indexes in this index.
+     *
+     * @return a set of IRIs representing the sub-indexes of this index
+     */
     public Set<IRI> getSubIndexes();
 
+    /**
+     * Returns the IRI of the index that is appended by this index.
+     *
+     * @return the IRI of the appended index, or null if this index does not append another index
+     */
     public IRI getAppendedIndex();
 
+    /**
+     * Checks if this index is complete.
+     *
+     * @return true if this index is complete, false if it is incomplete
+     */
     public boolean isIncomplete();
 
+    /**
+     * Returns the name of the nanopublication index.
+     *
+     * @return the name of the index
+     */
     public String getName();
 
+    /**
+     * Returns the description of the nanopublication index.
+     *
+     * @return the description of the index
+     */
     public String getDescription();
 
+    /**
+     * Returns the seeAlso URIs of the nanopublication index.
+     *
+     * @return a set of IRI objects representing the seeAlso URIs
+     */
     public Set<IRI> getSeeAlsoUris();
 
 }
