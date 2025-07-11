@@ -40,7 +40,7 @@ public class MakeIndex extends CliRunner {
     private File outputFile = new File("index.trig");
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-    private String baseUri = "index/";
+    private String baseUri = "http://purl.org/nanopub/temp/index/";
 
     @com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
     private String iTitle;

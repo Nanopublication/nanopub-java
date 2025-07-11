@@ -478,7 +478,7 @@ public class NanopubUtils {
      * @return a new IRI for a temporary Nanopub
      */
     public static IRI createTempNanopubIri() {
-        return vf.createIRI("" + Math.abs(random.nextInt()) + "/");
+        return vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
     }
 
 }

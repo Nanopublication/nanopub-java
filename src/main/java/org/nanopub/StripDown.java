@@ -89,7 +89,7 @@ public class StripDown extends CliRunner {
                     @Override
                     public void handleNanopub(Nanopub np) {
                         try {
-                            String replacement = "" + Math.abs(random.nextInt()) + "/";
+                            String replacement = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
                             List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
                             NanopubImpl oldNp = (NanopubImpl) np;

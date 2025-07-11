@@ -41,7 +41,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
-        IRI npIri = vf.createIRI("" + Math.abs(random.nextInt()) + "/");
+        IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
@@ -53,7 +53,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
-        String npIriString = "" + Math.abs(random.nextInt()) + "/";
+        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);

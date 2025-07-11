@@ -196,7 +196,7 @@ public class Import extends CliRunner {
         @Override
         public void readStatements(List<Statement> statements) {
             String cedarId = getCedarId(statements);
-            npIriString = "" + cedarId + "#";
+            npIriString = "http://purl.org/nanopub/temp/" + cedarId + "#";
             npIri = vf.createIRI(npIriString);
 
             npCreator = new NanopubCreator(npIri);
