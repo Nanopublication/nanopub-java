@@ -108,7 +108,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
     /**
      * Adds a seeAlso URI to the nanopublication index.
      *
-     * @param seeAlsoUri
+     * @param seeAlsoUri the seeAlso URI to add
      */
     public void addSeeAlsoUri(IRI seeAlsoUri) {
         seeAlsoUris.add(seeAlsoUri);

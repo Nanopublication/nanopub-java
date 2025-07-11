@@ -40,7 +40,7 @@ public class MakeIndex extends CliRunner {
     private File outputFile = new File("index.trig");
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-    private String baseUri = "http://purl.org/nanopub/temp/index/";
+    private String baseUri = "index/";
 
     @com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
     private String iTitle;
@@ -69,6 +69,12 @@ public class MakeIndex extends CliRunner {
 //	@com.beust.jcommander.Parameter(names = "--sig-algorithm", description = "Signature algorithm: either RSA or DSA")
 //	private SignatureAlgorithm algorithm;
 
+    /**
+     * Main method to run the MakeIndex tool.
+     *
+     * @param args command-line arguments
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws IOException {
         try {
             MakeIndex obj = CliRunner.initJc(new MakeIndex(), args);

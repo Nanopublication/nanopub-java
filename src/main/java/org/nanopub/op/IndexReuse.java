@@ -53,7 +53,7 @@ public class IndexReuse extends CliRunner {
     private boolean addSupersedesBacklinks = false;
 
     @com.beust.jcommander.Parameter(names = "-U", description = "Base URI for index nanopubs")
-    private String baseUri = "http://purl.org/nanopub/temp/index/";
+    private String baseUri = "index/";
 
     @com.beust.jcommander.Parameter(names = "-T", description = "Title of index")
     private String iTitle;

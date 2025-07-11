@@ -162,7 +162,7 @@ public class Build extends CliRunner {
     }
 
     private void initNanopub() {
-        String npUriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+        String npUriString = "" + Math.abs(random.nextInt()) + "/";
         nanopubIri = vf.createIRI(npUriString);
         assertionIri = vf.createIRI(npUriString + "assertion");
         if (creators.isEmpty()) creators.add(npUriString + "creator");

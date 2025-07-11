@@ -27,6 +27,11 @@ public class RoCrateImporter extends CliRunner {
 
     private ValueFactory vf = SimpleValueFactory.getInstance();
 
+    /**
+     * Main method to run the RoCrateImporter.
+     *
+     * @param args command line arguments, expects the RoCrate metadata URL
+     */
     public static void main(String[] args) {
         try {
             RoCrateImporter obj = CliRunner.initJc(new RoCrateImporter(), args);
@@ -39,6 +44,17 @@ public class RoCrateImporter extends CliRunner {
         }
     }
 
+    /**
+     * Runs the RoCrateImporter to parse the RoCrate metadata and either create a local nanopub or publish it.
+     *
+     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws IOException               if there is an I/O error
+     * @throws URISyntaxException        if the metadata URL is malformed
+     * @throws InterruptedException      if the thread is interrupted
+     * @throws TrustyUriException        if there is an issue with Trusty URI
+     * @throws SignatureException        if there is an issue with signing the nanopub
+     * @throws InvalidKeyException       if the signing key is invalid
+     */
     public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException {
         String metadataFilename = metadataUrl.substring(metadataUrl.lastIndexOf('/'));
         String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));

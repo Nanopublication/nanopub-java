@@ -35,6 +35,11 @@ public class ShaclValidator extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-s", description = "SHACL shape file", required = true)
     private File shapeFile;
 
+    /**
+     * Main method to run the ShaclValidator.
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         try {
             ShaclValidator obj = CliRunner.initJc(new ShaclValidator(), args);

@@ -65,16 +65,32 @@ public class CrossRefResolver implements RDFHandler {
         return v;
     }
 
+    /**
+     * Starts the RDF processing by calling the startRDF method of the nested handler.
+     *
+     * @throws RDFHandlerException if an error occurs during processing
+     */
     @Override
     public void startRDF() throws RDFHandlerException {
         nestedHandler.startRDF();
     }
 
+    /**
+     * Ends the RDF processing by calling the endRDF method of the nested handler.
+     *
+     * @throws RDFHandlerException if an error occurs during processing
+     */
     @Override
     public void endRDF() throws RDFHandlerException {
         nestedHandler.endRDF();
     }
 
+    /**
+     * Handles a comment by passing it to the nested handler.
+     *
+     * @param comment the comment to handle
+     * @throws RDFHandlerException if an error occurs during processing
+     */
     @Override
     public void handleComment(String comment) throws RDFHandlerException {
         nestedHandler.handleComment(comment);

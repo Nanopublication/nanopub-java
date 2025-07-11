@@ -41,6 +41,14 @@ public class RegistryInfo implements Serializable {
         return load(registryUrl, RegistryInfo.class);
     }
 
+    /**
+     * Loads the registry information from the specified URL using a specific class for deserialization.
+     *
+     * @param url             the URL of the registry server
+     * @param serverInfoClass the class to use for deserializing the registry information
+     * @return a RegistryInfo object containing the server information
+     * @throws RegistryInfoException if there is an error loading the registry information
+     */
     protected static RegistryInfo load(String url, Class<? extends RegistryInfo> serverInfoClass) throws RegistryInfoException {
         HttpGet get = null;
         try {

@@ -21,8 +21,18 @@ import java.util.Map;
  */
 public abstract class QueryAccess {
 
+    /**
+     * Process the header.
+     *
+     * @param line the header line from the CSV response
+     */
     protected abstract void processHeader(String[] line);
 
+    /**
+     * Process a line of data from the CSV response.
+     *
+     * @param line the line of data from the CSV response
+     */
     protected abstract void processLine(String[] line);
 
     /**

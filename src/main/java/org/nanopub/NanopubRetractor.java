@@ -23,6 +23,9 @@ public class NanopubRetractor {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
+    /**
+     * The IRI for the retraction statement.
+     */
     public static final IRI RETRACTION = vf.createIRI("http://purl.org/nanopub/x/retracts");
 
 
@@ -30,8 +33,12 @@ public class NanopubRetractor {
      * Create a retraction np out of the original np and a transformation context
      *
      * @param originalNp The Nanopublication to be retracted
-     * @param tc The transfomation context with the public key
+     * @param tc         The transfomation context with the public key
      * @return the retraction np, which can be published afterward
+     * @throws MalformedCryptoElementException if the public key in the context is malformed
+     * @throws MalformedNanopubException       if the original nanopub is malformed
+     * @throws TrustyUriException              if the original nanopub's URI is not a valid Trusty URI
+     * @throws GeneralSecurityException        if there is a security issue with signing the retraction
      */
     public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException {
         SignatureUtils.assertMatchingPubkeys(tc, originalNp);

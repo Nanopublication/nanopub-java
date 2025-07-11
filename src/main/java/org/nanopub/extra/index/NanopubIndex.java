@@ -19,7 +19,7 @@ import java.util.Set;
  * second and adds the remaining 500 nanopubs, thereby containing in total 2500 of them.
  * <p>
  * See the following paper for a description of the general approach:
- * <a href="http://arxiv.org/pdf/1411.2749"></a>...</a>
+ * <a href="http://arxiv.org/pdf/1411.2749">http://arxiv.org/pdf/1411.2749</a>
  *
  * @author Tobias Kuhn
  */

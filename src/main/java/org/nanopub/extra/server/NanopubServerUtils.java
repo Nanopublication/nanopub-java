@@ -18,6 +18,9 @@ import java.util.List;
  */
 public class NanopubServerUtils {
 
+    /**
+     * Default constructor.
+     */
     // TODO make the constructor private?
     protected NanopubServerUtils() {
         throw new RuntimeException("no instances allowed");

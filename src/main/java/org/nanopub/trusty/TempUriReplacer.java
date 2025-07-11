@@ -40,6 +40,7 @@ public class TempUriReplacer implements RDFHandler {
      *
      * @param np            The nanopublication to be transformed.
      * @param nestedHandler The nested RDF handler that will receive the transformed statements.
+     * @param transformMap  A map to store the transformation of temporary URIs to their final form.
      */
     public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map<Resource, IRI> transformMap) {
         this.uriPrefix = np.getUri().stringValue();

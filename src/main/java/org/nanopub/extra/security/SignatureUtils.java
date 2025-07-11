@@ -299,6 +299,9 @@ public class SignatureUtils {
 
     /**
      * This includes legacy signatures. Might include false positives.
+     *
+     * @param nanopub the nanopub to check
+     * @return true if the nanopub seems to have a signature, false otherwise
      */
     public static boolean seemsToHaveSignature(Nanopub nanopub) {
         for (Statement st : nanopub.getPubinfo()) {
@@ -326,6 +329,8 @@ public class SignatureUtils {
     /**
      * Compare the public key from the tc and the signedNp.
      *
+     * @param tc       the TransformContext containing the key
+     * @param signedNp the signed nanopub to check
      * @throws MalformedCryptoElementException if not both contain the same public key
      */
     public static void assertMatchingPubkeys(TransformContext tc, Nanopub signedNp) throws MalformedCryptoElementException {

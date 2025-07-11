@@ -31,6 +31,11 @@ public class StripDown extends CliRunner {
     private ValueFactory vf = SimpleValueFactory.getInstance();
     private Random random = new Random();
 
+    /**
+     * Main method to run the StripDown tool.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         try {
             StripDown obj = CliRunner.initJc(new StripDown(), args);
@@ -43,7 +48,13 @@ public class StripDown extends CliRunner {
         }
     }
 
-    public void run () throws MalformedNanopubException, IOException {
+    /**
+     * Runs the StripDown process.
+     *
+     * @throws MalformedNanopubException if a nanopublication is malformed.
+     * @throws IOException               if an I/O error occurs.
+     */
+    public void run() throws MalformedNanopubException, IOException {
 
         final OutputStream singleOut;
         if (singleOutputFile != null) {
@@ -78,10 +89,10 @@ public class StripDown extends CliRunner {
                     @Override
                     public void handleNanopub(Nanopub np) {
                         try {
-                            String replacement = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+                            String replacement = "" + Math.abs(random.nextInt()) + "/";
                             List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
-                            NanopubImpl oldNp = (NanopubImpl)np;
+                            NanopubImpl oldNp = (NanopubImpl) np;
                             Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
 
                             NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
@@ -101,7 +112,7 @@ public class StripDown extends CliRunner {
         }
     }
 
-    private Map<String,String> removeHashFromNamespaces(NanopubImpl np, String replacement) {
+    private Map<String, String> removeHashFromNamespaces(NanopubImpl np, String replacement) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());
         if (artifactCode == null) {
             throw new RuntimeException("No artifact code found for " + np.getUri());
@@ -109,7 +120,7 @@ public class StripDown extends CliRunner {
         Map<String, String> newNamespaces = new HashMap<>();
         for (String prefix : np.getNsPrefixes()) {
             String ns = np.getNamespace(prefix);
-            newNamespaces.put(prefix, ns.replaceFirst("http.*"+artifactCode+".?", replacement));
+            newNamespaces.put(prefix, ns.replaceFirst("http.*" + artifactCode + ".?", replacement));
         }
         return newNamespaces;
     }
@@ -146,13 +157,21 @@ public class StripDown extends CliRunner {
         return newStatements;
     }
 
-    protected IRI transform (Resource r, String artifact, String replacement) {
+    /**
+     * Transforms a Resource by replacing the artifact code with a replacement string.
+     *
+     * @param r           the Resource to transform
+     * @param artifact    the artifact code to look for in the Resource's string representation
+     * @param replacement the string to replace the artifact code with
+     * @return the transformed IRI, or null if the input Resource is null
+     */
+    protected IRI transform(Resource r, String artifact, String replacement) {
         if (r == null) {
             return null;
         } else if (r instanceof BNode) {
             throw new RuntimeException("Unexpected blank node encountered");
         } else {
-            IRI transformedURI = vf.createIRI(r.toString().replaceFirst("http.*"+artifact+".?", replacement));
+            IRI transformedURI = vf.createIRI(r.toString().replaceFirst("http.*" + artifact + ".?", replacement));
             return transformedURI;
         }
     }

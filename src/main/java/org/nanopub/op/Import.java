@@ -160,8 +160,6 @@ public class Import extends CliRunner {
 
         /**
          * Finalizes the nanopublications after all statements have been read.
-         *
-         * @throws MalformedNanopubException if the nanopublication is malformed
          */
         public void finalizeNanopubs();
 
@@ -198,7 +196,7 @@ public class Import extends CliRunner {
         @Override
         public void readStatements(List<Statement> statements) {
             String cedarId = getCedarId(statements);
-            npIriString = "http://purl.org/nanopub/temp/" + cedarId + "#";
+            npIriString = "" + cedarId + "#";
             npIri = vf.createIRI(npIriString);
 
             npCreator = new NanopubCreator(npIri);
@@ -267,8 +265,6 @@ public class Import extends CliRunner {
 
         /**
          * Finalizes the nanopublications after all statements have been read.
-         *
-         * @throws MalformedNanopubException if the nanopublication is malformed
          */
         @Override
         public void finalizeNanopubs() {

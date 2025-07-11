@@ -242,7 +242,7 @@ public abstract class NanopubIndexCreator {
         elementNsCount = 0;
         itemCount = 0;
         String baseUri = getBaseUri();
-        if (baseUri.startsWith("http://purl.org/nanopub/temp/")) {
+        if (baseUri.startsWith("")) {
             baseUri += Math.abs(random.nextLong()) + "/";
         }
         npCreator = new NanopubCreator(baseUri);

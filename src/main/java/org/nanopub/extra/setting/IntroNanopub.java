@@ -276,6 +276,7 @@ public class IntroNanopub implements Serializable {
         /**
          * Returns the extracted Nanopub that contains the introduction.
          *
+         * @return the Nanopub that contains the introduction
          * @throws RDFHandlerException if there is an error handling the end of the data
          */
         public Nanopub getIntroNanopub() {
