@@ -6,7 +6,10 @@ import eu.neverblink.jelly.convert.rdf4j.Rdf4jDatatype;
 import eu.neverblink.jelly.core.JellyOptions;
 import eu.neverblink.jelly.core.ProtoDecoder;
 import eu.neverblink.jelly.core.RdfHandler;
-import eu.neverblink.jelly.core.proto.v1.*;
+import eu.neverblink.jelly.core.proto.v1.LogicalStreamType;
+import eu.neverblink.jelly.core.proto.v1.PhysicalStreamType;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamOptions;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
@@ -29,20 +32,21 @@ public class JellyUtils {
      * Options for Jelly RDF streams that are written to the database.
      */
     public static final RdfStreamOptions jellyOptionsForDB = JellyOptions.SMALL_STRICT
-        .clone()
-        .setPhysicalType(PhysicalStreamType.QUADS)
-        .setLogicalType(LogicalStreamType.DATASETS);
+            .clone()
+            .setPhysicalType(PhysicalStreamType.QUADS)
+            .setLogicalType(LogicalStreamType.DATASETS);
 
     /**
      * Options for Jelly RDF streams that are transmitted between services.
      */
     public static final RdfStreamOptions jellyOptionsForTransmission = JellyOptions.BIG_STRICT
-        .clone()
-        .setPhysicalType(PhysicalStreamType.QUADS)
-        .setLogicalType(LogicalStreamType.DATASETS);
+            .clone()
+            .setPhysicalType(PhysicalStreamType.QUADS)
+            .setLogicalType(LogicalStreamType.DATASETS);
 
     /**
      * Write a Nanopub to bytes in the Jelly format to be stored in the database.
+     *
      * @param np Nanopub
      * @return Jelly RDF bytes (non-delimited)
      */
@@ -121,8 +125,8 @@ public class JellyUtils {
     }
 
     private static ProtoDecoder<Value, Rdf4jDatatype> getDecoder(
-        ArrayList<Statement> statements,
-        ArrayList<Pair<String, String>> namespaces
+            ArrayList<Statement> statements,
+            ArrayList<Pair<String, String>> namespaces
     ) {
         final var quadMaker = Rdf4jConverterFactory.getInstance().decoderConverter();
         final var handler = new RdfHandler.QuadHandler<Value>() {
