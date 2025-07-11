@@ -17,126 +17,134 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Command-line utility to extract specific components from nanopublications.
+ */
 public class Extract extends CliRunner {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<>();
+    @com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
+    private List<File> inputNanopubs = new ArrayList<>();
 
-	@com.beust.jcommander.Parameter(names = "-a", description = "Extract assertion triples")
-	private boolean extractAssertion = false;
+    @com.beust.jcommander.Parameter(names = "-a", description = "Extract assertion triples")
+    private boolean extractAssertion = false;
 
-	@com.beust.jcommander.Parameter(names = "-p", description = "Extract provenance triples")
-	private boolean extractProvenance = false;
+    @com.beust.jcommander.Parameter(names = "-p", description = "Extract provenance triples")
+    private boolean extractProvenance = false;
 
-	@com.beust.jcommander.Parameter(names = "-i", description = "Extract publication info triples")
-	private boolean extractPubinfo = false;
+    @com.beust.jcommander.Parameter(names = "-i", description = "Extract publication info triples")
+    private boolean extractPubinfo = false;
 
-	@com.beust.jcommander.Parameter(names = "-h", description = "Extract head triples")
-	private boolean extractHead = false;
+    @com.beust.jcommander.Parameter(names = "-h", description = "Extract head triples")
+    private boolean extractHead = false;
 
-	@com.beust.jcommander.Parameter(names = "-d", description = "Drop graph URIs")
-	private boolean dropGraphs = false;
+    @com.beust.jcommander.Parameter(names = "-d", description = "Drop graph URIs")
+    private boolean dropGraphs = false;
 
-	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
-	private File outputFile;
+    @com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+    private File outputFile;
 
-	@com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
-	private String inFormat;
+    @com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
+    private String inFormat;
 
-	@com.beust.jcommander.Parameter(names = "--out-format", description = "Format of the output nanopubs: trig, nq, trix, trig.gz, ...")
-	private String outFormat;
+    @com.beust.jcommander.Parameter(names = "--out-format", description = "Format of the output nanopubs: trig, nq, trix, trig.gz, ...")
+    private String outFormat;
 
-	public static void main(String[] args) {
-		try {
-			Extract obj = CliRunner.initJc(new Extract(), args);
-			obj.run();
-		} catch (ParameterException ex) {
-			System.exit(1);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.exit(1);
-		}
-	}
+    /**
+     * Main method to run the Extract command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+            Extract obj = CliRunner.initJc(new Extract(), args);
+            obj.run();
+        } catch (ParameterException ex) {
+            System.exit(1);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+    }
 
-	private RDFFormat rdfInFormat, rdfOutFormat;
-	private OutputStream outputStream = System.out;
-	private RDFWriter writer;
+    private RDFFormat rdfInFormat, rdfOutFormat;
+    private OutputStream outputStream = System.out;
+    private RDFWriter writer;
 
-	private void run() throws IOException, RDFParseException, RDFHandlerException,
-			MalformedNanopubException, TrustyUriException {
-		for (File inputFile : inputNanopubs) {
-			if (inFormat != null) {
-				rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
-			} else {
-				rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
-			}
-			if (outputFile == null) {
-				if (outFormat == null) {
-					outFormat = "trig";
-				}
-				rdfOutFormat = Rio.getParserFormatForFileName("file." + outFormat).orElse(null);
-			} else {
-				rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
-				if (outputFile.getName().endsWith(".gz")) {
-					outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
-				} else {
-					outputStream = new FileOutputStream(outputFile);
-				}
-			}
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+        for (File inputFile : inputNanopubs) {
+            if (inFormat != null) {
+                rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
+            } else {
+                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
+            }
+            if (outputFile == null) {
+                if (outFormat == null) {
+                    outFormat = "trig";
+                }
+                rdfOutFormat = Rio.getParserFormatForFileName("file." + outFormat).orElse(null);
+            } else {
+                rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
+                if (outputFile.getName().endsWith(".gz")) {
+                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+                } else {
+                    outputStream = new FileOutputStream(outputFile);
+                }
+            }
 
-			writer = Rio.createWriter(rdfOutFormat, new OutputStreamWriter(outputStream, Charset.forName("UTF-8")));
-			writer.startRDF();
+            writer = Rio.createWriter(rdfOutFormat, new OutputStreamWriter(outputStream, Charset.forName("UTF-8")));
+            writer.startRDF();
 
-			MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
 
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					}
-				}
+                @Override
+                public void handleNanopub(Nanopub np) {
+                    try {
+                        process(np);
+                    } catch (RDFHandlerException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
 
-			});
+            });
 
-			writer.endRDF();
+            writer.endRDF();
 
-			outputStream.flush();
-			if (outputStream != System.out) {
-				outputStream.close();
-			}
-		}
-	}
+            outputStream.flush();
+            if (outputStream != System.out) {
+                outputStream.close();
+            }
+        }
+    }
 
-	private void process(Nanopub np) throws RDFHandlerException {
-		if (extractAssertion) {
-			for (Statement st : np.getAssertion()) {
-				outputStatement(st);
-			}
-		}
-		if (extractProvenance) {
-			for (Statement st : np.getProvenance()) {
-				outputStatement(st);
-			}
-		}
-		if (extractPubinfo) {
-			for (Statement st : np.getPubinfo()) {
-				outputStatement(st);
-			}
-		}
-		if (extractHead) {
-			for (Statement st : np.getHead()) {
-				outputStatement(st);
-			}
-		}
-	}
+    private void process(Nanopub np) throws RDFHandlerException {
+        if (extractAssertion) {
+            for (Statement st : np.getAssertion()) {
+                outputStatement(st);
+            }
+        }
+        if (extractProvenance) {
+            for (Statement st : np.getProvenance()) {
+                outputStatement(st);
+            }
+        }
+        if (extractPubinfo) {
+            for (Statement st : np.getPubinfo()) {
+                outputStatement(st);
+            }
+        }
+        if (extractHead) {
+            for (Statement st : np.getHead()) {
+                outputStatement(st);
+            }
+        }
+    }
 
-	private void outputStatement(Statement st) throws RDFHandlerException {
-		if (dropGraphs) {
-			st = SimpleValueFactory.getInstance().createStatement(st.getSubject(), st.getPredicate(), st.getObject());
-		}
-		writer.handleStatement(st);
-	}
+    private void outputStatement(Statement st) throws RDFHandlerException {
+        if (dropGraphs) {
+            st = SimpleValueFactory.getInstance().createStatement(st.getSubject(), st.getPredicate(), st.getObject());
+        }
+        writer.handleStatement(st);
+    }
 
 }

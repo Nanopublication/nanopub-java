@@ -1,19 +1,31 @@
 package org.nanopub.op.fingerprint;
 
-import java.util.Random;
-
 import org.nanopub.Nanopub;
 
+import java.util.Random;
+
+/**
+ * A FingerprintHandler that always returns a different fingerprint.
+ */
 public class AlwaysDifferentFingerprints implements FingerprintHandler {
 
-	private final Random random = new Random();
+    private final Random random = new Random();
 
-	public AlwaysDifferentFingerprints() {
-	}
+    /**
+     * Default constructor.
+     */
+    public AlwaysDifferentFingerprints() {
+    }
 
-	@Override
-	public String getFingerprint(Nanopub np) {
-		return random.nextLong() + "";
-	}
+    /**
+     * Generates a random fingerprint for the given Nanopub.
+     *
+     * @param np the Nanopub for which to generate a fingerprint
+     * @return a random fingerprint as a String
+     */
+    @Override
+    public String getFingerprint(Nanopub np) {
+        return random.nextLong() + "";
+    }
 
 }
