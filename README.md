@@ -8,6 +8,14 @@ guidelines](http://nanopub.net/guidelines/working_draft/) and the specification
 for FDOs as defined by the [FDO Forum](https://fairdo.org/).
 
 
+## Documentation
+
+See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
+source code documentation.
+
+The FDO-specific classes are documented [here](https://javadoc.io/doc/org.nanopub/nanopub/latest/org/nanopub/fdo/package-summary.html).
+
+
 ## Usage as Java Library
 
 The easiest way to use this library in your project is to let Maven download it
@@ -56,14 +64,6 @@ And then nanopublications can be created and published programmatically like thi
 For the complete code checkout ``UsageExamples.java``. 
 
 
-## Documentation
-
-See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
-source code documentation.
-
-The FDO-specific classes are documented [here](https://javadoc.io/doc/org.nanopub/nanopub/latest/org/nanopub/fdo/package-summary.html).
-
-
 ## Usage on Unix Command-Line
 
 To use this library on the command line, just download the [np
@@ -90,25 +90,22 @@ the `curl` command is invoked.
 
 ## Usage with Docker
 
-You can use this [image from
-DockerHub](https://hub.docker.com/r/nanopub/nanopub-java).
+Build the Docker image:
+
+```shell
+docker build -t nanopub/nanopub-java-fdo .
+```
 
 Sign a nanopublication (`nanopub.trig` file in current dir here):
 
 ```bash
-docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java sign /data/nanopub.trig
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java-fdo sign /data/nanopub.trig
 ```
 
 Publish a signed nanopublication:
 
 ```bash
-docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java publish /data/signed.nanopub.trig
-```
-
-Build the Docker image:
-
-```shell
-docker build -t nanopub/nanopub-java .
+docker run -it --rm -v ~/.nanopub:/root/.nanopub -v $(pwd):/data nanopub/nanopub-java-fdo publish /data/signed.nanopub.trig
 ```
 
 ## Compilation
