@@ -19,19 +19,39 @@ import java.util.Random;
 
 import static org.nanopub.fdo.FdoUtils.*;
 
+/**
+ * Utility class for creating Nanopubs from FDO records.
+ */
 public class FdoNanopubCreator {
 
+    /**
+     * Prefix for FDO type IRIs.
+     */
     public static final String FDO_TYPE_PREFIX = "https://w3id.org/kpxl/handle/terms/";
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     private static final Random random = new Random();
 
+    /**
+     * Creates a NanopubCreator with the given FdoRecord and the FDO IRI.
+     *
+     * @param fdoRecord the FdoRecord to be included in the Nanopub
+     * @param fdoIri    the IRI of the FDO record
+     * @return a NanopubCreator instance ready to create a Nanopub
+     */
     public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
         IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
+    /**
+     * Creates a NanopubCreator with the given FdoRecord and a FDO suffix.
+     *
+     * @param fdoRecord the FdoRecord to be included in the Nanopub
+     * @param fdoSuffix the suffix to be appended to the FDO IRI
+     * @return a NanopubCreator instance ready to create a Nanopub
+     */
     public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
         String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
@@ -61,16 +81,25 @@ public class FdoNanopubCreator {
 
         IRI fdoIri = FdoUtils.createIri(id);
         NanopubCreator creator = createWithFdoIri(record, fdoIri);
-        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+id));
+        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + id));
         Nanopub np = creator.finalizeNanopub(true);
         return np;
     }
 
+    /**
+     * Creates an FdoRecord from a handle system identifier.
+     *
+     * @param id the handle system identifier
+     * @return FdoRecord containing the data from the handle system
+     * @throws URISyntaxException   if the handle system identifier is not a valid URI
+     * @throws IOException          if there is an error during the HTTP request to the handle system
+     * @throws InterruptedException if the thread is interrupted while waiting for the HTTP request to complete
+     */
     public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException {
         ParsedJsonResponse response = new HandleResolver().call(id);
         FdoRecord record = initFdoRecord(response);
 
-        for (Value v: response.values) {
+        for (Value v : response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
                 record.setAttribute(DATA_REF_IRI, vf.createIRI(String.valueOf(v.data.value)));
                 continue;
@@ -105,7 +134,7 @@ public class FdoNanopubCreator {
         String label = null;
         IRI profile = null;
 
-        for (Value v: response.values) {
+        for (Value v : response.values) {
             if (v.type.equals("name")) {
                 label = String.valueOf(v.data.value);
             }
