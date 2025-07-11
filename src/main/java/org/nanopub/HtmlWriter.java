@@ -78,9 +78,9 @@ public class HtmlWriter extends TurtleWriter {
     public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true, false);
 
     /**
-     * Sets the prefixes that are used in the output.
+     * Gets the RDF format that this writer supports.
      *
-     * @param prefixes a set of prefixes to use
+     * @return the RDF format for HTML output
      */
     @Override
     public RDFFormat getRDFFormat() {

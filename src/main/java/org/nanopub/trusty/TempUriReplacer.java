@@ -12,10 +12,9 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.Nanopub;
 
 /**
- * You can use temporary URIs for your nanopublications that start with
- * "<a href="">...</a>". T<a href="hese">then become "https://w3id.org/np/ARTIFAC</a>TCODE-PLACEHOLDER/"
- * before being transformed to trusty nanopublications, and as final trusty nanopublications have
- * the actual artifact code instead of the placeholder.
+ * You can use temporary URIs for your nanopublications that start with <a href="http://purl.org/nanopub/temp/">http://purl.org/nanopub/temp/</a>. These then become
+ * <a href="https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/">https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/</a> before being transformed to
+ * trusty nanopublications, and as final trusty nanopublications have the actual artifact code instead of the placeholder.
  *
  * @author Tobias Kuhn
  */

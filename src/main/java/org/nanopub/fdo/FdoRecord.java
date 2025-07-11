@@ -26,7 +26,7 @@ import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
  * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
  * a nanopub-based one, or of an FDO that is still being created. The record may be viewed as a set of
  * RDF Statements (corresponding to  the assertion graph of an FDO nanopub). Internally it's represented as a
- * Map of tuples <IRI, Value>
+ * Map of tuples (IRI, Value) where the IRI is the predicate and the Value is the object.
  */
 public class FdoRecord implements Serializable {
 
