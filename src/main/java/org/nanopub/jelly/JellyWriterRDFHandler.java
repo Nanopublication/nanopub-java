@@ -22,18 +22,25 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
         this.decoderConverter = Rdf4jConverterFactory.getInstance().decoderConverter();
 
         // Enabling namespace declarations -- so we are using Jelly 1.1.0 here.
-        this.encoder = Rdf4jConverterFactory.getInstance().encoder(ProtoEncoder.Params.of(
-            options,
-            true,
-            rowBuffer
-        ));
+        this.encoder = Rdf4jConverterFactory.getInstance().encoder(ProtoEncoder.Params.of(options, true, rowBuffer));
     }
 
+    /**
+     * Handle a statement by encoding it into the Jelly format.
+     *
+     * @param st The RDF4J statement to handle.
+     */
     @Override
     public void handleStatement(Statement st) {
         encoder.handleQuad(st.getSubject(), st.getPredicate(), st.getObject(), st.getContext());
     }
 
+    /**
+     * Handle a namespace declaration by encoding it into the Jelly format.
+     *
+     * @param prefix The namespace prefix.
+     * @param uri    The namespace URI.
+     */
     @Override
     public void handleNamespace(String prefix, String uri) {
         encoder.handleNamespace(prefix, decoderConverter.makeIriNode(uri));
@@ -41,6 +48,7 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
 
     /**
      * Call this at the end of a nanopub.
+     *
      * @return RdfStreamFrame
      */
     public RdfStreamFrame getFrame() {
@@ -50,6 +58,7 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
     /**
      * Call this at the end of a nanopub.
      * This flushes the buffer and returns the RdfStreamFrame corresponding to one nanopub.
+     *
      * @param counter The counter value to store in the frame metadata. If < 0, no metadata is added.
      * @return RdfStreamFrame
      */
@@ -68,4 +77,5 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
 
         return frame;
     }
+
 }

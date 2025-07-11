@@ -10,7 +10,8 @@ import org.nanopub.Nanopub;
  */
 public class IndexUtils {
 
-    private IndexUtils() {}  // no instances allowed
+    private IndexUtils() {
+    }  // no instances allowed
 
     /**
      * Checks if the given nanopublication is an index nanopublication.
@@ -33,7 +34,7 @@ public class IndexUtils {
      *
      * @param np the nanopublication to cast
      * @return the NanopubIndex instance
-     * @throws MalformedNanopubException
+     * @throws MalformedNanopubException if the nanopublication is not a valid index
      */
     public static NanopubIndex castToIndex(Nanopub np) throws MalformedNanopubException {
         if (np instanceof NanopubIndex) {

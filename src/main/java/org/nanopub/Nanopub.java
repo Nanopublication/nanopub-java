@@ -25,11 +25,29 @@ import java.util.Set;
 public interface Nanopub {
 
     // URIs in the nanopub namespace:
+    /**
+     * IRI of the Nanopublication type.
+     */
     public static final IRI NANOPUB_TYPE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#Nanopublication");
+
+    /**
+     * IRI of the has assertion property.
+     */
     public static final IRI HAS_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasAssertion");
+
+    /**
+     * IRI of the has provenance property.
+     */
     public static final IRI HAS_PROVENANCE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasProvenance");
+
+    /**
+     * IRI of the has pubinfo property.
+     */
     public static final IRI HAS_PUBINFO_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasPublicationInfo");
 
+    /**
+     * IRI of the supersedes property.
+     */
     // URIs that link nanopublications:
     public static final IRI SUPERSEDES = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/supersedes");
 
@@ -143,6 +161,10 @@ public interface Nanopub {
 
     /**
      * Serializes this nanopublication to an RDF stream in the specified format.
+     *
+     * @param out    the output stream to which the nanopub should be written
+     * @param format the RDF format to use for serialization
+     * @throws RDFHandlerException if an error occurs during serialization
      */
     public default void writeToStream(OutputStream out, RDFFormat format) throws RDFHandlerException {
         NanopubUtils.writeToStream(this, out, format);
@@ -150,6 +172,11 @@ public interface Nanopub {
 
     /**
      * Serializes this nanopublication to a string in the specified format.
+     *
+     * @param format the RDF format to use for serialization
+     * @return a string representation of the nanopublication in the specified format
+     * @throws RDFHandlerException if an error occurs during serialization
+     * @throws IOException         if an I/O error occurs during serialization
      */
     public default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
         return NanopubUtils.writeToString(this, format);
@@ -158,6 +185,7 @@ public interface Nanopub {
     /**
      * Publishes this nanopublication to the default server.
      *
+     * @return the response from the server after publishing
      * @throws IOException if an I/O error occurs during publishing
      */
     public default String publish() throws IOException {
@@ -168,6 +196,7 @@ public interface Nanopub {
      * Publishes this nanopublication to the specified server URL.
      *
      * @param serverUrl the URL of the server to which the nanopub should be published
+     * @return the response from the server after publishing
      * @throws IOException if an I/O error occurs during publishing
      */
     public default String publish(String serverUrl) throws IOException {

@@ -43,6 +43,7 @@ public class RetrieveFdo {
      *
      * @param iriOrHandle the IRI or handle of the FDO to resolve
      * @return the FdoRecord corresponding to the IRI or handle
+     * @throws FdoNotFoundException if the FDO is not found in either the nanopub network or handle system
      */
     public static FdoRecord resolveId(String iriOrHandle) throws FdoNotFoundException {
         try {
@@ -66,6 +67,7 @@ public class RetrieveFdo {
      *
      * @param iriOrHandle the IRI or handle of the FDO to resolve
      * @return the Nanopub corresponding to the IRI or handle, or null if not found
+     * @throws FailedApiCallException if the API call fails
      */
     public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
         Map<String, String> params = new HashMap<>();
@@ -85,6 +87,10 @@ public class RetrieveFdo {
      *
      * @param handle the handle of the FDO to resolve
      * @return the FdoRecord corresponding to the handle
+     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws URISyntaxException        if the URI is malformed
+     * @throws IOException               if an I/O error occurs
+     * @throws InterruptedException      if the operation is interrupted
      */
     public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
@@ -96,6 +102,10 @@ public class RetrieveFdo {
      *
      * @param iriOrHandle the IRI or handle of the FDO to resolve
      * @return an InputStream containing the content of the FDO
+     * @throws URISyntaxException   if the URI is malformed
+     * @throws IOException          if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws FdoNotFoundException if the FDO is not found
      */
     public static InputStream retrieveContentFromId(String iriOrHandle) throws URISyntaxException, IOException, InterruptedException, FdoNotFoundException {
         FdoRecord fdo = resolveId(iriOrHandle);

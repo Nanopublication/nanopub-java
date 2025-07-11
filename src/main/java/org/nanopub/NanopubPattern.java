@@ -57,6 +57,7 @@ public interface NanopubPattern extends Serializable {
      * given pattern.
      *
      * @return A URL with additional information
+     * @throws MalformedURLException If the URL is malformed
      */
     public URL getPatternInfoUrl() throws MalformedURLException;
 

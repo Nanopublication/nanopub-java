@@ -83,6 +83,9 @@ public class ValidateFdo {
      * additionalProperties is always true.)
      * When we just want to validate a shape, this method is fine. If the profile should be published as a nanopub,
      * we want to specify the subject-prefix for the statements with the surrounding nanopub uri by using @createShaclValidationShapeFromJson(httpResponse, subjPrefix)
+     *
+     * @param httpResponse the HTTP response containing the profile JSON
+     * @return a set of statements representing the SHACL validation shape
      */
     public static Set<Statement> createShaclValidationShapeFromJson(HttpResponse<String> httpResponse) {
         return createShaclValidationShapeFromJson(httpResponse, "https://w3id.org/kpxl/shacl/temp/");
@@ -93,6 +96,10 @@ public class ValidateFdo {
      * for shacl validation. *required* fields have min-count 1, the others do not have a min-count. (We assume that
      * additionalProperties is always true.)
      * If the profile should be published as a nanopub, we want to specify the subject-prefix for the statements with the surrounding nanopub uri
+     *
+     * @param httpResponse the HTTP response containing the profile JSON
+     * @param subjPrefix   the prefix to use for the subject of the statements
+     * @return a set of statements representing the SHACL validation shape
      */
     public static Set<Statement> createShaclValidationShapeFromJson(HttpResponse<String> httpResponse, String subjPrefix) {
         ParsedSchemaResponse r = new Gson().fromJson(httpResponse.body(), ParsedSchemaResponse.class);

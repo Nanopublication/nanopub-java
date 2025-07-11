@@ -69,6 +69,12 @@ public class MakeIndex extends CliRunner {
 //	@com.beust.jcommander.Parameter(names = "--sig-algorithm", description = "Signature algorithm: either RSA or DSA")
 //	private SignatureAlgorithm algorithm;
 
+    /**
+     * Main method to run the MakeIndex tool.
+     *
+     * @param args command-line arguments
+     * @throws IOException if an I/O error occurs
+     */
     public static void main(String[] args) throws IOException {
         try {
             MakeIndex obj = CliRunner.initJc(new MakeIndex(), args);

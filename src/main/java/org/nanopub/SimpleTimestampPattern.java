@@ -12,60 +12,78 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
+/**
+ * A simple timestamp pattern.
+ */
 public class SimpleTimestampPattern implements NanopubPattern {
 
-	@Override
-	public String getName() {
-		return "Basic timestamp information";
-	}
+    /**
+     * Returns the name of the pattern
+     */
+    @Override
+    public String getName() {
+        return "Basic timestamp information";
+    }
 
-	@Override
-	public boolean appliesTo(Nanopub nanopub) {
-		return true;
-	}
+    @Override
+    public boolean appliesTo(Nanopub nanopub) {
+        return true;
+    }
 
-	@Override
-	public boolean isCorrectlyUsedBy(Nanopub nanopub) {
-		return getCreationTime(nanopub) != null;
-	}
+    @Override
+    public boolean isCorrectlyUsedBy(Nanopub nanopub) {
+        return getCreationTime(nanopub) != null;
+    }
 
-	@Override
-	public String getDescriptionFor(Nanopub nanopub) {
-		Calendar timestamp = getCreationTime(nanopub);
-		if (timestamp == null) {
-			return "No timestamp found";
-		} else {
-			return "Timestamp: " + DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(timestamp.getTime());
-		}
-	}
+    @Override
+    public String getDescriptionFor(Nanopub nanopub) {
+        Calendar timestamp = getCreationTime(nanopub);
+        if (timestamp == null) {
+            return "No timestamp found";
+        } else {
+            return "Timestamp: " + DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(timestamp.getTime());
+        }
+    }
 
-	@Override
-	public URL getPatternInfoUrl() throws MalformedURLException {
-		return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java");
-	}
+    @Override
+    public URL getPatternInfoUrl() throws MalformedURLException {
+        return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java");
+    }
 
-	public static Calendar getCreationTime(Nanopub nanopub) {
-		String s = null;
-		for (Statement st : nanopub.getPubinfo()) {
-			if (!st.getSubject().equals(nanopub.getUri())) continue;
-			if (!isCreationTimeProperty(st.getPredicate())) continue;
-			if (!(st.getObject() instanceof Literal l)) continue;
+    /**
+     * Returns the creation time of the nanopublication, if available.
+     *
+     * @param nanopub the nanopublication to check
+     * @return the creation time as a Calendar object, or null if not found
+     */
+    public static Calendar getCreationTime(Nanopub nanopub) {
+        String s = null;
+        for (Statement st : nanopub.getPubinfo()) {
+            if (!st.getSubject().equals(nanopub.getUri())) continue;
+            if (!isCreationTimeProperty(st.getPredicate())) continue;
+            if (!(st.getObject() instanceof Literal l)) continue;
             if (!l.getDatatype().equals(XSD_DATETIME)) continue;
-			s = l.stringValue();
-			break;
-		}
-		if (s == null) return null;
-		return DatatypeConverter.parseDateTime(s);
-	}
+            s = l.stringValue();
+            break;
+        }
+        if (s == null) return null;
+        return DatatypeConverter.parseDateTime(s);
+    }
 
-	public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
+    public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
-	public static final IRI DCT_CREATED = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/created");
-	public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
-	public static final IRI PAV_CREATEDON = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdOn");
+    public static final IRI DCT_CREATED = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/created");
+    public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
+    public static final IRI PAV_CREATEDON = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdOn");
 
-	public static boolean isCreationTimeProperty(IRI uri) {
-		return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV_CREATEDON);
-	}
+    /**
+     * Checks if the given IRI is a property that indicates the creation time of a nanopublication.
+     *
+     * @param uri the IRI to check
+     * @return true if the IRI is a creation time property, false otherwise
+     */
+    public static boolean isCreationTimeProperty(IRI uri) {
+        return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV_CREATEDON);
+    }
 
 }

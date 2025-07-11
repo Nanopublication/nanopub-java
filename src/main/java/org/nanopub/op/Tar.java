@@ -20,79 +20,87 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Command-line utility to create a tar archive of nanopublications.
+ */
 public class Tar extends CliRunner {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<>();
+    @com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
+    private List<File> inputNanopubs = new ArrayList<>();
 
-	@com.beust.jcommander.Parameter(names = "-o", description = "Output file", required = true)
-	private File outputFile;
+    @com.beust.jcommander.Parameter(names = "-o", description = "Output file", required = true)
+    private File outputFile;
 
-	@com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
-	private String inFormat;
+    @com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
+    private String inFormat;
 
-	public static void main(String[] args) {
-		try {
-			Tar obj = CliRunner.initJc(new Tar(), args);
-			obj.run();
-		} catch (ParameterException ex) {
-			System.exit(1);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.exit(1);
-		}
-	}
+    /**
+     * Main method to run the Tar utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+            Tar obj = CliRunner.initJc(new Tar(), args);
+            obj.run();
+        } catch (ParameterException ex) {
+            System.exit(1);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+    }
 
-	private RDFFormat rdfInFormat;
-	private TarArchiveOutputStream outputStream;
+    private RDFFormat rdfInFormat;
+    private TarArchiveOutputStream outputStream;
 
-	private void run() throws IOException, RDFParseException, RDFHandlerException,
-			MalformedNanopubException, TrustyUriException {
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
 
-		outputStream = new TarArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
-		try {
+        outputStream = new TarArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+        try {
 
-			for (File inputFile : inputNanopubs) {
-				if (inFormat != null) {
-					rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
-				} else {
-					rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
-				}
-	
-				MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-	
-					@Override
-					public void handleNanopub(Nanopub np) {
-						try {
-							process(np);
-						} catch (RDFHandlerException ex) {
-							throw new RuntimeException(ex);
-						}
-					}
-	
-				});
-	
-			}
-			outputStream.finish();
-			outputStream.flush();
-		} finally {
-			outputStream.close();
-		}
-	}
+            for (File inputFile : inputNanopubs) {
+                if (inFormat != null) {
+                    rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
+                } else {
+                    rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
+                }
 
-	private void process(Nanopub np) throws RDFHandlerException {
-		try {
-			String filename = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());
-			filename = filename.replaceFirst("^(..)(..)(..)", "$1/$2/$3/");
-			TarArchiveEntry tarEntry = new TarArchiveEntry(filename);
-			byte[] npBytes = NanopubUtils.writeToString(np, RDFFormat.TRIG).getBytes(Charsets.UTF_8);
-			tarEntry.setSize(npBytes.length);
-			outputStream.putArchiveEntry(tarEntry);
-			outputStream.write(npBytes);
-			outputStream.closeArchiveEntry();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
+                MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
+
+                    @Override
+                    public void handleNanopub(Nanopub np) {
+                        try {
+                            process(np);
+                        } catch (RDFHandlerException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+
+                });
+
+            }
+            outputStream.finish();
+            outputStream.flush();
+        } finally {
+            outputStream.close();
+        }
+    }
+
+    private void process(Nanopub np) throws RDFHandlerException {
+        try {
+            String filename = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());
+            filename = filename.replaceFirst("^(..)(..)(..)", "$1/$2/$3/");
+            TarArchiveEntry tarEntry = new TarArchiveEntry(filename);
+            byte[] npBytes = NanopubUtils.writeToString(np, RDFFormat.TRIG).getBytes(Charsets.UTF_8);
+            tarEntry.setSize(npBytes.length);
+            outputStream.putArchiveEntry(tarEntry);
+            outputStream.write(npBytes);
+            outputStream.closeArchiveEntry();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
 }

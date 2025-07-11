@@ -75,6 +75,13 @@ public class FdoNanopubCreator {
 
     /**
      * Creation of Nanopub from handle system.
+     *
+     * @param id the handle system identifier
+     * @return Nanopub containing the data from the handle system
+     * @throws MalformedNanopubException if the Nanopub cannot be created due to malformed data
+     * @throws URISyntaxException        if the handle system identifier is not a valid URI
+     * @throws IOException               if there is an error during the HTTP request to the handle system
+     * @throws InterruptedException      if the thread is interrupted while waiting for the HTTP request to complete
      */
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
         FdoRecord record = createFdoRecordFromHandleSystem(id);

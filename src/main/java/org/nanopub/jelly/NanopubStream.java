@@ -4,7 +4,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.mongodb.client.MongoCursor;
 import eu.neverblink.jelly.core.JellyTranscoderFactory;
 import eu.neverblink.jelly.core.ProtoTranscoder;
-import eu.neverblink.jelly.core.proto.v1.*;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
 import org.bson.Document;
 import org.bson.types.Binary;
 
@@ -17,10 +17,14 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * A stream of Nanopubs.
+ */
 public class NanopubStream {
     /**
      * Create a NanopubStream from a MongoDB cursor in the "nanopubs" collection.
      * The cursor must include the "jelly" field.
+     *
      * @param cursor MongoDB cursor
      * @return NanopubStream
      */
@@ -55,6 +59,7 @@ public class NanopubStream {
     /**
      * Same as fromMongoCursor, but also returns the Nanopub counter in the Jelly frame metadata.
      * The curson MUST include the "jelly" and "counter" fields.
+     *
      * @param cursor MongoDB cursor
      * @return NanopubStream
      */
@@ -74,8 +79,8 @@ public class NanopubStream {
             }
             try {
                 final var frame = RdfStreamFrame.parseFrom(jellyContent)
-                    .clone()
-                    .addMetadata(JellyMetadataUtil.getCounterMetadata(doc.getLong("counter")));
+                        .clone()
+                        .addMetadata(JellyMetadataUtil.getCounterMetadata(doc.getLong("counter")));
 
                 return transcoder.ingestFrame(frame);
             } catch (InvalidProtocolBufferException e) {
@@ -88,19 +93,20 @@ public class NanopubStream {
     /**
      * Create a NanopubStream from an incoming byte stream (delimited).
      * This can be an HTTP response body with multiple Nanopubs.
+     *
      * @param is InputStream
      * @return NanopubStream
      */
     public static NanopubStream fromByteStream(InputStream is) {
         Stream<RdfStreamFrame> stream = Stream
-            .generate(() -> {
-                try {
-                    return RdfStreamFrame.parseDelimitedFrom(is);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            })
-            .takeWhile(Objects::nonNull);
+                .generate(() -> {
+                    try {
+                        return RdfStreamFrame.parseDelimitedFrom(is);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .takeWhile(Objects::nonNull);
 
         return new NanopubStream(stream);
     }
@@ -114,6 +120,7 @@ public class NanopubStream {
     /**
      * Write the NanopubStream to a byte stream (delimited).
      * This data can be returned safely as an HTTP response body.
+     *
      * @param os OutputStream
      */
     public void writeToByteStream(OutputStream os) {
@@ -128,6 +135,7 @@ public class NanopubStream {
 
     /**
      * Return the NanopubStream as a stream of Nanopub objects.
+     *
      * @return Stream of Nanopubs
      */
     public Stream<MaybeNanopub> getAsNanopubs() {

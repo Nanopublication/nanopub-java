@@ -21,6 +21,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * This class represents a parser for RO-Crate metadata files.
+ */
 public class RoCrateParser {
 
     private HttpClient client = HttpClient.newHttpClient();
@@ -28,8 +31,15 @@ public class RoCrateParser {
     private boolean verbose = false;
 
     /**
-     * @param url the url where the metadata file is published (including trailing "/")
+     * Parses a RO-Crate metadata file from a given URL.
+     *
+     * @param url          the url where the metadata file is published (including trailing "/")
      * @param metadataFile the name of the metadata file.
+     * @return a Nanopub object containing the parsed data.
+     * @throws MalformedNanopubException if the parsed data does not conform to the expected structure.
+     * @throws IOException               if an I/O error occurs while reading the metadata file.
+     * @throws InterruptedException      if the operation is interrupted.
+     * @throws URISyntaxException        if the URL is malformed.
      */
     public Nanopub parseRoCreate(String url, String metadataFile) throws MalformedNanopubException, IOException, InterruptedException, URISyntaxException {
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(url + metadataFile)).build();
@@ -62,7 +72,7 @@ public class RoCrateParser {
         NanopubCreator npCreator = new NanopubCreator(true);
         npCreator.addAssertionStatements(handler.getStatements());
 
-        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ metadataFile));
+        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url + metadataFile));
         npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
 
         return npCreator.finalizeNanopub(true);
