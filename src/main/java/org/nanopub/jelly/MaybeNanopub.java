@@ -13,6 +13,11 @@ public class MaybeNanopub {
     private final Exception exception;
     private final long counter;
 
+    /**
+     * Create a MaybeNanopub.
+     *
+     * @param ex Exception that caused the failure
+     */
     public MaybeNanopub(Exception ex) {
         success = false;
         nanopub = null;
@@ -20,6 +25,11 @@ public class MaybeNanopub {
         counter = -1;
     }
 
+    /**
+     * Create a MaybeNanopub with a Nanopub.
+     *
+     * @param np Nanopub that was successfully created
+     */
     public MaybeNanopub(Nanopub np) {
         success = true;
         nanopub = np;
@@ -27,6 +37,12 @@ public class MaybeNanopub {
         counter = -1;
     }
 
+    /**
+     * Create a MaybeNanopub with a Nanopub and a counter.
+     *
+     * @param np      Nanopub that was successfully created
+     * @param counter Counter value, may be negative if not present
+     */
     public MaybeNanopub(Nanopub np, long counter) {
         success = true;
         nanopub = np;
@@ -34,14 +50,29 @@ public class MaybeNanopub {
         this.counter = counter;
     }
 
+    /**
+     * Check if the MaybeNanopub is successful.
+     *
+     * @return true if the MaybeNanopub contains a Nanopub, false if it contains an exception.
+     */
     public boolean isSuccess() {
         return success;
     }
 
+    /**
+     * Check if the MaybeNanopub is a failure.
+     *
+     * @return true if the MaybeNanopub contains an exception, false if it contains a Nanopub.
+     */
     public boolean isFailure() {
         return !success;
     }
 
+    /**
+     * Get the Nanopub if the MaybeNanopub is successful.
+     *
+     * @return Nanopub object if successful, null if it contains an exception.
+     */
     public Nanopub getNanopub() {
         return nanopub;
     }
@@ -50,13 +81,20 @@ public class MaybeNanopub {
      * Counter may be attached to Jelly responses from the Registry.
      * It can be used to track the progress of a stream of Nanopubs.
      * Will return a negative value if the counter is not present.
+     *
      * @return counter
      */
     public long getCounter() {
         return counter;
     }
 
+    /**
+     * Get the exception if the MaybeNanopub is a failure.
+     *
+     * @return Exception object if it contains an exception, null if it contains a Nanopub.
+     */
     public Exception getException() {
         return exception;
     }
+
 }

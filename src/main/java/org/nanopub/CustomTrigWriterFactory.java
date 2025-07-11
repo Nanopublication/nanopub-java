@@ -1,22 +1,36 @@
 package org.nanopub;
 
-import java.io.OutputStream;
-import java.io.Writer;
-
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.trig.TriGWriterFactory;
 
+import java.io.OutputStream;
+import java.io.Writer;
+
 /**
+ * A custom TriG writer factory.
+ *
  * @author Tobias Kuhn
  */
 public class CustomTrigWriterFactory extends TriGWriterFactory {
 
-	public RDFWriter getWriter(OutputStream out) {
-		return new CustomTrigWriter(out);
-	}
+    /**
+     * Creates a new RDFWriter for the given output stream.
+     *
+     * @param out the output stream to write to
+     * @return a new RDFWriter instance
+     */
+    public RDFWriter getWriter(OutputStream out) {
+        return new CustomTrigWriter(out);
+    }
 
-	public RDFWriter getWriter(Writer writer) {
-		return new CustomTrigWriter(writer);
-	}
+    /**
+     * Creates a new RDFWriter for the given writer.
+     *
+     * @param writer the writer to write to
+     * @return a new RDFWriter instance
+     */
+    public RDFWriter getWriter(Writer writer) {
+        return new CustomTrigWriter(writer);
+    }
 
 }

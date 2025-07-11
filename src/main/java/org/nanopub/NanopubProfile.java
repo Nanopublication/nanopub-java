@@ -16,6 +16,9 @@ public class NanopubProfile {
     // For writing profile file see:
     // https://stackoverflow.com/questions/24949505/how-do-i-write-to-a-yaml-file-using-snakeyaml
 
+    /**
+     * The default name of the profile file.
+     */
     public final static String IMPLICIT_PROFILE_FILE_NAME = System.getProperty("user.home") + "/.nanopub/profile.yaml";
 
     private Map<String, Object> map;

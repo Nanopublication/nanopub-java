@@ -26,7 +26,7 @@ import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
  * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
  * a nanopub-based one, or of an FDO that is still being created. The record may be viewed as a set of
  * RDF Statements (corresponding to  the assertion graph of an FDO nanopub). Internally it's represented as a
- * Map of tuples <IRI, Value>
+ * Map of tuples (IRI, Value) where the IRI is the predicate and the Value is the object.
  */
 public class FdoRecord implements Serializable {
 
@@ -76,6 +76,8 @@ public class FdoRecord implements Serializable {
 
     /**
      * Build statements out of tuples, requires the id (fdoIri) to be set
+     *
+     * @return a Set of RDF Statements representing this FdoRecord
      */
     public Set<Statement> buildStatements() {
         Set<Statement> statements = new HashSet<>();
@@ -98,6 +100,7 @@ public class FdoRecord implements Serializable {
     /**
      * Get the value of the attribute with the given IRI.
      *
+     * @param iri the IRI of the attribute to get, must not be null
      * @return the value of the attribute, or null
      */
     public Value getAttribute(IRI iri) {
@@ -107,6 +110,8 @@ public class FdoRecord implements Serializable {
     /**
      * Set the attribute. If the key (iri) was already there, the old value is removed.
      *
+     * @param iri the IRI of the attribute to set, must not be null
+     * @param val the Value to set for the attribute, must not be null
      * @return the FdoRecord for chaining
      */
     public FdoRecord setAttribute(IRI iri, Value val) {
@@ -117,6 +122,7 @@ public class FdoRecord implements Serializable {
     /**
      * Remove the attribute.
      *
+     * @param iri the IRI of the attribute to remove
      * @return the FdoRecord for chaining
      */
     public FdoRecord removeAttribute(IRI iri) {
@@ -256,6 +262,8 @@ public class FdoRecord implements Serializable {
     /**
      * If this FdoRecord was created by a Nanopub, we return that Nanopub.
      * null otherwise.
+     *
+     * @return the original Nanopub, or null if this FdoRecord was not created from a Nanopub
      */
     public Nanopub getOriginalNanopub() {
         return originalNanopub;

@@ -34,6 +34,11 @@ public class TimestampUpdater extends CliRunner {
 
     private ValueFactory vf = SimpleValueFactory.getInstance();
 
+    /**
+     * Main method to run the TimestampUpdater.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         try {
             TimestampUpdater obj = CliRunner.initJc(new TimestampUpdater(), args);
@@ -46,7 +51,13 @@ public class TimestampUpdater extends CliRunner {
         }
     }
 
-    public void run () throws MalformedNanopubException, IOException {
+    /**
+     * Runs the TimestampUpdater to update the timestamps of the provided Nanopublications.
+     *
+     * @throws MalformedNanopubException if a Nanopublication is malformed.
+     * @throws IOException               if an I/O error occurs.
+     */
+    public void run() throws MalformedNanopubException, IOException {
 
         final OutputStream singleOut;
         if (singleOutputFile != null) {
@@ -85,7 +96,7 @@ public class TimestampUpdater extends CliRunner {
                             newStatements.add(vf.createStatement(np.getUri(), SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));
                             Nanopub updatedNp;
                             if (np instanceof NanopubImpl) {
-                                updatedNp = new NanopubImpl(newStatements, ((NanopubImpl)np).getNsPrefixes(), ((NanopubImpl)np).getNs());
+                                updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());
                             } else {
                                 updatedNp = new NanopubImpl(newStatements);
                             }

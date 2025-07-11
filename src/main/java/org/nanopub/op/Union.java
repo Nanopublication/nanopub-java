@@ -19,90 +19,98 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * Command-line utility to create a union of nanopublications.
+ */
 public class Union extends CliRunner {
 
-	@com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
-	private List<File> inputNanopubs = new ArrayList<>();
+    @com.beust.jcommander.Parameter(description = "input-nanopubs", required = true)
+    private List<File> inputNanopubs = new ArrayList<>();
 
-	@com.beust.jcommander.Parameter(names = "-o", description = "Output file")
-	private File outputFile;
+    @com.beust.jcommander.Parameter(names = "-o", description = "Output file")
+    private File outputFile;
 
-	@com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
-	private String inFormat;
+    @com.beust.jcommander.Parameter(names = "--in-format", description = "Format of the input nanopubs: trig, nq, trix, trig.gz, ...")
+    private String inFormat;
 
-	@com.beust.jcommander.Parameter(names = "--out-format", description = "Format of the output nanopubs: trig, nq, trix, trig.gz, ...")
-	private String outFormat;
+    @com.beust.jcommander.Parameter(names = "--out-format", description = "Format of the output nanopubs: trig, nq, trix, trig.gz, ...")
+    private String outFormat;
 
-	public static void main(String[] args) {
-		try {
-			Union obj = CliRunner.initJc(new Union(), args);
-			obj.run();
-		} catch (ParameterException ex) {
-			System.exit(1);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.exit(1);
-		}
-	}
+    /**
+     * Main method to run the Union command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+            Union obj = CliRunner.initJc(new Union(), args);
+            obj.run();
+        } catch (ParameterException ex) {
+            System.exit(1);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+    }
 
-	private RDFFormat rdfInFormat, rdfOutFormat;
-	private OutputStream outputStream = System.out;
-	private Map<String,Boolean> seen = new HashMap<>();
-	private int duplicates = 0;
+    private RDFFormat rdfInFormat, rdfOutFormat;
+    private OutputStream outputStream = System.out;
+    private Map<String, Boolean> seen = new HashMap<>();
+    private int duplicates = 0;
 
-	private void run() throws IOException, RDFParseException, RDFHandlerException,
-			MalformedNanopubException, TrustyUriException {
-		if (outputFile == null) {
-			if (outFormat == null) {
-				outFormat = "trig";
-			}
-			rdfOutFormat = Rio.getParserFormatForFileName("file." + outFormat).orElse(null);
-		} else {
-			rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
-			if (outputFile.getName().endsWith(".gz")) {
-				outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
-			} else {
-				outputStream = new FileOutputStream(outputFile);
-			}
-		}
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+        if (outputFile == null) {
+            if (outFormat == null) {
+                outFormat = "trig";
+            }
+            rdfOutFormat = Rio.getParserFormatForFileName("file." + outFormat).orElse(null);
+        } else {
+            rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);
+            if (outputFile.getName().endsWith(".gz")) {
+                outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));
+            } else {
+                outputStream = new FileOutputStream(outputFile);
+            }
+        }
 
-		for (File inputFile : inputNanopubs) {
-			if (inFormat != null) {
-				rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
-			} else {
-				rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
-			}
+        for (File inputFile : inputNanopubs) {
+            if (inFormat != null) {
+                rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
+            } else {
+                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
+            }
 
-			MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
 
-				@Override
-				public void handleNanopub(Nanopub np) {
-					try {
-						process(np);
-					} catch (RDFHandlerException ex) {
-						throw new RuntimeException(ex);
-					}
-				}
+                @Override
+                public void handleNanopub(Nanopub np) {
+                    try {
+                        process(np);
+                    } catch (RDFHandlerException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
 
-			});
+            });
 
-		}
+        }
 
-		System.err.println(duplicates + " duplicates eliminated");
-		outputStream.flush();
-		if (outputStream != System.out) {
-			outputStream.close();
-		}
-	}
+        System.err.println(duplicates + " duplicates eliminated");
+        outputStream.flush();
+        if (outputStream != System.out) {
+            outputStream.close();
+        }
+    }
 
-	private void process(Nanopub np) throws RDFHandlerException {
-		String u = np.getUri().stringValue();
-		if (seen.containsKey(u)) {
-			duplicates++;
-		} else {
-			NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);
-			seen.put(u, true);
-		}
-	}
+    private void process(Nanopub np) throws RDFHandlerException {
+        String u = np.getUri().stringValue();
+        if (seen.containsKey(u)) {
+            duplicates++;
+        } else {
+            NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);
+            seen.put(u, true);
+        }
+    }
 
 }

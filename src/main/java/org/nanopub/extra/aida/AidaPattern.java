@@ -16,7 +16,14 @@ import java.net.URLDecoder;
  */
 public class AidaPattern implements NanopubPattern {
 
+    /**
+     * The prefix for AIDA URIs.
+     */
     public static final String AIDA_URI_PREFIX = "http://purl.org/aida/";
+
+    /**
+     * The IRI for the AIDA sentence predicate.
+     */
     public static final IRI AS_SENTENCE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/asSentence");
 
     @Override
