@@ -26,7 +26,7 @@ public class TempUriReplacer implements RDFHandler {
     public static final String tempUri = "http://purl.org/nanopub/temp/";
 
     /**
-     * The normalized URI prefix for nanopublications, which is used in the
+     * The normalized URI prefix for nanopublications.
      */
     public static final String normUri = "https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/";
 
