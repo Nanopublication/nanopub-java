@@ -1,6 +1,6 @@
 site_name: nanopub-java
 site_description: Java client for Nanopublications
-site_author: Robin Richardson, Sven van der Burg, Vincent Emonet
+site_author: Ashley Caselli, Tobias Kuhn
 site_url: https://nanopublication.github.io/nanopub-java
 repo_name: Nanopublication/nanopub-java
 repo_url: https://github.com/Nanopublication/nanopub-java
