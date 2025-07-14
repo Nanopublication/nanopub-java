@@ -30,7 +30,7 @@ public class IndexUtils {
     }
 
     /**
-     * Casts the given nanopublication to a NanopubIndex if it is an index,
+     * Casts the given nanopublication to a NanopubIndex if it is an index.
      *
      * @param np the nanopublication to cast
      * @return the NanopubIndex instance
