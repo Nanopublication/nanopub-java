@@ -3,23 +3,22 @@ package org.nanopub;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.nanopub.utils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.nanopub.utils.TestUtils.anyIri;
+import static org.nanopub.utils.TestUtils.vf;
 
 public class NanopubUtilsTest {
 
-    private final ValueFactory vf = SimpleValueFactory.getInstance();
-    private final IRI anyIri = vf.createIRI("http://knowledgepixels.com/nanopubIri#any");
 
     @Test
     void getDefaultNamespaces() {
@@ -28,16 +27,13 @@ public class NanopubUtilsTest {
 
     @Test
     void getStatementsMinimal() throws MalformedNanopubException {
-        NanopubCreator creator = new NanopubCreator(vf.createIRI("http://knowledgepixels.com/nanopubIri#title"));
+        NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         // Create valid nanopub
         Statement assertionStatement = vf.createStatement(anyIri, anyIri, anyIri);
         creator.addAssertionStatements(assertionStatement);
 
-        Statement provenanceStatement = vf.createStatement(
-                creator.getAssertionUri(),
-                anyIri,
-                anyIri);
+        Statement provenanceStatement = vf.createStatement(creator.getAssertionUri(), anyIri, anyIri);
         creator.addProvenanceStatements(provenanceStatement);
 
         Statement pubinfoStatement = vf.createStatement(creator.getNanopubUri(), anyIri, anyIri);
@@ -56,7 +52,7 @@ public class NanopubUtilsTest {
 
     @Test
     void writeToStream() throws MalformedNanopubException {
-        Nanopub nanopub = createNanopub();
+        Nanopub nanopub = TestUtils.createNanopub();
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         RDFFormat format = RDFFormat.TURTLE; // TODO TrustyNanopubUtils.STNP_FORMAT
@@ -66,36 +62,17 @@ public class NanopubUtilsTest {
         assertThat(output).contains(nanopub.getUri().toString());
     }
 
-    public Nanopub createNanopub() throws MalformedNanopubException {
-        NanopubCreator creator = new NanopubCreator(vf.createIRI("http://knowledgepixels.com/nanopubIri#title"));
-
-        // Create valid nanopub
-        Statement assertionStatement = vf.createStatement(anyIri, anyIri, anyIri);
-        creator.addAssertionStatements(assertionStatement);
-
-        Statement provenanceStatement = vf.createStatement(
-                creator.getAssertionUri(),
-                anyIri,
-                anyIri);
-        creator.addProvenanceStatements(provenanceStatement);
-
-        Statement pubinfoStatement = vf.createStatement(creator.getNanopubUri(), anyIri, anyIri);
-        creator.addPubinfoStatements(pubinfoStatement);
-
-        Nanopub nanopub = creator.finalizeNanopub();
-        return nanopub;
-    }
 
     @Test
     void testEquality() throws Exception {
-        Nanopub np1 = createNanopub();
-        Nanopub np2 = createNanopub();
+        Nanopub np1 = TestUtils.createNanopub();
+        Nanopub np2 = TestUtils.createNanopub();
         assertThat(np1.equals(np2)).isTrue();
     }
 
     @Test
     void writeToString() throws MalformedNanopubException, IOException {
-        Nanopub nanopub = createNanopub();
+        Nanopub nanopub = TestUtils.createNanopub();
 
         RDFFormat format = RDFFormat.JSONLD; // TODO NullPointerException with TrustyNanopubUtils.STNP_FORMAT
         String output = NanopubUtils.writeToString(nanopub, format);
@@ -105,19 +82,13 @@ public class NanopubUtilsTest {
 
     @Test
     void getLabel() throws MalformedNanopubException {
-        NanopubCreator creator = new NanopubCreator(vf.createIRI("http://knowledgepixels.com/nanopubIri#title"));
+        NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         // Create nanopub with Label
-        Statement assertionStatement = vf.createStatement(
-                vf.createIRI("http://knowledgepixels.com/nanopubIri#titleassertion"),
-                RDFS.LABEL,
-                vf.createLiteral("My Label"));
+        Statement assertionStatement = vf.createStatement(vf.createIRI("http://knowledgepixels.com/nanopubIri#titleassertion"), RDFS.LABEL, vf.createLiteral("My Label"));
         creator.addAssertionStatements(assertionStatement);
 
-        Statement provenanceStatement = vf.createStatement(
-                creator.getAssertionUri(),
-                anyIri,
-                anyIri);
+        Statement provenanceStatement = vf.createStatement(creator.getAssertionUri(), anyIri, anyIri);
         creator.addProvenanceStatements(provenanceStatement);
 
         Statement pubinfoStatement = vf.createStatement(creator.getNanopubUri(), anyIri, anyIri);
@@ -130,19 +101,13 @@ public class NanopubUtilsTest {
 
     @Test
     void getDescription() throws MalformedNanopubException {
-        NanopubCreator creator = new NanopubCreator(vf.createIRI("http://knowledgepixels.com/nanopubIri#title"));
+        NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         // Create nanopub with Description
-        Statement assertionStatement = vf.createStatement(
-                vf.createIRI("http://knowledgepixels.com/nanopubIri#titleassertion"),
-                DCTERMS.DESCRIPTION,
-                vf.createLiteral("My Description"));
+        Statement assertionStatement = vf.createStatement(vf.createIRI("http://knowledgepixels.com/nanopubIri#titleassertion"), DCTERMS.DESCRIPTION, vf.createLiteral("My Description"));
         creator.addAssertionStatements(assertionStatement);
 
-        Statement provenanceStatement = vf.createStatement(
-                creator.getAssertionUri(),
-                anyIri,
-                anyIri);
+        Statement provenanceStatement = vf.createStatement(creator.getAssertionUri(), anyIri, anyIri);
         creator.addProvenanceStatements(provenanceStatement);
 
         Statement pubinfoStatement = vf.createStatement(creator.getNanopubUri(), anyIri, anyIri);
@@ -155,7 +120,7 @@ public class NanopubUtilsTest {
 
     @Test
     void getTypes() throws MalformedNanopubException {
-        Nanopub nanopub = createNanopub();
+        Nanopub nanopub = TestUtils.createNanopub();
         Set<IRI> types = NanopubUtils.getTypes(nanopub);
         // This is an extremely minimal test, some more assertions were nice
         assertThat(types).contains(anyIri);
@@ -179,7 +144,7 @@ public class NanopubUtilsTest {
         client = NanopubUtils.getHttpClient();
         assertThat(client).isNotNull();
     }
- 
+
 // TODO: Using this as quickstart code in the README. Should probably be made executable somewhere, but not sure where...
 //    @Test
 //    void demoNanopubCreationExample() throws Exception {

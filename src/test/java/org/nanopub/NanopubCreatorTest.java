@@ -1,21 +1,18 @@
 package org.nanopub;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.nanopub.utils.TestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.nanopub.utils.TestUtils.anyIri;
+import static org.nanopub.utils.TestUtils.vf;
 
 class NanopubCreatorTest {
 
-    private static final String TEST_NANOPUB_URI = "https://knowledgepixels.com/nanopubIri#test";
-    private static final SimpleValueFactory vf = SimpleValueFactory.getInstance();
-    private static final IRI anyIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#any");
-
     private NanopubCreator createNanopubCreator() {
-        NanopubCreator creator = new NanopubCreator(vf.createIRI(TEST_NANOPUB_URI));
+        NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
         Statement assertionStatement = vf.createStatement(anyIri, anyIri, anyIri);
         creator.addAssertionStatements(assertionStatement);
 
@@ -45,8 +42,8 @@ class NanopubCreatorTest {
         // Test with String
         NanopubCreator creator = new NanopubCreator();
         Assertions.assertNull(creator.getNanopubUri());
-        creator.setNanopubUri(TEST_NANOPUB_URI);
-        Assertions.assertEquals(TEST_NANOPUB_URI, creator.getNanopubUri().toString());
+        creator.setNanopubUri(TestUtils.NANOPUB_URI);
+        Assertions.assertEquals(TestUtils.NANOPUB_URI, creator.getNanopubUri().toString());
 
         // Test with IRI
         String testIri = "https://knowledgepixels.com/nanopubIri#test2";
@@ -58,7 +55,7 @@ class NanopubCreatorTest {
     void setNanopubUriWithFinalized() throws MalformedNanopubException {
         NanopubCreator creator = createNanopubCreator();
         creator.finalizeNanopub();
-        assertThrows(RuntimeException.class, () -> creator.setNanopubUri(TEST_NANOPUB_URI));
+        assertThrows(RuntimeException.class, () -> creator.setNanopubUri(TestUtils.NANOPUB_URI));
     }
 
     @Test
@@ -81,7 +78,7 @@ class NanopubCreatorTest {
         NanopubCreator creator = createNanopubCreator();
         Nanopub nanopub = creator.finalizeNanopub();
         assertNotNull(nanopub);
-        assertEquals(TEST_NANOPUB_URI, nanopub.getUri().toString());
+        assertEquals(TestUtils.NANOPUB_URI, nanopub.getUri().toString());
         assertFalse(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(SimpleTimestampPattern.DCT_CREATED)));
     }
 
@@ -90,7 +87,7 @@ class NanopubCreatorTest {
         NanopubCreator creator = createNanopubCreator();
         Nanopub nanopub = creator.finalizeNanopub(true);
         assertNotNull(nanopub);
-        assertEquals(TEST_NANOPUB_URI, nanopub.getUri().toString());
+        assertEquals(TestUtils.NANOPUB_URI, nanopub.getUri().toString());
         assertTrue(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(SimpleTimestampPattern.DCT_CREATED)));
     }
 

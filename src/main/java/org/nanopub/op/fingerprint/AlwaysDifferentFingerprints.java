@@ -25,7 +25,7 @@ public class AlwaysDifferentFingerprints implements FingerprintHandler {
      */
     @Override
     public String getFingerprint(Nanopub np) {
-        return random.nextLong() + "";
+        return String.valueOf(random.nextLong());
     }
 
 }

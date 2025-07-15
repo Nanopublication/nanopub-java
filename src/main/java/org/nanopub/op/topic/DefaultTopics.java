@@ -17,6 +17,7 @@ public class DefaultTopics implements TopicHandler {
 
     /**
      * Create a new DefaultTopics instance.
+     * This constructor allows specifying a list of property URIs to ignore when determining the topic.
      *
      * @param ignoreProperties A pipe-separated list of property URIs to ignore when determining the topic.
      */
@@ -30,6 +31,7 @@ public class DefaultTopics implements TopicHandler {
 
     /**
      * Get the topic of a nanopublication.
+     * This method analyzes the assertions in the nanopublication and determines the topic based on the most frequently occurring subject.
      *
      * @param np The nanopublication for which to get the topic.
      * @return The topic of the nanopublication.
@@ -55,7 +57,8 @@ public class DefaultTopics implements TopicHandler {
                 topic = null;
             }
         }
-        return topic + "";
+        // TODO return null instead of "null" string?
+        return String.valueOf(topic);
     }
 
 }
