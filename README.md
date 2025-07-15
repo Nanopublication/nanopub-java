@@ -1,3 +1,5 @@
+[![coverage](https://raw.githubusercontent.com/Nanopublication/nanopub-java/badges/jacoco.svg)](https://github.com/Nanopublication/nanopub-java/actions/workflows/maven-test.yml)
+
 # nanopub-java
 
 This is a Java library for nanopublications (see http://nanopub.net) based on
