@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.nanopub.utils.TestUtils.anyIri;
 import static org.nanopub.utils.TestUtils.vf;
 
@@ -143,6 +145,15 @@ public class NanopubUtilsTest {
         // We do not care if it's the same client, but it must be there
         client = NanopubUtils.getHttpClient();
         assertThat(client).isNotNull();
+    }
+
+    @Test
+    void createTempNanopubIri() {
+        IRI tempNanopubIri = NanopubUtils.createTempNanopubIri();
+        assertTrue(tempNanopubIri.stringValue().startsWith(NanopubUtils.TEMPORARY_NANOPUB_IRI));
+
+        IRI tempNanopubIri2 = NanopubUtils.createTempNanopubIri();
+        assertNotEquals(tempNanopubIri, tempNanopubIri2);
     }
 
 // TODO: Using this as quickstart code in the README. Should probably be made executable somewhere, but not sure where...

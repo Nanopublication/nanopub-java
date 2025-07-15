@@ -469,6 +469,11 @@ public class NanopubUtils {
         return httpClient;
     }
 
+    /**
+     * A temporary IRI for Nanopubs.
+     */
+    public static final String TEMPORARY_NANOPUB_IRI = "http://purl.org/nanopub/temp";
+
 
     private static Random random = new Random();
 
@@ -478,7 +483,7 @@ public class NanopubUtils {
      * @return a new IRI for a temporary Nanopub
      */
     public static IRI createTempNanopubIri() {
-        return vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
+        return vf.createIRI(TEMPORARY_NANOPUB_IRI + "/" + Math.abs(random.nextInt()) + "/");
     }
 
 }
