@@ -153,8 +153,8 @@ public class MySandboxIT {
     void retractNanopubTest() throws Exception {
         Nanopub original = GetNanopub.get("https://w3id.org/np/RA1Lhd0Rt5xuz63vjeUYgGJrgeUvH-7QKwAiPgj44WWgg");
         Nanopub retraction = NanopubRetractor.createRetraction(original, TransformContext.makeDefault());
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
-        NanopubUtils.propagateToHandler(retraction, w);
+//        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+//        NanopubUtils.propagateToHandler(retraction, w);
         PublishNanopub.publish(retraction);
     }
 

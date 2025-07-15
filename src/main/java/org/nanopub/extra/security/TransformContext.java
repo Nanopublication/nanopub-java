@@ -21,6 +21,7 @@ import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
  * Context for transformations that require a signature, such as signing a nanopub or making it trustworthy.
  */
 public class TransformContext {
+    public static final String DEFAULT_KEY_PATH = "~/.nanopub/id_rsa";
 
     // TODO: Use this also for MakeTrustyNanopub
 
@@ -39,7 +40,7 @@ public class TransformContext {
         }
         KeyPair key = null;
         try {
-            key = SignNanopub.loadKey("~/.nanopub/id_rsa", RSA);
+            key = SignNanopub.loadKey(DEFAULT_KEY_PATH, RSA);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

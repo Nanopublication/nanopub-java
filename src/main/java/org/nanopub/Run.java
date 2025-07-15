@@ -74,6 +74,7 @@ public class Run {
         addRunnableClass(StripDown.class, "strip");
         addRunnableClass(ShaclValidator.class, "shacl");
         addRunnableClass(RoCrateImporter.class, "rocrate");
+        addRunnableClass(NanopubRetractorCli.class, "retract");
     }
 
     /**
