@@ -27,7 +27,7 @@ public class GetNanopubTest {
         String nanopubUrl = "https://w3id.org/np/RAWH0fe1RCpoOgaJE1B2qfTzzdTiBUUK7iIk6l7Zll9mg";
 
         // download nanopub and create file
-        GetNanopub c = CliRunner.initJc(new GetNanopub(), new String[] {
+        GetNanopub c = CliRunner.initJc(new GetNanopub(), new String[]{
                 nanopubUrl,
                 "-o ", outFile.getPath()});
         c.run();
@@ -50,7 +50,7 @@ public class GetNanopubTest {
         String nanopubUrl = "https://w3id.org/fair/fip/np/index/RALMoJU3xZoCyWlVAzxtbwct7W22AU-LLcE4U8QrnmUVM";
 
         // download index nanopub itself and create file
-        GetNanopub cli1 = CliRunner.initJc(new GetNanopub(), new String[] {
+        GetNanopub cli1 = CliRunner.initJc(new GetNanopub(), new String[]{
                 nanopubUrl,
                 "-i ",
                 "-o ", outFile.getPath()});
@@ -71,7 +71,7 @@ public class GetNanopubTest {
 
         // now download the indexed nanopubs into a file
         File indexContentFile = new File(outPath + "content.trig");
-        GetNanopub cli2 = CliRunner.initJc(new GetNanopub(), new String[] {
+        GetNanopub cli2 = CliRunner.initJc(new GetNanopub(), new String[]{
                 nanopubUrl,
                 "-c ",
                 "-o ", indexContentFile.getPath()});
