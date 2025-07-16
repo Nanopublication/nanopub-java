@@ -31,6 +31,7 @@ public class KeyDeclaration extends CryptoElement {
      * @param uri the IRI of the key declaration
      */
     public KeyDeclaration(IRI uri) {
+        // TOOD this set the uri property, but not the keyLocation property
         super(uri);
     }
 
@@ -68,6 +69,7 @@ public class KeyDeclaration extends CryptoElement {
      * @param keyLocation the IRI representing the location of the key
      */
     public void setKeyLocation(IRI keyLocation) {
+        // TODO shouldn't this set the uri property?
         this.keyLocation = keyLocation;
     }
 
@@ -77,6 +79,7 @@ public class KeyDeclaration extends CryptoElement {
      * @return the IRI representing the key location, or null if not set
      */
     public IRI getKeyLocation() {
+        // TODO shouldn't this return the uri property?
         return keyLocation;
     }
 
