@@ -171,8 +171,7 @@ public class StripDown extends CliRunner {
         } else if (r instanceof BNode) {
             throw new RuntimeException("Unexpected blank node encountered");
         } else {
-            IRI transformedURI = vf.createIRI(r.toString().replaceFirst("http.*" + artifact + ".?", replacement));
-            return transformedURI;
+            return vf.createIRI(r.toString().replaceFirst("http.*" + artifact + ".?", replacement));
         }
     }
 
