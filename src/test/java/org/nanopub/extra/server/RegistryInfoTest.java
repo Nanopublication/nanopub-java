@@ -43,7 +43,6 @@ class RegistryInfoTest {
     );
     private final String validUrl = "https://registry.np.trustyuri.net/";
 
-
     MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);
     private RegistryInfo registryInfo;
 
