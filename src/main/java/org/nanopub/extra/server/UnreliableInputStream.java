@@ -23,6 +23,9 @@ public class UnreliableInputStream extends InputStream {
         this.wrappedInputStream = wrappedInputStream;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int read() throws IOException {
         double rd = random.nextDouble();
@@ -39,6 +42,9 @@ public class UnreliableInputStream extends InputStream {
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int read(byte[] b) throws IOException {
         double rd = random.nextDouble();
@@ -55,6 +61,9 @@ public class UnreliableInputStream extends InputStream {
         return r;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         double rd = random.nextDouble();
@@ -73,31 +82,49 @@ public class UnreliableInputStream extends InputStream {
         return r;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int available() throws IOException {
         return wrappedInputStream.available();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws IOException {
         wrappedInputStream.close();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized void mark(int readlimit) {
         wrappedInputStream.mark(readlimit);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean markSupported() {
         return wrappedInputStream.markSupported();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized void reset() throws IOException {
         wrappedInputStream.reset();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long skip(long n) throws IOException {
         return wrappedInputStream.skip(n);

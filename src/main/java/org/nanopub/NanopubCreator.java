@@ -478,7 +478,7 @@ public class NanopubCreator {
     /**
      * Adds the default namespaces to the nanopub.
      * <p>
-     * The default namespaces are defined in {@link NanopubUtils#getDefaultNamespaces()}.
+     * The default namespaces are defined in {@link org.nanopub.NanopubUtils#getDefaultNamespaces()}.
      */
     public void addDefaultNamespaces() {
         addNamespace("this", nanopubUri);
@@ -502,7 +502,7 @@ public class NanopubCreator {
      * This method does not add a timestamp to the nanopub.
      *
      * @return the finalized nanopub
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
      */
     public Nanopub finalizeNanopub() throws MalformedNanopubException {
         return finalizeNanopub(false);
@@ -515,7 +515,7 @@ public class NanopubCreator {
      *
      * @param addTimestamp whether to add a timestamp to the nanopub
      * @return the finalized nanopub
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
      */
     public Nanopub finalizeNanopub(boolean addTimestamp) throws MalformedNanopubException {
         if (finalized) {
@@ -542,7 +542,7 @@ public class NanopubCreator {
      * uncomment the entry in the pom file.
      *
      * @return the finalized nanopub with a trusty URI
-     * @throws Exception if an error occurs during the transformation
+     * @throws java.lang.Exception if an error occurs during the transformation
      */
     public Nanopub finalizeTrustyNanopub() throws Exception {
         return finalizeTrustyNanopub(false);
@@ -557,7 +557,7 @@ public class NanopubCreator {
      *
      * @param addTimestamp whether to add a timestamp to the nanopub
      * @return the finalized nanopub with a trusty URI
-     * @throws Exception if an error occurs during the transformation
+     * @throws java.lang.Exception if an error occurs during the transformation
      */
     public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
         Nanopub preNanopub = finalizeNanopub(addTimestamp);

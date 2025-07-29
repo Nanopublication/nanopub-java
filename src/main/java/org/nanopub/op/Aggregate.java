@@ -63,7 +63,7 @@ public class Aggregate extends CliRunner {
      *
      * @param args Command line arguments
      * @return An instance of Aggregate
-     * @throws ParameterException If there is an error in the parameters
+     * @throws com.beust.jcommander.ParameterException If there is an error in the parameters
      */
     public static Aggregate getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -79,11 +79,11 @@ public class Aggregate extends CliRunner {
     /**
      * Runs the aggregation operation on the input nanopubs.
      *
-     * @throws IOException               If there is an error reading or writing files
-     * @throws RDFParseException         If there is an error parsing RDF data
-     * @throws RDFHandlerException       If there is an error handling RDF data
-     * @throws MalformedNanopubException If a nanopub is malformed
-     * @throws TrustyUriException        If there is an error with Trusty URIs
+     * @throws java.io.IOException                       If there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException          If there is an error with Trusty URIs
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {
@@ -125,8 +125,8 @@ public class Aggregate extends CliRunner {
      * Processes a single nanopub and aggregates its statements.
      *
      * @param np The nanopub to process
-     * @throws RDFHandlerException If there is an error handling RDF data
-     * @throws IOException         If there is an error writing to files
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws java.io.IOException                       If there is an error writing to files
      */
     public void process(Nanopub np) throws RDFHandlerException, IOException {
         aggregate(np.getHead(), np, headCounts);

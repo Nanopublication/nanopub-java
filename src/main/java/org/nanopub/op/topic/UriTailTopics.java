@@ -9,10 +9,7 @@ import org.nanopub.op.Topic.TopicHandler;
 public class UriTailTopics implements TopicHandler {
 
     /**
-     * Returns the topic of a Nanopub by extracting the tail of its URI.
-     *
-     * @param np the Nanopub for which to get the topic
-     * @return the topic as a String
+     * {@inheritDoc}
      */
     @Override
     public String getTopic(Nanopub np) {

@@ -23,8 +23,8 @@ public class Run {
      * Main method to run the nanopub operations.
      *
      * @param args the command line arguments
-     * @throws IOException    if an I/O error occurs
-     * @throws RDF4JException if an RDF4J error occurs
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void main(String[] args) throws IOException, RDF4JException {
         NanopubImpl.ensureLoaded();
@@ -76,8 +76,8 @@ public class Run {
      * Runs the specified command with the given arguments.
      *
      * @param command the command to run, where the first element is the command name
-     * @throws IOException    if an I/O error occurs
-     * @throws RDF4JException if an RDF4J error occurs
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void run(String[] command) throws IOException, RDF4JException {
         if (command.length == 0) {

@@ -21,6 +21,9 @@ import static org.nanopub.SimpleTimestampPattern.isCreationTimeProperty;
  */
 public class WikipathwaysFingerprints implements FingerprintHandler {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getFingerprint(Nanopub np) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());

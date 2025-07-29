@@ -71,7 +71,7 @@ public class Fingerprint extends CliRunner {
      *
      * @param args Command-line arguments
      * @return An instance of Fingerprint
-     * @throws ParameterException if there is an error in the parameters
+     * @throws com.beust.jcommander.ParameterException if there is an error in the parameters
      */
     public static Fingerprint getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -106,11 +106,11 @@ public class Fingerprint extends CliRunner {
     /**
      * Runs the Fingerprint utility to calculate fingerprints for the given nanopublications.
      *
-     * @throws IOException               if there is an error reading or writing files
-     * @throws RDFParseException         if there is an error parsing RDF data
-     * @throws RDFHandlerException       if there is an error handling RDF data
-     * @throws MalformedNanopubException if a nanopublication is malformed
-     * @throws TrustyUriException        if there is an error with Trusty URIs
+     * @throws java.io.IOException                       if there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopublication is malformed
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {
@@ -158,8 +158,8 @@ public class Fingerprint extends CliRunner {
      *
      * @param np the nanopublication for which to calculate the fingerprint
      * @return the fingerprint as a string
-     * @throws RDFHandlerException if there is an error handling RDF data
-     * @throws IOException         if there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws java.io.IOException                       if there is an error reading or writing files
      */
     public String getFingerprint(Nanopub np) throws RDFHandlerException, IOException {
         return fingerprintHandler.getFingerprint(np);

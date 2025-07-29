@@ -26,6 +26,9 @@ public class DisgenetFingerprints implements FingerprintHandler {
     private static final IRI pav1importedOn = vf.createIRI("http://purl.org/pav/importedOn");
     private static final IRI pav2importedOn = vf.createIRI("http://purl.org/pav/2.0/importedOn");
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getFingerprint(Nanopub np) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());

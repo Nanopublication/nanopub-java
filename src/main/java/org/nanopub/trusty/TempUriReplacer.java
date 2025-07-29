@@ -58,9 +58,9 @@ public class TempUriReplacer implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles a statement by replacing temporary URIs with the normalized URI prefix.
-     *
-     * @param st The statement to handle.
      */
     @Override
     public void handleStatement(Statement st) throws RDFHandlerException {
@@ -68,10 +68,9 @@ public class TempUriReplacer implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles a namespace by replacing the temporary URI prefix with the normalized URI prefix.
-     *
-     * @param prefix The namespace prefix.
-     * @param uri    The namespace URI.
      */
     @Override
     public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
@@ -92,9 +91,9 @@ public class TempUriReplacer implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Starts the RDF processing by calling the startRDF method of the nested handler.
-     *
-     * @throws RDFHandlerException If an error occurs during the start of RDF processing.
      */
     @Override
     public void startRDF() throws RDFHandlerException {
@@ -102,9 +101,9 @@ public class TempUriReplacer implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Ends the RDF processing by calling the endRDF method of the nested handler.
-     *
-     * @throws RDFHandlerException If an error occurs during the end of RDF processing.
      */
     @Override
     public void endRDF() throws RDFHandlerException {
@@ -112,10 +111,9 @@ public class TempUriReplacer implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles a comment by passing it to the nested handler.
-     *
-     * @param comment The comment to handle.
-     * @throws RDFHandlerException If an error occurs while handling the comment.
      */
     @Override
     public void handleComment(String comment) throws RDFHandlerException {

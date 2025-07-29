@@ -15,10 +15,9 @@ public class DisgenetTopics extends DefaultTopics {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Get the topic for a given nanopublication.
-     *
-     * @param np The nanopublication for which to get the topic.
-     * @return The topic URI for the nanopublication, with the specific Disgenet prefix.
      */
     @Override
     public String getTopic(Nanopub np) {

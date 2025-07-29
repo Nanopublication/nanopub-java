@@ -18,16 +18,25 @@ public class NanopubIndexPattern implements NanopubPattern {
     public NanopubIndexPattern() {
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return "Nanopublication index";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         return IndexUtils.isIndex(nanopub);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
         try {
@@ -38,6 +47,9 @@ public class NanopubIndexPattern implements NanopubPattern {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
         try {
@@ -48,6 +60,9 @@ public class NanopubIndexPattern implements NanopubPattern {
         return "This is a valid nanopublication index.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {
         return new URL("http://arxiv.org/abs/1411.2749");

@@ -18,10 +18,9 @@ public class AlwaysDifferentFingerprints implements FingerprintHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Generates a random fingerprint for the given Nanopub.
-     *
-     * @param np the Nanopub for which to generate a fingerprint
-     * @return a random fingerprint as a String
      */
     @Override
     public String getFingerprint(Nanopub np) {

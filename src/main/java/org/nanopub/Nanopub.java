@@ -164,7 +164,7 @@ public interface Nanopub {
      *
      * @param out    the output stream to which the nanopub should be written
      * @param format the RDF format to use for serialization
-     * @throws RDFHandlerException if an error occurs during serialization
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs during serialization
      */
     public default void writeToStream(OutputStream out, RDFFormat format) throws RDFHandlerException {
         NanopubUtils.writeToStream(this, out, format);
@@ -175,8 +175,8 @@ public interface Nanopub {
      *
      * @param format the RDF format to use for serialization
      * @return a string representation of the nanopublication in the specified format
-     * @throws RDFHandlerException if an error occurs during serialization
-     * @throws IOException         if an I/O error occurs during serialization
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs during serialization
+     * @throws java.io.IOException                       if an I/O error occurs during serialization
      */
     public default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
         return NanopubUtils.writeToString(this, format);
@@ -186,7 +186,7 @@ public interface Nanopub {
      * Publishes this nanopublication to the default server.
      *
      * @return the response from the server after publishing
-     * @throws IOException if an I/O error occurs during publishing
+     * @throws java.io.IOException if an I/O error occurs during publishing
      */
     public default String publish() throws IOException {
         return PublishNanopub.publish(this);
@@ -197,7 +197,7 @@ public interface Nanopub {
      *
      * @param serverUrl the URL of the server to which the nanopub should be published
      * @return the response from the server after publishing
-     * @throws IOException if an I/O error occurs during publishing
+     * @throws java.io.IOException if an I/O error occurs during publishing
      */
     public default String publish(String serverUrl) throws IOException {
         return PublishNanopub.publish(this, serverUrl);
@@ -208,9 +208,9 @@ public interface Nanopub {
      *
      * @param context the context for signing, which may include keys and other parameters
      * @return the signed nanopublication
-     * @throws TrustyUriException  if there is an issue with the Trusty URI
-     * @throws SignatureException  if there is an issue with the signature process
-     * @throws InvalidKeyException if the key used for signing is invalid
+     * @throws net.trustyuri.TrustyUriException  if there is an issue with the Trusty URI
+     * @throws java.security.SignatureException  if there is an issue with the signature process
+     * @throws java.security.InvalidKeyException if the key used for signing is invalid
      */
     public default Nanopub sign(TransformContext context) throws TrustyUriException, SignatureException, InvalidKeyException {
         return SignNanopub.signAndTransform(this, context);

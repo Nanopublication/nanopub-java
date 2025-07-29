@@ -40,9 +40,8 @@ public class LegacySignatureUtils {
      *
      * @param nanopub the nanopub to extract the signature element from
      * @return the extracted NanopubSignatureElement, or null if no signature element is found
-     * @throws MalformedCryptoElementException if the signature element is malformed
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the signature element is malformed
      */
-
     public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureUri = getSignatureElementUri(nanopub);
         if (signatureUri == null) return null;
@@ -93,7 +92,7 @@ public class LegacySignatureUtils {
      *
      * @param se the NanopubSignatureElement to check
      * @return true if the signature is valid, false otherwise
-     * @throws GeneralSecurityException if there is an error in the cryptographic operations
+     * @throws java.security.GeneralSecurityException if there is an error in the cryptographic operations
      */
     public static boolean hasValidSignature(NanopubSignatureElement se) throws GeneralSecurityException {
         String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
@@ -114,10 +113,10 @@ public class LegacySignatureUtils {
      * @param key        the key pair to sign with
      * @param signer     the IRI of the signer
      * @return the signed nanopub
-     * @throws GeneralSecurityException  if there is an error in the cryptographic operations
-     * @throws RDFHandlerException       if there is an error in handling RDF
-     * @throws TrustyUriException        if there is an error in handling URIs
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.security.GeneralSecurityException    if there is an error in the cryptographic operations
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error in handling RDF
+     * @throws net.trustyuri.TrustyUriException          if there is an error in handling URIs
+     * @throws org.nanopub.MalformedNanopubException     if the nanopub is malformed
      */
     public static Nanopub createSignedNanopub(Nanopub preNanopub, KeyPair key, IRI signer)
             throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {

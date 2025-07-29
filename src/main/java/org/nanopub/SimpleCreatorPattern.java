@@ -14,9 +14,9 @@ import java.util.*;
 public class SimpleCreatorPattern implements NanopubPattern {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the name of the pattern.
-     *
-     * @return the name of the pattern
      */
     @Override
     public String getName() {
@@ -24,10 +24,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns true if the pattern applies to the given nanopub.
-     *
-     * @param nanopub the nanopub to check
-     * @return true if the pattern applies to the given nanopub
      */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
@@ -35,10 +34,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if the pattern is correctly used by the given nanopub.
-     *
-     * @param nanopub the nanopub to check
-     * @return true if the pattern is correctly used by the given nanopub,
      */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
@@ -46,10 +44,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a description of the pattern for the given nanopub.
-     *
-     * @param nanopub the nanopub to describe
-     * @return a description of the pattern for the given nanopub
      */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
@@ -74,10 +71,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a URL to the pattern information.
-     *
-     * @return a URL to the pattern information
-     * @throws MalformedURLException if the URL is malformed
      */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {
@@ -170,18 +166,51 @@ public class SimpleCreatorPattern implements NanopubPattern {
         return creators;
     }
 
+    /**
+     * Constant <code>PAV_CREATEDBY</code>
+     */
     public static final IRI PAV_CREATEDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdBy");
+    /**
+     * Constant <code>PAV_CREATEDBY_1</code>
+     */
     public static final IRI PAV_CREATEDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
+    /**
+     * Constant <code>PAV_CREATEDBY_2</code>
+     */
     public static final IRI PAV_CREATEDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/createdBy");
+    /**
+     * Constant <code>DCT_CREATOR</code>
+     */
     public static final IRI DCT_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/creator");
+    /**
+     * Constant <code>DCE_CREATOR</code>
+     */
     public static final IRI DCE_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/elements/1.1/creator");
+    /**
+     * Constant <code>PROV_WASATTRIBUTEDTO</code>
+     */
     public static final IRI PROV_WASATTRIBUTEDTO = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#wasAttributedTo");
 
+    /**
+     * Constant <code>PAV_AUTHOREDBY</code>
+     */
     public static final IRI PAV_AUTHOREDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/authoredBy");
+    /**
+     * Constant <code>PAV_AUTHOREDBY_1</code>
+     */
     public static final IRI PAV_AUTHOREDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
+    /**
+     * Constant <code>PAV_AUTHOREDBY_2</code>
+     */
     public static final IRI PAV_AUTHOREDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/authoredBy");
 
+    /**
+     * Constant <code>BIBO_AUTHOR_LIST</code>
+     */
     public static final IRI BIBO_AUTHOR_LIST = SimpleValueFactory.getInstance().createIRI("http://purl.org/ontology/bibo/authorList");
+    /**
+     * Constant <code>RDF_ELEMENT_PROPERTY_REGEX="http://www\\.w3\\.org/1999/02/22-rdf-sy"{trunked}</code>
+     */
     public static final String RDF_ELEMENT_PROPERTY_REGEX = "http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_([1-9][0-9]*)";
 
     /**

@@ -43,9 +43,9 @@ public class DefaultFingerprints implements FingerprintHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the fingerprint of the nanopub.
-     *
-     * @return the fingerprint as a string
      */
     @Override
     public String getFingerprint(Nanopub np) {

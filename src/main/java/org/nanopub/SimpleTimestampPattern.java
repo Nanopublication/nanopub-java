@@ -18,6 +18,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 public class SimpleTimestampPattern implements NanopubPattern {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the name of the pattern
      */
     @Override
@@ -25,16 +27,25 @@ public class SimpleTimestampPattern implements NanopubPattern {
         return "Basic timestamp information";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
         return getCreationTime(nanopub) != null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
         Calendar timestamp = getCreationTime(nanopub);
@@ -45,6 +56,9 @@ public class SimpleTimestampPattern implements NanopubPattern {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {
         return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java");
@@ -70,10 +84,22 @@ public class SimpleTimestampPattern implements NanopubPattern {
         return DatatypeConverter.parseDateTime(s);
     }
 
+    /**
+     * Constant <code>XSD_DATETIME</code>
+     */
     public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
+    /**
+     * Constant <code>DCT_CREATED</code>
+     */
     public static final IRI DCT_CREATED = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/created");
+    /**
+     * Constant <code>PROV_GENERATEDATTIME</code>
+     */
     public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
+    /**
+     * Constant <code>PAV_CREATEDON</code>
+     */
     public static final IRI PAV_CREATEDON = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdOn");
 
     /**

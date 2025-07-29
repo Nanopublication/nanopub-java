@@ -93,7 +93,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @param statements the statements of the nanopublication
      * @param nsPrefixes the namespace prefixes used in the nanopublication
      * @param ns         the namespaces used in the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
      */
     public NanopubImpl(Collection<Statement> statements, List<String> nsPrefixes, Map<String, String> ns) throws MalformedNanopubException {
         this.statements.addAll(statements);
@@ -107,7 +107,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param statements the statements of the nanopublication
      * @param namespaces the namespaces used in the nanopublication, as pairs of prefix and URI
-     * @throws MalformedNanopubException if the nanopublication is malformed
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
      */
     public NanopubImpl(Collection<Statement> statements, List<Pair<String, String>> namespaces) throws MalformedNanopubException {
         this.statements.addAll(statements);
@@ -122,7 +122,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * Creates a new NanopubImpl instance from the given statements.
      *
      * @param statements the statements of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
      */
     public NanopubImpl(Collection<Statement> statements) throws MalformedNanopubException {
         this.statements.addAll(statements);
@@ -151,8 +151,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @param nanopubUri the URI of the nanopublication
      * @param nsPrefixes the namespace prefixes used in the nanopublication
      * @param ns         the namespaces used in the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RepositoryException       if there is an error accessing the repository
+     * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
     public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String, String> ns)
             throws MalformedNanopubException, RepositoryException {
@@ -183,8 +183,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param repo       the repository containing the nanopublication
      * @param nanopubUri the URI of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RepositoryException       if there is an error accessing the repository
+     * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
     public NanopubImpl(Repository repo, IRI nanopubUri)
             throws MalformedNanopubException, RepositoryException {
@@ -196,9 +196,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param file   the file containing the nanopublication
      * @param format the RDF format of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
-     * @throws IOException               if there is an error reading the file
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading the file
      */
     public NanopubImpl(File file, RDFFormat format)
             throws MalformedNanopubException, RDF4JException, IOException {
@@ -210,9 +210,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * Creates a new NanopubImpl instance from the given file.
      *
      * @param file the file containing the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
-     * @throws IOException               if there is an error reading the file
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading the file
      */
     public NanopubImpl(File file) throws MalformedNanopubException, RDF4JException, IOException {
         String n = file.getName();
@@ -233,9 +233,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param url    the URL of the nanopublication
      * @param format the RDF format of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
-     * @throws IOException               if there is an error reading from the URL
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the URL
      */
     public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
         HttpResponse response = getNanopub(url);
@@ -247,9 +247,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * Creates a new NanopubImpl instance from the given URL.
      *
      * @param url the URL of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
-     * @throws IOException               if there is an error reading from the URL
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the URL
      */
     public NanopubImpl(URL url) throws MalformedNanopubException, RDF4JException, IOException {
         HttpResponse response = getNanopub(url);
@@ -293,9 +293,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param in     the input stream containing the nanopublication
      * @param format the RDF format of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
-     * @throws IOException               if there is an error reading from the input stream
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the input stream
      */
     public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
         readStatements(in, format);
@@ -307,8 +307,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      *
      * @param utf8   the UTF-8 encoded string containing the nanopublication
      * @param format the RDF format of the nanopublication
-     * @throws MalformedNanopubException if the nanopublication is malformed
-     * @throws RDF4JException            if there is an error reading the RDF data
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
      */
     public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {
         try {
@@ -506,89 +506,137 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         throw new MalformedNanopubException("Publication info does not refer to nanopublication URI: " + pubinfoUri);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IRI getUri() {
         return nanopubUri;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IRI getHeadUri() {
         return headUri;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Statement> getHead() {
         return head;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IRI getAssertionUri() {
         return assertionUri;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Statement> getAssertion() {
         return assertion;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IRI getProvenanceUri() {
         return provenanceUri;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Statement> getProvenance() {
         return provenance;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IRI getPubinfoUri() {
         return pubinfoUri;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Statement> getPubinfo() {
         return pubinfo;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<IRI> getGraphUris() {
         return graphUris;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Calendar getCreationTime() {
         return SimpleTimestampPattern.getCreationTime(this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<IRI> getAuthors() {
         return SimpleCreatorPattern.getAuthors(this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<IRI> getCreators() {
         return SimpleCreatorPattern.getCreators(this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<String> getNsPrefixes() {
         return new ArrayList<>(nsPrefixes);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getNamespace(String prefix) {
         return ns.get(prefix);
     }
 
     /**
-     * @return a copy of the namespaces map
+     * {@inheritDoc}
      */
     @Override
     public Map<String, String> getNs() {
         return new HashMap<>(ns);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void removeUnusedPrefixes() {
         if (unusedPrefixesRemoved) return;
@@ -602,22 +650,34 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         unusedPrefixesRemoved = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getTripleCount() {
         return tripleCount;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getByteCount() {
         return byteCount;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof NanopubImpl nanopub)) return false;
         return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved && tripleCount == nanopub.tripleCount && byteCount == nanopub.byteCount && Objects.equals(nanopubUri, nanopub.nanopubUri) && Objects.equals(headUri, nanopub.headUri) && Objects.equals(assertionUri, nanopub.assertionUri) && Objects.equals(provenanceUri, nanopub.provenanceUri) && Objects.equals(pubinfoUri, nanopub.pubinfoUri) && Objects.equals(graphUris, nanopub.graphUris) && Objects.equals(head, nanopub.head) && Objects.equals(assertion, nanopub.assertion) && Objects.equals(provenance, nanopub.provenance) && Objects.equals(pubinfo, nanopub.pubinfo) && Objects.equals(statements, nanopub.statements) && Objects.equals(nsPrefixes, nanopub.nsPrefixes) && Objects.equals(ns, nanopub.ns);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(nanopubUri, headUri, assertionUri, provenanceUri, pubinfoUri, graphUris, head, assertion, provenance, pubinfo, statements, nsPrefixes, ns, unusedPrefixesRemoved, tripleCount, byteCount);

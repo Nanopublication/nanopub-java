@@ -26,11 +26,17 @@ public class AidaPattern implements NanopubPattern {
      */
     public static final IRI AS_SENTENCE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/asSentence");
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return "AIDA nanopublication";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         for (Statement st : nanopub.getAssertion()) {
@@ -39,12 +45,18 @@ public class AidaPattern implements NanopubPattern {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
         IRI aidaUri = getAidaUri(nanopub);
         return aidaUri != null && aidaUri.toString().startsWith(AIDA_URI_PREFIX);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
         if (isCorrectlyUsedBy(nanopub)) {
@@ -54,6 +66,9 @@ public class AidaPattern implements NanopubPattern {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {
         return new URL("https://github.com/tkuhn/aida");

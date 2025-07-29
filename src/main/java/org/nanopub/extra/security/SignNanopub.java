@@ -64,7 +64,7 @@ public class SignNanopub extends CliRunner {
      * Main method to run the SignNanopub command line tool.
      *
      * @param args command line arguments
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public static void main(String[] args) throws IOException {
         try {
@@ -90,7 +90,7 @@ public class SignNanopub extends CliRunner {
     /**
      * Runs the signing process for the nanopubs.
      *
-     * @throws Exception if an error occurs during signing
+     * @throws java.lang.Exception if an error occurs during signing
      */
     protected void run() throws Exception {
         NanopubProfile profile;
@@ -177,9 +177,9 @@ public class SignNanopub extends CliRunner {
      * @param nanopub the nanopub to sign
      * @param c       the transform context containing signing information
      * @return the signed and transformed nanopub
-     * @throws TrustyUriException  if there is an error with the Trusty URI
-     * @throws InvalidKeyException if the key is invalid
-     * @throws SignatureException  if there is an error during signing
+     * @throws net.trustyuri.TrustyUriException  if there is an error with the Trusty URI
+     * @throws java.security.InvalidKeyException if the key is invalid
+     * @throws java.security.SignatureException  if there is an error during signing
      */
     public static Nanopub signAndTransform(Nanopub nanopub, TransformContext c) throws TrustyUriException, InvalidKeyException, SignatureException {
         if (nanopub instanceof NanopubWithNs) {
@@ -207,10 +207,10 @@ public class SignNanopub extends CliRunner {
      * @param file   the input file containing nanopubs
      * @param c      the transform context containing signing information
      * @param out    the output stream to write signed nanopubs
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if there is an error parsing RDF
-     * @throws RDFHandlerException       if there is an error handling RDF
-     * @throws MalformedNanopubException if a nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, File file, TransformContext c, OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         InputStream in = new FileInputStream(file);
@@ -224,10 +224,10 @@ public class SignNanopub extends CliRunner {
      * @param in     the input stream containing nanopubs
      * @param c      the transform context containing signing information
      * @param out    the output stream to write signed nanopubs
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if there is an error parsing RDF
-     * @throws RDFHandlerException       if there is an error handling RDF
-     * @throws MalformedNanopubException if a nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final TransformContext c, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         try (out) {
@@ -255,10 +255,10 @@ public class SignNanopub extends CliRunner {
      * @param c      the transform context containing signing information
      * @param out    the output stream to write the signed nanopub
      * @return the signed nanopub
-     * @throws RDFHandlerException if there is an error handling RDF
-     * @throws TrustyUriException  if there is an error with the Trusty URI
-     * @throws InvalidKeyException if the key is invalid
-     * @throws SignatureException  if there is an error during signing
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws net.trustyuri.TrustyUriException          if there is an error with the Trusty URI
+     * @throws java.security.InvalidKeyException         if the key is invalid
+     * @throws java.security.SignatureException          if there is an error during signing
      */
     public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, TransformContext c, OutputStream out) throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
         np = signAndTransform(np, c);
@@ -273,9 +273,9 @@ public class SignNanopub extends CliRunner {
      * @param keyFilename the path to the key file
      * @param algorithm   the signature algorithm used for the key
      * @return the loaded KeyPair
-     * @throws NoSuchAlgorithmException if the specified algorithm is not available
-     * @throws IOException              if an I/O error occurs while reading the key file
-     * @throws InvalidKeySpecException  if the key specification is invalid
+     * @throws java.security.NoSuchAlgorithmException     if the specified algorithm is not available
+     * @throws java.io.IOException                        if an I/O error occurs while reading the key file
+     * @throws java.security.spec.InvalidKeySpecException if the key specification is invalid
      */
     public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);

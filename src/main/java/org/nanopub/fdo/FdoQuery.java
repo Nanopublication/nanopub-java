@@ -24,7 +24,7 @@ public class FdoQuery {
      *
      * @param query The search query string
      * @return An ApiResponse containing the FDOs that match the search query.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse textSearch(String query) throws FailedApiCallException {
         return QueryAccess.get(textSearch, Map.of("query", query));
@@ -35,7 +35,7 @@ public class FdoQuery {
      *
      * @param ref The PID or handle to search for
      * @return An ApiResponse containing the FDOs that refer to the given PID / handle.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse findByRef(String ref) throws FailedApiCallException {
         return QueryAccess.get(findByRef, Map.of("refid", ref));
@@ -46,7 +46,7 @@ public class FdoQuery {
      *
      * @param creator The orcid url, i.e. https://orcid.org/0009-0008-3635-347X
      * @return An ApiResponse containing the FDOs created by the specified user.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFeed(String creator) throws FailedApiCallException {
         return QueryAccess.get(getFeed, Map.of("creator", creator));
@@ -57,7 +57,7 @@ public class FdoQuery {
      *
      * @param creator The orcid url, i.e. https://orcid.org/0009-0008-3635-347X
      * @return An ApiResponse containing the favorite things of the specified user.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException {
         return QueryAccess.get(getFavoriteThings, Map.of("creator", creator));

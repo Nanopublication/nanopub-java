@@ -41,8 +41,8 @@ public class IntroNanopub implements Serializable {
      *
      * @param userId the userId to get the IntroNanopub for
      * @return the IntroNanopub for the userId, or null if not found
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroNanopub get(String userId) throws IOException, RDF4JException {
         return get(userId, (HttpClient) null);
@@ -54,8 +54,8 @@ public class IntroNanopub implements Serializable {
      * @param userId     the userId to get the IntroNanopub for
      * @param httpClient the HttpClient to use for fetching the IntroNanopub
      * @return the IntroNanopub for the userId, or null if not found
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
         IntroExtractor ie = extract(userId, httpClient);
@@ -82,8 +82,8 @@ public class IntroNanopub implements Serializable {
      * @param userId     the userId to extract the IntroNanopub for
      * @param httpClient the HttpClient to use for fetching the IntroNanopub
      * @return the IntroExtractor containing the extracted data
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
         if (httpClient == null) httpClient = NanopubUtils.getHttpClient();

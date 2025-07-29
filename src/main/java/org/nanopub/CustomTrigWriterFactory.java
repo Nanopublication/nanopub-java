@@ -24,10 +24,9 @@ public class CustomTrigWriterFactory extends TriGWriterFactory {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Creates a new RDFWriter for the given writer.
-     *
-     * @param writer the writer to write to
-     * @return a new RDFWriter instance
      */
     public RDFWriter getWriter(Writer writer) {
         return new CustomTrigWriter(writer);

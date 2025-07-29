@@ -72,6 +72,9 @@ public class CustomTrigWriter extends TriGWriter {
         this.usedPrefixes = usedPrefixes;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void writeURI(IRI uri) throws IOException {
         String uriString = uri.toString();
@@ -171,6 +174,10 @@ public class CustomTrigWriter extends TriGWriter {
     }
 
     // Overriding this method to *not* normalize/pretty-print literals.
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void writeLiteral(Literal lit) throws IOException {
         String label = lit.getLabel();

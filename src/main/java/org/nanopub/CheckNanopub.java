@@ -91,7 +91,7 @@ public class CheckNanopub extends CliRunner {
      * Checks the nanopubs provided.
      *
      * @return a Report object containing the results of the checks
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public Report check() throws IOException {
         report = new Report();

@@ -41,7 +41,7 @@ public class LegacySignNanopub {
      * Main method to run the command-line tool.
      *
      * @param args command-line arguments
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public static void main(String[] args) throws IOException {
         NanopubImpl.ensureLoaded();
@@ -103,9 +103,9 @@ public class LegacySignNanopub {
      * @param nanopub the Nanopub to sign and transform
      * @param key     the KeyPair used for signing
      * @return the signed and transformed Nanopub
-     * @throws TrustyUriException  if there is an issue with the Trusty URI format
-     * @throws InvalidKeyException if the provided key is invalid
-     * @throws SignatureException  if there is an issue with the signature process
+     * @throws net.trustyuri.TrustyUriException  if there is an issue with the Trusty URI format
+     * @throws java.security.InvalidKeyException if the provided key is invalid
+     * @throws java.security.SignatureException  if there is an issue with the signature process
      */
     public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key) throws TrustyUriException, InvalidKeyException, SignatureException {
         return signAndTransform(nanopub, key, null);
@@ -118,9 +118,9 @@ public class LegacySignNanopub {
      * @param key     the KeyPair used for signing
      * @param signer  the IRI of the signer
      * @return the signed and transformed Nanopub
-     * @throws TrustyUriException  if there is an issue with the Trusty URI format
-     * @throws InvalidKeyException if the provided key is invalid
-     * @throws SignatureException  if there is an issue with the signature process
+     * @throws net.trustyuri.TrustyUriException  if there is an issue with the Trusty URI format
+     * @throws java.security.InvalidKeyException if the provided key is invalid
+     * @throws java.security.SignatureException  if there is an issue with the signature process
      */
     public static Nanopub signAndTransform(Nanopub nanopub, KeyPair key, IRI signer) throws TrustyUriException, InvalidKeyException, SignatureException {
         if (TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()) != null) {
@@ -147,10 +147,10 @@ public class LegacySignNanopub {
      * @param file   the input file containing multiple Nanopubs
      * @param key    the KeyPair used for signing
      * @param out    the OutputStream to write the signed Nanopubs to
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if there is an error parsing the RDF data
-     * @throws RDFHandlerException       if there is an error handling the RDF data
-     * @throws MalformedNanopubException if a Nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a Nanopub is malformed
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, File file, KeyPair key, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         InputStream in = new FileInputStream(file);
@@ -164,10 +164,10 @@ public class LegacySignNanopub {
      * @param in     the InputStream containing multiple Nanopubs
      * @param key    the KeyPair used for signing
      * @param out    the OutputStream to write the signed Nanopubs to
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if there is an error parsing the RDF data
-     * @throws RDFHandlerException       if there is an error handling the RDF data
-     * @throws MalformedNanopubException if a Nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a Nanopub is malformed
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final KeyPair key, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
@@ -194,10 +194,10 @@ public class LegacySignNanopub {
      * @param key    the KeyPair used for signing
      * @param out    the OutputStream to write the signed Nanopub to
      * @return the signed Nanopub
-     * @throws RDFHandlerException if there is an error handling the RDF data
-     * @throws TrustyUriException  if there is an issue with the Trusty URI format
-     * @throws InvalidKeyException if the provided key is invalid
-     * @throws SignatureException  if there is an issue with the signature process
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws net.trustyuri.TrustyUriException          if there is an issue with the Trusty URI format
+     * @throws java.security.InvalidKeyException         if the provided key is invalid
+     * @throws java.security.SignatureException          if there is an issue with the signature process
      */
     public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, KeyPair key, OutputStream out) throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
         np = signAndTransform(np, key);
@@ -211,9 +211,9 @@ public class LegacySignNanopub {
      *
      * @param keyFilename the path to the key file
      * @return the loaded KeyPair
-     * @throws NoSuchAlgorithmException if the DSA algorithm is not available
-     * @throws IOException              if an I/O error occurs while reading the key file
-     * @throws InvalidKeySpecException  if the key specification is invalid
+     * @throws java.security.NoSuchAlgorithmException     if the DSA algorithm is not available
+     * @throws java.io.IOException                        if an I/O error occurs while reading the key file
+     * @throws java.security.spec.InvalidKeySpecException if the key specification is invalid
      */
     public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);

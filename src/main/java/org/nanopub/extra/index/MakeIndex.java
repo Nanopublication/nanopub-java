@@ -73,7 +73,7 @@ public class MakeIndex extends CliRunner {
      * Main method to run the MakeIndex tool.
      *
      * @param args command-line arguments
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public static void main(String[] args) throws IOException {
         try {

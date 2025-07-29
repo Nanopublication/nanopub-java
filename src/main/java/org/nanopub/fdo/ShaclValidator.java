@@ -124,8 +124,8 @@ public class ShaclValidator extends CliRunner {
     /**
      * Runs the Shacl validation process.
      *
-     * @throws MalformedNanopubException if the Nanopub is malformed
-     * @throws IOException               if there is an error reading the files
+     * @throws org.nanopub.MalformedNanopubException if the Nanopub is malformed
+     * @throws java.io.IOException                   if there is an error reading the files
      */
     public void run() throws MalformedNanopubException, IOException {
         Nanopub shape = new NanopubImpl(shapeFile);

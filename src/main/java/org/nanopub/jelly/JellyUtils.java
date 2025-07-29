@@ -65,7 +65,7 @@ public class JellyUtils {
      *
      * @param jellyBytes Jelly RDF bytes (non-delimited)
      * @return Nanopub
-     * @throws MalformedNanopubException if this is not a valid Nanopub
+     * @throws org.nanopub.MalformedNanopubException if this is not a valid Nanopub
      */
     public static Nanopub readFromDB(byte[] jellyBytes) throws MalformedNanopubException {
         try {
@@ -81,7 +81,7 @@ public class JellyUtils {
      *
      * @param is Jelly RDF data (delimited, one frame (!!!))
      * @return Nanopub
-     * @throws MalformedNanopubException if this is not a valid Nanopub
+     * @throws org.nanopub.MalformedNanopubException if this is not a valid Nanopub
      */
     public static Nanopub readFromInputStream(InputStream is) throws MalformedNanopubException {
         try {

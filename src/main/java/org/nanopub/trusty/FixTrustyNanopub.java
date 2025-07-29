@@ -87,7 +87,7 @@ public class FixTrustyNanopub extends CliRunner {
      *
      * @param nanopub the nanopub to fix
      * @return the fixed nanopub
-     * @throws TrustyUriException if the nanopub cannot be fixed due to a malformed Trusty URI
+     * @throws net.trustyuri.TrustyUriException if the nanopub cannot be fixed due to a malformed Trusty URI
      */
     public static Nanopub fix(Nanopub nanopub) throws TrustyUriException {
         Nanopub np;
@@ -116,10 +116,10 @@ public class FixTrustyNanopub extends CliRunner {
      * @param format the RDF format of the input nanopubs
      * @param file   the input file containing multiple nanopubs
      * @param out    the output stream to write the fixed nanopubs
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if an error occurs while parsing RDF
-     * @throws RDFHandlerException       if an error occurs while handling RDF
-     * @throws MalformedNanopubException if a nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if an error occurs while parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
      */
     public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -133,10 +133,10 @@ public class FixTrustyNanopub extends CliRunner {
      * @param format the RDF format of the input nanopubs
      * @param in     the input stream containing multiple nanopubs
      * @param out    the output stream to write the fixed nanopubs
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if an error occurs while parsing RDF
-     * @throws RDFHandlerException       if an error occurs while handling RDF
-     * @throws MalformedNanopubException if a nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if an error occurs while parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
      */
     public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -163,8 +163,8 @@ public class FixTrustyNanopub extends CliRunner {
      * @param format the RDF format to use for writing
      * @param out    the output stream to write the fixed nanopub
      * @return the fixed nanopub
-     * @throws RDFHandlerException if an error occurs while writing RDF
-     * @throws TrustyUriException  if the nanopub cannot be fixed due to a malformed Trusty URI
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing RDF
+     * @throws net.trustyuri.TrustyUriException          if the nanopub cannot be fixed due to a malformed Trusty URI
      */
     public static Nanopub writeAsFixedNanopub(Nanopub np, RDFFormat format, OutputStream out)
             throws RDFHandlerException, TrustyUriException {

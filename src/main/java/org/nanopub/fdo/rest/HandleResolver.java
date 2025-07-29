@@ -27,9 +27,9 @@ public class HandleResolver {
      *
      * @param id the handle ID to resolve
      * @return ParsedJsonResponse containing the resolved handle information
-     * @throws URISyntaxException   if the URI is malformed
-     * @throws IOException          if an I/O error occurs
-     * @throws InterruptedException if the operation is interrupted
+     * @throws java.net.URISyntaxException    if the URI is malformed
+     * @throws java.io.IOException            if an I/O error occurs
+     * @throws java.lang.InterruptedException if the operation is interrupted
      */
     public ParsedJsonResponse call(String id) throws URISyntaxException, IOException, InterruptedException {
 

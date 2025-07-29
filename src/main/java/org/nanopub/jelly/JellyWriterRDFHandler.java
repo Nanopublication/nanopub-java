@@ -26,9 +26,9 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handle a statement by encoding it into the Jelly format.
-     *
-     * @param st The RDF4J statement to handle.
      */
     @Override
     public void handleStatement(Statement st) {
@@ -36,10 +36,9 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handle a namespace declaration by encoding it into the Jelly format.
-     *
-     * @param prefix The namespace prefix.
-     * @param uri    The namespace URI.
      */
     @Override
     public void handleNamespace(String prefix, String uri) {

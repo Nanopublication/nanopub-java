@@ -47,13 +47,13 @@ public class RoCrateImporter extends CliRunner {
     /**
      * Runs the RoCrateImporter to parse the RoCrate metadata and either create a local nanopub or publish it.
      *
-     * @throws MalformedNanopubException if the nanopub is malformed
-     * @throws IOException               if there is an I/O error
-     * @throws URISyntaxException        if the metadata URL is malformed
-     * @throws InterruptedException      if the thread is interrupted
-     * @throws TrustyUriException        if there is an issue with Trusty URI
-     * @throws SignatureException        if there is an issue with signing the nanopub
-     * @throws InvalidKeyException       if the signing key is invalid
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                   if there is an I/O error
+     * @throws java.net.URISyntaxException           if the metadata URL is malformed
+     * @throws java.lang.InterruptedException        if the thread is interrupted
+     * @throws net.trustyuri.TrustyUriException      if there is an issue with Trusty URI
+     * @throws java.security.SignatureException      if there is an issue with signing the nanopub
+     * @throws java.security.InvalidKeyException     if the signing key is invalid
      */
     public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException {
         String metadataFilename = metadataUrl.substring(metadataUrl.lastIndexOf('/'));

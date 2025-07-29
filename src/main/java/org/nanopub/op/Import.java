@@ -103,10 +103,10 @@ public class Import extends CliRunner {
      * @param type   the type of import
      * @param format the RDF format of the input file
      * @return a list of created nanopublications
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if the RDF data cannot be parsed
-     * @throws RDFHandlerException       if there is an error handling the RDF data
-     * @throws MalformedNanopubException if the nanopublication is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if the RDF data cannot be parsed
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if the nanopublication is malformed
      */
     public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {

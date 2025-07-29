@@ -20,9 +20,9 @@ public class TrustyNanopubPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the name of this nanopublication pattern.
-     *
-     * @return the name of the pattern
      */
     @Override
     public String getName() {
@@ -30,10 +30,9 @@ public class TrustyNanopubPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if this nanopublication pattern applies to the given nanopublication.
-     *
-     * @param nanopub The nanopublication
-     * @return true if the nanopublication has a potential Trusty URI, false otherwise
      */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
@@ -41,10 +40,9 @@ public class TrustyNanopubPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if this nanopublication pattern is correctly used by the given nanopublication.
-     *
-     * @param nanopub The nanopublication
-     * @return true if the nanopublication has a valid Trusty URI, false otherwise
      */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
@@ -52,10 +50,9 @@ public class TrustyNanopubPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the description of this nanopublication pattern.
-     *
-     * @param nanopub The nanopublication
-     * @return a description of the nanopublication pattern
      */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
@@ -67,10 +64,9 @@ public class TrustyNanopubPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URL where more information about this nanopublication pattern can be found.
-     *
-     * @return the URL for more information
-     * @throws MalformedURLException if the URL is malformed
      */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {

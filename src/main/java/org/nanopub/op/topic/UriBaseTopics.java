@@ -9,10 +9,9 @@ import org.nanopub.op.Topic.TopicHandler;
 public class UriBaseTopics implements TopicHandler {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the topic for a nanopublication based on its URI.
-     *
-     * @param np The nanopublication for which to get the topic.
-     * @return The topic string derived from the nanopub's URI.
      */
     @Override
     public String getTopic(Nanopub np) {

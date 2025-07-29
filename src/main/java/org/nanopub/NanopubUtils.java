@@ -94,7 +94,7 @@ public class NanopubUtils {
      * @param nanopub the Nanopub to write
      * @param out     the output stream to write to
      * @param format  the RDF format to use
-     * @throws RDFHandlerException if an error occurs while writing
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
      */
     public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException {
         writeNanopub(nanopub, format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
@@ -106,8 +106,8 @@ public class NanopubUtils {
      * @param nanopub the Nanopub to write
      * @param format  the RDF format to use
      * @return a string representation of the Nanopub in the specified format
-     * @throws RDFHandlerException if an error occurs while writing
-     * @throws IOException         if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
+     * @throws java.io.IOException                       if an I/O error occurs
      */
     public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException, IOException {
         try (StringWriter sw = new StringWriter()) {
@@ -135,7 +135,7 @@ public class NanopubUtils {
      *
      * @param nanopub the Nanopub to propagate
      * @param handler the RDFHandler to propagate to
-     * @throws RDFHandlerException if an error occurs while handling RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
      */
     public static void propagateToHandler(Nanopub nanopub, RDFHandler handler) throws RDFHandlerException {
         handler.startRDF();

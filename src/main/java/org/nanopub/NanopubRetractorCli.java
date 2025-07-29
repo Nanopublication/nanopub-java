@@ -25,6 +25,8 @@ import java.security.GeneralSecurityException;
  *      <li>-p: optional - publish the created retraction (without -p the retraction nanopub will only be written to stdout)</li>
  * </ol>
  * <p>For signing the key at "~/.nanopub/id_rsa" is used and the orcid from "~/.nanopub/profile.yaml</p>
+ *
+ * @since 1.80
  */
 public class NanopubRetractorCli extends CliRunner {
 
@@ -36,6 +38,7 @@ public class NanopubRetractorCli extends CliRunner {
 
     /**
      * Main method for running
+     *
      * @param args command line arguments
      */
     public static void main(String[] args) {
@@ -52,6 +55,12 @@ public class NanopubRetractorCli extends CliRunner {
 
     /**
      * Runs the retractor.
+     *
+     * @throws org.nanopub.MalformedNanopubException                      if any.
+     * @throws java.io.IOException                                        if any.
+     * @throws net.trustyuri.TrustyUriException                           if any.
+     * @throws java.security.GeneralSecurityException                     if any.
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if any.
      */
     public void run() throws MalformedNanopubException, IOException, TrustyUriException, GeneralSecurityException, MalformedCryptoElementException {
         Nanopub orig = getNanopubToRetract();

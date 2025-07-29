@@ -28,6 +28,9 @@ import java.net.http.HttpResponse;
 public class RoCrateParser {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    /**
+     * Constant <code>RO_CRATE_IRI</code>
+     */
     public static final IRI RO_CRATE_IRI = vf.createIRI("http://purl.org/nanopub/x/RoCrateNanopub");
 
     private HttpClient client = HttpClient.newHttpClient();
@@ -39,10 +42,10 @@ public class RoCrateParser {
      * @param url          the url where the metadata file is published (including trailing "/")
      * @param metadataFile the name of the metadata file.
      * @return a Nanopub object containing the parsed data.
-     * @throws MalformedNanopubException if the parsed data does not conform to the expected structure.
-     * @throws IOException               if an I/O error occurs while reading the metadata file.
-     * @throws InterruptedException      if the operation is interrupted.
-     * @throws URISyntaxException        if the URL is malformed.
+     * @throws org.nanopub.MalformedNanopubException if the parsed data does not conform to the expected structure.
+     * @throws java.io.IOException                   if an I/O error occurs while reading the metadata file.
+     * @throws java.lang.InterruptedException        if the operation is interrupted.
+     * @throws java.net.URISyntaxException           if the URL is malformed.
      */
     public Nanopub parseRoCreate(String url, String metadataFile) throws MalformedNanopubException, IOException, InterruptedException, URISyntaxException {
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(url + metadataFile)).build();

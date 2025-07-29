@@ -37,10 +37,10 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
      * @param format    The RDF format of the nanopubs.
      * @param in        The input stream containing the nanopubs.
      * @param npHandler The handler to process each nanopub.
-     * @throws IOException               If an I/O error occurs.
-     * @throws RDFParseException         If an error occurs while parsing the RDF data.
-     * @throws RDFHandlerException       If an error occurs while handling the RDF data.
-     * @throws MalformedNanopubException If a nanopub is malformed.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
      */
     public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -53,10 +53,10 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
      * @param format    The RDF format of the nanopubs.
      * @param file      The file containing the nanopubs.
      * @param npHandler The handler to process each nanopub.
-     * @throws IOException               If an I/O error occurs.
-     * @throws RDFParseException         If an error occurs while parsing the RDF data.
-     * @throws RDFHandlerException       If an error occurs while handling the RDF data.
-     * @throws MalformedNanopubException If a nanopub is malformed.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
      */
     public static void process(RDFFormat format, File file, NanopubHandler npHandler)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -74,10 +74,10 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
      *
      * @param file      The file containing the nanopubs.
      * @param npHandler The handler to process each nanopub.
-     * @throws IOException               If an I/O error occurs.
-     * @throws RDFParseException         If an error occurs while parsing the RDF data.
-     * @throws RDFHandlerException       If an error occurs while handling the RDF data.
-     * @throws MalformedNanopubException If a nanopub is malformed.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
      */
     public static void process(File file, NanopubHandler npHandler)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
@@ -122,10 +122,9 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles the statement to be added to the current nanopub.
-     *
-     * @param st The RDF statement to handle.
-     * @throws RDFHandlerException If an error occurs while handling the RDF data.
      */
     @Override
     public void handleStatement(Statement st) throws RDFHandlerException {
@@ -142,11 +141,9 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles the namespace declaration in the RDF data.
-     *
-     * @param prefix The namespace prefix.
-     * @param uri    The namespace URI.
-     * @throws RDFHandlerException If an error occurs while handling the RDF data.
      */
     @Override
     public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
@@ -157,7 +154,7 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
     /**
      * Adds the namespaces.
      *
-     * @throws RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
      */
     public void addNamespaces() throws RDFHandlerException {
         for (int i = 0; i < newNs.size(); i++) {
@@ -172,9 +169,9 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles the end of the RDF data.
-     *
-     * @throws RDFHandlerException If an error occurs while handling the RDF data.
      */
     @Override
     public void endRDF() throws RDFHandlerException {

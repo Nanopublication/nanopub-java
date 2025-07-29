@@ -12,16 +12,25 @@ import java.security.GeneralSecurityException;
  */
 public class DigitalSignaturePattern implements NanopubPattern {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getName() {
         return "Digitally signed nanopublication";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         return SignatureUtils.seemsToHaveSignature(nanopub);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
         try {
@@ -41,6 +50,9 @@ public class DigitalSignaturePattern implements NanopubPattern {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
         if (isCorrectlyUsedBy(nanopub)) {
@@ -62,6 +74,9 @@ public class DigitalSignaturePattern implements NanopubPattern {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException {
         return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/extra/security/NanopubSignatureElement.java");

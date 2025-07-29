@@ -43,8 +43,8 @@ public class TrustyNanopubUtils {
      * @param nanopub the Nanopub to write
      * @param out     the OutputStream to write to
      * @param format  the RDF format to use for serialization
-     * @throws RDFHandlerException if there is an error during writing
-     * @throws IOException         if there is an I/O error
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error during writing
+     * @throws java.io.IOException                       if there is an I/O error
      */
     public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException, IOException {
         try (OutputStreamWriter sw = new OutputStreamWriter(out, Charset.forName("UTF-8"))) {

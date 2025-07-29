@@ -9,10 +9,9 @@ import org.nanopub.op.Topic.TopicHandler;
 public class NoTopics implements TopicHandler {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the Nanopub URI as the topic.
-     *
-     * @param np The nanopublication for which to get the topic.
-     * @return The URI of the nanopublication as a string.
      */
     @Override
     public String getTopic(Nanopub np) {

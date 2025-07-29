@@ -35,7 +35,7 @@ public class RegistryInfo implements Serializable {
      *
      * @param registryUrl the URL of the registry server
      * @return a RegistryInfo object containing the server information
-     * @throws RegistryInfoException if there is an error loading the registry information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
      */
     public static RegistryInfo load(String registryUrl) throws RegistryInfoException {
         return load(registryUrl, RegistryInfo.class);
@@ -47,7 +47,7 @@ public class RegistryInfo implements Serializable {
      * @param url             the URL of the registry server
      * @param serverInfoClass the class to use for deserializing the registry information
      * @return a RegistryInfo object containing the server information
-     * @throws RegistryInfoException if there is an error loading the registry information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
      */
     protected static RegistryInfo load(String url, Class<? extends RegistryInfo> serverInfoClass) throws RegistryInfoException {
         HttpGet get = null;
@@ -234,9 +234,9 @@ public class RegistryInfo implements Serializable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URL of the registry server as a string.
-     *
-     * @return true if the object is equal to the given object, false otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -245,9 +245,9 @@ public class RegistryInfo implements Serializable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the hash code of the registry server.
-     *
-     * @return the hash code
      */
     @Override
     public int hashCode() {
@@ -255,9 +255,9 @@ public class RegistryInfo implements Serializable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the string representation of the registry server URL.
-     *
-     * @return the URL of the registry server
      */
     @Override
     public String toString() {

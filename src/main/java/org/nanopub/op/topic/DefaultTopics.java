@@ -30,11 +30,10 @@ public class DefaultTopics implements TopicHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Get the topic of a nanopublication.
      * This method analyzes the assertions in the nanopublication and determines the topic based on the most frequently occurring subject.
-     *
-     * @param np The nanopublication for which to get the topic.
-     * @return The topic of the nanopublication.
      */
     @Override
     public String getTopic(Nanopub np) {

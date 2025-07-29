@@ -59,7 +59,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publish(Nanopub nanopub) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub);
@@ -71,7 +71,7 @@ public class PublishNanopub extends CliRunner {
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publish(Nanopub nanopub, String serverUrl) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub, serverUrl);
@@ -88,7 +88,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publishToTestServer(Nanopub nanopub) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub, TEST_SERVER_URL);
@@ -185,7 +185,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub) throws IOException {
         return publishNanopub(nanopub, null);
@@ -197,7 +197,7 @@ public class PublishNanopub extends CliRunner {
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
         if (registryInfo == null) {
@@ -265,7 +265,6 @@ public class PublishNanopub extends CliRunner {
      *
      * @return the registry information
      */
-
     public RegistryInfo getUsedServer() {
         return registryInfo;
     }

@@ -14,10 +14,7 @@ import java.util.*;
 public class WikipathwaysTopics implements TopicHandler {
 
     /**
-     * Returns the topic of a given Nanopub.
-     *
-     * @param np The Nanopub for which the topic is to be determined.
-     * @return A string representing the topic of the Nanopub.
+     * {@inheritDoc}
      */
     @Override
     public String getTopic(Nanopub np) {

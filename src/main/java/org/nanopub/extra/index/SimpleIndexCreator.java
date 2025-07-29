@@ -115,9 +115,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
     }
 
     /**
-     * Returns the base URI of the nanopublication index.
-     *
-     * @return the base URI
+     * {@inheritDoc}
      */
     @Override
     public String getBaseUri() {
@@ -125,10 +123,9 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Enriches an incomplete nanopublication index with metadata.
-     *
-     * @param npCreator Access to a partially created incomplete nanopublication in the form of
-     *                  a NanopubCreator object.
      */
     @Override
     public void enrichIncompleteIndex(NanopubCreator npCreator) {
@@ -153,10 +150,9 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Enriches a complete nanopublication index with additional metadata.
-     *
-     * @param npCreator Access to the partially created complete nanopublication in the form of
-     *                  a NanopubCreator object.
      */
     @Override
     public void enrichCompleteIndex(NanopubCreator npCreator) {

@@ -232,7 +232,7 @@ public class FdoRecord implements Serializable {
      * Create a new NanopubCreator for this FdoRecord, which can be used to create a new Nanopub.
      *
      * @return a NanopubCreator for this FdoRecord
-     * @throws MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
     public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
         return createUpdatedNanopub(TransformContext.makeDefault());
@@ -243,7 +243,7 @@ public class FdoRecord implements Serializable {
      *
      * @param tc the TransformContext to use for the Nanopub creation, must not be null
      * @return a NanopubCreator for this FdoRecord
-     * @throws MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
     public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
         if (originalNanopub == null) {

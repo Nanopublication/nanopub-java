@@ -34,7 +34,7 @@ public class IndexUtils {
      *
      * @param np the nanopublication to cast
      * @return the NanopubIndex instance
-     * @throws MalformedNanopubException if the nanopublication is not a valid index
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is not a valid index
      */
     public static NanopubIndex castToIndex(Nanopub np) throws MalformedNanopubException {
         if (np instanceof NanopubIndex) {

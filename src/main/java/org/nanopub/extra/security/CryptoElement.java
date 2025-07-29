@@ -63,7 +63,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the public key string for this crypto element.
      *
      * @param publicKeyLiteral the literal containing the public key string
-     * @throws MalformedCryptoElementException if a public key is already set
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if a public key is already set
      */
     public void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedCryptoElementException {
         if (publicKeyString != null) {
@@ -85,7 +85,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the algorithm used for this crypto element.
      *
      * @param algorithm the signature algorithm to set
-     * @throws MalformedCryptoElementException if an algorithm is already set
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set
      */
     public void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedCryptoElementException {
         if (this.algorithm != null) {
@@ -98,7 +98,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the algorithm used for this crypto element from a Literal.
      *
      * @param algorithmLiteral the literal containing the algorithm name
-     * @throws MalformedCryptoElementException if an algorithm is already set or if the algorithm is not recognized
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set or if the algorithm is not recognized
      */
     public void setAlgorithm(Literal algorithmLiteral) throws MalformedCryptoElementException {
         if (algorithm != null) {

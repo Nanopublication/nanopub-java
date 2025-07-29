@@ -55,7 +55,7 @@ public class Count extends CliRunner {
      *
      * @param args command-line arguments
      * @return a Count instance initialized with the provided arguments
-     * @throws ParameterException if there is an error in the parameters
+     * @throws com.beust.jcommander.ParameterException if there is an error in the parameters
      */
     public static Count getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -71,11 +71,11 @@ public class Count extends CliRunner {
     /**
      * Runs the count operation on the provided nanopublications.
      *
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFParseException         if there is an error parsing RDF
-     * @throws RDFHandlerException       if there is an error handling RDF
-     * @throws MalformedNanopubException if a nanopublication is malformed
-     * @throws TrustyUriException        if there is an issue with Trusty URIs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopublication is malformed
+     * @throws net.trustyuri.TrustyUriException          if there is an issue with Trusty URIs
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {

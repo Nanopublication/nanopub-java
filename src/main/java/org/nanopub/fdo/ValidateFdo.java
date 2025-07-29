@@ -48,10 +48,10 @@ public class ValidateFdo {
      *
      * @param fdoRecord the FdoRecord to validate
      * @return ValidationResult containing the result of the validation
-     * @throws FdoNotFoundException if the profile ID in the FdoRecord cannot be resolved
-     * @throws URISyntaxException   if the schema URL is not a valid URI
-     * @throws IOException          if there is an error reading the schema
-     * @throws InterruptedException if the HTTP request is interrupted
+     * @throws org.nanopub.fdo.FdoNotFoundException if the profile ID in the FdoRecord cannot be resolved
+     * @throws java.net.URISyntaxException          if the schema URL is not a valid URI
+     * @throws java.io.IOException                  if there is an error reading the schema
+     * @throws java.lang.InterruptedException       if the HTTP request is interrupted
      */
     public static ValidationResult validate(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
 

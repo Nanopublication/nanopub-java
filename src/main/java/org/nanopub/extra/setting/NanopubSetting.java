@@ -54,9 +54,9 @@ public class NanopubSetting implements Serializable {
      * Retrieves the default local nanopub setting.
      *
      * @return the NanopubSetting object for the default setting.
-     * @throws RDF4JException            if there is an error with RDF4J operations.
-     * @throws MalformedNanopubException if the nanopub is malformed.
-     * @throws IOException               if there is an error reading the input stream.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
      */
     public static NanopubSetting getLocalSetting() throws RDF4JException, MalformedNanopubException, IOException {
         return getLocalSetting(null);
@@ -67,9 +67,9 @@ public class NanopubSetting implements Serializable {
      *
      * @param name the name of the setting, or "default" if null is provided.
      * @return the NanopubSetting object corresponding to the specified name.
-     * @throws RDF4JException            if there is an error with RDF4J operations.
-     * @throws MalformedNanopubException if the nanopub is malformed.
-     * @throws IOException               if there is an error reading the input stream.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
      */
     public static NanopubSetting getLocalSetting(String name) throws RDF4JException, MalformedNanopubException, IOException {
         if (name == null) name = "default";

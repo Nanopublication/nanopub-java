@@ -51,8 +51,8 @@ public class StripDown extends CliRunner {
     /**
      * Runs the StripDown process.
      *
-     * @throws MalformedNanopubException if a nanopublication is malformed.
-     * @throws IOException               if an I/O error occurs.
+     * @throws org.nanopub.MalformedNanopubException if a nanopublication is malformed.
+     * @throws java.io.IOException                   if an I/O error occurs.
      */
     public void run() throws MalformedNanopubException, IOException {
 

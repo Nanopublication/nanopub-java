@@ -30,9 +30,9 @@ public class CrossRefResolver implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handle a statement by replacing temporary references with their corresponding IRIs.
-     *
-     * @param st the RDF statement to handle
      */
     @Override
     public void handleStatement(Statement st) throws RDFHandlerException {
@@ -40,10 +40,9 @@ public class CrossRefResolver implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handle a namespace by replacing the URI with its corresponding transformed URI.
-     *
-     * @param prefix the namespace prefix
-     * @param uri    the namespace URI
      */
     @Override
     public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
@@ -66,9 +65,9 @@ public class CrossRefResolver implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Starts the RDF processing by calling the startRDF method of the nested handler.
-     *
-     * @throws RDFHandlerException if an error occurs during processing
      */
     @Override
     public void startRDF() throws RDFHandlerException {
@@ -76,9 +75,9 @@ public class CrossRefResolver implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Ends the RDF processing by calling the endRDF method of the nested handler.
-     *
-     * @throws RDFHandlerException if an error occurs during processing
      */
     @Override
     public void endRDF() throws RDFHandlerException {
@@ -86,10 +85,9 @@ public class CrossRefResolver implements RDFHandler {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles a comment by passing it to the nested handler.
-     *
-     * @param comment the comment to handle
-     * @throws RDFHandlerException if an error occurs during processing
      */
     @Override
     public void handleComment(String comment) throws RDFHandlerException {

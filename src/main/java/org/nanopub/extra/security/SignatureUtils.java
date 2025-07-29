@@ -43,7 +43,7 @@ public class SignatureUtils {
      *
      * @param nanopub the nanopub to extract the signature element from
      * @return the signature element, or null if no signature element is found
-     * @throws MalformedCryptoElementException if the signature element is malformed
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the signature element is malformed
      */
     public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureUri = getSignatureElementUri(nanopub);
@@ -104,7 +104,7 @@ public class SignatureUtils {
      *
      * @param se the signature element to check
      * @return true if the signature is valid, false otherwise
-     * @throws GeneralSecurityException if there is an error in the cryptographic operations
+     * @throws java.security.GeneralSecurityException if there is an error in the cryptographic operations
      */
     public static boolean hasValidSignature(NanopubSignatureElement se) throws GeneralSecurityException {
         String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());
@@ -128,10 +128,10 @@ public class SignatureUtils {
      * @param preNanopub the pre-nanopub to sign
      * @param c          the transform context containing the key and signature algorithm
      * @return the signed nanopub
-     * @throws GeneralSecurityException  if there is an error in the cryptographic operations
-     * @throws RDFHandlerException       if there is an error in handling RDF data
-     * @throws TrustyUriException        if there is an error in handling Trusty URIs
-     * @throws MalformedNanopubException if the pre-nanopub is malformed
+     * @throws java.security.GeneralSecurityException    if there is an error in the cryptographic operations
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error in handling RDF data
+     * @throws net.trustyuri.TrustyUriException          if there is an error in handling Trusty URIs
+     * @throws org.nanopub.MalformedNanopubException     if the pre-nanopub is malformed
      */
     public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
             throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
@@ -331,7 +331,7 @@ public class SignatureUtils {
      *
      * @param tc       the TransformContext containing the key
      * @param signedNp the signed nanopub to check
-     * @throws MalformedCryptoElementException if not both contain the same public key
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if not both contain the same public key
      */
     public static void assertMatchingPubkeys(TransformContext tc, Nanopub signedNp) throws MalformedCryptoElementException {
         String oldPubKey = SignatureUtils.getSignatureElement(signedNp).getPublicKeyString();

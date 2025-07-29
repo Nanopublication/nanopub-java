@@ -54,8 +54,8 @@ public class TimestampUpdater extends CliRunner {
     /**
      * Runs the TimestampUpdater to update the timestamps of the provided Nanopublications.
      *
-     * @throws MalformedNanopubException if a Nanopublication is malformed.
-     * @throws IOException               if an I/O error occurs.
+     * @throws org.nanopub.MalformedNanopubException if a Nanopublication is malformed.
+     * @throws java.io.IOException                   if an I/O error occurs.
      */
     public void run() throws MalformedNanopubException, IOException {
 

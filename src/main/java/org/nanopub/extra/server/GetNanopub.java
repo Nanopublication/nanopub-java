@@ -147,9 +147,9 @@ public class GetNanopub extends CliRunner {
      * @param artifactCode the artifact code of the nanopub
      * @param registryInfo the RegistryInfo object containing server details
      * @return the Nanopub object
-     * @throws IOException               if an I/O error occurs
-     * @throws RDF4JException            if an RDF4J error occurs
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
     public static Nanopub get(String artifactCode, RegistryInfo registryInfo)
             throws IOException, RDF4JException, MalformedNanopubException {
@@ -163,9 +163,9 @@ public class GetNanopub extends CliRunner {
      * @param registryInfo the RegistryInfo object containing server details
      * @param httpClient   the HttpClient to use for the request
      * @return the Nanopub object
-     * @throws IOException               if an I/O error occurs
-     * @throws RDF4JException            if an RDF4J error occurs
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
     public static Nanopub get(String artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
             throws IOException, RDF4JException, MalformedNanopubException {
@@ -225,9 +225,9 @@ public class GetNanopub extends CliRunner {
     /**
      * Runs the GetNanopub command line tool.
      *
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFHandlerException       if an error occurs while handling RDF data
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if the nanopub is malformed
      */
     protected void run() throws IOException, RDFHandlerException, MalformedNanopubException {
         if (showReport) {
