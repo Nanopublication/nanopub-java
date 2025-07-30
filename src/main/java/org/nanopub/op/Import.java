@@ -209,13 +209,13 @@ public class Import extends CliRunner {
 
             for (Statement st : statements) {
                 if (st.getPredicate().stringValue().equals("http://open-services.net/ns/core#modifiedBy")) {
-                    npCreator.addProvenanceStatement(SimpleCreatorPattern.PAV_AUTHOREDBY, st.getObject());
+                    npCreator.addProvenanceStatement(PAV.AUTHORED_BY, st.getObject());
                     npCreator.addPubinfoStatement(DCTERMS.CREATOR, st.getObject());
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/lastUpdatedOn")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.LAST_UPDATED_ON.stringValue())) {
                     npCreator.addPubinfoStatement(DCTERMS.CREATED, st.getObject());
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/createdBy")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.CREATED_BY.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/createdOn")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.CREATED_ON.stringValue())) {
                     npCreator.addPubinfoStatements(st);
                 } else if (st.getPredicate().stringValue().equals(SCHEMA.DESCRIPTION.stringValue())) {
                     npCreator.addPubinfoStatements(st);

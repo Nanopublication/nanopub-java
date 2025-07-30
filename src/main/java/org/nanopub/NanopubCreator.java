@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.*;
 
@@ -398,7 +399,7 @@ public class NanopubCreator {
      * @param author the author IRI
      */
     public void addAuthor(IRI author) {
-        addPubinfoStatement(SimpleCreatorPattern.PAV_AUTHOREDBY, author);
+        addPubinfoStatement(PAV.AUTHORED_BY, author);
     }
 
     /**
