@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
@@ -91,18 +92,13 @@ public class SimpleTimestampPattern implements NanopubPattern {
     public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
     /**
-     * Constant <code>PROV_GENERATEDATTIME</code>
-     */
-    public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
-
-    /**
      * Checks if the given IRI is a property that indicates the creation time of a nanopublication.
      *
      * @param uri the IRI to check
      * @return true if the IRI is a creation time property, false otherwise
      */
     public static boolean isCreationTimeProperty(IRI uri) {
-        return uri.equals(DCTERMS.CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV.CREATED_ON);
+        return uri.equals(DCTERMS.CREATED) || uri.equals(PROV.GENERATED_AT_TIME) || uri.equals(PAV.CREATED_ON);
     }
 
 }

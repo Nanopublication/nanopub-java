@@ -5,13 +5,12 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.security.TransformContext;
 
 import java.security.GeneralSecurityException;
-
-import static org.nanopub.SimpleCreatorPattern.PROV_WASATTRIBUTEDTO;
 
 /**
  * <p>
@@ -44,7 +43,7 @@ public class NanopubRetractor {
         SignatureUtils.assertMatchingPubkeys(tc, originalNp);
         NanopubCreator c = new NanopubCreator(true);
         c.addAssertionStatement(tc.getSigner(), RETRACTION, originalNp.getUri());
-        c.addProvenanceStatement(PROV_WASATTRIBUTEDTO, tc.getSigner());
+        c.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, tc.getSigner());
         c.addPubinfoStatement(DCTERMS.CREATOR, tc.getSigner());
 
         Nanopub retractionNp = c.finalizeNanopub(true);

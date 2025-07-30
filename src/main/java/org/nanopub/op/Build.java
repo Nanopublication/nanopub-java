@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
 
@@ -173,10 +174,10 @@ public class Build extends CliRunner {
             npCreator.addNamespace(p.getLeft(), p.getRight());
         }
         if (derivedFromUri != null) {
-            npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#wasDerivedFrom"), derivedFromUri);
+            npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, derivedFromUri);
         } else {
             for (String c : creators) {
-                npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), vf.createIRI(c));
+                npCreator.addProvenanceStatement(PROV.HAD_PRIMARY_SOURCE, vf.createIRI(c));
             }
         }
         for (String c : creators) {
