@@ -3,6 +3,7 @@ package org.nanopub;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
@@ -174,10 +175,6 @@ public class SimpleCreatorPattern implements NanopubPattern {
     public static final IRI PAV_CREATEDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
 
     /**
-     * Constant <code>DCT_CREATOR</code>
-     */
-    public static final IRI DCT_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/creator");
-    /**
      * Constant <code>DCE_CREATOR</code>
      */
     public static final IRI DCE_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/elements/1.1/creator");
@@ -208,7 +205,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      */
     public static boolean isCreatorProperty(IRI uri) {
         return uri.equals(PAV.CREATED_BY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV.CREATED_BY_V2)
-                || uri.equals(DCT_CREATOR) || uri.equals(DCE_CREATOR) || uri.equals(PROV_WASATTRIBUTEDTO);
+                || uri.equals(DCTERMS.CREATOR) || uri.equals(DCE_CREATOR) || uri.equals(PROV_WASATTRIBUTEDTO);
     }
 
     /**

@@ -3,6 +3,7 @@ package org.nanopub;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
 import org.nanopub.vocabulary.PAV;
@@ -365,14 +366,14 @@ public class NanopubCreator {
      * @param date the date to add
      */
     public void addTimestamp(Date date) {
-        addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(date));
+        addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral(date));
     }
 
     /**
      * Adds a timestamp to the pubinfo part of the nanopublication using the current time.
      */
     public void addTimestampNow() {
-        addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, TimestampNow.getTimestamp());
+        addPubinfoStatement(DCTERMS.CREATED, TimestampNow.getTimestamp());
     }
 
     /**
@@ -381,7 +382,7 @@ public class NanopubCreator {
      * @param creator the creator IRI
      */
     public void addCreator(IRI creator) {
-        addPubinfoStatement(SimpleCreatorPattern.DCT_CREATOR, creator);
+        addPubinfoStatement(DCTERMS.CREATOR, creator);
     }
 
     /**

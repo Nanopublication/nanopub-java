@@ -2,6 +2,7 @@ package org.nanopub.op.topic;
 
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.Nanopub;
 import org.nanopub.op.Topic.TopicHandler;
@@ -27,7 +28,7 @@ public class WikipathwaysTopics implements TopicHandler {
             String ps = st.getPredicate().stringValue();
             if (ps.equals(RDF.TYPE.stringValue())) continue;
             if (ps.equals("http://vocabularies.wikipathways.org/wp#pathwayOntologyTag")) continue;
-            if (ps.equals("http://purl.org/dc/terms/isPartOf")) {
+            if (ps.equals(DCTERMS.IS_PART_OF.stringValue())) {
                 pathwayIds.add(st.getObject().stringValue().replace("http://identifiers.org/wikipathways/", ""));
             }
             if (ps.equals("http://vocabularies.wikipathways.org/wp#organismName")) {

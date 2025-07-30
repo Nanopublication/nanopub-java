@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.nanopub.utils.TestUtils;
@@ -79,7 +80,7 @@ class NanopubCreatorTest {
         Nanopub nanopub = creator.finalizeNanopub();
         assertNotNull(nanopub);
         assertEquals(TestUtils.NANOPUB_URI, nanopub.getUri().toString());
-        assertFalse(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(SimpleTimestampPattern.DCT_CREATED)));
+        assertFalse(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(DCTERMS.CREATED)));
     }
 
     @Test
@@ -88,7 +89,7 @@ class NanopubCreatorTest {
         Nanopub nanopub = creator.finalizeNanopub(true);
         assertNotNull(nanopub);
         assertEquals(TestUtils.NANOPUB_URI, nanopub.getUri().toString());
-        assertTrue(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(SimpleTimestampPattern.DCT_CREATED)));
+        assertTrue(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(DCTERMS.CREATOR)));
     }
 
 }
