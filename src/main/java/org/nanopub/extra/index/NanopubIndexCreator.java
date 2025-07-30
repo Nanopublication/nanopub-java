@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -253,7 +254,7 @@ public abstract class NanopubIndexCreator {
         npCreator.addNamespace(OWL.NS);
         npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
         npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
-        npCreator.addNamespace("pav", "http://purl.org/pav/");
+        npCreator.addNamespace(PAV.PREFIX, PAV.NAMESPACE);
         npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
         npCreator.addNamespace("npx", "http://purl.org/nanopub/x/");
         npCreator.addProvenanceStatement(RDF.TYPE, NanopubIndex.INDEX_ASSERTION_URI);

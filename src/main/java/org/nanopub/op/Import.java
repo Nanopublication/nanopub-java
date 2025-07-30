@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.*;
+import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.*;
@@ -250,7 +251,7 @@ public class Import extends CliRunner {
             npCreator.addNamespace(OWL.NS);
             npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
             npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
-            npCreator.addNamespace("pav", "http://purl.org/pav/");
+            npCreator.addNamespace(PAV.PREFIX, PAV.NAMESPACE);
             npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
             npCreator.addNamespace("skos", "http://www.w3.org/TR/skos-reference/skos-owl1-dl#");
             npCreator.addNamespace("obo", "http://purl.obolibrary.org/obo/");

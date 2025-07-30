@@ -63,6 +63,7 @@ public class TrustyNanopubUtils {
             writer.handleNamespace(OWL.PREFIX, OWL.NAMESPACE);
             writer.handleNamespace("dct", DCTERMS.NAMESPACE);
             writer.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
+            // TODO check if this prefix and namespace are correct
             writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
             writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
             for (Statement st : NanopubUtils.getStatements(nanopub)) {
