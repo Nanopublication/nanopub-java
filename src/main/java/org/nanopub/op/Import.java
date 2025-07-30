@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.*;
+import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -215,11 +216,11 @@ public class Import extends CliRunner {
                     npCreator.addPubinfoStatements(st);
                 } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/createdOn")) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/description")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.DESCRIPTION.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/isBasedOn")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.IS_BASED_ON.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/name")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.NAME.stringValue())) {
                     npCreator.addPubinfoStatements(st);
                 } else if (st.getSubject() instanceof IRI) {
                     String s = st.getSubject().stringValue().replaceFirst("^https://repo.metadatacenter.org/template-instances/.*$", npIriString + "subj");
@@ -253,7 +254,7 @@ public class Import extends CliRunner {
             npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
             npCreator.addNamespace("skos", "http://www.w3.org/TR/skos-reference/skos-owl1-dl#");
             npCreator.addNamespace("obo", "http://purl.obolibrary.org/obo/");
-            npCreator.addNamespace("schema", "http://schema.org/");
+            npCreator.addNamespace(SCHEMA.PREFIX, SCHEMA.NAMESPACE);
             npCreator.addNamespace("cedar-user", "https://metadatacenter.org/users/");
             npCreator.addNamespace("cedar-temp", "https://repo.metadatacenter.org/templates/");
             npCreator.addNamespace("cedar-tempinst", "https://repo.metadatacenter.org/template-instances/");
