@@ -6,7 +6,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.*;
@@ -62,8 +62,7 @@ public class Import extends CliRunner {
     private RDFFormat rdfInFormat, rdfOutFormat;
     private OutputStream outputStream = System.out;
 
-    private void run() throws IOException, RDFParseException, RDFHandlerException,
-            MalformedNanopubException, TrustyUriException {
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
 
         File inputFile = inputFiles.get(0);
         if (inFormat != null) {
@@ -108,8 +107,7 @@ public class Import extends CliRunner {
      * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
      * @throws org.nanopub.MalformedNanopubException     if the nanopublication is malformed
      */
-    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format)
-            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         final NanopubImporter importer;
         if ("cedar".equals(type)) {
             importer = new CedarNanopubImporter();
@@ -244,12 +242,12 @@ public class Import extends CliRunner {
 
         private void addNamespaces() {
             npCreator.addNamespace("", npIriString);
-            npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-            npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+            npCreator.addNamespace(RDF.NS);
+            npCreator.addNamespace(RDFS.NS);
             npCreator.addNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-            npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-            npCreator.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-            npCreator.addNamespace("dct", "http://purl.org/dc/terms/");
+            npCreator.addNamespace(XSD.NS);
+            npCreator.addNamespace(OWL.NS);
+            npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
             npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
             npCreator.addNamespace("pav", "http://purl.org/pav/");
             npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");

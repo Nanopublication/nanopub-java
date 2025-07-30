@@ -9,10 +9,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.extra.security.KeyDeclaration;
@@ -35,15 +32,15 @@ public class NanopubUtils {
     private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
 
     static {
-        defaultNamespaces.add(Pair.of("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
-        defaultNamespaces.add(Pair.of("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
+        defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));
+        defaultNamespaces.add(Pair.of(RDFS.PREFIX, RDFS.NAMESPACE));
         defaultNamespaces.add(Pair.of("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/"));
-        defaultNamespaces.add(Pair.of("xsd", "http://www.w3.org/2001/XMLSchema#"));
-        defaultNamespaces.add(Pair.of("owl", "http://www.w3.org/2002/07/owl#"));
-        defaultNamespaces.add(Pair.of("dct", "http://purl.org/dc/terms/"));
+        defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));
+        defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));
+        defaultNamespaces.add(Pair.of("dct", DCTERMS.NAMESPACE));
         defaultNamespaces.add(Pair.of("dce", "http://purl.org/dc/elements/1.1/"));
         defaultNamespaces.add(Pair.of("pav", "http://purl.org/pav/"));
-        defaultNamespaces.add(Pair.of("prov", "http://www.w3.org/ns/prov#"));
+        defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));
         defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
     }
 

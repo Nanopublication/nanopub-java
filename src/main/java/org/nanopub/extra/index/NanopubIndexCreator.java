@@ -1,7 +1,7 @@
 package org.nanopub.extra.index;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
@@ -247,11 +247,11 @@ public abstract class NanopubIndexCreator {
         }
         npCreator = new NanopubCreator(baseUri);
         npCreator.addNamespace("", baseUri);
-        npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-        npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-        npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-        npCreator.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-        npCreator.addNamespace("dct", "http://purl.org/dc/terms/");
+        npCreator.addNamespace(RDF.NS);
+        npCreator.addNamespace(RDFS.NS);
+        npCreator.addNamespace(XSD.NS);
+        npCreator.addNamespace(OWL.NS);
+        npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
         npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
         npCreator.addNamespace("pav", "http://purl.org/pav/");
         npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
