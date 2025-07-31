@@ -22,4 +22,6 @@ public class SCHEMA {
 
     public static final IRI IS_BASED_ON = Utils.createIRI(NAMESPACE, "isBasedOn");
 
+    public static final IRI PERSON = Utils.createIRI(NAMESPACE, "Person");
+
 }

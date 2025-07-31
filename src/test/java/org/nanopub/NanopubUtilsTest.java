@@ -163,7 +163,7 @@ public class NanopubUtilsTest {
 //    	System.err.println("# Creating nanopub...");
 //    	NanopubCreator npCreator = new NanopubCreator(true);
 //    	final IRI anne = vf.createIRI("https://example.com/anne");
-//    	npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+//    	npCreator.addAssertionStatement(anne, RDF.TYPE, SCHEMA.PERSON);
 //    	npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
 //    	npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
 //    	Nanopub np = npCreator.finalizeNanopub(true);

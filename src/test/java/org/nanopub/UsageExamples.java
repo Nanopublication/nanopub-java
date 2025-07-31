@@ -18,6 +18,7 @@ import org.nanopub.fdo.FdoNanopubTest;
 import org.nanopub.fdo.FdoQuery;
 import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +43,7 @@ public class UsageExamples {
         NanopubCreator npCreator = new NanopubCreator(true);
 
         final IRI anne = vf.createIRI("https://example.com/anne");
-        npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+        npCreator.addAssertionStatement(anne, RDF.TYPE, SCHEMA.PERSON);
         npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
         npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
         Nanopub np = npCreator.finalizeNanopub(true);
@@ -89,7 +90,7 @@ public class UsageExamples {
         new GeneralIntegrationTestsIT();
     }
 
-    void examplesForQueryingFdo () throws FailedApiCallException {
+    void examplesForQueryingFdo() throws FailedApiCallException {
         // This query performs a full-text search on the FDO nanopublications.
         ApiResponse response1 = FdoQuery.textSearch("myText");
 
