@@ -19,6 +19,7 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.nanopub.vocabulary.NP;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -130,6 +131,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
     }
 
     private static final String nanopubViaSPARQLQuery =
+            // TODO concat the query with the namespace prefixes and namespaces
             "prefix np: <http://www.nanopub.org/nschema#> " +
                     "prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> " +
                     "prefix this: <@> " +
@@ -154,8 +156,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
      * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
-    public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String, String> ns)
-            throws MalformedNanopubException, RepositoryException {
+    public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String, String> ns) throws MalformedNanopubException, RepositoryException {
         if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);
         if (ns != null) this.ns.putAll(ns);
         try (RepositoryConnection connection = repo.getConnection()) {
@@ -186,8 +187,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
      * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
-    public NanopubImpl(Repository repo, IRI nanopubUri)
-            throws MalformedNanopubException, RepositoryException {
+    public NanopubImpl(Repository repo, IRI nanopubUri) throws MalformedNanopubException, RepositoryException {
         this(repo, nanopubUri, null, null);
     }
 
@@ -200,8 +200,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
      * @throws java.io.IOException                               if there is an error reading the file
      */
-    public NanopubImpl(File file, RDFFormat format)
-            throws MalformedNanopubException, RDF4JException, IOException {
+    public NanopubImpl(File file, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
         readStatements(new FileInputStream(file), format);
         init();
     }
@@ -361,7 +360,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
             if (st.getContext() == null) {
                 throw new MalformedNanopubException("Null value for context URI found.");
             }
-            if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(Nanopub.NANOPUB_TYPE_URI)) {
+            if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(NP.NANOPUBLICATION)) {
                 if (nanopubUri != null) {
                     throw new MalformedNanopubException("Two nanopub URIs found");
                 }
@@ -376,22 +375,19 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
             if (st.getContext().equals(headUri)) {
                 Resource s = st.getSubject();
                 IRI p = st.getPredicate();
-                if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_ASSERTION_URI)) {
+                if (s.equals(nanopubUri) && p.equals(NP.HAS_ASSERTION)) {
                     if (assertionUri != null) {
-                        throw new MalformedNanopubException("Two assertion URIs found: " +
-                                assertionUri + " and " + st.getObject());
+                        throw new MalformedNanopubException("Two assertion URIs found: " + assertionUri + " and " + st.getObject());
                     }
                     assertionUri = (IRI) st.getObject();
-                } else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PROVENANCE_URI)) {
+                } else if (s.equals(nanopubUri) && p.equals(NP.HAS_PROVENANCE)) {
                     if (provenanceUri != null) {
-                        throw new MalformedNanopubException("Two provenance URIs found: " +
-                                provenanceUri + " and " + st.getObject());
+                        throw new MalformedNanopubException("Two provenance URIs found: " + provenanceUri + " and " + st.getObject());
                     }
                     provenanceUri = (IRI) st.getObject();
-                } else if (s.equals(nanopubUri) && p.equals(Nanopub.HAS_PUBINFO_URI)) {
+                } else if (s.equals(nanopubUri) && p.equals(NP.HAS_PUBINFO)) {
                     if (pubinfoUri != null) {
-                        throw new MalformedNanopubException("Two publication info URIs found: " +
-                                pubinfoUri + " and " + st.getObject());
+                        throw new MalformedNanopubException("Two publication info URIs found: " + pubinfoUri + " and " + st.getObject());
                     }
                     pubinfoUri = (IRI) st.getObject();
                 }

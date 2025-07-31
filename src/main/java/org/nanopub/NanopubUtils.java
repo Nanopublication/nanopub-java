@@ -14,6 +14,7 @@ import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.PAV;
 
 import java.io.*;
@@ -42,7 +43,7 @@ public class NanopubUtils {
         defaultNamespaces.add(Pair.of("dce", DC.NAMESPACE));
         defaultNamespaces.add(Pair.of(PAV.PREFIX, PAV.NAMESPACE));
         defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));
-        defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
+        defaultNamespaces.add(Pair.of(NP.PREFIX, NP.NAMESPACE));
     }
 
     /**

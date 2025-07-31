@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NP;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -65,7 +66,7 @@ public class TrustyNanopubUtils {
             writer.handleNamespace("dce", DC.NAMESPACE);
             // TODO check if this prefix and namespace are correct
             writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
-            writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
+            writer.handleNamespace(NP.PREFIX, NP.NAMESPACE);
             for (Statement st : NanopubUtils.getStatements(nanopub)) {
                 writer.handleStatement(st);
             }

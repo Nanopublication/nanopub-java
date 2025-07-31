@@ -24,27 +24,6 @@ import java.util.Set;
  */
 public interface Nanopub {
 
-    // URIs in the nanopub namespace:
-    /**
-     * IRI of the Nanopublication type.
-     */
-    public static final IRI NANOPUB_TYPE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#Nanopublication");
-
-    /**
-     * IRI of the has assertion property.
-     */
-    public static final IRI HAS_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasAssertion");
-
-    /**
-     * IRI of the has provenance property.
-     */
-    public static final IRI HAS_PROVENANCE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasProvenance");
-
-    /**
-     * IRI of the has pubinfo property.
-     */
-    public static final IRI HAS_PUBINFO_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasPublicationInfo");
-
     /**
      * IRI of the supersedes property.
      */
@@ -215,4 +194,5 @@ public interface Nanopub {
     public default Nanopub sign(TransformContext context) throws TrustyUriException, SignatureException, InvalidKeyException {
         return SignNanopub.signAndTransform(this, context);
     }
+
 }

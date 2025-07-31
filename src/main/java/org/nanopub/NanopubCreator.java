@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
+import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.PAV;
 
 import java.util.*;
@@ -568,10 +569,10 @@ public class NanopubCreator {
 
     private void collectStatements() {
         statements = new ArrayList<>();
-        addStatement(nanopubUri, RDF.TYPE, Nanopub.NANOPUB_TYPE_URI, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_ASSERTION_URI, assertionUri, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_PROVENANCE_URI, provenanceUri, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_PUBINFO_URI, pubinfoUri, headUri);
+        addStatement(nanopubUri, RDF.TYPE, NP.NANOPUBLICATION, headUri);
+        addStatement(nanopubUri, NP.HAS_ASSERTION, assertionUri, headUri);
+        addStatement(nanopubUri, NP.HAS_PROVENANCE, provenanceUri, headUri);
+        addStatement(nanopubUri, NP.HAS_PUBINFO, pubinfoUri, headUri);
         for (Statement st : assertion) {
             addStatement(st.getSubject(), st.getPredicate(), st.getObject(), assertionUri);
         }
