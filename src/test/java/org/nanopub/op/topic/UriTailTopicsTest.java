@@ -3,7 +3,6 @@ package org.nanopub.op.topic;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
-import org.nanopub.NanopubUtilsTest;
 import org.nanopub.utils.TestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

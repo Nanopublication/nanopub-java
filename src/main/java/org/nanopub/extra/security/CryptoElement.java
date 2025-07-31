@@ -2,7 +2,6 @@ package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.io.Serializable;
 

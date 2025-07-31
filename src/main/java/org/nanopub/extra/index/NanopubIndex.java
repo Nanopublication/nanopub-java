@@ -1,7 +1,6 @@
 package org.nanopub.extra.index;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 
 import java.util.Set;
