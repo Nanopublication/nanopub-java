@@ -89,7 +89,7 @@ class NanopubCreatorTest {
         Nanopub nanopub = creator.finalizeNanopub(true);
         assertNotNull(nanopub);
         assertEquals(TestUtils.NANOPUB_URI, nanopub.getUri().toString());
-        assertTrue(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(DCTERMS.CREATOR)));
+        assertTrue(nanopub.getPubinfo().stream().anyMatch(st -> st.getPredicate().equals(DCTERMS.CREATED)));
     }
 
 }
