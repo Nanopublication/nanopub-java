@@ -1,7 +1,5 @@
 package org.nanopub.trusty;
 
-import java.util.Map;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -10,6 +8,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.Nanopub;
+
+import java.util.Map;
 
 /**
  * You can use temporary URIs for your nanopublications that start with <a href="http://purl.org/nanopub/temp/">http://purl.org/nanopub/temp/</a>. These then become

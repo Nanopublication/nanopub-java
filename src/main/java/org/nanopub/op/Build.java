@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -163,7 +164,7 @@ public class Build extends CliRunner {
     }
 
     private void initNanopub() {
-        String npUriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+        String npUriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         nanopubIri = vf.createIRI(npUriString);
         assertionIri = vf.createIRI(npUriString + "assertion");
         if (creators.isEmpty()) creators.add(npUriString + "creator");

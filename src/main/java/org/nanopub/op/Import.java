@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.SCHEMA;
@@ -197,7 +198,7 @@ public class Import extends CliRunner {
         @Override
         public void readStatements(List<Statement> statements) {
             String cedarId = getCedarId(statements);
-            npIriString = "http://purl.org/nanopub/temp/" + cedarId + "#";
+            npIriString = TempUriReplacer.tempUri + cedarId + "#";
             npIri = vf.createIRI(npIriString);
 
             npCreator = new NanopubCreator(npIri);

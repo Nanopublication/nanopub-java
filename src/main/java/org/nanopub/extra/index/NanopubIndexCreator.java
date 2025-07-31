@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
@@ -245,7 +246,7 @@ public abstract class NanopubIndexCreator {
         elementNsCount = 0;
         itemCount = 0;
         String baseUri = getBaseUri();
-        if (baseUri.startsWith("http://purl.org/nanopub/temp/")) {
+        if (baseUri.startsWith(TempUriReplacer.tempUri)) {
             baseUri += Math.abs(random.nextLong()) + "/";
         }
         npCreator = new NanopubCreator(baseUri);

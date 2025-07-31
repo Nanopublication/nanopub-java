@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
@@ -50,11 +51,11 @@ class StripDownTest {
     void transformWithValidResource() {
         Resource resource = SimpleValueFactory.getInstance().createIRI("http://purl.org/np/RAYskLSM5x29icArnWvo9nVrIVEN2mfPoDq3TQSgm-9kk#Head");
         String artifact = "RAYskLSM5x29icArnWvo9nVrIVEN2mfPoDq3TQSgm-9kk";
-        String replacement = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String replacement = TempUriReplacer.tempUri + Math.abs(new Random().nextInt()) + "/";
 
         IRI result = new StripDown().transform(resource, artifact, replacement);
 
-        assertTrue(result.stringValue().startsWith("http://purl.org/nanopub/temp/"));
+        assertTrue(result.stringValue().startsWith(TempUriReplacer.tempUri));
         assertTrue(result.stringValue().endsWith("/Head"));
     }
 
@@ -62,7 +63,7 @@ class StripDownTest {
     void transformWithNullResource() {
         Resource resource = null;
         String artifact = "RAdf9taM_Gyq2-WavUq3CxaVIvsHockMXzonj3W_igNhM";
-        String replacement = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String replacement = TempUriReplacer.tempUri + Math.abs(new Random().nextInt()) + "/";
         IRI result = new StripDown().transform(resource, artifact, replacement);
 
         assertNull(result);
@@ -72,7 +73,7 @@ class StripDownTest {
     void transformWithBlankNodeThrowsException() {
         Resource resource = SimpleValueFactory.getInstance().createBNode();
         String artifact = "RAdf9taM_Gyq2-WavUq3CxaVIvsHockMXzonj3W_igNhM";
-        String replacement = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String replacement = TempUriReplacer.tempUri + Math.abs(new Random().nextInt()) + "/";
 
         assertThrows(RuntimeException.class, () -> new StripDown().transform(resource, artifact, replacement));
     }
@@ -81,7 +82,7 @@ class StripDownTest {
     void transformWithNoArtifactMatch() {
         Resource resource = SimpleValueFactory.getInstance().createIRI("http://purl.org/np/RAYskLSM5x29icArnWvo9nVrIVEN2mfPoDq3TQSgm-9kk#Head");
         String artifact = "artifact123"; // No match for this artifact
-        String replacement = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String replacement = TempUriReplacer.tempUri + Math.abs(new Random().nextInt()) + "/";
 
         IRI result = new StripDown().transform(resource, artifact, replacement);
         assertEquals(resource.toString(), result.stringValue());
