@@ -39,7 +39,7 @@ public class NanopubUtils {
         defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));
         defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));
         defaultNamespaces.add(Pair.of("dct", DCTERMS.NAMESPACE));
-        defaultNamespaces.add(Pair.of("dce", "http://purl.org/dc/elements/1.1/"));
+        defaultNamespaces.add(Pair.of("dce", DC.NAMESPACE));
         defaultNamespaces.add(Pair.of(PAV.PREFIX, PAV.NAMESPACE));
         defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));
         defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
@@ -202,7 +202,7 @@ public class NanopubUtils {
             if (subj.equals(npId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
                 npLabel += " " + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
                 npTitle += " " + obj.stringValue();
             }
             if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
@@ -227,7 +227,7 @@ public class NanopubUtils {
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
                 aLabel += " " + obj.stringValue();
             }
-            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
                 aTitle += " " + obj.stringValue();
             }
             if (introMap.containsKey(subj) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
@@ -260,7 +260,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!subj.equals(npId)) continue;
             if (obj instanceof Literal) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     npDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     npComment += "\n" + obj.stringValue();
@@ -279,7 +279,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (!subj.equals(aId)) continue;
-            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                 aDesc += "\n" + obj.stringValue();
             } else if (pred.equals(RDFS.COMMENT)) {
                 aComment += "\n" + obj.stringValue();
@@ -293,7 +293,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (subj.equals(aId)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     aDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     aComment += "\n" + obj.stringValue();
@@ -302,7 +302,7 @@ public class NanopubUtils {
                 }
             }
             if (introMap.containsKey(subj)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     iDesc += " " + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     iComment += " " + obj.stringValue();
@@ -437,17 +437,6 @@ public class NanopubUtils {
      * The IRI for the hasNanopubType predicate.
      */
     public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
-
-    /**
-     * The IRI for the DCTERMS title predicate.
-     */
-    private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
-
-    /**
-     * The IRI for the DCTERMS description predicate.
-     */
-    private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
-
 
     private static CloseableHttpClient httpClient;
 

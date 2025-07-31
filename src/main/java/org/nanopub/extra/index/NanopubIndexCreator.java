@@ -253,7 +253,7 @@ public abstract class NanopubIndexCreator {
         npCreator.addNamespace(XSD.NS);
         npCreator.addNamespace(OWL.NS);
         npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
-        npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
+        npCreator.addNamespace("dce", DC.NAMESPACE);
         npCreator.addNamespace(PAV.PREFIX, PAV.NAMESPACE);
         npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
         npCreator.addNamespace("npx", "http://purl.org/nanopub/x/");
