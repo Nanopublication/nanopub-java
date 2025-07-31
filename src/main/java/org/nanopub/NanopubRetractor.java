@@ -1,7 +1,6 @@
 package org.nanopub;
 
 import net.trustyuri.TrustyUriException;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
@@ -9,6 +8,7 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.NPX;
 
 import java.security.GeneralSecurityException;
 
@@ -21,12 +21,6 @@ import java.security.GeneralSecurityException;
 public class NanopubRetractor {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    /**
-     * The IRI for the retraction statement.
-     */
-    public static final IRI RETRACTION = vf.createIRI("http://purl.org/nanopub/x/retracts");
-
 
     /**
      * Create a retraction np out of the original np and a transformation context
@@ -42,7 +36,7 @@ public class NanopubRetractor {
     public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException {
         SignatureUtils.assertMatchingPubkeys(tc, originalNp);
         NanopubCreator c = new NanopubCreator(true);
-        c.addAssertionStatement(tc.getSigner(), RETRACTION, originalNp.getUri());
+        c.addAssertionStatement(tc.getSigner(), NPX.RETRACTS, originalNp.getUri());
         c.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, tc.getSigner());
         c.addPubinfoStatement(DCTERMS.CREATOR, tc.getSigner());
 

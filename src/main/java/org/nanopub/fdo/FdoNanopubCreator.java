@@ -12,6 +12,7 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.fdo.rest.gson.Value;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -67,7 +68,7 @@ public class FdoNanopubCreator {
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
+        creator.addPubinfoStatement(npIri, NPX.INTRODUCES, fdoIri);
         creator.addAssertionStatements(fdoRecord.buildStatements().toArray(new Statement[0]));
 
         return creator;

@@ -21,6 +21,7 @@ import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.ResponsePrinter;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -91,7 +92,7 @@ public class FdoNanopubTest {
         final IRI nonFdoNanopub = vf.createIRI("https://example.com/nonFdoNanopub");
         npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, TestUtils.anyIri);
         npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, nonFdoNanopub);
-        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
         Nanopub np = npCreator.finalizeNanopub(true);
 
         assertFalse(FdoUtils.isFdoNanopub(np));

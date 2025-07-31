@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
@@ -18,6 +19,7 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.fdo.*;
 import org.nanopub.fdo.rest.HandleResolver;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +36,6 @@ import java.util.Set;
 
 import static java.lang.System.out;
 import static org.junit.Assert.assertEquals;
-import static org.nanopub.NanopubUtils.HAS_NANOPUB_TYPE;
 import static org.nanopub.fdo.ValidateFdo.createShaclValidationShapeFromJson;
 
 /**
@@ -54,7 +55,7 @@ public class GeneralIntegrationTestsIT {
         NanopubUtils.propagateToHandler(np, w);
     }
 
-//    @Test
+    //    @Test
     void exampleForPublishingFdoNanopub() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7"; // TODO enter the handle id
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
@@ -85,13 +86,13 @@ public class GeneralIntegrationTestsIT {
 
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
 
-        for (Statement st: np.getAssertion()) {
+        for (Statement st : np.getAssertion()) {
 //            assertTrue(record.buildStatements().contains(st));
             // TODO we do need a new example here
         }
     }
 
-//     @Test
+    //     @Test
     void exampleForUpdatingFdoNanopub() throws Exception {
         String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
         FdoRecord record = RetrieveFdo.resolveId(id);
@@ -140,17 +141,17 @@ public class GeneralIntegrationTestsIT {
         // create nanopub
         IRI fdoIri = FdoUtils.createIri(profileId);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(fdoRecord, fdoIri);
-        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI+profileId));
+        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + profileId));
 
         String shapeIri = creator.getNanopubUri().stringValue();
         Set<Statement> shaclShape = createShaclValidationShapeFromJson(httpResponse, shapeIri);
         creator.addAssertionStatements(shaclShape);
 
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.PROFILE_CLASS_IRI);
-        creator.addAssertionStatement(fdoIri, FdoUtils.SHAPE_LINK_IRI, vf.createIRI(shapeIri+"nodeShape"));
+        creator.addAssertionStatement(fdoIri, FdoUtils.SHAPE_LINK_IRI, vf.createIRI(shapeIri + "nodeShape"));
 
-        creator.addPubinfoStatement(HAS_NANOPUB_TYPE, vf.createIRI("https://w3id.org/np/o/ntemplate/AssertionTemplate"));
-        creator.addNamespace("shacl", vf.createIRI("http://www.w3.org/ns/shacl#"));
+        creator.addPubinfoStatement(NPX.HAS_NANOPUB_TYPE, vf.createIRI("https://w3id.org/np/o/ntemplate/AssertionTemplate"));
+        creator.addNamespace(SHACL.PREFIX, SHACL.NAMESPACE);
         Nanopub np = creator.finalizeNanopub(true);
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
 

@@ -12,9 +12,9 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
-import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
 
 import java.io.*;
@@ -206,7 +206,7 @@ public class NanopubUtils {
             if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
                 npTitle += " " + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -269,7 +269,7 @@ public class NanopubUtils {
                     npDef += "\n" + obj.stringValue();
                 }
             } else {
-                if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) {
+                if (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) {
                     introMap.put((IRI) obj, true);
                 }
             }
@@ -346,10 +346,10 @@ public class NanopubUtils {
             if (subj.equals(npId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
+            if (subj.equals(npId) && pred.equals(NPX.HAS_NANOPUB_TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -375,7 +375,7 @@ public class NanopubUtils {
                 if (subj.equals(aId)) types.add((IRI) obj);
                 if (introMap.containsKey(subj)) types.add((IRI) obj);
             }
-            if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+            if (pred.equals(NPX.DECLARED_BY)) {
                 // This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
                 // this predicate is treated as a special case that triggers a type assignment.
                 types.add(pred);
@@ -418,26 +418,6 @@ public class NanopubUtils {
     }
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    /**
-     * The IRI for the introduces predicate.
-     */
-    public static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
-
-    /**
-     * The IRI for the describes predicate.
-     */
-    public static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
-
-    /**
-     * The IRI for the embeds predicate.
-     */
-    public static final IRI EMBEDS = vf.createIRI("http://purl.org/nanopub/x/embeds");
-
-    /**
-     * The IRI for the hasNanopubType predicate.
-     */
-    public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
 
     private static CloseableHttpClient httpClient;
 

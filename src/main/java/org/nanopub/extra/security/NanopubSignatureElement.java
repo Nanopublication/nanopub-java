@@ -16,32 +16,6 @@ import java.util.Set;
  */
 public class NanopubSignatureElement extends CryptoElement {
 
-    /**
-     * The IRI for the signature element in a Nanopub.
-     */
-    public static final IRI SIGNATURE_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubSignatureElement");
-
-    /**
-     * The IRIs for the signature target property.
-     */
-    public static final IRI HAS_SIGNATURE_TARGET = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignatureTarget");
-
-    /**
-     * The IRIs for the has signature property.
-     */
-    public static final IRI HAS_SIGNATURE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignature");
-
-    /**
-     * The IRI for the signed by property, indicating who signed the Nanopub.
-     */
-    public static final IRI SIGNED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/signedBy");
-
-    /**
-     * The IRI for the has signature element property.
-     */
-    // Deprecated; used for legacy signatures
-    public static final IRI HAS_SIGNATURE_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasSignatureElement");
-
     private IRI targetNanopubUri;
     private byte[] signature;
     private Set<IRI> signers = new LinkedHashSet<>();

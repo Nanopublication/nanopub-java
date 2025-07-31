@@ -14,6 +14,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -25,8 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.nanopub.extra.security.NanopubSignatureElement.*;
 
 /**
  * Utility class for handling nanopub signatures.
@@ -59,7 +58,7 @@ public class SignatureUtils {
                 se.addTargetStatement(st);
                 continue;
             }
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) {
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) {
                 // This statement is the only one that is *not* added as a target statement
                 if (!(st.getObject() instanceof Literal)) {
                     throw new MalformedCryptoElementException("Literal expected as signature: " + st.getObject());
@@ -67,17 +66,17 @@ public class SignatureUtils {
                 se.setSignatureLiteral((Literal) st.getObject());
             } else {
                 se.addTargetStatement(st);
-                if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) {
+                if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {
                     if (!(st.getObject() instanceof Literal)) {
                         throw new MalformedCryptoElementException("Literal expected as public key: " + st.getObject());
                     }
                     se.setPublicKeyLiteral((Literal) st.getObject());
-                } else if (st.getPredicate().equals(CryptoElement.HAS_ALGORITHM)) {
+                } else if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) {
                     if (!(st.getObject() instanceof Literal)) {
                         throw new MalformedCryptoElementException("Literal expected as algorithm: " + st.getObject());
                     }
                     se.setAlgorithm((Literal) st.getObject());
-                } else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
+                } else if (st.getPredicate().equals(NPX.SIGNED_BY)) {
                     if (!(st.getObject() instanceof IRI)) {
                         throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
                     }
@@ -187,12 +186,12 @@ public class SignatureUtils {
         IRI signatureElUri = vf.createIRI(npUri + "sig");
         String publicKeyString = encodePublicKey(c.getKey().getPublic());
         Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
-        preStatements.add(vf.createStatement(signatureElUri, HAS_SIGNATURE_TARGET, npUri, piUri));
-        preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE_TARGET, npUri, piUri));
+        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
         Literal algorithmLiteral = vf.createLiteral(c.getSignatureAlgorithm().name());
-        preStatements.add(vf.createStatement(signatureElUri, CryptoElement.HAS_ALGORITHM, algorithmLiteral, piUri));
+        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_ALGORITHM, algorithmLiteral, piUri));
         if (c.getSigner() != null) {
-            preStatements.add(vf.createStatement(signatureElUri, SIGNED_BY, c.getSigner(), piUri));
+            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, c.getSigner(), piUri));
         }
 
         // Preprocess statements that are covered by signature:
@@ -217,7 +216,7 @@ public class SignatureUtils {
 
         // Preprocess signature statement:
         List<Statement> sigStatementList = new ArrayList<>();
-        sigStatementList.add(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+        sigStatementList.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE, signatureLiteral, piUri));
         Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).get(0);
 
         // Combine all statements:
@@ -226,7 +225,7 @@ public class SignatureUtils {
         for (String prefix : nsMap.keySet()) {
             signedContent.handleNamespace(prefix, nsMap.get(prefix));
         }
-        signedContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
+        signedContent.handleNamespace(NPX.PREFIX, NPX.NAMESPACE);
         for (Statement st : preprocessedContent.getStatements()) {
             signedContent.handleStatement(st);
         }
@@ -284,7 +283,7 @@ public class SignatureUtils {
     private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureElementUri = null;
         for (Statement st : nanopub.getPubinfo()) {
-            if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
+            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
             if (!st.getObject().equals(nanopub.getUri())) continue;
             if (!(st.getSubject() instanceof IRI)) {
                 throw new MalformedCryptoElementException("Signature element must be identified by URI");
@@ -305,10 +304,10 @@ public class SignatureUtils {
      */
     public static boolean seemsToHaveSignature(Nanopub nanopub) {
         for (Statement st : nanopub.getPubinfo()) {
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) return true;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) return true;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) return true;
-            if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) return true;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) return true;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) return true;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) return true;
+            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) return true;
         }
         return false;
     }

@@ -165,7 +165,7 @@ public class NanopubUtilsTest {
 //    	final IRI anne = vf.createIRI("https://example.com/anne");
 //    	npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
 //    	npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
-//    	npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+//    	npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
 //    	Nanopub np = npCreator.finalizeNanopub(true);
 //    	System.err.println("# Nanopub before signing:");
 //    	NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);

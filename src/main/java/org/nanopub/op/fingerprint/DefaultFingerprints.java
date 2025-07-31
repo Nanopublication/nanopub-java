@@ -6,7 +6,7 @@ import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
-import org.nanopub.extra.security.NanopubSignatureElement;
+import org.nanopub.vocabulary.NPX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,12 +75,12 @@ public class DefaultFingerprints implements FingerprintHandler {
             IRI pred = st.getPredicate();
             if (isInPubInfo) {
                 if (subj.equals(np.getUri()) && isCreationTimeProperty(pred)) continue;
-                if (subj.equals(np.getUri()) && pred.equals(Nanopub.SUPERSEDES)) continue;
-                if (pred.equals(NanopubSignatureElement.HAS_SIGNATURE)) continue;
-                if (pred.equals(NanopubSignatureElement.HAS_ALGORITHM)) continue;
-                if (pred.equals(NanopubSignatureElement.HAS_PUBLIC_KEY)) continue;
-                if (pred.equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
-                if (pred.equals(NanopubSignatureElement.SIGNED_BY)) continue;
+                if (subj.equals(np.getUri()) && pred.equals(NPX.SUPERSEDES)) continue;
+                if (pred.equals(NPX.HAS_SIGNATURE)) continue;
+                if (pred.equals(NPX.HAS_ALGORITHM)) continue;
+                if (pred.equals(NPX.HAS_PUBLIC_KEY)) continue;
+                if (pred.equals(NPX.HAS_SIGNATURE_TARGET)) continue;
+                if (pred.equals(NPX.SIGNED_BY)) continue;
             }
             Statement newSt = transform(st, np.getUri().stringValue(), ac);
             n.add(newSt);

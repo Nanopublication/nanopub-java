@@ -1,6 +1,5 @@
 package org.nanopub;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
@@ -13,6 +12,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,10 +28,6 @@ import java.net.http.HttpResponse;
 public class RoCrateParser {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
-    /**
-     * Constant <code>RO_CRATE_IRI</code>
-     */
-    public static final IRI RO_CRATE_IRI = vf.createIRI("http://purl.org/nanopub/x/RoCrateNanopub");
 
     private HttpClient client = HttpClient.newHttpClient();
     private boolean verbose = false;
@@ -79,7 +75,7 @@ public class RoCrateParser {
         npCreator.addAssertionStatements(handler.getStatements());
 
         npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url + metadataFile));
-        npCreator.addPubinfoStatement(RDF.TYPE, RO_CRATE_IRI);
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.RO_CRATE_NANOPUB);
 
         return npCreator.finalizeNanopub(true);
     }
