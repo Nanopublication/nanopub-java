@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -150,7 +151,7 @@ public class NanopubUtilsTest {
     @Test
     void createTempNanopubIri() {
         IRI tempNanopubIri = NanopubUtils.createTempNanopubIri();
-        assertTrue(tempNanopubIri.stringValue().startsWith(NanopubUtils.TEMPORARY_NANOPUB_IRI));
+        assertTrue(tempNanopubIri.stringValue().startsWith(TempUriReplacer.tempUri));
 
         IRI tempNanopubIri2 = NanopubUtils.createTempNanopubIri();
         assertNotEquals(tempNanopubIri, tempNanopubIri2);

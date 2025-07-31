@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
@@ -437,12 +438,6 @@ public class NanopubUtils {
         return httpClient;
     }
 
-    /**
-     * A temporary IRI for Nanopubs.
-     */
-    public static final String TEMPORARY_NANOPUB_IRI = "http://purl.org/nanopub/temp";
-
-
     private static Random random = new Random();
 
     /**
@@ -451,7 +446,7 @@ public class NanopubUtils {
      * @return a new IRI for a temporary Nanopub
      */
     public static IRI createTempNanopubIri() {
-        return vf.createIRI(TEMPORARY_NANOPUB_IRI + "/" + Math.abs(random.nextInt()) + "/");
+        return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
     }
 
 }

@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
 import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -40,7 +41,7 @@ public class MakeIndex extends CliRunner {
     private File outputFile = new File("index.trig");
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-    private String baseUri = "http://purl.org/nanopub/temp/index/";
+    private String baseUri = TempUriReplacer.tempUri + "index/";
 
     @com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
     private String iTitle;
