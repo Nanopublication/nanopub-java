@@ -13,6 +13,7 @@ public class TestUtils {
     public final static String NANOPUB_URI = "http://knowledgepixels.com/nanopubIri#title";
     public final static ValueFactory vf = SimpleValueFactory.getInstance();
     public final static IRI anyIri = vf.createIRI("http://knowledgepixels.com/nanopubIri#any");
+    public final static String ORCID = "http://orcid.org/0000-0000-0000-0000";
 
     public static Nanopub createNanopub() throws MalformedNanopubException {
         return createNanopub(NANOPUB_URI);
