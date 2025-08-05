@@ -1,15 +1,29 @@
 package org.nanopub.fdo;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
+
+import java.util.Set;
 
 import static org.eclipse.rdf4j.model.util.Values.literal;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
+import static org.nanopub.utils.TestUtils.vf;
 
 class FdoRecordTest {
 
@@ -177,5 +191,132 @@ class FdoRecordTest {
 
         assertNull(record.getSchemaUrl());
     }
+
+
+    @Test
+    void buildStatementsWithDataRefAndAggregates() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+
+        FdoRecord record = new FdoRecord(fdoProfile, label, Values.iri("https://example.org/data-ref"));
+        record.setId(Values.iri("https://example.org/fdo-record-id"));
+        record.addAggregatedFdo("https://example.org/aggregated-fdo");
+        assertThrows(RuntimeException.class, record::buildStatements);
+    }
+
+    @Test
+    void buildStatementsWithoutIdSet() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+        FdoRecord record = new FdoRecord(fdoProfile, label, null);
+        assertThrows(RuntimeException.class, record::buildStatements);
+    }
+
+    @Test
+    void addAggregatedFdoWithInvalidUriOrHandle() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+        FdoRecord record = new FdoRecord(fdoProfile, label, null);
+        String aggregateFdo = "not-a-valid-uri-or-handle";
+        assertThrows(RuntimeException.class, () -> record.addAggregatedFdo(aggregateFdo));
+    }
+
+    @Test
+    void addAggregatedFdoWithValidUriAndBuildStatements() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+        FdoRecord record = new FdoRecord(fdoProfile, label, null);
+
+        String aggregate1 = "https://w3id.org/np/RAbb0pvoFGiNwcY8nL-qSR93O4AAcfsQRS_TNvLqt0VHg/FdoExample";
+        String aggregate2 = "https://w3id.org/np/RAwCj8sM9FkB8Wyz3-i0Fh9Dcq1NniH1sErJBVEkoRQ-o/FdoExample";
+        String aggregate3 = "21.T11966/365ff9576c26ca6053db";
+
+        record.addAggregatedFdo(aggregate1);
+        record.addAggregatedFdo(aggregate2);
+        record.addAggregatedFdo(aggregate3);
+
+        record.setId(Values.iri("https://example.org/fdo-record-id"));
+
+        Set<Statement> statements = record.buildStatements();
+        assertTrue(statements.contains(vf.createStatement(
+                record.getId(),
+                FdoUtils.FDO_HAS_PART,
+                Values.iri(aggregate1)
+        )));
+
+        assertTrue(statements.contains(vf.createStatement(
+                record.getId(),
+                FdoUtils.FDO_HAS_PART,
+                Values.iri(aggregate2)
+        )));
+
+        assertTrue(statements.contains(vf.createStatement(
+                record.getId(),
+                FdoUtils.FDO_HAS_PART,
+                Values.iri(FDO_URI_PREFIX + aggregate3)
+        )));
+    }
+
+    @Test
+    void addDerivedFromFdoAndBuildStatements() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+        FdoRecord record = new FdoRecord(fdoProfile, label, null);
+
+        IRI derives1 = Values.iri("https://w3id.org/np/RAbb0pvoFGiNwcY8nL-qSR93O4AAcfsQRS_TNvLqt0VHg/FdoExample");
+        IRI derives2 = Values.iri("https://w3id.org/np/RAwCj8sM9FkB8Wyz3-i0Fh9Dcq1NniH1sErJBVEkoRQ-o/FdoExample");
+
+        record.addDerivedFromFdo(derives1);
+        record.addDerivedFromFdo(derives2);
+
+        record.setId(Values.iri("https://example.org/fdo-record-id"));
+        Set<Statement> statements = record.buildStatements();
+        assertTrue(statements.contains(vf.createStatement(
+                record.getId(),
+                FdoUtils.FDO_DERIVES_FROM,
+                derives1
+        )));
+
+        assertTrue(statements.contains(vf.createStatement(
+                record.getId(),
+                FdoUtils.FDO_DERIVES_FROM,
+                derives2
+        )));
+    }
+
+    @Test
+    void createUpdatedNanopubRecordWithoutNanopub() {
+        IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        String label = "Example FDO Record";
+        FdoRecord record = new FdoRecord(fdoProfile, label, null);
+        assertThrows(MalformedCryptoElementException.class, record::createUpdatedNanopub);
+    }
+
+    @Test
+    void createUpdatedNanopubRecordWithNanopub() throws FdoNotFoundException, MalformedCryptoElementException {
+        String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
+        FdoRecord record = RetrieveFdo.resolveId(id);
+
+        NanopubCreator creator;
+
+        try (MockedStatic<SignatureUtils> signatureUtilsMock = mockStatic(SignatureUtils.class)) {
+            signatureUtilsMock
+                    .when(() -> SignatureUtils.assertMatchingPubkeys(any(TransformContext.class), any()))
+                    .thenAnswer(invocation -> null);
+
+            creator = record.createUpdatedNanopub();
+        }
+
+        assertNotNull(creator);
+        assertTrue(creator.getAssertionUri().stringValue().matches(TempUriReplacer.tempUri + "\\d+" + "/assertion"));
+
+        Nanopub np = record.getOriginalNanopub();
+        assertTrue(creator.getCurrentPubinfoStatements().stream().anyMatch(st ->
+                NPX.SUPERSEDES.equals(st.getPredicate()) &&
+                        np.getUri().equals(st.getObject())
+        ));
+        assertEquals(np.getProvenance().size(), creator.getCurrentProvenanceStatements().size());
+    }
+
 
 }

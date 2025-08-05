@@ -76,11 +76,14 @@ public class FdoRecord implements Serializable {
     }
 
     /**
-     * Build statements out of tuples, requires the id (fdoIri) to be set
+     * Build statements out of tuples.
      *
      * @return a Set of RDF Statements representing this FdoRecord
      */
     public Set<Statement> buildStatements() {
+        if (id == null) {
+            throw new RuntimeException("FdoRecord id (fdoIri) must be set before building statements");
+        }
         Set<Statement> statements = new HashSet<>();
         for (var entry : tuples.entrySet()) {
             statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));
