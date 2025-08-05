@@ -35,7 +35,7 @@ public class FdoQueryIT {
         params.put("fdoid", "21.T11967/39b0ec87d17a4856c5f7");
         ApiResponse apiResponse = QueryAccess.get(RetrieveFdo.GET_FDO_QUERY_ID, params);
         List<ApiResponseEntry> data = apiResponse.getData();
-        String npref = data.get(0).get("np");
+        String npref = data.getFirst().get("np");
 
         Nanopub np = GetNanopub.get(npref);
         System.out.println("npref: " + npref);

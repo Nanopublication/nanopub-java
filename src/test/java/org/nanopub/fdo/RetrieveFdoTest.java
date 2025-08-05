@@ -69,7 +69,7 @@ class RetrieveFdoTest {
     }
 
     @Test
-    void retrieveContentFromIdWithoutDataRef() throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
+    void retrieveContentFromIdWithoutDataRef() {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.retrieveContentFromId(handle));
     }

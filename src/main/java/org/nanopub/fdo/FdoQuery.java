@@ -45,9 +45,9 @@ public class FdoQuery {
     /**
      * This query returns the latest FDOs from the specified creator.
      *
-     * @param creator The orcid url, i.e. https://orcid.org/0009-0008-3635-347X
+     * @param creator The orcid url, i.e. <a href="https://orcid.org/0009-0008-3635-347X">...</a>
      * @return An ApiResponse containing the FDOs created by the specified user.
-     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
+     * @throws FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFeed(String creator) throws FailedApiCallException {
         return QueryAccess.get(getFeed, Map.of("creator", creator));
@@ -56,9 +56,9 @@ public class FdoQuery {
     /**
      * This query returns the things the given user has declared to be their favorites (using cito:likes).
      *
-     * @param creator The orcid url, i.e. https://orcid.org/0009-0008-3635-347X
+     * @param creator The orcid url, i.e. <a href="https://orcid.org/0009-0008-3635-347X">...</a>
      * @return An ApiResponse containing the favorite things of the specified user.
-     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
+     * @throws FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException {
         return QueryAccess.get(getFavoriteThings, Map.of("creator", creator));

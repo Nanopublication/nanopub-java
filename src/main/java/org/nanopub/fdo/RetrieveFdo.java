@@ -37,7 +37,7 @@ public class RetrieveFdo {
     }  // no instances allowed
 
     /**
-     * Retrieve the NP/FdoRecord from the nanopub network or handle system, always check nanopub network first.
+     * Retrieve the NP/FdoRecord from the nanopub network or handle system, always check the nanopub network first.
      *
      * @param iriOrHandle the IRI or handle of the FDO to resolve
      * @return the FdoRecord corresponding to the IRI or handle
@@ -95,7 +95,7 @@ public class RetrieveFdo {
     }
 
     /**
-     * Retrieve the NP/FdoRecord Content (DataRef) from the nanopub network or handle system, always check nanopub network first.
+     * Retrieve the NP/FdoRecord Content (DataRef) from the nanopub network or handle system, always check the nanopub network first.
      *
      * @param iriOrHandle the IRI or handle of the FDO to resolve
      * @return an InputStream containing the content of the FDO
