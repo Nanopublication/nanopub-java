@@ -31,6 +31,7 @@ import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 public class FdoRecord implements Serializable {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    final static String SCHEMA_ID = "21.T11966/JsonSchema";
 
     private IRI id = null;
     private final HashMap<IRI, Value> tuples = new HashMap<>();
@@ -38,7 +39,7 @@ public class FdoRecord implements Serializable {
     private final Set<IRI> derivesFrom = new HashSet<>();
 
     /**
-     * When teh FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it.
+     * When the FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it.
      */
     private Nanopub originalNanopub = null;
 
@@ -159,11 +160,11 @@ public class FdoRecord implements Serializable {
      * @return the schema URL as a String, or null if not set
      */
     public String getSchemaUrl() {
-        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + "21.T11966/JsonSchema"));
+        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + SCHEMA_ID));
         if (schemaEntry != null) {
+            // TODO check if the schemaEntry is a valid JSON Schema reference
             // assume the entry looks like {"$ref": "https://the-url"}
-            String url = schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);
-            return url;
+            return schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);
         }
         return null;
     }
