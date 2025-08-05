@@ -1,8 +1,7 @@
 package org.nanopub.fdo;
 
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.Values;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.server.GetNanopub;
@@ -33,7 +32,6 @@ public class RetrieveFdo {
      * The query ID for retrieving FDOs by their ID from the nanopub network.
      */
     public final static String GET_FDO_QUERY_ID = "RAs0HI_KRAds4w_OOEMl-_ed0nZHFWdfePPXsDHf4kQkU/get-fdo-by-id";
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     private RetrieveFdo() {
     }  // no instances allowed
@@ -53,8 +51,8 @@ public class RetrieveFdo {
             }
             if (FdoUtils.looksLikeHandle(iriOrHandle)) {
                 return resolveInHandleSystem(iriOrHandle);
-            } else if (FdoUtils.isHandleIri(vf.createIRI(iriOrHandle))) {
-                return resolveInHandleSystem(FdoUtils.extractHandle(vf.createIRI(iriOrHandle)));
+            } else if (FdoUtils.isHandleIri(Values.iri(iriOrHandle))) {
+                return resolveInHandleSystem(FdoUtils.extractHandle(Values.iri(iriOrHandle)));
             }
         } catch (Exception e) {
             throw new FdoNotFoundException(e);
@@ -78,8 +76,7 @@ public class RetrieveFdo {
             return null;
         }
         String npRef = data.getFirst().get("np");
-        Nanopub np = GetNanopub.get(npRef);
-        return np;
+        return GetNanopub.get(npRef);
     }
 
     /**
