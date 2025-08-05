@@ -1,10 +1,11 @@
 package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.nanopub.utils.TestUtils;
 
+import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
 
 class KeyDeclarationTest {
@@ -14,13 +15,13 @@ class KeyDeclarationTest {
 
     @BeforeEach
     void setUp() {
-        keyDeclaration = new KeyDeclaration(SimpleValueFactory.getInstance().createIRI(keyLocation));
+        keyDeclaration = new KeyDeclaration(iri(keyLocation));
     }
 
     @Test
     void getKeyLocationReturnsSetKeyLocation() {
         String anotherKeyLocation = "https://nanodash.knowledgepixels.com/newLocation";
-        IRI anotherKeyLocationIri = SimpleValueFactory.getInstance().createIRI(anotherKeyLocation);
+        IRI anotherKeyLocationIri = iri(anotherKeyLocation);
 
         assertNotEquals(anotherKeyLocationIri, keyDeclaration.getKeyLocation());
         keyDeclaration.setKeyLocation(anotherKeyLocationIri);
@@ -30,12 +31,12 @@ class KeyDeclarationTest {
     @Test
     void getKeyLocationReturnsNullWhenKeyLocationNotSet() {
         assertNull(keyDeclaration.getKeyLocation());
-        assertEquals(keyDeclaration.getUri(), SimpleValueFactory.getInstance().createIRI(keyLocation));
+        assertEquals(keyDeclaration.getUri(), iri(keyLocation));
     }
 
     @Test
     void addDeclarerAddsValidDeclarerToSet() {
-        IRI declarer = SimpleValueFactory.getInstance().createIRI("https://orcid.org/0000-0000-0000-0000");
+        IRI declarer = iri(TestUtils.ORCID);
 
         keyDeclaration.addDeclarer(declarer);
         assertTrue(keyDeclaration.getDeclarers().contains(declarer));
@@ -43,7 +44,7 @@ class KeyDeclarationTest {
 
     @Test
     void addDeclarerDoesNotAddDuplicateDeclarer() {
-        IRI declarer = SimpleValueFactory.getInstance().createIRI("https://orcid.org/0000-0000-0000-0000");
+        IRI declarer = iri(TestUtils.ORCID);
 
         keyDeclaration.addDeclarer(declarer);
         keyDeclaration.addDeclarer(declarer);
@@ -59,8 +60,8 @@ class KeyDeclarationTest {
 
     @Test
     void getDeclarersReturnsSetWithAddedDeclarers() {
-        IRI declarer1 = SimpleValueFactory.getInstance().createIRI("https://orcid.org/0000-0000-0000-0000");
-        IRI declarer2 = SimpleValueFactory.getInstance().createIRI("https://orcid.org/0000-0000-0000-0001");
+        IRI declarer1 = iri(TestUtils.ORCID);
+        IRI declarer2 = iri("https://orcid.org/0000-0000-0000-0001");
 
         keyDeclaration.addDeclarer(declarer1);
         keyDeclaration.addDeclarer(declarer2);
@@ -72,7 +73,7 @@ class KeyDeclarationTest {
 
     @Test
     void hasDeclarerReturnsTrueForExistingDeclarer() {
-        IRI declarer = SimpleValueFactory.getInstance().createIRI("https://orcid.org/0000-0000-0000-0000");
+        IRI declarer = iri(TestUtils.ORCID);
 
         keyDeclaration.addDeclarer(declarer);
         assertTrue(keyDeclaration.hasDeclarer(declarer));

@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.NanopubImpl;
+import org.nanopub.utils.TestUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +27,7 @@ class SignNanopubTest {
     @Test
     void initWithValidArgs() throws Exception {
         String path = "src/test/resources/testsuite/valid/plain/aida1.trig";
-        String[] args = new String[] {"-v", path};
+        String[] args = new String[]{"-v", path};
 
         CliRunner.initJc(new SignNanopub(), args);
     }
@@ -39,25 +40,24 @@ class SignNanopubTest {
         File outFile = new File(outPath, "signed.trig");
 
         String keyFile = "src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
-        String signerOrcid = "https://orcid.org/0000-0000-0000-0000";
+        String signerOrcid = TestUtils.ORCID;
         String inFiles = "src/test/resources/testsuite/transform/plain/";
         String signedFiles = "src/test/resources/testsuite/transform/signed/rsa-key1/";
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.endsWith(".in.trig");
-                }
-            }))
-        {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.endsWith(".in.trig");
+                    }
+                })) {
             // create signed nanopub file
-            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
+            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
                     "-k ", keyFile,
                     "-s ", signerOrcid,
                     "-o ", outFile.getPath(),});
             c.run();
-            
+
             // read nanopub from file
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
@@ -91,10 +91,9 @@ class SignNanopubTest {
                     public boolean accept(File dir, String name) {
                         return name.endsWith("in.trig");
                     }
-                }))
-        {
+                })) {
             // create signed nanopub file
-            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[] {
+            SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
                     "--profile ", profileFile,
                     "-o ", outFile.getPath(),});

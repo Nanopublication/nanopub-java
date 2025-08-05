@@ -2,14 +2,11 @@ package org.nanopub.fdo;
 
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
@@ -21,6 +18,9 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.ResponsePrinter;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -46,7 +46,7 @@ public class FdoNanopubCreatorTest {
         String fdoLabel = "ExampleFdoToUpdate";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
 
-        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String npIriString = TempUriReplacer.tempUri + Math.abs(new Random().nextInt()) + "/";
         String fdoSuffix = "FdoExample";
         IRI fdoIri = iri(npIriString + fdoSuffix);
         IRI npIri = iri(npIriString);
@@ -61,7 +61,7 @@ public class FdoNanopubCreatorTest {
 
         assertTrue(fdoNanopubCreator.getCurrentPubinfoStatements().stream().anyMatch(statement ->
                 statement.getSubject().equals(npIri)
-                        && statement.getPredicate().equals(iri("http://purl.org/nanopub/x/introduces"))
+                        && statement.getPredicate().equals(NPX.INTRODUCES)
                         && statement.getObject().equals(fdoIri))
         );
     }
@@ -73,7 +73,7 @@ public class FdoNanopubCreatorTest {
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
 
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri(TestUtils.ORCID));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -89,7 +89,7 @@ public class FdoNanopubCreatorTest {
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
 
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri(TestUtils.ORCID));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -104,7 +104,7 @@ public class FdoNanopubCreatorTest {
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri(TestUtils.ORCID));
 
         Nanopub np = creator.finalizeNanopub(true);
         assertTrue(FdoUtils.isFdoNanopub(np));
@@ -116,7 +116,7 @@ public class FdoNanopubCreatorTest {
         final IRI nonFdoNanopub = iri("https://example.com/nonFdoNanopub");
         npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, iri("https://schema.org/Any"));
         npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, nonFdoNanopub);
-        npCreator.addPubinfoStatement(RDF.TYPE, iri("http://purl.org/nanopub/x/ExampleNanopub"));
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
         Nanopub np = npCreator.finalizeNanopub(true);
 
         assertFalse(FdoUtils.isFdoNanopub(np));
@@ -137,7 +137,7 @@ public class FdoNanopubCreatorTest {
         IRI profile = iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
         String label = "ExampleFdo01";
         IRI dataRef = iri("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
-        String signer = "https://orcid.org/0000-0000-0000-0000"; // enter your orcid
+        String signer = TestUtils.ORCID; // enter your orcid
 
         // create fdo record
         FdoRecord record = new FdoRecord(profile, label, dataRef);
