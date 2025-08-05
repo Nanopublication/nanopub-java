@@ -5,8 +5,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.nanopub.NanopubUtils;
 
@@ -21,45 +20,73 @@ import static org.mockito.Mockito.*;
 
 class QueryCallTest {
 
-    MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);
+    private final MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);
+    private CloseableHttpClient mockHttpClient;
+
+    private static String[] queryApiInstancesOld;
+
+    @BeforeAll
+    static void beforeAll() {
+        // Store the original queryApiInstances for later restoration
+        queryApiInstancesOld = QueryCall.queryApiInstances;
+    }
+
+    @BeforeEach
+    void setUp() {
+        mockHttpClient = mock(CloseableHttpClient.class);
+        mockStatic.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
+    }
+
 
     @AfterEach
-    void tearDown() throws NoSuchFieldException, IllegalAccessException {
+    void tearDown() throws NoSuchFieldException, IllegalAccessException, IOException {
         mockStatic.close();
 
         // Reset the static field 'checkedApiInstances' to null after each test using reflection
         Field field = QueryCall.class.getDeclaredField("checkedApiInstances");
         field.setAccessible(true);
         field.set(null, null);
+
+        mockHttpClient.close();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        // Restore the original queryApiInstances
+        QueryCall.queryApiInstances = queryApiInstancesOld;
     }
 
     @Test
     void getApiInstancesWithNotAccessibleInstances() throws IOException {
-        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        when(mockStatusLine.getStatusCode()).thenReturn(300);
 
-        when(mockResponse.getStatusLine()).thenReturn(mock(StatusLine.class));
-        when(mockResponse.getStatusLine().getStatusCode()).thenReturn(300);
-        when(mockResponse.getEntity()).thenReturn(mock(HttpEntity.class));
-        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
+        when(mockHttpClient.execute(any(HttpGet.class))).thenAnswer(invocation -> {
+            CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getStatusLine()).thenReturn(mockStatusLine);
+            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            return response;
+        });
 
-        mockStatic.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
-
-        QueryCall.queryApiInstances = new String[]{"https://mocked.instance1.com/", "https://mocked.instance2.com/", "https://mocked.instance3.com/"};
+        QueryCall.queryApiInstances = new String[]{
+                "https://mocked.instance1.com/",
+                "https://mocked.instance2.com/",
+                "https://mocked.instance3.com/"
+        };
         assertThrows(RuntimeException.class, QueryCall::getApiInstances);
     }
 
     @Test
     void getApiInstancesWithOnlyOneInstance() throws IOException {
-        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        when(mockStatusLine.getStatusCode()).thenReturn(200);
 
-        when(mockResponse.getStatusLine()).thenReturn(mock(StatusLine.class));
-        when(mockResponse.getStatusLine().getStatusCode()).thenReturn(200);
-        when(mockResponse.getEntity()).thenReturn(mock(HttpEntity.class));
-        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
-
-        mockStatic.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
+        when(mockHttpClient.execute(any(HttpGet.class))).thenAnswer(invocation -> {
+            CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getStatusLine()).thenReturn(mockStatusLine);
+            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            return response;
+        });
 
         QueryCall.queryApiInstances = new String[]{"https://mocked.instance1.com/"};
         assertThrows(RuntimeException.class, QueryCall::getApiInstances);
@@ -67,15 +94,15 @@ class QueryCallTest {
 
     @Test
     void getApiInstancesWithValidInstances() throws IOException {
-        CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
+        StatusLine mockStatusLine = mock(StatusLine.class);
+        when(mockStatusLine.getStatusCode()).thenReturn(200);
 
-        when(mockResponse.getStatusLine()).thenReturn(mock(StatusLine.class));
-        when(mockResponse.getStatusLine().getStatusCode()).thenReturn(200);
-        when(mockResponse.getEntity()).thenReturn(mock(HttpEntity.class));
-        when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
-
-        mockStatic.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
+        when(mockHttpClient.execute(any(HttpGet.class))).thenAnswer(invocation -> {
+            CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getStatusLine()).thenReturn(mockStatusLine);
+            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            return response;
+        });
 
         QueryCall.queryApiInstances = new String[]{"https://mocked.instance1.com/", "https://mocked.instance2.com/", "https://mocked.instance3.com/"};
         List<String> apiInstances = QueryCall.getApiInstances();
