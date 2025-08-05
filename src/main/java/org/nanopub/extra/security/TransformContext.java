@@ -24,7 +24,7 @@ public class TransformContext {
     /**
      * Constant <code>DEFAULT_KEY_PATH="~/.nanopub/id_rsa"</code>
      */
-    public static final String DEFAULT_KEY_PATH = "~/.nanopub/id_rsa";
+    public static final String DEFAULT_KEY_PATH = System.getProperty("user.home") + "/.nanopub/id_rsa";
 
     // TODO: Use this also for MakeTrustyNanopub
 
