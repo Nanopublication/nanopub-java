@@ -3,7 +3,6 @@ package org.nanopub.fdo;
 import org.eclipse.rdf4j.model.IRI;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.services.FailedApiCallException;
 
@@ -15,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
 
 class RetrieveFdoTest {
@@ -49,7 +49,7 @@ class RetrieveFdoTest {
     @Test
     void resolveIdWithValidHandleFromSystem() throws FdoNotFoundException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
             mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handle)).thenReturn(null);
             FdoRecord result = RetrieveFdo.resolveId(handle);
             assertNotNull(result);
@@ -61,10 +61,22 @@ class RetrieveFdoTest {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         String handleIri = FdoUtils.FDO_URI_PREFIX + handle;
 
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
             mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handleIri)).thenReturn(null);
             FdoRecord result = RetrieveFdo.resolveId(handleIri);
             assertNotNull(result);
+        }
+    }
+
+    @Test
+    void resolveIdNotFoundAnywhere() {
+        String handle = "21.T11967/39b0ec87d17a4856c5f7";
+        try (MockedStatic<RetrieveFdo> retrieveFdoMock = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS);
+             MockedStatic<FdoUtils> fdoUtilsMock = mockStatic(FdoUtils.class)) {
+            retrieveFdoMock.when(() -> RetrieveFdo.resolveInNanopubNetwork(any())).thenReturn(null);
+            fdoUtilsMock.when(() -> FdoUtils.looksLikeHandle(any())).thenReturn(false);
+            fdoUtilsMock.when(() -> FdoUtils.isHandleIri(any())).thenReturn(false);
+            assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.resolveId(handle));
         }
     }
 
@@ -82,7 +94,7 @@ class RetrieveFdoTest {
 
         FdoRecord record = new FdoRecord(profile, label, dataRef);
 
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
             mocked.when(() -> RetrieveFdo.resolveId(any())).thenReturn(record);
 
             InputStream contentStream = RetrieveFdo.retrieveContentFromId(any());
