@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,7 @@ public class WikipathwaysFingerprints implements FingerprintHandler {
             if (isInPubinfo && subj.equals(np.getUri()) && isCreationTimeProperty(pred)) {
                 continue;
             }
-            if (isInPubinfo && subj.equals(np.getUri()) && pred.equals(Nanopub.SUPERSEDES)) {
+            if (isInPubinfo && subj.equals(np.getUri()) && pred.equals(NPX.SUPERSEDES)) {
                 continue;
             }
             n.add(SimpleValueFactory.getInstance().createStatement(subj, pred, obj, graphURI));

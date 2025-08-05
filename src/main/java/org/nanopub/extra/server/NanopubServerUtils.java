@@ -3,11 +3,11 @@ package org.nanopub.extra.server;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.setting.NanopubSetting;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,11 +47,6 @@ public class NanopubServerUtils {
     }
 
     /**
-     * IRI for the protected nanopub type.
-     */
-    public static final IRI PROTECTED_NANOPUB = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/ProtectedNanopub");
-
-    /**
      * Checks if the given nanopub is a protected nanopub.
      *
      * @param np the nanopub to check
@@ -61,7 +56,7 @@ public class NanopubServerUtils {
         for (Statement st : np.getPubinfo()) {
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!st.getPredicate().equals(RDF.TYPE)) continue;
-            if (st.getObject().equals(PROTECTED_NANOPUB)) return true;
+            if (st.getObject().equals(NPX.PROTECTED_NANOPUB)) return true;
         }
         return false;
     }

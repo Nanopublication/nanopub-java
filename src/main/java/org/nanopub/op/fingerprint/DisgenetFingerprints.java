@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +23,6 @@ public class DisgenetFingerprints implements FingerprintHandler {
      * Placeholder for the disgenet gda.
      */
     public static final IRI disgenetGdaPlaceholder = vf.createIRI("http://purl.org/nanopub/placeholders/disgenet-gda");
-
-    private static final IRI pav1importedOn = vf.createIRI("http://purl.org/pav/importedOn");
-    private static final IRI pav2importedOn = vf.createIRI("http://purl.org/pav/2.0/importedOn");
 
     /**
      * {@inheritDoc}
@@ -64,8 +62,8 @@ public class DisgenetFingerprints implements FingerprintHandler {
                     subj = disgenetGdaPlaceholder;
                 }
             } else if (isInProvenance) {
-                if (pred.equals(pav1importedOn) || pred.equals(pav2importedOn)) {
-                    pred = pav2importedOn;
+                if (pred.equals(PAV.IMPORTED_ON) || pred.equals(PAV.IMPORTED_ON_V2)) {
+                    pred = PAV.IMPORTED_ON_V2;
                     obj = timestampPlaceholder;
                 }
                 if (subj.equals(np.getAssertionUri())) {

@@ -2,9 +2,9 @@ package org.nanopub.extra.aida;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -22,11 +22,6 @@ public class AidaPattern implements NanopubPattern {
     public static final String AIDA_URI_PREFIX = "http://purl.org/aida/";
 
     /**
-     * The IRI for the AIDA sentence predicate.
-     */
-    public static final IRI AS_SENTENCE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/asSentence");
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -40,7 +35,7 @@ public class AidaPattern implements NanopubPattern {
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         for (Statement st : nanopub.getAssertion()) {
-            if (st.getPredicate().equals(AS_SENTENCE)) return true;
+            if (st.getPredicate().equals(NPX.AS_SENTENCE)) return true;
         }
         return false;
     }
@@ -85,7 +80,7 @@ public class AidaPattern implements NanopubPattern {
         boolean error = false;
         for (Statement st : nanopub.getAssertion()) {
             if (!st.getSubject().equals(nanopub.getAssertionUri())) continue;
-            if (!st.getPredicate().equals(AS_SENTENCE)) continue;
+            if (!st.getPredicate().equals(NPX.AS_SENTENCE)) continue;
             if (!(st.getObject() instanceof IRI)) {
                 error = true;
                 break;

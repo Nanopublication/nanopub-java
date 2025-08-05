@@ -19,13 +19,12 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubRdfHandler;
 import org.nanopub.NanopubUtils;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.security.*;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
-
-import static org.nanopub.extra.security.NanopubSignatureElement.*;
 
 /**
  * Utility class for handling legacy nanopub signatures.
@@ -53,22 +52,22 @@ public class LegacySignatureUtils {
 
         for (Statement st : nanopub.getPubinfo()) {
             if (!st.getSubject().equals(signatureUri)) {
-                if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) {
+                if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) {
                     se.addTargetStatement(st);
                 }
                 continue;
             }
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) {
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) {
                 if (!(st.getObject() instanceof Literal)) {
                     throw new MalformedCryptoElementException("Literal expected as signature: " + st.getObject());
                 }
                 se.setSignatureLiteral((Literal) st.getObject());
-            } else if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) {
+            } else if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {
                 if (!(st.getObject() instanceof Literal)) {
                     throw new MalformedCryptoElementException("Literal expected as public key: " + st.getObject());
                 }
                 se.setPublicKeyLiteral((Literal) st.getObject());
-            } else if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) {
+            } else if (st.getPredicate().equals(NPX.SIGNED_BY)) {
                 if (!(st.getObject() instanceof IRI)) {
                     throw new MalformedCryptoElementException("URI expected as signer: " + st.getObject());
                 }
@@ -136,17 +135,17 @@ public class LegacySignatureUtils {
         RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
         IRI signatureElUri = vf.createIRI(preNanopub.getUri() + "sig");
         signatureContent.startRDF();
-        signatureContent.handleNamespace("npx", "http://purl.org/nanopub/x/");
+        signatureContent.handleNamespace(NPX.PREFIX, NPX.NAMESPACE);
         IRI npUri = preNanopub.getUri();
         IRI piUri = preNanopub.getPubinfoUri();
-        signatureContent.handleStatement(vf.createStatement(npUri, HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
+        signatureContent.handleStatement(vf.createStatement(npUri, NPX.HAS_SIGNATURE_ELEMENT, signatureElUri, piUri));
         String publicKeyString = DatatypeConverter.printBase64Binary(key.getPublic().getEncoded()).replaceAll("\\s", "");
         Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
-        signatureContent.handleStatement(vf.createStatement(signatureElUri, CryptoElement.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
+        signatureContent.handleStatement(vf.createStatement(signatureElUri, NPX.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
         Literal signatureLiteral = vf.createLiteral(signatureString);
-        signatureContent.handleStatement(vf.createStatement(signatureElUri, HAS_SIGNATURE, signatureLiteral, piUri));
+        signatureContent.handleStatement(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE, signatureLiteral, piUri));
         if (signer != null) {
-            signatureContent.handleStatement(vf.createStatement(signatureElUri, SIGNED_BY, signer, piUri));
+            signatureContent.handleStatement(vf.createStatement(signatureElUri, NPX.SIGNED_BY, signer, piUri));
         }
         signatureContent.endRDF();
         signatureContent = RdfPreprocessor.run(signatureContent, preNanopub.getUri(), TrustyNanopubUtils.transformRdfSetting);
@@ -165,7 +164,7 @@ public class LegacySignatureUtils {
         IRI signatureElementUri = null;
         for (Statement st : nanopub.getPubinfo()) {
             if (!st.getSubject().equals(nanopub.getUri())) continue;
-            if (!st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) continue;
+            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;
             if (!(st.getObject() instanceof IRI)) {
                 throw new MalformedCryptoElementException("Signature element must be identified by URI");
             }

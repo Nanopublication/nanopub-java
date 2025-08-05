@@ -9,8 +9,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.extra.security.CryptoElement;
-import org.nanopub.extra.security.NanopubSignatureElement;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -89,7 +89,7 @@ public class StripDown extends CliRunner {
                     @Override
                     public void handleNanopub(Nanopub np) {
                         try {
-                            String replacement = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+                            String replacement = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
                             List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
                             NanopubImpl oldNp = (NanopubImpl) np;
@@ -136,12 +136,12 @@ public class StripDown extends CliRunner {
         List<Statement> newStatements = new ArrayList<>();
         for (Statement st : statements) {
             // skip signatures
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) continue;
-            if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) continue;
-            if (st.getPredicate().equals(CryptoElement.HAS_ALGORITHM)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) continue;
+            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) continue;
+            if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) continue;
+            if (st.getPredicate().equals(NPX.SIGNED_BY)) continue;
 
             // remove hashes
             Resource context = transform(st.getContext(), artifactCode, replacement);

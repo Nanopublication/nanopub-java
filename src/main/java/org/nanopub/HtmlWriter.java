@@ -288,8 +288,7 @@ public class HtmlWriter extends TurtleWriter {
     protected void writePredicate(IRI predicate)
             throws IOException {
         if (predicate.equals(RDF.TYPE)) {
-            // Write short-cut for rdf:type
-            writer.write("<a href=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\">a</a>");
+            writer.write("<a href=\"" + RDF.TYPE + "\">a</a>");
         } else {
             writeURI(predicate);
         }

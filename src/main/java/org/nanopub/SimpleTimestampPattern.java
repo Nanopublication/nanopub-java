@@ -1,16 +1,18 @@
 package org.nanopub;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.DateFormat;
-import java.util.Calendar;
-
 import jakarta.xml.bind.DatatypeConverter;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.vocabulary.PAV;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.util.Calendar;
 
 /**
  * A simple timestamp pattern.
@@ -90,26 +92,13 @@ public class SimpleTimestampPattern implements NanopubPattern {
     public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
     /**
-     * Constant <code>DCT_CREATED</code>
-     */
-    public static final IRI DCT_CREATED = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/created");
-    /**
-     * Constant <code>PROV_GENERATEDATTIME</code>
-     */
-    public static final IRI PROV_GENERATEDATTIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#generatedAtTime");
-    /**
-     * Constant <code>PAV_CREATEDON</code>
-     */
-    public static final IRI PAV_CREATEDON = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdOn");
-
-    /**
      * Checks if the given IRI is a property that indicates the creation time of a nanopublication.
      *
      * @param uri the IRI to check
      * @return true if the IRI is a creation time property, false otherwise
      */
     public static boolean isCreationTimeProperty(IRI uri) {
-        return uri.equals(DCT_CREATED) || uri.equals(PROV_GENERATEDATTIME) || uri.equals(PAV_CREATEDON);
+        return uri.equals(DCTERMS.CREATED) || uri.equals(PROV.GENERATED_AT_TIME) || uri.equals(PAV.CREATED_ON);
     }
 
 }

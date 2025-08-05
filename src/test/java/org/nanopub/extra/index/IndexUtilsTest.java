@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.vocabulary.NPX;
 
 class IndexUtilsTest {
 
@@ -27,7 +28,7 @@ class IndexUtilsTest {
         NanopubCreator creator2 = new NanopubCreator(vf.createIRI(TEST_NANOPUB_URI + "2"));
         creator2.addAssertionStatements(vf.createStatement(anyIri, anyIri, anyIri));
         creator2.addProvenanceStatements(vf.createStatement(creator2.getAssertionUri(), anyIri, anyIri));
-        creator2.addPubinfoStatements(vf.createStatement(creator2.getNanopubUri(), RDF.TYPE, NanopubIndex.NANOPUB_INDEX_URI));
+        creator2.addPubinfoStatements(vf.createStatement(creator2.getNanopubUri(), RDF.TYPE, NPX.NANOPUB_INDEX));
 
         Nanopub nanopub1 = creator1.finalizeNanopub(true);
         Nanopub nanopub2 = creator2.finalizeNanopub(true);

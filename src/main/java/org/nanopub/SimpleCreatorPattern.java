@@ -3,6 +3,10 @@ package org.nanopub;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DC;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -166,43 +170,16 @@ public class SimpleCreatorPattern implements NanopubPattern {
         return creators;
     }
 
-    /**
-     * Constant <code>PAV_CREATEDBY</code>
-     */
-    public static final IRI PAV_CREATEDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdBy");
+    // TODO think about importing this from the PAV vocabulary
     /**
      * Constant <code>PAV_CREATEDBY_1</code>
      */
     public static final IRI PAV_CREATEDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
-    /**
-     * Constant <code>PAV_CREATEDBY_2</code>
-     */
-    public static final IRI PAV_CREATEDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/createdBy");
-    /**
-     * Constant <code>DCT_CREATOR</code>
-     */
-    public static final IRI DCT_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/creator");
-    /**
-     * Constant <code>DCE_CREATOR</code>
-     */
-    public static final IRI DCE_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/elements/1.1/creator");
-    /**
-     * Constant <code>PROV_WASATTRIBUTEDTO</code>
-     */
-    public static final IRI PROV_WASATTRIBUTEDTO = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#wasAttributedTo");
 
-    /**
-     * Constant <code>PAV_AUTHOREDBY</code>
-     */
-    public static final IRI PAV_AUTHOREDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/authoredBy");
     /**
      * Constant <code>PAV_AUTHOREDBY_1</code>
      */
     public static final IRI PAV_AUTHOREDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
-    /**
-     * Constant <code>PAV_AUTHOREDBY_2</code>
-     */
-    public static final IRI PAV_AUTHOREDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/authoredBy");
 
     /**
      * Constant <code>BIBO_AUTHOR_LIST</code>
@@ -220,8 +197,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      * @return true if the IRI is a creator property, false otherwise
      */
     public static boolean isCreatorProperty(IRI uri) {
-        return uri.equals(PAV_CREATEDBY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV_CREATEDBY_2)
-                || uri.equals(DCT_CREATOR) || uri.equals(DCE_CREATOR) || uri.equals(PROV_WASATTRIBUTEDTO);
+        return uri.equals(PAV.CREATED_BY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV.CREATED_BY_V2) || uri.equals(DCTERMS.CREATOR) || uri.equals(DC.CREATOR) || uri.equals(PROV.WAS_ATTRIBUTED_TO);
     }
 
     /**
@@ -231,7 +207,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      * @return true if the IRI is an author property, false otherwise
      */
     public static boolean isAuthorProperty(IRI uri) {
-        return uri.equals(PAV_AUTHOREDBY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV_AUTHOREDBY_2);
+        return uri.equals(PAV.AUTHORED_BY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV.AUTHORED_BY_V2);
     }
 
 }

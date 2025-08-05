@@ -2,7 +2,6 @@ package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.io.Serializable;
 
@@ -10,21 +9,6 @@ import java.io.Serializable;
  * Abstract class representing a cryptographic element used in signatures.
  */
 public abstract class CryptoElement implements Serializable {
-
-    /**
-     * The IRI for the CryptoElement class.
-     */
-    public static final IRI CRYPTO_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/CryptoElement");
-
-    /**
-     * The IRI for the hasAlgorithm property.
-     */
-    public static final IRI HAS_ALGORITHM = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasAlgorithm");
-
-    /**
-     * The IRI for the hasPublicKey property.
-     */
-    public static final IRI HAS_PUBLIC_KEY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasPublicKey");
 
     /**
      * The IRI of the crypto element.

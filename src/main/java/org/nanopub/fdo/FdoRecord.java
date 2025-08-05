@@ -12,13 +12,13 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.nanopub.Nanopub.SUPERSEDES;
 import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 
@@ -255,7 +255,7 @@ public class FdoRecord implements Serializable {
         for (Statement st : originalNanopub.getProvenance()) {
             creator.addProvenanceStatement(assertionUri, st.getPredicate(), st.getObject());
         }
-        creator.addPubinfoStatement(SUPERSEDES, originalNanopub.getUri());
+        creator.addPubinfoStatement(NPX.SUPERSEDES, originalNanopub.getUri());
         return creator;
     }
 

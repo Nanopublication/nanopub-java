@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
@@ -93,7 +94,7 @@ public class TimestampUpdater extends CliRunner {
                     public void handleNanopub(Nanopub np) {
                         try {
                             List<Statement> newStatements = removeCreationTime(np);
-                            newStatements.add(vf.createStatement(np.getUri(), SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));
+                            newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));
                             Nanopub updatedNp;
                             if (np instanceof NanopubImpl) {
                                 updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());

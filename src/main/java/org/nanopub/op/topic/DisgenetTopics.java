@@ -1,5 +1,6 @@
 package org.nanopub.op.topic;
 
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.Nanopub;
 
 /**
@@ -11,7 +12,7 @@ public class DisgenetTopics extends DefaultTopics {
      * Constructor for DisgenetTopics.
      */
     public DisgenetTopics() {
-        super("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        super(String.valueOf(RDF.TYPE));
     }
 
     /**

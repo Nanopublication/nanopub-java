@@ -9,14 +9,14 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
-import org.nanopub.extra.security.KeyDeclaration;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.PAV;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -35,16 +35,16 @@ public class NanopubUtils {
     private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
 
     static {
-        defaultNamespaces.add(Pair.of("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
-        defaultNamespaces.add(Pair.of("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
+        defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));
+        defaultNamespaces.add(Pair.of(RDFS.PREFIX, RDFS.NAMESPACE));
         defaultNamespaces.add(Pair.of("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/"));
-        defaultNamespaces.add(Pair.of("xsd", "http://www.w3.org/2001/XMLSchema#"));
-        defaultNamespaces.add(Pair.of("owl", "http://www.w3.org/2002/07/owl#"));
-        defaultNamespaces.add(Pair.of("dct", "http://purl.org/dc/terms/"));
-        defaultNamespaces.add(Pair.of("dce", "http://purl.org/dc/elements/1.1/"));
-        defaultNamespaces.add(Pair.of("pav", "http://purl.org/pav/"));
-        defaultNamespaces.add(Pair.of("prov", "http://www.w3.org/ns/prov#"));
-        defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
+        defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));
+        defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));
+        defaultNamespaces.add(Pair.of("dct", DCTERMS.NAMESPACE));
+        defaultNamespaces.add(Pair.of("dce", DC.NAMESPACE));
+        defaultNamespaces.add(Pair.of(PAV.PREFIX, PAV.NAMESPACE));
+        defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));
+        defaultNamespaces.add(Pair.of(NP.PREFIX, NP.NAMESPACE));
     }
 
     /**
@@ -204,10 +204,10 @@ public class NanopubUtils {
             if (subj.equals(npId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
                 npLabel += " " + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
                 npTitle += " " + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -229,7 +229,7 @@ public class NanopubUtils {
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
                 aLabel += " " + obj.stringValue();
             }
-            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
+            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
                 aTitle += " " + obj.stringValue();
             }
             if (introMap.containsKey(subj) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
@@ -262,7 +262,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!subj.equals(npId)) continue;
             if (obj instanceof Literal) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     npDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     npComment += "\n" + obj.stringValue();
@@ -270,7 +270,7 @@ public class NanopubUtils {
                     npDef += "\n" + obj.stringValue();
                 }
             } else {
-                if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) {
+                if (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) {
                     introMap.put((IRI) obj, true);
                 }
             }
@@ -281,7 +281,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (!subj.equals(aId)) continue;
-            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                 aDesc += "\n" + obj.stringValue();
             } else if (pred.equals(RDFS.COMMENT)) {
                 aComment += "\n" + obj.stringValue();
@@ -295,7 +295,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (subj.equals(aId)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     aDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     aComment += "\n" + obj.stringValue();
@@ -304,7 +304,7 @@ public class NanopubUtils {
                 }
             }
             if (introMap.containsKey(subj)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     iDesc += " " + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     iComment += " " + obj.stringValue();
@@ -347,10 +347,10 @@ public class NanopubUtils {
             if (subj.equals(npId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
+            if (subj.equals(npId) && pred.equals(NPX.HAS_NANOPUB_TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -376,7 +376,7 @@ public class NanopubUtils {
                 if (subj.equals(aId)) types.add((IRI) obj);
                 if (introMap.containsKey(subj)) types.add((IRI) obj);
             }
-            if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+            if (pred.equals(NPX.DECLARED_BY)) {
                 // This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
                 // this predicate is treated as a special case that triggers a type assignment.
                 types.add(pred);
@@ -420,37 +420,6 @@ public class NanopubUtils {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    /**
-     * The IRI for the introduces predicate.
-     */
-    public static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
-
-    /**
-     * The IRI for the describes predicate.
-     */
-    public static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
-
-    /**
-     * The IRI for the embeds predicate.
-     */
-    public static final IRI EMBEDS = vf.createIRI("http://purl.org/nanopub/x/embeds");
-
-    /**
-     * The IRI for the hasNanopubType predicate.
-     */
-    public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
-
-    /**
-     * The IRI for the DCTERMS title predicate.
-     */
-    private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
-
-    /**
-     * The IRI for the DCTERMS description predicate.
-     */
-    private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
-
-
     private static CloseableHttpClient httpClient;
 
     /**
@@ -469,12 +438,6 @@ public class NanopubUtils {
         return httpClient;
     }
 
-    /**
-     * A temporary IRI for Nanopubs.
-     */
-    public static final String TEMPORARY_NANOPUB_IRI = "http://purl.org/nanopub/temp";
-
-
     private static Random random = new Random();
 
     /**
@@ -483,7 +446,7 @@ public class NanopubUtils {
      * @return a new IRI for a temporary Nanopub
      */
     public static IRI createTempNanopubIri() {
-        return vf.createIRI(TEMPORARY_NANOPUB_IRI + "/" + Math.abs(random.nextInt()) + "/");
+        return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
     }
 
 }

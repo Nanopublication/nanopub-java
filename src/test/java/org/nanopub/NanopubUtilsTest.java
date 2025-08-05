@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -150,7 +151,7 @@ public class NanopubUtilsTest {
     @Test
     void createTempNanopubIri() {
         IRI tempNanopubIri = NanopubUtils.createTempNanopubIri();
-        assertTrue(tempNanopubIri.stringValue().startsWith(NanopubUtils.TEMPORARY_NANOPUB_IRI));
+        assertTrue(tempNanopubIri.stringValue().startsWith(TempUriReplacer.tempUri));
 
         IRI tempNanopubIri2 = NanopubUtils.createTempNanopubIri();
         assertNotEquals(tempNanopubIri, tempNanopubIri2);
@@ -163,9 +164,9 @@ public class NanopubUtilsTest {
 //    	System.err.println("# Creating nanopub...");
 //    	NanopubCreator npCreator = new NanopubCreator(true);
 //    	final IRI anne = vf.createIRI("https://example.com/anne");
-//    	npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+//    	npCreator.addAssertionStatement(anne, RDF.TYPE, SCHEMA.PERSON);
 //    	npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
-//    	npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+//    	npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
 //    	Nanopub np = npCreator.finalizeNanopub(true);
 //    	System.err.println("# Nanopub before signing:");
 //    	NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);

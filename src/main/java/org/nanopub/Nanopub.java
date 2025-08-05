@@ -3,7 +3,6 @@ package org.nanopub;
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.nanopub.extra.security.SignNanopub;
@@ -24,102 +23,75 @@ import java.util.Set;
  */
 public interface Nanopub {
 
-    // URIs in the nanopub namespace:
-    /**
-     * IRI of the Nanopublication type.
-     */
-    public static final IRI NANOPUB_TYPE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#Nanopublication");
-
-    /**
-     * IRI of the has assertion property.
-     */
-    public static final IRI HAS_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasAssertion");
-
-    /**
-     * IRI of the has provenance property.
-     */
-    public static final IRI HAS_PROVENANCE_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasProvenance");
-
-    /**
-     * IRI of the has pubinfo property.
-     */
-    public static final IRI HAS_PUBINFO_URI = SimpleValueFactory.getInstance().createIRI("http://www.nanopub.org/nschema#hasPublicationInfo");
-
-    /**
-     * IRI of the supersedes property.
-     */
-    // URIs that link nanopublications:
-    public static final IRI SUPERSEDES = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/supersedes");
-
     /**
      * Returns the URI of this nanopublication. This is the URI that identifies the nanopub.
      *
      * @return the URI of this nanopublication
      */
-    public IRI getUri();
+    IRI getUri();
 
     /**
      * Returns the URI of the head of this nanopublication.
      *
      * @return the URI of the head of this nanopublication
      */
-    public IRI getHeadUri();
+    IRI getHeadUri();
 
     /**
      * Returns the head of this nanopublication, which is a set of RDF statements.
      *
      * @return the head of this nanopublication
      */
-    public Set<Statement> getHead();
+    Set<Statement> getHead();
 
     /**
      * Returns the URI of the assertion of this nanopublication.
      *
      * @return the URI of the assertion of this nanopublication
      */
-    public IRI getAssertionUri();
+    IRI getAssertionUri();
 
     /**
      * Returns the assertion of this nanopublication, which is a set of RDF statements.
      *
      * @return the assertion of this nanopublication
      */
-    public Set<Statement> getAssertion();
+    Set<Statement> getAssertion();
 
     /**
      * Returns the URI of the provenance of this nanopublication.
      *
      * @return the URI of the provenance of this nanopublication
      */
-    public IRI getProvenanceUri();
+    IRI getProvenanceUri();
 
     /**
      * Returns the provenance of this nanopublication, which is a set of RDF statements.
      *
      * @return the provenance of this nanopublication
      */
-    public Set<Statement> getProvenance();
+    Set<Statement> getProvenance();
 
     /**
      * Returns the URI of the publication information of this nanopublication.
      *
      * @return the URI of the publication information of this nanopublication
      */
-    public IRI getPubinfoUri();
+    IRI getPubinfoUri();
 
     /**
      * Returns the publication information of this nanopublication, which is a set of RDF statements.
      *
      * @return the publication information of this nanopublication
      */
-    public Set<Statement> getPubinfo();
+    Set<Statement> getPubinfo();
 
     /**
      * Returns the URIs of the graphs that are used in this nanopublication.
      *
      * @return the URIs of the graphs that are used in this nanopublication
      */
-    public Set<IRI> getGraphUris();
+    Set<IRI> getGraphUris();
 
     // TODO: Now that we have SimpleCreatorPattern and SimpleTimestampPattern,
     // we might not need the following three methods anymore...
@@ -129,35 +101,35 @@ public interface Nanopub {
      *
      * @return the creation time of this nanopublication
      */
-    public Calendar getCreationTime();
+    Calendar getCreationTime();
 
     /**
      * Returns the URI of the authors of this nanopublication.
      *
      * @return the URI of the authors of this nanopublication
      */
-    public Set<IRI> getAuthors();
+    Set<IRI> getAuthors();
 
     /**
      * Returns the URIs of the creators of this nanopublication.
      *
      * @return the URIs of the creators of this nanopublication
      */
-    public Set<IRI> getCreators();
+    Set<IRI> getCreators();
 
     /**
      * Returns the number of triples in this nanopublication.
      *
      * @return the number of triples in this nanopublication
      */
-    public int getTripleCount();
+    int getTripleCount();
 
     /**
      * Returns the number of bytes that this nanopublication takes when serialized in RDF.
      *
      * @return the number of bytes that this nanopublication takes when serialized in RDF
      */
-    public long getByteCount();
+    long getByteCount();
 
     /**
      * Serializes this nanopublication to an RDF stream in the specified format.
@@ -166,7 +138,7 @@ public interface Nanopub {
      * @param format the RDF format to use for serialization
      * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs during serialization
      */
-    public default void writeToStream(OutputStream out, RDFFormat format) throws RDFHandlerException {
+    default void writeToStream(OutputStream out, RDFFormat format) throws RDFHandlerException {
         NanopubUtils.writeToStream(this, out, format);
     }
 
@@ -178,7 +150,7 @@ public interface Nanopub {
      * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs during serialization
      * @throws java.io.IOException                       if an I/O error occurs during serialization
      */
-    public default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
+    default String writeToString(RDFFormat format) throws RDFHandlerException, IOException {
         return NanopubUtils.writeToString(this, format);
     }
 
@@ -188,7 +160,7 @@ public interface Nanopub {
      * @return the response from the server after publishing
      * @throws java.io.IOException if an I/O error occurs during publishing
      */
-    public default String publish() throws IOException {
+    default String publish() throws IOException {
         return PublishNanopub.publish(this);
     }
 
@@ -199,7 +171,7 @@ public interface Nanopub {
      * @return the response from the server after publishing
      * @throws java.io.IOException if an I/O error occurs during publishing
      */
-    public default String publish(String serverUrl) throws IOException {
+    default String publish(String serverUrl) throws IOException {
         return PublishNanopub.publish(this, serverUrl);
     }
 
@@ -212,7 +184,8 @@ public interface Nanopub {
      * @throws java.security.SignatureException  if there is an issue with the signature process
      * @throws java.security.InvalidKeyException if the key used for signing is invalid
      */
-    public default Nanopub sign(TransformContext context) throws TrustyUriException, SignatureException, InvalidKeyException {
+    default Nanopub sign(TransformContext context) throws TrustyUriException, SignatureException, InvalidKeyException {
         return SignNanopub.signAndTransform(this, context);
     }
+
 }

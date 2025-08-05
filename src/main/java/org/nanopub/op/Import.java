@@ -6,10 +6,14 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.PAV;
+import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -62,8 +66,7 @@ public class Import extends CliRunner {
     private RDFFormat rdfInFormat, rdfOutFormat;
     private OutputStream outputStream = System.out;
 
-    private void run() throws IOException, RDFParseException, RDFHandlerException,
-            MalformedNanopubException, TrustyUriException {
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
 
         File inputFile = inputFiles.get(0);
         if (inFormat != null) {
@@ -108,8 +111,7 @@ public class Import extends CliRunner {
      * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
      * @throws org.nanopub.MalformedNanopubException     if the nanopublication is malformed
      */
-    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format)
-            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         final NanopubImporter importer;
         if ("cedar".equals(type)) {
             importer = new CedarNanopubImporter();
@@ -196,7 +198,7 @@ public class Import extends CliRunner {
         @Override
         public void readStatements(List<Statement> statements) {
             String cedarId = getCedarId(statements);
-            npIriString = "http://purl.org/nanopub/temp/" + cedarId + "#";
+            npIriString = TempUriReplacer.tempUri + cedarId + "#";
             npIri = vf.createIRI(npIriString);
 
             npCreator = new NanopubCreator(npIri);
@@ -209,19 +211,19 @@ public class Import extends CliRunner {
 
             for (Statement st : statements) {
                 if (st.getPredicate().stringValue().equals("http://open-services.net/ns/core#modifiedBy")) {
-                    npCreator.addProvenanceStatement(SimpleCreatorPattern.PAV_AUTHOREDBY, st.getObject());
+                    npCreator.addProvenanceStatement(PAV.AUTHORED_BY, st.getObject());
                     npCreator.addPubinfoStatement(DCTERMS.CREATOR, st.getObject());
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/lastUpdatedOn")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.LAST_UPDATED_ON.stringValue())) {
                     npCreator.addPubinfoStatement(DCTERMS.CREATED, st.getObject());
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/createdBy")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.CREATED_BY.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://purl.org/pav/createdOn")) {
+                } else if (st.getPredicate().stringValue().equals(PAV.CREATED_ON.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/description")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.DESCRIPTION.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/isBasedOn")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.IS_BASED_ON.stringValue())) {
                     npCreator.addPubinfoStatements(st);
-                } else if (st.getPredicate().stringValue().equals("http://schema.org/name")) {
+                } else if (st.getPredicate().stringValue().equals(SCHEMA.NAME.stringValue())) {
                     npCreator.addPubinfoStatements(st);
                 } else if (st.getSubject() instanceof IRI) {
                     String s = st.getSubject().stringValue().replaceFirst("^https://repo.metadatacenter.org/template-instances/.*$", npIriString + "subj");
@@ -244,18 +246,18 @@ public class Import extends CliRunner {
 
         private void addNamespaces() {
             npCreator.addNamespace("", npIriString);
-            npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-            npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+            npCreator.addNamespace(RDF.NS);
+            npCreator.addNamespace(RDFS.NS);
             npCreator.addNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-            npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-            npCreator.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-            npCreator.addNamespace("dct", "http://purl.org/dc/terms/");
-            npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
-            npCreator.addNamespace("pav", "http://purl.org/pav/");
-            npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
+            npCreator.addNamespace(XSD.NS);
+            npCreator.addNamespace(OWL.NS);
+            npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
+            npCreator.addNamespace("dce", DC.NAMESPACE);
+            npCreator.addNamespace(PAV.PREFIX, PAV.NAMESPACE);
+            npCreator.addNamespace(NP.PREFIX, NP.NAMESPACE);
             npCreator.addNamespace("skos", "http://www.w3.org/TR/skos-reference/skos-owl1-dl#");
             npCreator.addNamespace("obo", "http://purl.obolibrary.org/obo/");
-            npCreator.addNamespace("schema", "http://schema.org/");
+            npCreator.addNamespace(SCHEMA.PREFIX, SCHEMA.NAMESPACE);
             npCreator.addNamespace("cedar-user", "https://metadatacenter.org/users/");
             npCreator.addNamespace("cedar-temp", "https://repo.metadatacenter.org/templates/");
             npCreator.addNamespace("cedar-tempinst", "https://repo.metadatacenter.org/template-instances/");

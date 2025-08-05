@@ -4,6 +4,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.vocabulary.NPX;
 
 /**
  * Utility class for working with nanopublication indexes.
@@ -23,7 +24,7 @@ public class IndexUtils {
         for (Statement st : np.getPubinfo()) {
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!st.getPredicate().equals(RDF.TYPE)) continue;
-            if (!st.getObject().equals(NanopubIndex.NANOPUB_INDEX_URI)) continue;
+            if (!st.getObject().equals(NPX.NANOPUB_INDEX)) continue;
             return true;
         }
         return false;

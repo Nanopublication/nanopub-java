@@ -18,10 +18,10 @@ import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
-import org.nanopub.extra.security.CryptoElement;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,7 +151,7 @@ public class IntroNanopub implements Serializable {
             if (!(st.getObject() instanceof IRI obj)) continue;
             IRI subj = (IRI) st.getSubject();
             IRI pred = st.getPredicate();
-            if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+            if (pred.equals(NPX.DECLARED_BY) || pred.equals(NPX.HAS_KEY_LOCATION)) {
                 KeyDeclaration d;
                 if (keyDeclarations.containsKey(subj)) {
                     d = keyDeclarations.get(subj);
@@ -159,11 +159,11 @@ public class IntroNanopub implements Serializable {
                     d = new KeyDeclaration(subj);
                     keyDeclarations.put(subj, d);
                 }
-                if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+                if (pred.equals(NPX.DECLARED_BY)) {
                     if (this.user == null) this.user = obj;
                     if (!this.user.equals(obj)) continue;
                     d.addDeclarer(this.user);
-                } else if (pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+                } else if (pred.equals(NPX.HAS_KEY_LOCATION)) {
                     d.setKeyLocation(obj);
                 }
             }
@@ -176,13 +176,13 @@ public class IntroNanopub implements Serializable {
                 KeyDeclaration d = keyDeclarations.get(subj);
                 IRI pred = st.getPredicate();
                 Value obj = st.getObject();
-                if (pred.equals(CryptoElement.HAS_ALGORITHM) && obj instanceof Literal) {
+                if (pred.equals(NPX.HAS_ALGORITHM) && obj instanceof Literal) {
                     try {
                         d.setAlgorithm((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {
                         //ex.printStackTrace();
                     }
-                } else if (pred.equals(CryptoElement.HAS_PUBLIC_KEY) && obj instanceof Literal) {
+                } else if (pred.equals(NPX.HAS_PUBLIC_KEY) && obj instanceof Literal) {
                     try {
                         d.setPublicKeyLiteral((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {

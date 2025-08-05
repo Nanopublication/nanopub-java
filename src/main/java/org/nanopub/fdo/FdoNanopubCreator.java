@@ -12,6 +12,8 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.fdo.rest.gson.Value;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -41,7 +43,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
-        IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
+        IRI npIri = vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
@@ -53,7 +55,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
-        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+        String npIriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
@@ -67,7 +69,7 @@ public class FdoNanopubCreator {
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
+        creator.addPubinfoStatement(npIri, NPX.INTRODUCES, fdoIri);
         creator.addAssertionStatements(fdoRecord.buildStatements().toArray(new Statement[0]));
 
         return creator;

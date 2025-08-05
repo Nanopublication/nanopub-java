@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.nanopub.fdo.rest.gson.ParsedSchemaResponse;
 
 import java.io.IOException;
@@ -30,12 +31,6 @@ public class ValidateFdo {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    private static final IRI SHACL_MAX_COUNT = vf.createIRI("http://www.w3.org/ns/shacl#maxCount");
-    private static final IRI SHACL_MIN_COUNT = vf.createIRI("http://www.w3.org/ns/shacl#minCount");
-    private static final IRI SHACL_PATH = vf.createIRI("http://www.w3.org/ns/shacl#path");
-    private static final IRI SHACL_TARGET = vf.createIRI("http://www.w3.org/ns/shacl#targetClass");
-    private static final IRI SHACL_PROPERTY = vf.createIRI("http://www.w3.org/ns/shacl#property");
-    private static final IRI SHACL_NODE_SHAPE = vf.createIRI("http://www.w3.org/ns/shacl#NodeShape");
     private static final String SHACL_PROPERTY_SHAPE = "propertyShape";
 
     private static HttpClient client = HttpClient.newHttpClient();
@@ -111,19 +106,19 @@ public class ValidateFdo {
         for (String s : r.properties.keySet()) {
             i++;
             IRI propertyShape = vf.createIRI(subjPrefix + SHACL_PROPERTY_SHAPE + i);
-            shaclShape.add(vf.createStatement(propertyShape, SHACL_MAX_COUNT, vf.createLiteral(1)));
+            shaclShape.add(vf.createStatement(propertyShape, SHACL.MAX_COUNT, vf.createLiteral(1)));
             if (reqired.contains(s)) {
-                shaclShape.add(vf.createStatement(propertyShape, SHACL_MIN_COUNT, vf.createLiteral(1)));
+                shaclShape.add(vf.createStatement(propertyShape, SHACL.MIN_COUNT, vf.createLiteral(1)));
             }
             if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
-                shaclShape.add(vf.createStatement(propertyShape, SHACL_PATH, PROFILE_IRI));
+                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, PROFILE_IRI));
             } else {
-                shaclShape.add(vf.createStatement(propertyShape, SHACL_PATH, vf.createIRI(FDO_URI_PREFIX + s)));
+                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, vf.createIRI(FDO_URI_PREFIX + s)));
             }
-            shaclShape.add(vf.createStatement(nodeShape, SHACL_PROPERTY, propertyShape));
+            shaclShape.add(vf.createStatement(nodeShape, SHACL.PROPERTY, propertyShape));
         }
-        shaclShape.add(vf.createStatement(nodeShape, SHACL_TARGET, RDF_TYPE_FDO));
-        shaclShape.add(vf.createStatement(nodeShape, RDF.TYPE, SHACL_NODE_SHAPE));
+        shaclShape.add(vf.createStatement(nodeShape, SHACL.TARGET_CLASS, RDF_TYPE_FDO));
+        shaclShape.add(vf.createStatement(nodeShape, RDF.TYPE, SHACL.NODE_SHAPE));
 
         return shaclShape;
     }

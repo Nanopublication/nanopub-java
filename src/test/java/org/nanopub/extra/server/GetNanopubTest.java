@@ -36,7 +36,7 @@ public class GetNanopubTest {
         NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
         IRI resultUri = testNano.getUri();
 
-        assertEquals(resultUri.stringValue(), nanopubUrl);
+        assertEquals(nanopubUrl, resultUri.stringValue());
 
         outFile.delete();
     }

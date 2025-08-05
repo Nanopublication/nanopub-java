@@ -3,8 +3,11 @@ package org.nanopub;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.trusty.MakeTrustyNanopub;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.*;
 
@@ -364,14 +367,14 @@ public class NanopubCreator {
      * @param date the date to add
      */
     public void addTimestamp(Date date) {
-        addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, vf.createLiteral(date));
+        addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral(date));
     }
 
     /**
      * Adds a timestamp to the pubinfo part of the nanopublication using the current time.
      */
     public void addTimestampNow() {
-        addPubinfoStatement(SimpleTimestampPattern.DCT_CREATED, TimestampNow.getTimestamp());
+        addPubinfoStatement(DCTERMS.CREATED, TimestampNow.getTimestamp());
     }
 
     /**
@@ -380,7 +383,7 @@ public class NanopubCreator {
      * @param creator the creator IRI
      */
     public void addCreator(IRI creator) {
-        addPubinfoStatement(SimpleCreatorPattern.DCT_CREATOR, creator);
+        addPubinfoStatement(DCTERMS.CREATOR, creator);
     }
 
     /**
@@ -398,7 +401,7 @@ public class NanopubCreator {
      * @param author the author IRI
      */
     public void addAuthor(IRI author) {
-        addPubinfoStatement(SimpleCreatorPattern.PAV_AUTHOREDBY, author);
+        addPubinfoStatement(PAV.AUTHORED_BY, author);
     }
 
     /**
@@ -566,10 +569,10 @@ public class NanopubCreator {
 
     private void collectStatements() {
         statements = new ArrayList<>();
-        addStatement(nanopubUri, RDF.TYPE, Nanopub.NANOPUB_TYPE_URI, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_ASSERTION_URI, assertionUri, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_PROVENANCE_URI, provenanceUri, headUri);
-        addStatement(nanopubUri, Nanopub.HAS_PUBINFO_URI, pubinfoUri, headUri);
+        addStatement(nanopubUri, RDF.TYPE, NP.NANOPUBLICATION, headUri);
+        addStatement(nanopubUri, NP.HAS_ASSERTION, assertionUri, headUri);
+        addStatement(nanopubUri, NP.HAS_PROVENANCE, provenanceUri, headUri);
+        addStatement(nanopubUri, NP.HAS_PUBINFO, pubinfoUri, headUri);
         for (Statement st : assertion) {
             addStatement(st.getSubject(), st.getPredicate(), st.getObject(), assertionUri);
         }

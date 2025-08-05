@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
+import org.nanopub.vocabulary.NPX;
 
 import java.util.*;
 
@@ -43,7 +44,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
         Set<IRI> subIndexSet = new HashSet<>();
         for (Statement st : np.getAssertion()) {
             if (!st.getSubject().equals(np.getUri())) continue;
-            if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {
+            if (st.getPredicate().equals(NPX.APPENDS_INDEX)) {
                 if (appendedIndex != null) {
                     throw new MalformedNanopubException("Multiple appends-statements found for index");
                 }
@@ -51,12 +52,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
                     throw new MalformedNanopubException("URI expected for object of appends-statement");
                 }
                 appendedIndex = (IRI) st.getObject();
-            } else if (st.getPredicate().equals(NanopubIndex.INCLUDES_ELEMENT_URI)) {
+            } else if (st.getPredicate().equals(NPX.INCLUDES_ELEMENT)) {
                 if (!(st.getObject() instanceof IRI)) {
                     throw new MalformedNanopubException("Element has to be a URI");
                 }
                 elementSet.add((IRI) st.getObject());
-            } else if (st.getPredicate().equals(NanopubIndex.INCLUDES_SUBINDEX_URI)) {
+            } else if (st.getPredicate().equals(NPX.INCLUDES_SUBINDEX)) {
                 if (!(st.getObject() instanceof IRI)) {
                     throw new MalformedNanopubException("Sub-index has to be a URI");
                 }
@@ -66,7 +67,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
         for (Statement st : np.getPubinfo()) {
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!st.getPredicate().equals(RDF.TYPE)) continue;
-            if (st.getObject().equals(NanopubIndex.INCOMPLETE_INDEX_URI)) {
+            if (st.getObject().equals(NPX.INCOMPLETE_INDEX)) {
                 isIncompleteIndex = true;
             }
         }
