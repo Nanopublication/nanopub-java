@@ -35,8 +35,7 @@ import java.util.Random;
 
 import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.iri;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FdoNanopubCreatorTest {
 
@@ -181,4 +180,12 @@ public class FdoNanopubCreatorTest {
         assertFalse(FdoUtils.looksLikeUrl("this is not a valid url"));
     }
 
+    @Test
+    void createFdoRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException {
+        String profileId = "21.T11966/82045bd97a0acce88378";
+        FdoRecord fdoRecord = FdoNanopubCreator.createFdoRecordFromHandleSystem(profileId);
+        assertNotNull(fdoRecord);
+    }
+
 }
+
