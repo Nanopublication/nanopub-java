@@ -63,7 +63,7 @@ public class FdoNanopubCreator {
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
-    private static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
+    static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
         fdoRecord.setId(fdoIri);
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();

@@ -14,7 +14,7 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.fdo.FdoNanopubTest;
+import org.nanopub.fdo.FdoNanopubCreatorTest;
 import org.nanopub.fdo.FdoQuery;
 import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.vocabulary.NPX;
@@ -69,15 +69,15 @@ public class UsageExamples {
     }
 
     void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
-        new FdoNanopubTest().exampleCreateFdoNanopubManuallyWithoutHandleSystem();
+        new FdoNanopubCreatorTest().exampleCreateFdoNanopubManuallyWithoutHandleSystem();
     }
 
     void createNanopubWithFdoIri() throws MalformedNanopubException {
-        new FdoNanopubTest().exampleCreateWithFdoIri();
+        new FdoNanopubCreatorTest().createWithFdoIri();
     }
 
     void createNanopubWithFdoIriSuffix() throws MalformedNanopubException {
-        new FdoNanopubTest().exampleCreateWithFdoIriSuffix();
+        new FdoNanopubCreatorTest().createWithFdoSuffix();
     }
 
     void shaclValidation() {

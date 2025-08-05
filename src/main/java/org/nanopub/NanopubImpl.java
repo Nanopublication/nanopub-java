@@ -20,6 +20,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.vocabulary.NP;
+import org.nanopub.trusty.TrustyNanopubUtils;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -87,9 +88,10 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
 
     private int tripleCount;
     private long byteCount;
+    private boolean isValidAndTrusty = false;
 
     /**
-     * Creates a new NanopubImpl instance from the given statements, namespaces and namespace prefixes.
+     * Creates a new NanopubImpl instance from the given statements, namespaces, and namespace prefixes.
      *
      * @param statements the statements of the nanopublication
      * @param nsPrefixes the namespace prefixes used in the nanopublication
@@ -107,7 +109,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * Creates a new NanopubImpl instance from the given statements and namespaces.
      *
      * @param statements the statements of the nanopublication
-     * @param namespaces the namespaces used in the nanopublication, as pairs of prefix and URI
+     * @param namespaces the namespaces used in the nanopublication, as pairs of prefixes and URI
      * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
      */
     public NanopubImpl(Collection<Statement> statements, List<Pair<String, String>> namespaces) throws MalformedNanopubException {
@@ -156,7 +158,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
      * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
-    public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String, String> ns) throws MalformedNanopubException, RepositoryException {
+    public NanopubImpl(Repository repo, IRI nanopubUri, List<String> nsPrefixes, Map<String, String> ns)
+            throws MalformedNanopubException, RepositoryException {
         if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);
         if (ns != null) this.ns.putAll(ns);
         try (RepositoryConnection connection = repo.getConnection()) {
@@ -187,7 +190,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
      * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
      */
-    public NanopubImpl(Repository repo, IRI nanopubUri) throws MalformedNanopubException, RepositoryException {
+    public NanopubImpl(Repository repo, IRI nanopubUri)
+            throws MalformedNanopubException, RepositoryException {
         this(repo, nanopubUri, null, null);
     }
 
@@ -200,7 +204,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
      * @throws java.io.IOException                               if there is an error reading the file
      */
-    public NanopubImpl(File file, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
+    public NanopubImpl(File file, RDFFormat format)
+            throws MalformedNanopubException, RDF4JException, IOException {
         readStatements(new FileInputStream(file), format);
         init();
     }
@@ -314,12 +319,12 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
             readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
         } catch (IOException ex) {
             // We do not expect an IOException here (no file system IO taking place)
-            throw new RuntimeException("Unexptected IOException", ex);
+            throw new RuntimeException("Unexpected IOException", ex);
         }
         init();
     }
 
-    private void readStatements(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {
+    private void readStatements(InputStream in, RDFFormat format) throws RDF4JException, IOException {
         try (in) {
             RDFParser p = NanopubUtils.getParser(format);
             p.setRDFHandler(new AbstractRDFHandler() {
@@ -353,6 +358,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         checkAssertion();
         checkProvenance();
         checkPubinfo();
+        isValidAndTrusty = TrustyNanopubUtils.isValidTrustyNanopub(this);
     }
 
     private void collectNanopubUri(Collection<Statement> statements) throws MalformedNanopubException {
@@ -663,12 +669,45 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
     }
 
     /**
+     * Returns whether this nanopublication is valid and trustworthy.
+     *
+     * @return true if the nanopublication is valid and trustworthy, false otherwise
+     */
+    public boolean isValidAndTrusty() {
+        return isValidAndTrusty;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof NanopubImpl nanopub)) return false;
-        return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved && tripleCount == nanopub.tripleCount && byteCount == nanopub.byteCount && Objects.equals(nanopubUri, nanopub.nanopubUri) && Objects.equals(headUri, nanopub.headUri) && Objects.equals(assertionUri, nanopub.assertionUri) && Objects.equals(provenanceUri, nanopub.provenanceUri) && Objects.equals(pubinfoUri, nanopub.pubinfoUri) && Objects.equals(graphUris, nanopub.graphUris) && Objects.equals(head, nanopub.head) && Objects.equals(assertion, nanopub.assertion) && Objects.equals(provenance, nanopub.provenance) && Objects.equals(pubinfo, nanopub.pubinfo) && Objects.equals(statements, nanopub.statements) && Objects.equals(nsPrefixes, nanopub.nsPrefixes) && Objects.equals(ns, nanopub.ns);
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NanopubImpl nanopub)) {
+            return false;
+        }
+        if (isValidAndTrusty && nanopub.isValidAndTrusty()) {
+            return Objects.equals(nanopubUri, nanopub.nanopubUri);
+        } else {
+            return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved &&
+                    tripleCount == nanopub.tripleCount &&
+                    byteCount == nanopub.byteCount &&
+                    Objects.equals(nanopubUri, nanopub.nanopubUri) &&
+                    Objects.equals(headUri, nanopub.headUri) &&
+                    Objects.equals(assertionUri, nanopub.assertionUri) &&
+                    Objects.equals(provenanceUri, nanopub.provenanceUri) &&
+                    Objects.equals(pubinfoUri, nanopub.pubinfoUri) &&
+                    Objects.equals(graphUris, nanopub.graphUris) &&
+                    Objects.equals(head, nanopub.head) &&
+                    Objects.equals(assertion, nanopub.assertion) &&
+                    Objects.equals(provenance, nanopub.provenance) &&
+                    Objects.equals(pubinfo, nanopub.pubinfo) &&
+                    Objects.equals(statements, nanopub.statements) &&
+                    Objects.equals(nsPrefixes, nanopub.nsPrefixes) &&
+                    Objects.equals(ns, nanopub.ns);
+        }
     }
 
     /**
@@ -676,6 +715,27 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(nanopubUri, headUri, assertionUri, provenanceUri, pubinfoUri, graphUris, head, assertion, provenance, pubinfo, statements, nsPrefixes, ns, unusedPrefixesRemoved, tripleCount, byteCount);
+        if (isValidAndTrusty) {
+            return Objects.hash(nanopubUri);
+        } else {
+            return Objects.hash(
+                    unusedPrefixesRemoved,
+                    tripleCount,
+                    byteCount,
+                    nanopubUri,
+                    headUri,
+                    assertionUri,
+                    provenanceUri,
+                    pubinfoUri,
+                    graphUris,
+                    head,
+                    assertion,
+                    provenance,
+                    pubinfo,
+                    statements,
+                    nsPrefixes,
+                    ns
+            );
+        }
     }
 }

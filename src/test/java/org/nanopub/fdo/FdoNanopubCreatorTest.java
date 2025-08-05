@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
@@ -20,8 +21,6 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.ResponsePrinter;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
-import org.nanopub.utils.TestUtils;
-import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -32,24 +31,49 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Random;
 
 import static java.lang.System.out;
+import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FdoNanopubTest {
-
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+public class FdoNanopubCreatorTest {
 
     @Test
-    public void exampleCreateWithFdoIri() throws MalformedNanopubException {
+    void prepareNanopubCreator() {
+        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        String fdoLabel = "ExampleFdoToUpdate";
+        FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
+
+        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(new Random().nextInt()) + "/";
+        String fdoSuffix = "FdoExample";
+        IRI fdoIri = iri(npIriString + fdoSuffix);
+        IRI npIri = iri(npIriString);
+        NanopubCreator fdoNanopubCreator = FdoNanopubCreator.prepareNanopubCreator(record, fdoIri, npIri);
+
+
+        assertTrue(fdoNanopubCreator.getCurrentAssertionStatements().stream()
+                .anyMatch(statement -> statement.getSubject().equals(fdoIri)
+                        && statement.getPredicate().equals(RDF.TYPE)
+                        && statement.getObject().equals(FdoUtils.RDF_TYPE_FDO))
+        );
+
+        assertTrue(fdoNanopubCreator.getCurrentPubinfoStatements().stream().anyMatch(statement ->
+                statement.getSubject().equals(npIri)
+                        && statement.getPredicate().equals(iri("http://purl.org/nanopub/x/introduces"))
+                        && statement.getObject().equals(fdoIri))
+        );
+    }
+
+    public void createWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
 
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -58,14 +82,14 @@ public class FdoNanopubTest {
     }
 
     @Test
-    public void exampleCreateWithFdoIriSuffix() throws MalformedNanopubException {
+    public void createWithFdoSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
-        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "abc-table-fdo";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
 
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
 
@@ -76,11 +100,11 @@ public class FdoNanopubTest {
     @Test
     void testFdoNanopubCreation() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0000-0000-0000-0000"));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri("https://orcid.org/0000-0000-0000-0000"));
 
         Nanopub np = creator.finalizeNanopub(true);
         assertTrue(FdoUtils.isFdoNanopub(np));
@@ -89,10 +113,10 @@ public class FdoNanopubTest {
     @Test
     void testNonFdoNanopub() throws MalformedNanopubException {
         NanopubCreator npCreator = new NanopubCreator(true);
-        final IRI nonFdoNanopub = vf.createIRI("https://example.com/nonFdoNanopub");
-        npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, TestUtils.anyIri);
+        final IRI nonFdoNanopub = iri("https://example.com/nonFdoNanopub");
+        npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, iri("https://schema.org/Any"));
         npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, nonFdoNanopub);
-        npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
+        npCreator.addPubinfoStatement(RDF.TYPE, iri("http://purl.org/nanopub/x/ExampleNanopub"));
         Nanopub np = npCreator.finalizeNanopub(true);
 
         assertFalse(FdoUtils.isFdoNanopub(np));
@@ -110,9 +134,9 @@ public class FdoNanopubTest {
     @Test
     public void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
         String fdoSuffix = "example-fdo-01";
-        IRI profile = vf.createIRI("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
+        IRI profile = iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
         String label = "ExampleFdo01";
-        IRI dataRef = vf.createIRI("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
+        IRI dataRef = iri("https://github.com/Nanopublication/nanopub-java/blob/master/README.md");
         String signer = "https://orcid.org/0000-0000-0000-0000"; // enter your orcid
 
         // create fdo record
@@ -120,12 +144,12 @@ public class FdoNanopubTest {
 
         // create nanopub
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
-        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI(signer));
+        creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, iri(signer));
         Nanopub np = creator.finalizeNanopub();
 
         // enter your key
         KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
-        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
+        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, iri(signer), true, true, true);
         // signing
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
 
