@@ -25,7 +25,7 @@ import org.nanopub.vocabulary.NPX;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -52,7 +52,6 @@ public class FdoNanopubCreatorTest {
         IRI npIri = iri(npIriString);
         NanopubCreator fdoNanopubCreator = FdoNanopubCreator.prepareNanopubCreator(record, fdoIri, npIri);
 
-
         assertTrue(fdoNanopubCreator.getCurrentAssertionStatements().stream()
                 .anyMatch(statement -> statement.getSubject().equals(fdoIri)
                         && statement.getPredicate().equals(RDF.TYPE)
@@ -77,7 +76,7 @@ public class FdoNanopubCreatorTest {
 
         Nanopub np = creator.finalizeNanopub(true);
 
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
     }
 
@@ -93,7 +92,7 @@ public class FdoNanopubCreatorTest {
 
         Nanopub np = creator.finalizeNanopub(true);
 
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
     }
 
@@ -154,7 +153,7 @@ public class FdoNanopubCreatorTest {
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
 
         // output to System.out
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(out, StandardCharsets.UTF_8));
 
         System.out.println("\nSigned Nanopub:");
         NanopubUtils.propagateToHandler(signedNp, w);

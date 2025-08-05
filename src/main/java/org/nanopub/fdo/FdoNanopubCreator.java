@@ -76,7 +76,7 @@ public class FdoNanopubCreator {
     }
 
     /**
-     * Creation of Nanopub from handle system.
+     * Creation of Nanopub from the handle system.
      *
      * @param id the handle system identifier
      * @return Nanopub containing the data from the handle system
@@ -91,8 +91,7 @@ public class FdoNanopubCreator {
         IRI fdoIri = FdoUtils.createIri(id);
         NanopubCreator creator = createWithFdoIri(record, fdoIri);
         creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + id));
-        Nanopub np = creator.finalizeNanopub(true);
-        return np;
+        return creator.finalizeNanopub(true);
     }
 
     /**
@@ -158,8 +157,7 @@ public class FdoNanopubCreator {
             }
         }
 
-        FdoRecord record = new FdoRecord(profile, label, null);
-        return record;
+        return new FdoRecord(profile, label, null);
     }
 
 }
