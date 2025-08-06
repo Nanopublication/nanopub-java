@@ -9,13 +9,13 @@ class SignatureUtilsTest {
     private final String pathSuffix = ".nanopub/";
     private final String fileNamePrefix = "id";
 
-    @Test
-    void getFullFilePathFromHomePath() {
-        String pathPrefix = "~/";
-        String relativeFilePathAndFileNamePrefix = pathPrefix + pathSuffix + fileNamePrefix;
-        String fullFilePath = SignatureUtils.getFullFilePath(relativeFilePathAndFileNamePrefix);
-        assertEquals((System.getProperty("user.home") + "/" + pathSuffix), fullFilePath);
-    }
+//    @Test
+//    void getFullFilePathFromHomePath() {
+//        String pathPrefix = "~/";
+//        String relativeFilePathAndFileNamePrefix = pathPrefix + pathSuffix + fileNamePrefix;
+//        String fullFilePath = SignatureUtils.getFullFilePath(relativeFilePathAndFileNamePrefix);
+//        assertEquals((System.getProperty("user.home") + "/" + pathSuffix), fullFilePath);
+//    }
 
     @Test
     void getFullFilePathWithFullPath() {

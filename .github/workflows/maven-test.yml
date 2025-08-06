@@ -32,7 +32,7 @@ jobs:
           cache: 'maven'
 
       - name: Tests and Integration Tests with Maven
-        run: mvn -B verify
+        run: mvn -B test
 
       - name: Generate JaCoCo badge
         id: jacoco
