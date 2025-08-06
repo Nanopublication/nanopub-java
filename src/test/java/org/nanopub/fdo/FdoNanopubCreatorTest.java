@@ -64,6 +64,7 @@ public class FdoNanopubCreatorTest {
         );
     }
 
+    @Test
     public void createWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
@@ -146,7 +147,7 @@ public class FdoNanopubCreatorTest {
         Nanopub np = creator.finalizeNanopub();
 
         // enter your key
-        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
+        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(), SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, iri(signer), true, true, true);
         // signing
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
