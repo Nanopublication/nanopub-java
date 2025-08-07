@@ -37,11 +37,12 @@ import java.util.Random;
 import java.util.Set;
 
 import static java.lang.System.out;
+import static org.eclipse.rdf4j.model.util.Values.literal;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.nanopub.fdo.ValidateFdo.createShaclValidationShapeFromJson;
 
 /**
- * Integration Tests must have suffix "IT".
+ * Integration Tests must have the suffix "IT".
  */
 public class GeneralIntegrationTestsIT {
 
@@ -63,7 +64,7 @@ public class GeneralIntegrationTestsIT {
 
         String signer = "https://orcid.org/0009-0008-3635-347X"; // TODO enter your orcid
 
-        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
+        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(), SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, Values.iri(signer), true, true, true);
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
         PublishNanopub.publish(signedNp);
@@ -98,10 +99,10 @@ public class GeneralIntegrationTestsIT {
         String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
         FdoRecord record = RetrieveFdo.resolveId(id);
         record.setAttribute(FdoUtils.toIri("handleToUpdate"),
-                Values.literal("New-Value-" + random.nextInt()));
+                literal("New-Value-" + random.nextInt()));
         String signer = "https://orcid.org/0009-0008-3635-347X"; // TODO enter your orcid
         // for updating the original nanopub must be signed with the same key
-//        KeyPair key = SignNanopub.loadKey("src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa", SignatureAlgorithm.RSA);
+//        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(), SignatureAlgorithm.RSA);
 //        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true, true);
         TransformContext context = TransformContext.makeDefault();
         NanopubCreator creator = record.createUpdatedNanopub(context);
