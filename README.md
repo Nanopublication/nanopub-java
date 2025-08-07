@@ -1,4 +1,4 @@
-[![coverage](https://raw.githubusercontent.com/Nanopublication/nanopub-java/badges/jacoco.svg)](https://github.com/Nanopublication/nanopub-java/actions/workflows/maven-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Nanopublication/nanopub-java/badge.svg?branch=master)](https://coveralls.io/github/Nanopublication/nanopub-java?branch=master)
 
 # nanopub-java
 
@@ -63,7 +63,7 @@ See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html)
 source code documentation.
 
 
-## Usage on Unix Command-Line
+## Usage of Unix Command-Line
 
 To use this library on the command line, just download the [np
 script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np).
@@ -127,7 +127,7 @@ Create the file target/jacoco.exec which includes the test coverage information 
 ```bash
 mvn clean verify
 ```
-To create a html report out of jacoco.exec (target/site/jacoco/index.html) use:
+To create a HTML report out of jacoco.exec (target/site/jacoco/index.html) use:
 ```bash
 mvn jacoco:report
 ```
