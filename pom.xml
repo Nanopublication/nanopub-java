@@ -310,11 +310,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>com.github.hazendaz.maven</groupId>
-        <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.7.0</version>
-      </plugin>
     </plugins>
   </build>
   <distributionManagement>
