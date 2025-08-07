@@ -1,0 +1,3 @@
+: https://orcid.org/0000-0000-0000-0000
+private_key: src/test/resources/testsuite/transform/signed/rsa-key2/key/id_rsa
+invalid: [this is an invalid line
