@@ -314,9 +314,6 @@
         <groupId>com.github.hazendaz.maven</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.7.0</version>
-        <configuration>
-          <repoToken>zD6dzndPKuoAgzBJrhdXg351prwbsENRD</repoToken>
-        </configuration>
       </plugin>
     </plugins>
   </build>
