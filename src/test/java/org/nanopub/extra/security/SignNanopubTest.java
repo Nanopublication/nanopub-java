@@ -12,7 +12,6 @@ import org.nanopub.utils.TestUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -20,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 class SignNanopubTest {
 
     @Test
-    void initWithoutArgs() throws IOException {
+    void initWithoutArgs() {
         assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new SignNanopub(), new String[0]));
     }
 
     @Test
     void initWithValidArgs() throws Exception {
-        String path = "src/test/resources/testsuite/valid/plain/aida1.trig";
+        String path = this.getClass().getResource("/testsuite/valid/plain/aida1.trig").getPath();
         String[] args = new String[]{"-v", path};
 
         CliRunner.initJc(new SignNanopub(), args);
@@ -34,15 +33,14 @@ class SignNanopubTest {
 
     @Test
     void signAndTransform1024RSA() throws Exception {
-
-        String outPath = "target/test-output/sign-nanopub";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String keyFile = "src/test/resources/testsuite/transform/signed/rsa-key1/key/id_rsa";
+        String keyFile = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath();
         String signerOrcid = TestUtils.ORCID;
-        String inFiles = "src/test/resources/testsuite/transform/plain/";
-        String signedFiles = "src/test/resources/testsuite/transform/signed/rsa-key1/";
+        String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
+        String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/").getPath();
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                     @Override
@@ -77,14 +75,13 @@ class SignNanopubTest {
 
     @Test
     void signAndTransform2048RSA() throws Exception {
-
-        String outPath = "target/test-output/sign-nanopub";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String profileFile = "src/test/resources/testsuite/transform/profile.yaml";
-        String inFiles = "src/test/resources/testsuite/transform/plain/";
-        String signedFiles = "src/test/resources/testsuite/transform/signed/rsa-key2/";
+        String profileFile = this.getClass().getResource("/testsuite/transform/profile.yaml").getPath();
+        String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
+        String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key2/").getPath();
         for (File testFile : new File(inFiles).listFiles(
                 new FilenameFilter() {
                     @Override

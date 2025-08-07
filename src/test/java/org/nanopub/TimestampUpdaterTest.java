@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,40 +14,35 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 public class TimestampUpdaterTest {
 
     @Test
-    void initWithoutArgs() throws IOException {
+    void initWithoutArgs() {
         assertThrowsExactly(ParameterException.class, () -> CliRunner.initJc(new TimestampUpdater(), new String[0]));
     }
 
     @Test
-    void initWithValidArgs() throws Exception {
-        String path = "src/test/resources/testsuite/valid/plain/aida1.trig";
-        String[] args = new String[] {"-v", path};
+    void initWithValidArgs() {
+        String path = this.getClass().getResource("/testsuite/valid/plain/aida1.trig").getPath();
+        String[] args = new String[]{"-v", path};
 
         CliRunner.initJc(new TimestampUpdater(), args);
     }
 
     @Test
     void upgradeTimestamp() throws Exception {
-
-        String outPath = "target/test-output/timestamp/";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/timestamp/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
 
-        String inFiles = "src/test/resources/testsuite/valid/plain/";
-        for (File testFile : new File(inFiles).listFiles(
-                new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(".trig");
-                    }
-                }))
-        {
+        String inFiles = this.getClass().getResource("/testsuite/valid/plain/").getPath();
+        for (File testFile : new File(inFiles).listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".trig");
+            }
+        })) {
             Calendar before = Calendar.getInstance();
 
             // create signed nanopub file
-            TimestampUpdater c = CliRunner.initJc(new TimestampUpdater(), new String[] {
-                    "-o", outFile.getPath(),
-                    testFile.getPath()});
+            TimestampUpdater c = CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", outFile.getPath(), testFile.getPath()});
             c.run();
 
             // read created nanopub from file

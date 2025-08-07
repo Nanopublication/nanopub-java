@@ -20,7 +20,7 @@ public class GetNanopubTest {
 
     @Test
     public void testGetNanopub() throws Exception {
-        String outPath = "target/test-output/get-nanopub/";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/get-nanopub/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath + "out.trig");
 
@@ -37,13 +37,12 @@ public class GetNanopubTest {
         IRI resultUri = testNano.getUri();
 
         assertEquals(nanopubUrl, resultUri.stringValue());
-
         outFile.delete();
     }
 
     @Test
     public void testGetIndex() throws Exception {
-        String outPath = "target/test-output/get-nanopub/";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/get-nanopub/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath + "out.trig");
 
@@ -88,6 +87,6 @@ public class GetNanopubTest {
         });
         outFile.delete();
         indexContentFile.delete();
-
     }
+
 }

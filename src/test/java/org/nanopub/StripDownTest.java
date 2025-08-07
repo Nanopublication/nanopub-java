@@ -21,7 +21,7 @@ class StripDownTest {
 
     @Test
     void stripDown() throws Exception {
-        String outPath = "target/test-output/strip/";
+        String outPath = this.getClass().getResource("/").getPath() + "test-output/strip/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
         String inFiles = Objects.requireNonNull(this.getClass().getResource("/testsuite/valid/signed")).getPath();
