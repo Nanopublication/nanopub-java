@@ -28,8 +28,5 @@ jobs:
       - name: Tests and Integration Tests with Maven
         run: mvn -B test
 
-      - name: Publish Coverall Report
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        if: ${{ env.COVERALLS_REPO_TOKEN }}
-        run: mvn -B jacoco:report coveralls:report
+      - name: Publish coverage to Coveralls
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
