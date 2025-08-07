@@ -20,7 +20,7 @@ public class KeyDeclaration extends CryptoElement {
      * @param uri the IRI of the key declaration
      */
     public KeyDeclaration(IRI uri) {
-        // TOOD this set the uri property, but not the keyLocation property
+        // TODO this set the uri property, but not the keyLocation property
         super(uri);
     }
 

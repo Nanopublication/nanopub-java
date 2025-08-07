@@ -24,7 +24,7 @@ public class TransformContext {
     /**
      * Constant <code>DEFAULT_KEY_PATH="~/.nanopub/id_rsa"</code>
      */
-    public static final String DEFAULT_KEY_PATH = System.getProperty("user.home") + "/.nanopub/id_rsa";
+    public static final String DEFAULT_KEY_PATH = "~/.nanopub/id_rsa";
 
     // TODO: Use this also for MakeTrustyNanopub
 
@@ -41,11 +41,11 @@ public class TransformContext {
         if (profile.getOrcidId() != null) {
             signerIri = vf.createIRI(profile.getOrcidId());
         }
-        KeyPair key = null;
+        KeyPair key;
         try {
             key = SignNanopub.loadKey(DEFAULT_KEY_PATH, RSA);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException("Could not load key " + ex.getMessage());
         }
         return new TransformContext(RSA, key, signerIri, false, false, false);
     }
@@ -108,7 +108,7 @@ public class TransformContext {
     }
 
     /**
-     * Returns true if to ignore signed is enabled.
+     * Returns true if ignore signed is enabled.
      *
      * @return true if ignore signed is enabled, false otherwise
      */
