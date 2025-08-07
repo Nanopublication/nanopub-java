@@ -19,6 +19,8 @@ public class Utils {
     }
 
     static IRI createIRI(String namespace, String localName) {
+        checkParameter(namespace, "Namespace");
+        checkParameter(localName, "Local Name");
         return new InternedIRI(namespace, localName);
     }
 
@@ -34,6 +36,8 @@ public class Utils {
          * @param namespace the full namespace URI
          */
         public VocabularyNamespace(String prefix, String namespace) {
+            checkParameter(prefix, "Prefix");
+            checkParameter(namespace, "Namespace");
             this.prefix = prefix;
             this.namespace = namespace;
         }
@@ -54,6 +58,12 @@ public class Utils {
             return this.namespace;
         }
 
+    }
+
+    static void checkParameter(String parameter, String parameterName) {
+        if (parameter == null || parameter.isEmpty()) {
+            throw new IllegalArgumentException(parameterName + " cannot be null or empty");
+        }
     }
 
 }
