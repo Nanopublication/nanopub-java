@@ -9,6 +9,7 @@ class SignatureUtilsTest {
     private final String pathSuffix = ".nanopub/";
     private final String fileNamePrefix = "id";
 
+    // TODO
 //    @Test
 //    void getFullFilePathFromHomePath() {
 //        String pathPrefix = "~/";

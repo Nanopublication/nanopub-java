@@ -18,6 +18,9 @@ import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Set;
 
 import static org.eclipse.rdf4j.model.util.Values.literal;
@@ -25,23 +28,34 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
+import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
 import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 import static org.nanopub.utils.TestUtils.vf;
 
 class FdoRecordTest {
 
-    private static final String TEST_KEY_PATH = "~/.nanopub/";
+    private static final String TEST_KEY_PATH = "~/.nanopub/testkey/";
     private static final String TEST_KEY_NAME = "id";
     private static final String testKeysDirPath = SignatureUtils.getFullFilePath(TEST_KEY_PATH);
 
     @BeforeAll
-    static void setUp() throws IOException {
+    static void setUp() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         File testKeysDir = new File(testKeysDirPath);
         testKeysDir.mkdirs();
         MakeKeys.make(testKeysDirPath + TEST_KEY_NAME, SignatureAlgorithm.RSA);
         assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase()).exists());
         assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase() + ".pub").exists());
+
+        // mock TransformContext.makeDefault() to get test keys
+        KeyPair key = SignNanopub.loadKey(TEST_KEY_PATH + "/id_rsa", RSA);
+
+        TransformContext testTC = new TransformContext(RSA, key, null, false, false, false);
+        MockedStatic<TransformContext> transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
+        transformContextMock
+                .when(() -> TransformContext.makeDefault())
+                .thenAnswer(invocation -> testTC);
+
     }
 
     @AfterAll
