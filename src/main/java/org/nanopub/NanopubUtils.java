@@ -19,7 +19,7 @@ import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -29,10 +29,18 @@ import java.util.*;
  */
 public class NanopubUtils {
 
+    private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
+    private static final Random random = new Random();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    private static CloseableHttpClient httpClient;
+
+    /**
+     * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
+     */
+    public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
+
     private NanopubUtils() {
     }  // no instances allowed
-
-    private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
 
     static {
         defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));
@@ -97,7 +105,7 @@ public class NanopubUtils {
      * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
      */
     public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException {
-        writeNanopub(nanopub, format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        writeNanopub(nanopub, format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
     }
 
     /**
@@ -139,7 +147,7 @@ public class NanopubUtils {
      */
     public static void propagateToHandler(Nanopub nanopub, RDFHandler handler) throws RDFHandlerException {
         handler.startRDF();
-        if (nanopub instanceof NanopubWithNs np && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
+        if (nanopub instanceof NanopubWithNs np && !np.getNsPrefixes().isEmpty()) {
             for (String p : np.getNsPrefixes()) {
                 handler.handleNamespace(p, np.getNamespace(p));
             }
@@ -193,6 +201,7 @@ public class NanopubUtils {
      * @return a string label for the Nanopub, or null if no label can be found
      */
     public static String getLabel(Nanopub np) {
+        final String separator = " ";
         String npLabel = "", npTitle = "", aLabel = "", aTitle = "", introLabel = "";
         final IRI npId = np.getUri();
         final IRI aId = np.getAssertionUri();
@@ -202,10 +211,10 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(npId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                npLabel += " " + obj.stringValue();
+                npLabel += separator + obj.stringValue();
             }
             if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
-                npTitle += " " + obj.stringValue();
+                npTitle += separator + obj.stringValue();
             }
             if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
@@ -216,10 +225,10 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                aLabel += " " + obj.stringValue();
+                aLabel += separator + obj.stringValue();
             }
             if (subj.equals(aId) && pred.equals(DCTERMS.TITLE) && obj instanceof Literal) {
-                aTitle += " " + obj.stringValue();
+                aTitle += separator + obj.stringValue();
             }
         }
         for (Statement st : np.getAssertion()) {
@@ -227,13 +236,13 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                aLabel += " " + obj.stringValue();
+                aLabel += separator + obj.stringValue();
             }
             if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
-                aTitle += " " + obj.stringValue();
+                aTitle += separator + obj.stringValue();
             }
             if (introMap.containsKey(subj) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                introLabel += " " + obj.stringValue();
+                introLabel += separator + obj.stringValue();
             }
         }
         if (!npLabel.isEmpty()) return npLabel.substring(1);
@@ -398,11 +407,6 @@ public class NanopubUtils {
     }
 
     /**
-     * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
-     */
-    public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
-
-    /**
      * For the first 32 bytes of the checksum, XOR them with the nanupub ID (starting at 3rd character)
      *
      * @param nanopubId the IRI of the Nanopub
@@ -411,16 +415,15 @@ public class NanopubUtils {
      */
     public static String updateXorChecksum(IRI nanopubId, String checksum) {
         byte[] checksumBytes = TrustyUriUtils.getBase64Bytes(checksum);
+        if (checksumBytes.length < 32) {
+            throw new IllegalArgumentException("Checksum must be at least 32 bytes long.");
+        }
         byte[] addBytes = TrustyUriUtils.getBase64Bytes(TrustyUriUtils.getArtifactCode(nanopubId.stringValue()).substring(2));
         for (int i = 0; i < 32; i++) {
             checksumBytes[i] = (byte) (checksumBytes[i] ^ addBytes[i]);
         }
         return TrustyUriUtils.getBase64(checksumBytes);
     }
-
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    private static CloseableHttpClient httpClient;
 
     /**
      * Returns a singleton instance of CloseableHttpClient with a custom configuration.
@@ -437,8 +440,6 @@ public class NanopubUtils {
         }
         return httpClient;
     }
-
-    private static Random random = new Random();
 
     /**
      * Creates a temporary Nanopub IRI with a random integer.
