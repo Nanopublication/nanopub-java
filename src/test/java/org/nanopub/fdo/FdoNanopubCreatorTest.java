@@ -8,6 +8,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
@@ -25,6 +27,8 @@ import org.nanopub.vocabulary.NPX;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -36,6 +40,9 @@ import java.util.Random;
 import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class FdoNanopubCreatorTest {
 
@@ -121,11 +128,23 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    void exampleRestCall() throws URISyntaxException, IOException, InterruptedException {
+    void exampleRestCall() throws URISyntaxException, IOException, InterruptedException, ClassNotFoundException {
 //        String id = "4263537/4000";
         String id = "21.T11967/39b0ec87d17a4856c5f7";
-        ParsedJsonResponse response = new HandleResolver().call(id);
 
+        // Set-up mocked httpClient
+        String httpResponseBody = "{\"responseCode\":1,\"handle\":\"21.T11967/39b0ec87d17a4856c5f7\",\"values\":[{\"index\":100,\"type\":\"HS_ADMIN\",\"data\":{\"format\":\"admin\",\"value\":{\"handle\":\"0.NA/21.T11967\",\"index\":300,\"permissions\":\"111111111111\"}},\"ttl\":86400,\"timestamp\":\"2025-03-30T14:53:22Z\"},{\"index\":1,\"type\":\"10320/loc\",\"data\":{\"format\":\"string\",\"value\":\"<locations>\\n<location href=\\\"https://cordra.testbed.pid.gwdg.de/objects/21.T11967/39b0ec87d17a4856c5f7\\\" weight=\\\"0\\\" view=\\\"json\\\" />\\n<location href=\\\"https://cordra.testbed.pid.gwdg.de/#objects/21.T11967/39b0ec87d17a4856c5f7\\\" weight=\\\"1\\\" view=\\\"ui\\\" />\\n</locations>\"},\"ttl\":86400,\"timestamp\":\"2025-03-30T14:53:22Z\"},{\"index\":2,\"type\":\"id\",\"data\":{\"format\":\"string\",\"value\":\"21.T11967/39b0ec87d17a4856c5f7\"},\"ttl\":86400,\"timestamp\":\"2025-03-30T14:53:22Z\"},{\"index\":3,\"type\":\"name\",\"data\":{\"format\":\"string\",\"value\":\"NumberFdo1\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":4,\"type\":\"description\",\"data\":{\"format\":\"string\",\"value\":\"This FDO is a simple data FDO to demonstrate what a ConfigType4 FDO looks like.\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":5,\"type\":\"FdoMimeType\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/f919d9f152904f6c40db\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":6,\"type\":\"FdoSemanticType\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/dde0a91075a4258a878b\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":7,\"type\":\"FdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/82045bd97a0acce88378\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":8,\"type\":\"DataRef\",\"data\":{\"format\":\"string\",\"value\":\"21.T11967/83d2b3f39034b2ac78cd\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":9,\"type\":\"MetadataRef\",\"data\":{\"format\":\"string\",\"value\":\"21.T11967/17361829babdab0ba566\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":10,\"type\":\"FdoService\",\"data\":{\"format\":\"string\",\"value\":\"21.T11967/service\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":11,\"type\":\"FdoStatus\",\"data\":{\"format\":\"string\",\"value\":\"created\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":12,\"type\":\"creationDate\",\"data\":{\"format\":\"string\",\"value\":\"2025-03-30T14:53:22.893Z\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":13,\"type\":\"modificationDate\",\"data\":{\"format\":\"string\",\"value\":\"2025-05-09T11:33:01.196Z\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":14,\"type\":\"createdBy\",\"data\":{\"format\":\"string\",\"value\":\"admin\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":15,\"type\":\"modifiedBy\",\"data\":{\"format\":\"string\",\"value\":\"admin\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"},{\"index\":16,\"type\":\"0.TYPE/DOIPService\",\"data\":{\"format\":\"string\",\"value\":\"21.T11967/service\"},\"ttl\":86400,\"timestamp\":\"2025-05-09T11:33:01Z\"}]}";
+        HttpResponse<String> mockResponse = mock();
+        when(mockResponse.body()).thenReturn(httpResponseBody);
+
+        HttpClient mockClient = mock();
+        when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockResponse);
+
+        MockedStatic<HttpClient> staticClient = Mockito.mockStatic(HttpClient.class);
+        staticClient.when(HttpClient::newHttpClient).thenReturn(mockClient);
+
+        // call handle resolver
+        ParsedJsonResponse response = new HandleResolver().call(id);
         ResponsePrinter.print(response);
     }
 

@@ -35,8 +35,8 @@ public class HandleResolver {
 
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(BASE_URI + id)).build();
         HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
-
-        ParsedJsonResponse r = new Gson().fromJson(httpResponse.body(), ParsedJsonResponse.class);
+        String responseBody = httpResponse.body();
+        ParsedJsonResponse r = new Gson().fromJson(responseBody, ParsedJsonResponse.class);
         return r;
     }
 
