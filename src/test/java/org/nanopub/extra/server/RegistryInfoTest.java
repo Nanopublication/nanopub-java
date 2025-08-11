@@ -17,8 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RegistryInfoTest {
@@ -41,7 +40,9 @@ class RegistryInfoTest {
             "{\"setupId\":%d,\"trustStateCounter\":%d,\"lastTrustStateUpdate\":\"%s\",\"trustStateHash\":\"%s\",\"status\":\"%s\",\"coverageTypes\":\"%s\",\"coverageAgents\":\"%s\",\"currentSetting\":\"%s\",\"originalSetting\":\"%s\",\"agentCount\":%d,\"accountCount\":%d,\"nanopubCount\":%d,\"loadCounter\":%d}",
             SETUP_ID, TRUST_STATE_COUNTER, LAST_TRUST_STATE_UPDATE, TRUST_STATE_HASH, STATUS, COVERAGE_TYPES, COVERAGE_AGENTS, CURRENT_SETTING, ORIGINAL_SETTING, AGENT_COUNT, ACCOUNT_COUNT, NANOPUB_COUNT, LOAD_COUNTER
     );
+
     private final String validUrl = "https://registry.np.trustyuri.net/";
+    private final String invalidUrl = "https://invalid.registry.url/";
 
     MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);
     private RegistryInfo registryInfo;
@@ -70,6 +71,11 @@ class RegistryInfoTest {
     void loadReturnsRegistryInfoForValidUrl() {
         assertNotNull(registryInfo);
         assertEquals(validUrl, registryInfo.getUrl());
+    }
+
+    @Test
+    void loadThrowsExceptionForInvalidUrl() {
+        assertThrows(RegistryInfo.RegistryInfoException.class, () -> RegistryInfo.load(invalidUrl));
     }
 
     @Test
