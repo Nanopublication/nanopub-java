@@ -366,4 +366,23 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
             return ImmutableMap.of();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        NanopubIndexImpl that = (NanopubIndexImpl) o;
+        return Objects.equals(np, that.np);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(np);
+    }
+
 }
