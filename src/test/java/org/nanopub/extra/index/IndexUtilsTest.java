@@ -1,40 +1,65 @@
 package org.nanopub.extra.index;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.Statements;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.NPX;
+
+import static org.eclipse.rdf4j.model.util.Values.triple;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.nanopub.utils.TestUtils.anyIri;
 
 class IndexUtilsTest {
 
-    private static final String TEST_NANOPUB_URI = "https://knowledgepixels.com/nanopubIri#test";
-    private static final SimpleValueFactory vf = SimpleValueFactory.getInstance();
-    private static final IRI anyIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#any");
-
     @Test
     void isIndex() throws MalformedNanopubException {
-        NanopubCreator creator1 = new NanopubCreator(vf.createIRI(TEST_NANOPUB_URI + "1"));
-        Statement assertionStatement = vf.createStatement(anyIri, anyIri, anyIri);
-        creator1.addAssertionStatements(assertionStatement);
-        creator1.addProvenanceStatements(vf.createStatement(creator1.getAssertionUri(), anyIri, anyIri));
-        creator1.addPubinfoStatements(vf.createStatement(creator1.getNanopubUri(), anyIri, anyIri));
+        NanopubCreator creator1 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "1"));
+        Statement assertionStatement = Statements.statement(triple(anyIri, anyIri, anyIri));
+        creator1.addAssertionStatement(assertionStatement);
+        creator1.addProvenanceStatement(anyIri, anyIri);
+        creator1.addPubinfoStatement(RDF.TYPE, anyIri);
 
-        NanopubCreator creator2 = new NanopubCreator(vf.createIRI(TEST_NANOPUB_URI + "2"));
-        creator2.addAssertionStatements(vf.createStatement(anyIri, anyIri, anyIri));
-        creator2.addProvenanceStatements(vf.createStatement(creator2.getAssertionUri(), anyIri, anyIri));
-        creator2.addPubinfoStatements(vf.createStatement(creator2.getNanopubUri(), RDF.TYPE, NPX.NANOPUB_INDEX));
+        NanopubCreator creator2 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "2"));
+        creator2.addAssertionStatement(Statements.statement(triple(anyIri, anyIri, anyIri)));
+        creator2.addProvenanceStatement(anyIri, anyIri);
+        creator2.addPubinfoStatement(Statements.statement(triple(Values.iri(anyIri.stringValue() + "/another"), anyIri, anyIri)));
+        creator2.addPubinfoStatement(RDF.TYPE, NPX.NANOPUB_INDEX);
 
         Nanopub nanopub1 = creator1.finalizeNanopub(true);
         Nanopub nanopub2 = creator2.finalizeNanopub(true);
 
-        Assertions.assertFalse(IndexUtils.isIndex(nanopub1));
-        Assertions.assertTrue(IndexUtils.isIndex(nanopub2));
+        assertFalse(IndexUtils.isIndex(nanopub1));
+        assertTrue(IndexUtils.isIndex(nanopub2));
+    }
+
+    @Test
+    void castToIndexWithNanopubIndex() throws MalformedNanopubException {
+        NanopubCreator creator2 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "2"));
+        creator2.addAssertionStatement(Statements.statement(triple(anyIri, anyIri, anyIri)));
+        creator2.addProvenanceStatement(anyIri, anyIri);
+        creator2.addPubinfoStatement(RDF.TYPE, NPX.NANOPUB_INDEX);
+
+        Nanopub nanopub2 = creator2.finalizeNanopub(true);
+        NanopubIndex index = new NanopubIndexImpl(nanopub2);
+
+        assertEquals(IndexUtils.castToIndex(index), index);
+    }
+
+    @Test
+    void castToIndexWithNanopub() throws MalformedNanopubException {
+        NanopubCreator creator2 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "2"));
+        creator2.addAssertionStatement(Statements.statement(triple(anyIri, anyIri, anyIri)));
+        creator2.addProvenanceStatement(anyIri, anyIri);
+        creator2.addPubinfoStatement(RDF.TYPE, NPX.NANOPUB_INDEX);
+
+        Nanopub nanopub2 = creator2.finalizeNanopub(true);
+        assertInstanceOf(NanopubIndexImpl.class, IndexUtils.castToIndex(nanopub2));
     }
 
 }
