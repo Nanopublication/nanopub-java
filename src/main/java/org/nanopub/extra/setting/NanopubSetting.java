@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -172,6 +173,26 @@ public class NanopubSetting implements Serializable {
      */
     public IRI getUpdateStrategy() {
         return updateStrategy;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NanopubSetting that = (NanopubSetting) o;
+        return Objects.equals(nanopub, that.nanopub);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(nanopub);
     }
 
 }
