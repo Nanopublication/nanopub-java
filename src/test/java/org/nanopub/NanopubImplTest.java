@@ -83,7 +83,7 @@ class NanopubImplTest {
             nanopubUtilsMock.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
             NanopubImpl nanopub1 = new NanopubImpl(new URI("https://w3id.org/np/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA").toURL());
-            NanopubImpl nanopub2 = new NanopubImpl(new File(Objects.requireNonNull(this.getClass().getResource("/testsuite/valid/signed/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA-all-LF.trig")).getPath()), RDFFormat.TRIG);
+            NanopubImpl nanopub2 = new NanopubImpl(new File(Objects.requireNonNull(this.getClass().getResource("/testsuite/invalid/signed/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA-all-LF.trig")).getPath()), RDFFormat.TRIG);
 
             assertTrue(TrustyNanopubUtils.isValidTrustyNanopub(nanopub1));
             assertFalse(TrustyNanopubUtils.isValidTrustyNanopub(nanopub2));
