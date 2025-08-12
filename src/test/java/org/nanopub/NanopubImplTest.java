@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,11 +64,11 @@ class NanopubImplTest {
     }
 
     @Test
-    void equalsTextBlockWithSameLineSeparator() throws Exception {
+    void equalsTextBlockWithSameLineSeparator() throws URISyntaxException, MalformedNanopubException, IOException {
         try (MockedStatic<NanopubUtils> nanopubUtilsMock = mockStatic(NanopubUtils.class, CALLS_REAL_METHODS)) {
             nanopubUtilsMock.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
-            NanopubImpl nanopub1 = new NanopubImpl(new URL("https://w3id.org/np/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA"));
+            NanopubImpl nanopub1 = new NanopubImpl(new URI("https://w3id.org/np/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA").toURL());
             NanopubImpl nanopub2 = new NanopubImpl(new File(Objects.requireNonNull(this.getClass().getResource("/testsuite/valid/signed/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA.trig")).getPath()), RDFFormat.TRIG);
 
             assertTrue(TrustyNanopubUtils.isValidTrustyNanopub(nanopub1));
@@ -78,11 +78,11 @@ class NanopubImplTest {
     }
 
     @Test
-    void equalsTextBlockWithDifferentLineSeparator() throws IOException, MalformedNanopubException {
+    void equalsTextBlockWithDifferentLineSeparator() throws IOException, MalformedNanopubException, URISyntaxException {
         try (MockedStatic<NanopubUtils> nanopubUtilsMock = mockStatic(NanopubUtils.class, CALLS_REAL_METHODS)) {
             nanopubUtilsMock.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
-            NanopubImpl nanopub1 = new NanopubImpl(new URL("https://w3id.org/np/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA"));
+            NanopubImpl nanopub1 = new NanopubImpl(new URI("https://w3id.org/np/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA").toURL());
             NanopubImpl nanopub2 = new NanopubImpl(new File(Objects.requireNonNull(this.getClass().getResource("/testsuite/valid/signed/RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA-all-LF.trig")).getPath()), RDFFormat.TRIG);
 
             assertTrue(TrustyNanopubUtils.isValidTrustyNanopub(nanopub1));

@@ -7,9 +7,7 @@ import org.nanopub.NanopubPattern;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
 
 /**
  * A nanopublication pattern for AIDA nanopublications.
@@ -65,8 +63,8 @@ public class AidaPattern implements NanopubPattern {
      * {@inheritDoc}
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/tkuhn/aida");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/tkuhn/aida").toURL();
     }
 
     /**

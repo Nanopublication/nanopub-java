@@ -4,6 +4,8 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 
@@ -78,8 +80,8 @@ public class DigitalSignaturePattern implements NanopubPattern {
      * {@inheritDoc}
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/extra/security/NanopubSignatureElement.java");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/extra/security/NanopubSignatureElement.java").toURL();
     }
 
 }

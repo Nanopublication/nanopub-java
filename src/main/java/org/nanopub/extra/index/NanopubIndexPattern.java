@@ -5,6 +5,8 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -64,8 +66,8 @@ public class NanopubIndexPattern implements NanopubPattern {
      * {@inheritDoc}
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("http://arxiv.org/abs/1411.2749");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("http://arxiv.org/abs/1411.2749").toURL();
     }
 
 }

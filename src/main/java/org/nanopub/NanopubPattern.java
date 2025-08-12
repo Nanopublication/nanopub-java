@@ -2,6 +2,7 @@ package org.nanopub;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -59,6 +60,6 @@ public interface NanopubPattern extends Serializable {
      * @return A URL with additional information
      * @throws java.net.MalformedURLException If the URL is malformed
      */
-    public URL getPatternInfoUrl() throws MalformedURLException;
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException;
 
 }

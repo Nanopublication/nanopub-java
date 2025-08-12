@@ -9,6 +9,8 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -80,8 +82,8 @@ public class SimpleCreatorPattern implements NanopubPattern {
      * Returns a URL to the pattern information.
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java").toURL();
     }
 
     /**
@@ -186,7 +188,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      */
     public static final IRI BIBO_AUTHOR_LIST = SimpleValueFactory.getInstance().createIRI("http://purl.org/ontology/bibo/authorList");
     /**
-     * Constant <code>RDF_ELEMENT_PROPERTY_REGEX="http://www\\.w3\\.org/1999/02/22-rdf-sy"{trunked}</code>
+     * Constant <code>RDF_ELEMENT_PROPERTY_REGEX</code>
      */
     public static final String RDF_ELEMENT_PROPERTY_REGEX = "http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_([1-9][0-9]*)";
 

@@ -10,6 +10,8 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.Calendar;
@@ -62,8 +64,8 @@ public class SimpleTimestampPattern implements NanopubPattern {
      * {@inheritDoc}
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java").toURL();
     }
 
     /**

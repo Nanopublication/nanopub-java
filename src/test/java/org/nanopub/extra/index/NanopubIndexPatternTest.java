@@ -7,6 +7,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.utils.TestUtils;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +41,7 @@ class NanopubIndexPatternTest {
     }
 
     @Test
-    void getPatternInfoUrlReturnsValidUrl() throws MalformedURLException {
+    void getPatternInfoUrlReturnsValidUrl() throws MalformedURLException, URISyntaxException {
         NanopubIndexPattern pattern = new NanopubIndexPattern();
         URL url = pattern.getPatternInfoUrl();
         assertNotNull(url);

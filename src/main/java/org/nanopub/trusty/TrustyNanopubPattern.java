@@ -1,12 +1,13 @@
 package org.nanopub.trusty;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import net.trustyuri.TrustyUriUtils;
-
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * A nanopublication pattern that checks if a nanopublication has a valid Trusty URI.
@@ -69,8 +70,8 @@ public class TrustyNanopubPattern implements NanopubPattern {
      * Returns the URL where more information about this nanopublication pattern can be found.
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("http://trustyuri.net/");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("http://trustyuri.net/").toURL();
     }
 
 }
