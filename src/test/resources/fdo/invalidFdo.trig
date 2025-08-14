@@ -1,0 +1,53 @@
+@prefix this: <https://w3id.org/np/RAojp3TaDSNdSvOMUtf8yzYCdTmIGVbq8XIBdy9RvcvhY> .
+@prefix sub: <https://w3id.org/np/RAojp3TaDSNdSvOMUtf8yzYCdTmIGVbq8XIBdy9RvcvhY/> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix fdof: <https://w3id.org/fdof/ontology#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+
+sub:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion sub:assertion;
+    np:hasProvenance sub:provenance;
+    np:hasPublicationInfo sub:pubinfo .
+}
+
+sub:assertion {
+  <https://hdl.handle.net/21.T11967/39b0ec87d17a4856c5f7> a fdof:FAIRDigitalObject;
+    dct:conformsTo <https://hdl.handle.net/21.T11966/82045bd97a0acce88378>;
+    rdfs:label "NumberFdo1";
+    <https://hdl.handle.net/0.TYPE/DOIPService> <https://hdl.handle.net/21.T11967/service>;
+    <https://hdl.handle.net/10320/loc> """<locations>
+<location href=\"https://cordra.testbed.pid.gwdg.de/objects/21.T11967/39b0ec87d17a4856c5f7\" weight=\"0\" view=\"json\" />
+<location href=\"https://cordra.testbed.pid.gwdg.de/#objects/21.T11967/39b0ec87d17a4856c5f7\" weight=\"1\" view=\"ui\" />
+</locations>""";
+    <https://w3id.org/kpxl/handle/terms/DataRef> <https://hdl.handle.net/21.T11967/83d2b3f39034b2ac78cd>;
+    <https://w3id.org/kpxl/handle/terms/FdoMimeType> <https://hdl.handle.net/21.T11966/f919d9f152904f6c40db>;
+    <https://w3id.org/kpxl/handle/terms/FdoSemanticType> <https://hdl.handle.net/21.T11966/dde0a91075a4258a878b>;
+    <https://w3id.org/kpxl/handle/terms/FdoService> <https://hdl.handle.net/21.T11967/service>;
+    <https://w3id.org/kpxl/handle/terms/FdoStatus> "created";
+    <https://w3id.org/kpxl/handle/terms/MetadataRef> <https://hdl.handle.net/21.T11967/17361829babdab0ba566>;
+    <https://w3id.org/kpxl/handle/terms/createdBy> "admin";
+    <https://w3id.org/kpxl/handle/terms/creationDate> "2025-03-30T14:53:22.893Z";
+    <https://w3id.org/kpxl/handle/terms/description> "This FDO is a simple data FDO to demonstrate what a ConfigType4 FDO looks like.";
+    <https://w3id.org/kpxl/handle/terms/modificationDate> "2025-05-09T11:33:01.196Z";
+    <https://w3id.org/kpxl/handle/terms/modifiedBy> "admin" .
+}
+
+sub:provenance {
+  sub:assertion prov:wasDerivedFrom <https://hdl.handle.net/api/handles/21.T11967/39b0ec87d17a4856c5f7> .
+}
+
+sub:pubinfo {
+  this: dct:created "2025-07-02T15:30:37.127+02:00"^^xsd:dateTime;
+    npx:introduces <https://hdl.handle.net/21.T11967/39b0ec87d17a4856c5f7> .
+
+  sub:sig npx:hasAlgorithm "RSA";
+    npx:hasPublicKey "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD3RHyHR7WWKBYevw1qK86B6RVzI7oKlvghqXvbpOAX1KueDE6Itru34HRhrVy4OMLCRQWBE3VXktKdbgOxD3vC4cIxz5LX+XOgGWzv5WKSjOfXu/yIeJrzsuIkyHvw7/tToGrE0itJ1wGylJv+YieizmGvNiUHhP0J0+YFMNnvewIDAQAB";
+    npx:hasSignature "Nhw0fplWnYmqwX/r45Jth7pRk46WddP6EXA1koyce+50N9eiEwtQ/pOyHHyU1HUXLHjyRRjv25PzmkXIFvDgV8R49RzS0Er/yMb1ezRrv5yEux6dEmp+arAsGk0S0ZS5qm78iq7WabAm7JzuODmpjvkuphTjD5bQ7TCEDD0c8LE=";
+    npx:hasSignatureTarget this:;
+    npx:signedBy <https://orcid.org/0009-0008-3635-347X> .
+}
