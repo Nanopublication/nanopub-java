@@ -19,13 +19,13 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
-import org.nanopub.vocabulary.NP;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
 
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -316,7 +316,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
      */
     public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {
         try {
-            readStatements(new ByteArrayInputStream(utf8.getBytes("UTF-8")), format);
+            readStatements(new ByteArrayInputStream(utf8.getBytes(StandardCharsets.UTF_8)), format);
         } catch (IOException ex) {
             // We do not expect an IOException here (no file system IO taking place)
             throw new RuntimeException("Unexpected IOException", ex);
@@ -341,7 +341,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
                 }
 
             });
-            p.parse(new InputStreamReader(in, Charset.forName("UTF-8")));
+            p.parse(new InputStreamReader(in, StandardCharsets.UTF_8));
         }
     }
 

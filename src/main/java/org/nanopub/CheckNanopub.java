@@ -7,7 +7,6 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
@@ -109,15 +108,12 @@ public class CheckNanopub extends CliRunner {
                     if (verbose) {
                         log("Reading file: " + s + "\n");
                     }
-                    MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
-                        @Override
-                        public void handleNanopub(Nanopub np) {
-                            count++;
-                            if (count % 100 == 0) {
-                                log(count + " nanopubs...\r");
-                            }
-                            check(np);
+                    MultiNanopubRdfHandler.process(new File(s), np -> {
+                        count++;
+                        if (count % 100 == 0) {
+                            log(count + " nanopubs...\r");
                         }
+                        check(np);
                     });
                     if (count == 0) {
                         log("NO NANOPUB FOUND: " + s + "\n");

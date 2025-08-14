@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
@@ -122,17 +121,12 @@ public class Namespaces extends CliRunner {
                 rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException | IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException | IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
         }

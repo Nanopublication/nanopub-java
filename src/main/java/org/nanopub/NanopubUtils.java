@@ -82,16 +82,11 @@ public class NanopubUtils {
 
     private static List<Statement> getSortedList(Set<Statement> s) {
         List<Statement> l = new ArrayList<>(s);
-        l.sort(new Comparator<>() {
-
-            @Override
-            public int compare(Statement st1, Statement st2) {
-                // TODO better sorting
-                // it works fine for now, since AbstractStatement has a valid toString()
-                // implementation, which does not consist of any runtime object references
-                return st1.toString().compareTo(st2.toString());
-            }
-
+        l.sort((st1, st2) -> {
+            // TODO better sorting
+            // it works fine for now, since AbstractStatement has a valid toString()
+            // implementation, which does not consist of any runtime object references
+            return st1.toString().compareTo(st2.toString());
         });
         return l;
     }

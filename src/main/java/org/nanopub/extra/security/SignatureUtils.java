@@ -217,7 +217,7 @@ public class SignatureUtils {
         // Preprocess signature statement:
         List<Statement> sigStatementList = new ArrayList<>();
         sigStatementList.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE, signatureLiteral, piUri));
-        Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).get(0);
+        Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).getFirst();
 
         // Combine all statements:
         RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);

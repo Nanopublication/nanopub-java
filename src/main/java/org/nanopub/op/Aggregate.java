@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
@@ -101,17 +100,12 @@ public class Aggregate extends CliRunner {
                 rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException | IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException | IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
         }
@@ -184,12 +178,7 @@ public class Aggregate extends CliRunner {
         if (statementCounts == null) return;
         BufferedWriter w = makeWriter(outputFile);
         List<Statement> statementList = new ArrayList<>(statementCounts.keySet());
-        statementList.sort(new Comparator<>() {
-            @Override
-            public int compare(Statement st1, Statement st2) {
-                return -statementCounts.get(st1).compareTo(statementCounts.get(st2));
-            }
-        });
+        statementList.sort((st1, st2) -> -statementCounts.get(st1).compareTo(statementCounts.get(st2)));
         for (Statement st : statementList) {
             w.write(statementCounts.get(st) + " " + st.toString().replaceAll("http://example.org/npop-dummy-uri/", "") + "\n");
         }

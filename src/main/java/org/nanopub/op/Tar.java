@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -67,17 +66,12 @@ public class Tar extends CliRunner {
                     rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
                 }
 
-                MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            process(np);
-                        } catch (RDFHandlerException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                    try {
+                        process(np);
+                    } catch (RDFHandlerException ex) {
+                        throw new RuntimeException(ex);
                     }
-
                 });
 
             }

@@ -15,7 +15,7 @@ class NoTopicsTest {
         Nanopub nanopub = TestUtils.createNanopub(TestUtils.NANOPUB_URI);
         NoTopics handler = new NoTopics();
         String topic = handler.getTopic(nanopub);
-        assertEquals(topic, TestUtils.NANOPUB_URI);
+        assertEquals(TestUtils.NANOPUB_URI, topic);
     }
 
     @Test

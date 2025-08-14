@@ -141,7 +141,7 @@ public abstract class QueryAccess {
                     }
                 }
                 if (latestList.size() == 1) {
-                    String latest = latestList.get(0);
+                    String latest = latestList.getFirst();
                     latestVersionMap.put(nanopubId, Pair.of(currentTime, latest));
                     return latest;
                 } else {

@@ -10,10 +10,9 @@ import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -77,21 +76,16 @@ public class LegacySignNanopub {
                 out = new FileOutputStream(outFile);
             }
             final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-            MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        np = writeAsSignedTrustyNanopub(np, format, key, out);
-                        if (verbose) {
-                            System.out.println("Nanopub URI: " + np.getUri());
-                        }
-                    } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
+            MultiNanopubRdfHandler.process(format, inputFile, np -> {
+                try {
+                    np = writeAsSignedTrustyNanopub(np, format, key, out);
+                    if (verbose) {
+                        System.out.println("Nanopub URI: " + np.getUri());
                     }
+                } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
+                    ex.printStackTrace();
+                    throw new RuntimeException(ex);
                 }
-
             });
             out.close();
         }
@@ -170,18 +164,13 @@ public class LegacySignNanopub {
      * @throws org.nanopub.MalformedNanopubException     if a Nanopub is malformed
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final KeyPair key, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
-        MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-            @Override
-            public void handleNanopub(Nanopub np) {
-                try {
-                    writeAsSignedTrustyNanopub(np, format, key, out);
-                } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
-                    ex.printStackTrace();
-                    throw new RuntimeException(ex);
-                }
+        MultiNanopubRdfHandler.process(format, in, np -> {
+            try {
+                writeAsSignedTrustyNanopub(np, format, key, out);
+            } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
+                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
-
         });
         out.close();
     }
@@ -201,7 +190,7 @@ public class LegacySignNanopub {
      */
     public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, KeyPair key, OutputStream out) throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
         np = signAndTransform(np, key);
-        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
         return np;
     }
@@ -218,10 +207,10 @@ public class LegacySignNanopub {
     public static KeyPair loadKey(String keyFilename) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);
         KeyFactory kf = KeyFactory.getInstance("DSA");
-        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
+        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), StandardCharsets.UTF_8));
         KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
         PrivateKey privateKey = kf.generatePrivate(privateSpec);
-        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), "UTF-8"));
+        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), StandardCharsets.UTF_8));
         KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
         PublicKey publicKey = kf.generatePublic(publicSpec);
         return new KeyPair(publicKey, privateKey);

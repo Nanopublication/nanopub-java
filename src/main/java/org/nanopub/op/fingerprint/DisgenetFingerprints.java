@@ -77,7 +77,7 @@ public class DisgenetFingerprints implements FingerprintHandler {
 
     private Value transform(Value v) {
         if (v instanceof IRI) {
-            String s = ((IRI) v).stringValue();
+            String s = v.stringValue();
             if (s.matches("http://rdf.disgenet.org/v.*/void.*")) {
                 if (s.matches("http://rdf.disgenet.org/v.*/void.*-20[0-9]*")) {
                     String r = s.replaceFirst("^http://rdf.disgenet.org/v.*/void.*(/|#)(.*)-20[0-9]*$", "http://rdf.disgenet.org/vx.x.x/void/$2");

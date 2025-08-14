@@ -36,9 +36,11 @@ class ResponsePrinterTest {
             System.setOut(originalOut);
         }
 
-        String expected = "id: 12345\n" +
-                "TYPE   DATA.FORMAT   DATA\n" +
-                "String   JSON   {\"key\":\"value\"}\n";
+        String expected = """
+                id: 12345
+                TYPE   DATA.FORMAT   DATA
+                String   JSON   {"key":"value"}
+                """;
         assertEquals(expected, outContent.toString());
     }
 

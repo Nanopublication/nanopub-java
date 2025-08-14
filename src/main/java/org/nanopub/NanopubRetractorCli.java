@@ -13,7 +13,7 @@ import org.nanopub.extra.server.PublishNanopub;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 
 /**
@@ -70,7 +70,7 @@ public class NanopubRetractorCli extends CliRunner {
             PublishNanopub.publish(retraction);
         }
         // Write to System.out
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(retraction, w);
     }
 

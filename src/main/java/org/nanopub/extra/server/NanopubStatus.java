@@ -81,7 +81,7 @@ public class NanopubStatus extends CliRunner {
     }
 
     private void run() throws IOException, RDFHandlerException {
-        checkNanopub(nanopubIds.get(0), recursive);
+        checkNanopub(nanopubIds.getFirst(), recursive);
         if (recursive) {
             System.out.print(indexNpCount + " index nanopub" + (indexNpCount != 1 ? "s" : "") + "; ");
             System.out.println(contentNpCount + " content nanopub" + (contentNpCount != 1 ? "s" : ""));

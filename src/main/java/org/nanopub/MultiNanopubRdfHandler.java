@@ -1,28 +1,14 @@
 package org.nanopub;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Handles files or streams with a sequence of nanopubs.
@@ -89,7 +75,7 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         RDFParser p = NanopubUtils.getParser(format);
         p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));
-        try (InputStreamReader is = new InputStreamReader(in, Charset.forName("UTF-8"))) {
+        try (InputStreamReader is = new InputStreamReader(in, StandardCharsets.UTF_8)) {
             p.parse(is, "");
         } catch (RuntimeException ex) {
             if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&

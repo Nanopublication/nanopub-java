@@ -102,11 +102,11 @@ public class ServerIterator implements Iterator<RegistryInfo> {
     private RegistryInfo getNextServer() {
         if (cachedServers != null) {
             if (cachedServers.isEmpty()) return null;
-            return cachedServers.remove(0);
+            return cachedServers.removeFirst();
         } else {
             while (!serversToContact.isEmpty()) {
                 if (!serversToContact.isEmpty()) {
-                    String url = serversToContact.remove(0);
+                    String url = serversToContact.removeFirst();
                     if (serversContacted.containsKey(url)) continue;
                     serversContacted.put(url, true);
                     RegistryInfo info = getServerInfo(url);

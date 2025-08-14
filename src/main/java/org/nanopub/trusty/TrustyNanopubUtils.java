@@ -17,7 +17,7 @@ import org.nanopub.vocabulary.NP;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -28,7 +28,7 @@ public class TrustyNanopubUtils {
     /**
      * The RDF format for serialized Trusty Nanopubs.
      */
-    public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true, false);
+    public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", StandardCharsets.UTF_8, "stnp", false, true, false);
 
     private TrustyNanopubUtils() {
     }  // no instances allowed
@@ -48,7 +48,7 @@ public class TrustyNanopubUtils {
      * @throws java.io.IOException                       if there is an I/O error
      */
     public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException, IOException {
-        try (OutputStreamWriter sw = new OutputStreamWriter(out, Charset.forName("UTF-8"))) {
+        try (OutputStreamWriter sw = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
             RDFWriter writer = Rio.createWriter(format, sw);
             writer.startRDF();
             String s = nanopub.getUri().toString();

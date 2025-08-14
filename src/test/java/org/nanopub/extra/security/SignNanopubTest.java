@@ -11,7 +11,6 @@ import org.nanopub.utils.TestUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -42,12 +41,7 @@ class SignNanopubTest {
         String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
         String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/").getPath();
         for (File testFile : new File(inFiles).listFiles(
-                new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(".in.trig");
-                    }
-                })) {
+                (dir, name) -> name.endsWith(".in.trig"))) {
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
@@ -60,7 +54,7 @@ class SignNanopubTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
-            FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
+            FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
             try {
                 String artifactCodeFromSuite = IOUtils.toString(inputStream);
                 assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
@@ -83,12 +77,7 @@ class SignNanopubTest {
         String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
         String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key2/").getPath();
         for (File testFile : new File(inFiles).listFiles(
-                new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith("in.trig");
-                    }
-                })) {
+                (dir, name) -> name.endsWith("in.trig"))) {
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
@@ -100,7 +89,7 @@ class SignNanopubTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
-            FileInputStream inputStream = new FileInputStream(new File(signedFiles + testFile.getName().replace("in.trig", "out.code")));
+            FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
             try {
                 String artifactCodeFromSuite = IOUtils.toString(inputStream);
                 assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());

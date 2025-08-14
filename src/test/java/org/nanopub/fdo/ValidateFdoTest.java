@@ -9,6 +9,7 @@ import org.nanopub.NanopubImpl;
 import java.io.File;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +17,7 @@ import static org.mockito.Mockito.*;
 
 class ValidateFdoTest {
 
-    public final static String MOCKED_NANOPUB_PATH = ValidateFdoTest.class.getResource("/fdo/").getPath().toString();
+    public final static String MOCKED_NANOPUB_PATH = Objects.requireNonNull(ValidateFdoTest.class.getResource("/fdo/")).getPath();
 
     @Test
     void validateValidFdo() throws Exception {
@@ -36,7 +37,7 @@ class ValidateFdoTest {
             try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
                 HttpClient mockClient = mock();
                 when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockJsonResponse);
-                mocked.when(() -> HttpClient.newHttpClient()).thenReturn(mockClient);
+                mocked.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
                 assertTrue(ValidateFdo.validate(new FdoRecord(nanopub)).isValid());
             }
@@ -61,7 +62,7 @@ class ValidateFdoTest {
             try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
                 HttpClient mockClient = mock();
                 when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockJsonResponse);
-                mocked.when(() -> HttpClient.newHttpClient()).thenReturn(mockClient);
+                mocked.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
                 assertFalse(ValidateFdo.validate(new FdoRecord(nanopub)).isValid());
             }

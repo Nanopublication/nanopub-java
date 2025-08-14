@@ -8,10 +8,9 @@ import net.trustyuri.rdf.RdfFileContent;
 import net.trustyuri.rdf.RdfUtils;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -58,25 +57,20 @@ public class FixTrustyNanopub extends CliRunner {
             }
             final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             try (out) {
-                MultiNanopubRdfHandler.process(format, inputFile, new NanopubHandler() {
-
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            np = writeAsFixedNanopub(np, format, out);
-                            count++;
-                            if (verbose) {
-                                System.out.println("Nanopub URI: " + np.getUri());
-                            } else {
-                                if (count % 100 == 0) {
-                                    System.err.print(count + " nanopubs...\r");
-                                }
+                MultiNanopubRdfHandler.process(format, inputFile, np -> {
+                    try {
+                        np = writeAsFixedNanopub(np, format, out);
+                        count++;
+                        if (verbose) {
+                            System.out.println("Nanopub URI: " + np.getUri());
+                        } else {
+                            if (count % 100 == 0) {
+                                System.err.print(count + " nanopubs...\r");
                             }
-                        } catch (RDFHandlerException | TrustyUriException ex) {
-                            throw new RuntimeException(ex);
                         }
+                    } catch (RDFHandlerException | TrustyUriException ex) {
+                        throw new RuntimeException(ex);
                     }
-
                 });
             }
         }
@@ -141,17 +135,12 @@ public class FixTrustyNanopub extends CliRunner {
     public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out)
             throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         try (in; out) {
-            MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        writeAsFixedNanopub(np, format, out);
-                    } catch (RDFHandlerException | TrustyUriException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(format, in, np -> {
+                try {
+                    writeAsFixedNanopub(np, format, out);
+                } catch (RDFHandlerException | TrustyUriException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
         }
     }
@@ -169,7 +158,7 @@ public class FixTrustyNanopub extends CliRunner {
     public static Nanopub writeAsFixedNanopub(Nanopub np, RDFFormat format, OutputStream out)
             throws RDFHandlerException, TrustyUriException {
         np = FixTrustyNanopub.fix(np);
-        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
         return np;
     }

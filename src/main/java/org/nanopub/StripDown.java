@@ -13,7 +13,7 @@ import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
@@ -84,28 +84,24 @@ public class StripDown extends CliRunner {
             final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
             try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, new MultiNanopubRdfHandler.NanopubHandler() {
+                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                    try {
+                        String replacement = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
+                        List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            String replacement = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
-                            List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
+                        NanopubImpl oldNp = (NanopubImpl) np;
+                        Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
 
-                            NanopubImpl oldNp = (NanopubImpl) np;
-                            Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
+                        NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
 
-                            NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
+                        RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, StandardCharsets.UTF_8));
+                        NanopubUtils.propagateToHandler(updatedNp, w);
 
-                            RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-                            NanopubUtils.propagateToHandler(updatedNp, w);
-
-                        } catch (RDFHandlerException ex) {
-                            ex.printStackTrace();
-                            throw new RuntimeException(ex);
-                        } catch (MalformedNanopubException e) {
-                            throw new RuntimeException(e);
-                        }
+                    } catch (RDFHandlerException ex) {
+                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
+                    } catch (MalformedNanopubException e) {
+                        throw new RuntimeException(e);
                     }
                 });
             }

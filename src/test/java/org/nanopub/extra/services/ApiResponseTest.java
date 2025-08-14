@@ -40,10 +40,10 @@ class ApiResponseTest {
         response.setHeader(new String[]{"key1", "key2"});
         response.add(new String[]{"value1", "value2"});
 
-        ApiResponseEntry entry = response.getData().get(0);
+        ApiResponseEntry entry = response.getData().getFirst();
 
         assertEquals(1, response.size());
-        assertEquals(response.getData().size(), 1);
+        assertEquals(1, response.getData().size());
         assertEquals("value1", entry.get("key1"));
         assertEquals("value2", entry.get("key2"));
     }

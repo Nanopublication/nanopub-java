@@ -156,21 +156,21 @@ public class FetchIndex {
                             // Failing to get subindexes can block the entire process, therefore
                             // we launch three sibling tasks at the same time:
                             FetchNanopubTask t1 = new FetchNanopubTask(subIndexUri.toString(), true);
-                            fetchTasks.add(0, t1);
+                            fetchTasks.addFirst(t1);
                             FetchNanopubTask t2 = new FetchNanopubTask(subIndexUri.toString(), true, t1);
-                            fetchTasks.add(0, t2);
+                            fetchTasks.addFirst(t2);
                             FetchNanopubTask t3 = new FetchNanopubTask(subIndexUri.toString(), true, t1, t2);
-                            fetchTasks.add(0, t3);
+                            fetchTasks.addFirst(t3);
                         }
                         if (npi.getAppendedIndex() != null) {
                             // Failing to get appended indexes can block the entire process, therefore
                             // we launch three sibling tasks at the same time:
                             FetchNanopubTask t1 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true);
-                            fetchTasks.add(0, t1);
+                            fetchTasks.addFirst(t1);
                             FetchNanopubTask t2 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1);
-                            fetchTasks.add(0, t2);
+                            fetchTasks.addFirst(t2);
                             FetchNanopubTask t3 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1, t2);
-                            fetchTasks.add(0, t3);
+                            fetchTasks.addFirst(t3);
                         }
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
@@ -236,14 +236,7 @@ public class FetchIndex {
     private void assignTask(final FetchNanopubTask task, final RegistryInfo r) {
         task.prepareForTryingServer(r);
         serverLoad.get(r).add(task);
-        Runnable runFetchTask = new Runnable() {
-
-            @Override
-            public void run() {
-                task.tryServer(r);
-            }
-
-        };
+        Runnable runFetchTask = () -> task.tryServer(r);
         Thread thread = new Thread(runFetchTask);
         thread.start();
     }

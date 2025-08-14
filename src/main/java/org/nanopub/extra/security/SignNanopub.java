@@ -10,10 +10,9 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
@@ -150,22 +149,17 @@ public class SignNanopub extends CliRunner {
             final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
             try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
-
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
-                            if (verbose) {
-                                System.out.println("Nanopub URI: " + np.getUri());
-                            }
-                        } catch (RDFHandlerException | SignatureException | InvalidKeyException |
-                                 TrustyUriException ex) {
-                            ex.printStackTrace();
-                            throw new RuntimeException(ex);
+                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                    try {
+                        np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
+                        if (verbose) {
+                            System.out.println("Nanopub URI: " + np.getUri());
                         }
+                    } catch (RDFHandlerException | SignatureException | InvalidKeyException |
+                             TrustyUriException ex) {
+                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
                     }
-
                 });
             }
         }
@@ -231,18 +225,13 @@ public class SignNanopub extends CliRunner {
      */
     public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final TransformContext c, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
         try (out) {
-            MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        writeAsSignedTrustyNanopub(np, format, c, out);
-                    } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(format, in, np -> {
+                try {
+                    writeAsSignedTrustyNanopub(np, format, c, out);
+                } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {
+                    ex.printStackTrace();
+                    throw new RuntimeException(ex);
                 }
-
             });
         }
     }
@@ -262,7 +251,7 @@ public class SignNanopub extends CliRunner {
      */
     public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, TransformContext c, OutputStream out) throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
         np = signAndTransform(np, c);
-        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
         return np;
     }
@@ -280,10 +269,10 @@ public class SignNanopub extends CliRunner {
     public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);
         KeyFactory kf = KeyFactory.getInstance(algorithm.name());
-        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), "UTF-8"));
+        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), StandardCharsets.UTF_8));
         KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
         PrivateKey privateKey = kf.generatePrivate(privateSpec);
-        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), "UTF-8"));
+        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), StandardCharsets.UTF_8));
         KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
         PublicKey publicKey = kf.generatePublic(publicSpec);
         return new KeyPair(publicKey, privateKey);

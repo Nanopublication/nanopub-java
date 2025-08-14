@@ -16,7 +16,7 @@ import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -68,7 +68,7 @@ public class Import extends CliRunner {
 
     private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
 
-        File inputFile = inputFiles.get(0);
+        File inputFile = inputFiles.getFirst();
         if (inFormat != null) {
             rdfInFormat = Rio.getParserFormatForFileName("file." + inFormat).orElse(null);
         } else {
@@ -138,7 +138,7 @@ public class Import extends CliRunner {
         };
         p.setRDFHandler(rdfHandler);
         try {
-            p.parse(new InputStreamReader(in, Charset.forName("UTF-8")), "");
+            p.parse(new InputStreamReader(in, StandardCharsets.UTF_8), "");
         } finally {
             in.close();
         }

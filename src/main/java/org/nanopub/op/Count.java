@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.File;
@@ -61,8 +60,7 @@ public class Count extends CliRunner {
         if (args == null) {
             args = "";
         }
-        Count obj = CliRunner.initJc(new Count(), args.trim().split(" "));
-        return obj;
+        return CliRunner.initJc(new Count(), args.trim().split(" "));
     }
 
     private RDFFormat rdfInFormat;
@@ -94,14 +92,7 @@ public class Count extends CliRunner {
                 rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    countTriples(np);
-                }
-
-            });
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, this::countTriples);
             if (tableFile == null) {
                 System.out.println("Nanopublications: " + npCount);
                 System.out.println("Head triples: " + headCount + " (average: " + ((((float) headCount)) / npCount) + ")");

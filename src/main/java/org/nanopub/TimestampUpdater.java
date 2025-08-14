@@ -13,7 +13,7 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -88,34 +88,29 @@ public class TimestampUpdater extends CliRunner {
             final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
             try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, new MultiNanopubRdfHandler.NanopubHandler() {
-
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            List<Statement> newStatements = removeCreationTime(np);
-                            newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));
-                            Nanopub updatedNp;
-                            if (np instanceof NanopubImpl) {
-                                updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());
-                            } else {
-                                updatedNp = new NanopubImpl(newStatements);
-                            }
-
-                            RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-                            NanopubUtils.propagateToHandler(updatedNp, w);
-
-                            if (verbose) {
-                                System.out.println("Nanopub URI: " + np.getUri());
-                            }
-                        } catch (RDFHandlerException ex) {
-                            ex.printStackTrace();
-                            throw new RuntimeException(ex);
-                        } catch (MalformedNanopubException e) {
-                            throw new RuntimeException(e);
+                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                    try {
+                        List<Statement> newStatements = removeCreationTime(np);
+                        newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));
+                        Nanopub updatedNp;
+                        if (np instanceof NanopubImpl) {
+                            updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());
+                        } else {
+                            updatedNp = new NanopubImpl(newStatements);
                         }
-                    }
 
+                        RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, StandardCharsets.UTF_8));
+                        NanopubUtils.propagateToHandler(updatedNp, w);
+
+                        if (verbose) {
+                            System.out.println("Nanopub URI: " + np.getUri());
+                        }
+                    } catch (RDFHandlerException ex) {
+                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
+                    } catch (MalformedNanopubException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
             }
         }

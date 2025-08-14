@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.op.topic.DefaultTopics;
 
@@ -123,17 +122,12 @@ public class Topic extends CliRunner {
 
             writer = new BufferedWriter(new OutputStreamWriter(outputStream));
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        writer.write(np.getUri() + " " + getTopic(np) + "\n");
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    writer.write(np.getUri() + " " + getTopic(np) + "\n");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             writer.flush();

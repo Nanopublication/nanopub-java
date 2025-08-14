@@ -5,7 +5,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,12 +32,7 @@ public class TimestampUpdaterTest {
         File outFile = new File(outPath, "updated.trig");
 
         String inFiles = this.getClass().getResource("/testsuite/valid/plain/").getPath();
-        for (File testFile : new File(inFiles).listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".trig");
-            }
-        })) {
+        for (File testFile : new File(inFiles).listFiles((dir, name) -> name.endsWith(".trig"))) {
             Calendar before = Calendar.getInstance();
 
             // create signed nanopub file

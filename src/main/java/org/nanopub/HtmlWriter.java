@@ -14,7 +14,7 @@ import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
@@ -75,7 +75,7 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * The RDF format for HTML output.
      */
-    public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true, false);
+    public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", StandardCharsets.UTF_8, "html", true, true, false);
 
     /**
      * {@inheritDoc}

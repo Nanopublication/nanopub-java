@@ -15,7 +15,6 @@ import org.nanopub.trusty.TrustyNanopubUtils;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -304,12 +303,7 @@ public class GetNanopub extends CliRunner {
             System.err.println("Used servers:");
             List<RegistryInfo> usedServers = fetchIndex.getRegistries();
             final FetchIndex fi = fetchIndex;
-            usedServers.sort(new Comparator<>() {
-                @Override
-                public int compare(RegistryInfo o1, RegistryInfo o2) {
-                    return fi.getServerUsage(o2) - fi.getServerUsage(o1);
-                }
-            });
+            usedServers.sort((o1, o2) -> fi.getServerUsage(o2) - fi.getServerUsage(o1));
             int usedServerCount = 0;
             for (RegistryInfo si : usedServers) {
                 if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;

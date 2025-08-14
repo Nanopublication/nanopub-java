@@ -1,43 +1,20 @@
 package org.nanopub.trusty;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPOutputStream;
-
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFWriter;
-import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.CliRunner;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubRdfHandler;
-import org.nanopub.NanopubUtils;
-import org.nanopub.NanopubWithNs;
-
 import com.beust.jcommander.ParameterException;
-
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfFileContent;
 import net.trustyuri.rdf.TransformRdf;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Command-line tool to transform nanopubs into Trusty Nanopubs.
@@ -115,20 +92,15 @@ public class MakeTrustyNanopub extends CliRunner {
             }
             final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
-            MultiNanopubRdfHandler.process(inFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap, tempPrefixMap);
-                        if (verbose) {
-                            System.out.println("Nanopub URI: " + np.getUri());
-                        }
-                    } catch (RDFHandlerException | TrustyUriException ex) {
-                        throw new RuntimeException(ex);
+            MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                try {
+                    np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap, tempPrefixMap);
+                    if (verbose) {
+                        System.out.println("Nanopub URI: " + np.getUri());
                     }
+                } catch (RDFHandlerException | TrustyUriException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
             if (singleOutputFile == null) {
                 out.close();
@@ -269,19 +241,14 @@ public class MakeTrustyNanopub extends CliRunner {
             tempRefMap = null;
         }
         try (in; out) {
-            MultiNanopubRdfHandler.process(format, in, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        // TODO temporary URI ref resolution not yet supported here
-                        // TODO prefix-based cross-ref resolution also not yet supported
-                        writeAsTrustyNanopub(np, format, out, tempRefMap, null);
-                    } catch (RDFHandlerException | TrustyUriException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(format, in, np -> {
+                try {
+                    // TODO temporary URI ref resolution not yet supported here
+                    // TODO prefix-based cross-ref resolution also not yet supported
+                    writeAsTrustyNanopub(np, format, out, tempRefMap, null);
+                } catch (RDFHandlerException | TrustyUriException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
         }
     }
@@ -300,7 +267,7 @@ public class MakeTrustyNanopub extends CliRunner {
      */
     public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map<Resource, IRI> tempRefMap, Map<String, String> tempPrefixMap) throws RDFHandlerException, TrustyUriException {
         np = MakeTrustyNanopub.transform(np, tempRefMap, tempPrefixMap);
-        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
         return np;
     }

@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -125,12 +124,9 @@ public class PublishNanopub extends CliRunner {
                     if (verbose) {
                         System.out.println("Reading file: " + s);
                     }
-                    MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
-                        @Override
-                        public void handleNanopub(Nanopub np) {
-                            if (failed) return;
-                            processNanopub(np);
-                        }
+                    MultiNanopubRdfHandler.process(new File(s), np -> {
+                        if (failed) return;
+                        processNanopub(np);
                     });
                     if (count == 0) {
                         System.out.println("NO NANOPUB FOUND: " + s);

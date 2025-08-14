@@ -6,8 +6,8 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
 import org.nanopub.vocabulary.NPX;
 
-import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A nanopublication pattern for AIDA nanopublications.
@@ -103,11 +103,7 @@ public class AidaPattern implements NanopubPattern {
         if (aidaUri == null) return null;
         if (!aidaUri.toString().startsWith(AIDA_URI_PREFIX)) return null;
         String aidaSentence = aidaUri.toString().substring(AIDA_URI_PREFIX.length());
-        try {
-            aidaSentence = URLDecoder.decode(aidaSentence, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            ex.printStackTrace();
-        }
+        aidaSentence = URLDecoder.decode(aidaSentence, StandardCharsets.UTF_8);
         return aidaSentence;
     }
 

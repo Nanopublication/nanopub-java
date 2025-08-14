@@ -53,7 +53,7 @@ class DefaultTopicsTest {
         Nanopub nanopub = creator.finalizeNanopub();
         DefaultTopics handler = new DefaultTopics(null);
         String topic = handler.getTopic(nanopub);
-        assertEquals(topic, "null"); // Expecting "null" because both subjects have equal frequency
+        assertEquals("null", topic); // Expecting "null" because both subjects have equal frequency
     }
 
     @Test
@@ -75,7 +75,7 @@ class DefaultTopicsTest {
         String ignoredProperties = ignoredProperty.stringValue() + "|" + anotherIri.stringValue();
         handler = new DefaultTopics(ignoredProperties);
         topic = handler.getTopic(nanopub);
-        assertEquals(topic, "null");
+        assertEquals("null", topic);
     }
 
 }

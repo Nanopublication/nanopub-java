@@ -4,10 +4,10 @@ import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +31,7 @@ public class Nanopub2Html extends CliRunner {
 
     private OutputStream outputStream = System.out;
 
-    private static final Charset utf8Charset = Charset.forName("UTF8");
+    private static final Charset utf8Charset = StandardCharsets.UTF_8;
 
     /**
      * Main method to run the Nanopub2Html command line tool.
@@ -71,14 +71,11 @@ public class Nanopub2Html extends CliRunner {
         try {
             for (String s : inputNanopubs) {
                 try {
-                    MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
-                        @Override
-                        public void handleNanopub(Nanopub np) {
-                            try {
-                                createHtml(np);
-                            } catch (IOException | RDFHandlerException ex) {
-                                ex.printStackTrace();
-                            }
+                    MultiNanopubRdfHandler.process(new File(s), np -> {
+                        try {
+                            createHtml(np);
+                        } catch (IOException | RDFHandlerException ex) {
+                            ex.printStackTrace();
                         }
                     });
                 } catch (RDF4JException | MalformedNanopubException ex) {

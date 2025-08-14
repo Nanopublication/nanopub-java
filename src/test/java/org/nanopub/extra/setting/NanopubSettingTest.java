@@ -24,7 +24,7 @@ class NanopubSettingTest {
     void getLocalDefaultSetting() throws MalformedNanopubException, IOException {
         NanopubSetting setting = NanopubSetting.getLocalSetting();
         assertNotNull(setting);
-        assertEquals(setting.getNanopub().getUri().getLocalName(), "RAqzx-R_CV5VqJ2Ib_lRnhW0wTILBhSH8cg0xmZwCi-Ag");
+        assertEquals("RAqzx-R_CV5VqJ2Ib_lRnhW0wTILBhSH8cg0xmZwCi-Ag", setting.getNanopub().getUri().getLocalName());
     }
 
     @Test
