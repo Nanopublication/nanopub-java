@@ -11,7 +11,9 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.nanopub.extra.security.MakeKeys;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
@@ -32,6 +34,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.security.KeyPair;
 import java.util.Random;
 import java.util.Set;
@@ -47,6 +50,16 @@ import static org.nanopub.fdo.ValidateFdo.createShaclValidationShapeFromJson;
 public class GeneralIntegrationTestsIT {
 
     Random random = new Random();
+
+    @BeforeAll
+    public static void makeSureKeysAreAvailable() throws IOException {
+        String keyPath = System.getProperty("user.home") + "/.nanopub/id";
+        try {
+            MakeKeys.make(keyPath, SignatureAlgorithm.RSA);
+        } catch (FileAlreadyExistsException e) {
+            // all fine, the key does exist
+        }
+    }
 
     @Test
     void createNanopubFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {

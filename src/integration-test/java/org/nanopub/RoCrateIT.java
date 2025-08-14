@@ -1,12 +1,20 @@
 package org.nanopub;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 
+import java.io.IOException;
+
 public class RoCrateIT {
+
+    @BeforeAll
+    static void makeSureKeysAreAvailable() throws IOException {
+        GeneralIntegrationTestsIT.makeSureKeysAreAvailable();
+    }
 
     Nanopub createNpFromRoCrate (String url, String metadata) throws Exception {
         RoCrateParser parser = new RoCrateParser();
