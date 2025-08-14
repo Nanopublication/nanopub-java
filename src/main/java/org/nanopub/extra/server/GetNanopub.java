@@ -319,7 +319,7 @@ public class GetNanopub extends CliRunner {
         }
     }
 
-    private void outputNanopub(String nanopubId, Nanopub np) throws IOException, RDFHandlerException {
+    private void outputNanopub(String nanopubId, Nanopub np) throws RDFHandlerException {
         if (np == null) {
             System.err.println("NOT FOUND: " + nanopubId);
             return;
