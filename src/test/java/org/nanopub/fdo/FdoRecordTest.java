@@ -9,11 +9,16 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
+import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.NanopubImpl;
 import org.nanopub.extra.security.*;
 import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.utils.MockFileService;
+import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
@@ -33,6 +38,7 @@ import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 import static org.nanopub.utils.TestUtils.vf;
 
+@ExtendWith(MockFileServiceExtension.class)
 class FdoRecordTest {
 
     private static final String TEST_KEY_PATH = "~/.nanopub/testkey/";
@@ -53,7 +59,7 @@ class FdoRecordTest {
         TransformContext testTC = new TransformContext(RSA, key, null, false, false, false);
         MockedStatic<TransformContext> transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
         transformContextMock
-                .when(() -> TransformContext.makeDefault())
+                .when(TransformContext::makeDefault)
                 .thenAnswer(invocation -> testTC);
 
     }
@@ -231,7 +237,6 @@ class FdoRecordTest {
         assertNull(record.getSchemaUrl());
     }
 
-
     @Test
     void buildStatementsWithDataRefAndAggregates() {
         IRI fdoProfile = Values.iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
@@ -332,30 +337,32 @@ class FdoRecordTest {
     }
 
     @Test
-    void createUpdatedNanopubRecordWithNanopub() throws FdoNotFoundException, MalformedCryptoElementException, IOException {
-        String id = "https://w3id.org/np/RAproAPfRNhcGoaa0zJ1lsZ_-fRsnlDLLC3nv5guyUWRo/FdoExample";
-        FdoRecord record = RetrieveFdo.resolveId(id);
+    void createUpdatedNanopubRecordWithNanopub() throws MalformedCryptoElementException, IOException, MalformedNanopubException {
+        String artifact = "RA2A-0ojBbTr2aeXUe2Bq4Fn8VLl5Ddr82fOuegiILGkA";
+        String fdoNanopubUrl = "https://w3id.org/np/" + artifact;
 
-        NanopubCreator creator;
-
-        try (MockedStatic<SignatureUtils> signatureUtilsMock = mockStatic(SignatureUtils.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<SignatureUtils> signatureUtilsMock = mockStatic(SignatureUtils.class, CALLS_REAL_METHODS);
+             MockedStatic<RetrieveFdo> mockedRetrieveFdo = mockStatic(RetrieveFdo.class)) {
+            Nanopub nanopub = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(artifact)));
+            FdoRecord fdoRecord = new FdoRecord(nanopub);
+            mockedRetrieveFdo.when(() -> RetrieveFdo.resolveId(fdoNanopubUrl)).thenReturn(fdoRecord);
+            NanopubCreator creator;
             signatureUtilsMock
                     .when(() -> SignatureUtils.assertMatchingPubkeys(any(TransformContext.class), any()))
                     .thenAnswer(invocation -> null);
 
-            creator = record.createUpdatedNanopub();
+            creator = fdoRecord.createUpdatedNanopub();
+
+            assertNotNull(creator);
+            assertTrue(creator.getAssertionUri().stringValue().matches(TempUriReplacer.tempUri + "\\d+" + "/assertion"));
+
+            Nanopub np = fdoRecord.getOriginalNanopub();
+            assertTrue(creator.getCurrentPubinfoStatements().stream().anyMatch(st ->
+                    NPX.SUPERSEDES.equals(st.getPredicate()) &&
+                            np.getUri().equals(st.getObject())
+            ));
+            assertEquals(np.getProvenance().size(), creator.getCurrentProvenanceStatements().size());
         }
-
-        assertNotNull(creator);
-        assertTrue(creator.getAssertionUri().stringValue().matches(TempUriReplacer.tempUri + "\\d+" + "/assertion"));
-
-        Nanopub np = record.getOriginalNanopub();
-        assertTrue(creator.getCurrentPubinfoStatements().stream().anyMatch(st ->
-                NPX.SUPERSEDES.equals(st.getPredicate()) &&
-                        np.getUri().equals(st.getObject())
-        ));
-        assertEquals(np.getProvenance().size(), creator.getCurrentProvenanceStatements().size());
     }
-
 
 }
