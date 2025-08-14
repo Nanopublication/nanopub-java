@@ -1,0 +1,64 @@
+@prefix this: <https://w3id.org/np/RA2A-0ojBbTr2aeXUe2Bq4Fn8VLl5Ddr82fOuegiILGkA> .
+@prefix sub: <https://w3id.org/np/RA2A-0ojBbTr2aeXUe2Bq4Fn8VLl5Ddr82fOuegiILGkA/> .
+@prefix shacl: <http://www.w3.org/ns/shacl#> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix fdof: <https://w3id.org/fdof/ontology#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+
+sub:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion sub:assertion;
+    np:hasProvenance sub:provenance;
+    np:hasPublicationInfo sub:pubinfo .
+}
+
+sub:assertion {
+  <https://hdl.handle.net/21.T11966/82045bd97a0acce88378> a <https://w3id.org/fdoc/o/terms/FdoProfile>,
+      fdof:FAIRDigitalObject;
+    dct:conformsTo <https://hdl.handle.net/21.T11966/996c38676da9ee56f8ab>;
+    <https://hdl.handle.net/0.TYPE/DOIPService> <https://hdl.handle.net/21.T11966/service>;
+    <https://hdl.handle.net/10320/loc> """<locations>
+<location href=\"http://typeregistry.testbed.pid.gwdg.de/objects/21.T11966/82045bd97a0acce88378\" weight=\"0\" view=\"json\" />
+<location href=\"http://typeregistry.testbed.pid.gwdg.de/#objects/21.T11966/82045bd97a0acce88378\" weight=\"1\" view=\"ui\" />
+</locations>""";
+    <https://hdl.handle.net/21.T11966/JsonSchema> "{\"$ref\": \"https://typeapi.lab.pidconsortium.net/v1/types/schema/21.T11966/82045bd97a0acce88378\"}";
+    <https://hdl.handle.net/21.T11966/b5b58656b1fa5aff0505> <https://hdl.handle.net/21.T11966/service>;
+    <https://w3id.org/fdoc/o/terms/hasShape> sub:nodeShape .
+
+  sub:nodeShape a shacl:NodeShape;
+    shacl:property sub:propertyShape1, sub:propertyShape2, sub:propertyShape3, sub:propertyShape4;
+    shacl:targetClass fdof:FAIRDigitalObject .
+
+  sub:propertyShape1 shacl:maxCount "1"^^xsd:int;
+    shacl:minCount "1"^^xsd:int;
+    shacl:path dct:conformsTo .
+
+  sub:propertyShape2 shacl:maxCount "1"^^xsd:int;
+    shacl:path <https://hdl.handle.net/21.T11966/1639bb8709dda583d357> .
+
+  sub:propertyShape3 shacl:maxCount "1"^^xsd:int;
+    shacl:path <https://hdl.handle.net/21.T11966/d3da8ecbafdc54485a40> .
+
+  sub:propertyShape4 shacl:maxCount "1"^^xsd:int;
+    shacl:minCount "1"^^xsd:int;
+    shacl:path <https://hdl.handle.net/21.T11966/b5b58656b1fa5aff0505> .
+}
+
+sub:provenance {
+  sub:assertion prov:wasDerivedFrom <https://hdl.handle.net/api/handles/21.T11966/82045bd97a0acce88378> .
+}
+
+sub:pubinfo {
+  this: dct:created "2025-06-27T16:41:14.692+02:00"^^xsd:dateTime;
+    npx:hasNanopubType <https://w3id.org/np/o/ntemplate/AssertionTemplate>;
+    npx:introduces <https://hdl.handle.net/21.T11966/82045bd97a0acce88378> .
+
+  sub:sig npx:hasAlgorithm "RSA";
+    npx:hasPublicKey "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApbztY8l4lWqVF8L/djJ1knoc7Nm5kVHT9NqSe0fXO9Hel3DRO2IyxJYVEvThhllBuHNtZK32ww23AlglArokhxPCSBPKvVgQS6r46khF2D85tnd5htaBq+bfjMqL+LDlQh3LdBpAqrLmsmfsPkU65CCxSGufBs2v39p41z5FkRXE1JKJ/UZe+1OUq+CibjOfo1g1Nz6HO0fZML7GnQBj5X9lvU0llmDk/sqdNMxAJDSQh2/Zh0kz7+Dm7vJOx3mNEXU4FuzVzKBYwTotvEcJod7Vot1fPOJXPGoNDVNKMQffCala9o4pqT739LS7R7ZFVMjzPkLUxYCjnEgOZI5t6wIDAQAB";
+    npx:hasSignature "fYKP1r+77qBamDAlZAjCRz8+04qBW4YvInMYrhtWXH4g2eIC4a2E1PU2UvYyqMOvRMM9VDFqdnQK+KzFjDrkG7cIW6NxJuvSFElgeqIUN8rORmBiLKlnQ83PdxLwTHy4UHHY5kBZiGTrddKz44++Xnq91s50yKp9Zv4wDB/wqeyaN/oc7/bPO/ty/TsaWZQzZ9HEYRE8Gst75tvouHBmTqKxqDOmLtGhboBuJjJLf42vUJmLsGiHkHTw3XsYt5b93qLAC5EixzN6srVCqFprWsCZcQE1eClvI94WkhunumhRj2hIcncT2gK9kvgQBcrShlaKJwGqcVmo3OVLOEaAyQ==";
+    npx:hasSignatureTarget this:;
+    npx:signedBy <https://orcid.org/0009-0008-3635-347X> .
+}

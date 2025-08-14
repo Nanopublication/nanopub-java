@@ -140,12 +140,13 @@ public class FdoNanopubCreatorTest {
         HttpClient mockClient = mock();
         when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockResponse);
 
-        MockedStatic<HttpClient> staticClient = Mockito.mockStatic(HttpClient.class);
-        staticClient.when(HttpClient::newHttpClient).thenReturn(mockClient);
+        try (MockedStatic<HttpClient> staticClient = Mockito.mockStatic(HttpClient.class)) {
+            staticClient.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
-        // call handle resolver
-        ParsedJsonResponse response = new HandleResolver().call(id);
-        ResponsePrinter.print(response);
+            // call handle resolver
+            ParsedJsonResponse response = new HandleResolver().call(id);
+            ResponsePrinter.print(response);
+        }
     }
 
     @Test
