@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.rdf4j.model.util.Values.literal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,7 +32,7 @@ public class NanopubUtilsTest {
 
     @Test
     void getDefaultNamespaces() {
-        assertThat(NanopubUtils.getDefaultNamespaces()).isNotEmpty();
+        assertFalse(NanopubUtils.getDefaultNamespaces().isEmpty());
     }
 
     @Test
@@ -52,13 +51,24 @@ public class NanopubUtilsTest {
 
         Nanopub nanopub = creator.finalizeNanopub();
 
-        // Check that getStatements returns the expected Statements
-        assertThat(NanopubUtils.getStatements(nanopub).contains(provenanceStatement));
-        assertThat(NanopubUtils.getStatements(nanopub).contains(assertionStatement));
-        assertThat(NanopubUtils.getStatements(nanopub).contains(pubinfoStatement));
+        // Cannot use equals because the statement in the nanopub has a different context, therefore, the test would fail
+        assertTrue(NanopubUtils.getStatements(nanopub).stream()
+                .anyMatch(st -> st.getSubject().equals(provenanceStatement.getSubject()) &&
+                        st.getPredicate().equals(provenanceStatement.getPredicate())
+                        && st.getObject().equals(provenanceStatement.getObject())));
+
+        assertTrue(NanopubUtils.getStatements(nanopub).stream()
+                .anyMatch(st -> st.getSubject().equals(assertionStatement.getSubject()) &&
+                        st.getPredicate().equals(assertionStatement.getPredicate())
+                        && st.getObject().equals(assertionStatement.getObject())));
+
+        assertTrue(NanopubUtils.getStatements(nanopub).stream()
+                .anyMatch(st -> st.getSubject().equals(pubinfoStatement.getSubject()) &&
+                        st.getPredicate().equals(pubinfoStatement.getPredicate())
+                        && st.getObject().equals(pubinfoStatement.getObject())));
 
         // there are 4 header statements, we do not check them here
-        assertThat(NanopubUtils.getStatements(nanopub).size()).isEqualTo(7);
+        assertEquals(7, NanopubUtils.getStatements(nanopub).size());
     }
 
     @Test
@@ -70,7 +80,7 @@ public class NanopubUtilsTest {
         NanopubUtils.writeToStream(nanopub, os, format);
 
         String output = os.toString();
-        assertThat(output).contains(nanopub.getUri().toString());
+        assertTrue(output.contains(nanopub.getUri().toString()));
     }
 
 
@@ -88,7 +98,7 @@ public class NanopubUtilsTest {
         RDFFormat format = RDFFormat.JSONLD; // TODO NullPointerException with TrustyNanopubUtils.STNP_FORMAT
         String output = NanopubUtils.writeToString(nanopub, format);
 
-        assertThat(output).contains(nanopub.getUri().toString());
+        assertTrue(output.contains(nanopub.getUri().toString()));
     }
 
     @Test
@@ -292,7 +302,7 @@ public class NanopubUtilsTest {
         Nanopub nanopub = TestUtils.createNanopub();
         Set<IRI> types = NanopubUtils.getTypes(nanopub);
         // This is an extremely minimal test, some more assertions were nice
-        assertThat(types).contains(anyIri);
+        assertTrue(types.contains(anyIri));
     }
 
     @Test
@@ -303,7 +313,7 @@ public class NanopubUtilsTest {
         String updatedChecksum = NanopubUtils.updateXorChecksum(anyIri, anyChecksum);
 
         String res = "vMpXx6ZpfXb2vTxPHo7Xotfmd1ENAlbltQ7nSnGfvxgtersfortestin";
-        //assertThat(res).isNotEqualTo(updatedChecksum);
+        //assertNotEquals(res, updatedChecksum);
 
         /*IRI nanopubId = vf.createIRI("http://example.org/nanopub#artifactCode");
         String initialChecksum = TrustyUriUtils.getBase64(new byte[32]);
