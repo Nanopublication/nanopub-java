@@ -26,6 +26,6 @@ jobs:
 
       - name: Publish snapshot to GitHub Packages
         # Note: we are skipping tests here.
-        run: mvn --batch-mode -Dmaven.test.skip deploy
+        run: ./mvnw --batch-mode -Dmaven.test.skip deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
