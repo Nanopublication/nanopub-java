@@ -2,7 +2,7 @@ package org.nanopub.extra.server;
 
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.nanopub.CliRunner;
 import org.nanopub.MultiNanopubRdfHandler;
@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Objects;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockStatic;
 
 public class GetNanopubTest {
