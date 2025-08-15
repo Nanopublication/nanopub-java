@@ -11,6 +11,7 @@ import org.nanopub.utils.TestUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.Charset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -23,7 +24,7 @@ class SignNanopubTest {
     }
 
     @Test
-    void initWithValidArgs() throws Exception {
+    void initWithValidArgs() {
         String path = this.getClass().getResource("/testsuite/valid/plain/aida1.trig").getPath();
         String[] args = new String[]{"-v", path};
 
@@ -56,7 +57,7 @@ class SignNanopubTest {
 
             FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
             try {
-                String artifactCodeFromSuite = IOUtils.toString(inputStream);
+                String artifactCodeFromSuite = IOUtils.toString(inputStream, Charset.defaultCharset());
                 assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
                 System.out.println("File signed correctly: " + testFile.getName());
             } finally {
@@ -91,7 +92,7 @@ class SignNanopubTest {
 
             FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
             try {
-                String artifactCodeFromSuite = IOUtils.toString(inputStream);
+                String artifactCodeFromSuite = IOUtils.toString(inputStream, Charset.defaultCharset());
                 assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
                 System.out.println("File signed correctly: " + testFile.getName());
             } finally {
