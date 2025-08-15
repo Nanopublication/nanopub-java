@@ -157,10 +157,16 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.3</version>
+        <configuration>
+          <!--suppress UnresolvedMavenProperty -->
+          <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+        </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.8.1</version>
         <executions>
@@ -169,6 +175,7 @@
             <phase>generate-sources</phase>
             <goals>
               <goal>build-classpath</goal>
+              <goal>properties</goal>
             </goals>
             <configuration>
               <outputFile>classpath.txt</outputFile>
