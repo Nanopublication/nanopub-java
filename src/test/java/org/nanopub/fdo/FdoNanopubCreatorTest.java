@@ -41,8 +41,7 @@ import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class FdoNanopubCreatorTest {
 
@@ -140,7 +139,7 @@ public class FdoNanopubCreatorTest {
         HttpClient mockClient = mock();
         when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockResponse);
 
-        try (MockedStatic<HttpClient> staticClient = Mockito.mockStatic(HttpClient.class)) {
+        try (MockedStatic<HttpClient> staticClient = mockStatic(HttpClient.class)) {
             staticClient.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
             // call handle resolver
@@ -202,9 +201,19 @@ public class FdoNanopubCreatorTest {
 
     @Test
     void createFdoRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException {
-        String profileId = "21.T11966/82045bd97a0acce88378";
-        FdoRecord fdoRecord = FdoNanopubCreator.createFdoRecordFromHandleSystem(profileId);
-        assertNotNull(fdoRecord);
+        String handle = "21.T11966/82045bd97a0acce88378";
+        String handleSystemResponse = "{\"responseCode\":1,\"handle\":\"21.T11966/82045bd97a0acce88378\",\"values\":[{\"index\":100,\"type\":\"HS_ADMIN\",\"data\":{\"format\":\"admin\",\"value\":{\"handle\":\"0.NA/21.T11966\",\"index\":300,\"permissions\":\"111111111111\"}},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":1,\"type\":\"10320/loc\",\"data\":{\"format\":\"string\",\"value\":\"<locations>\\n<location href=\\\"http://typeregistry.testbed.pid.gwdg.de/objects/21.T11966/82045bd97a0acce88378\\\" weight=\\\"0\\\" view=\\\"json\\\" />\\n<location href=\\\"http://typeregistry.testbed.pid.gwdg.de/#objects/21.T11966/82045bd97a0acce88378\\\" weight=\\\"1\\\" view=\\\"ui\\\" />\\n</locations>\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":2,\"type\":\"21.T11966/FdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/996c38676da9ee56f8ab\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":3,\"type\":\"21.T11966/JsonSchema\",\"data\":{\"format\":\"string\",\"value\":\"{\\\"$ref\\\": \\\"https://typeapi.lab.pidconsortium.net/v1/types/schema/21.T11966/82045bd97a0acce88378\\\"}\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":4,\"type\":\"21.T11966/b5b58656b1fa5aff0505\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/service\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":5,\"type\":\"0.TYPE/DOIPService\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/service\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"}]}";
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.body()).thenReturn(handleSystemResponse);
+        try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+            HttpClient mockClient = mock();
+            when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockHttpResponse);
+            httpClientStaticMock.when(() -> HttpClient.newHttpClient()).thenReturn(mockClient);
+
+            FdoRecord fdoRecord = FdoNanopubCreator.createFdoRecordFromHandleSystem(handle);
+            assertNotNull(fdoRecord);
+        }
     }
 
 }
