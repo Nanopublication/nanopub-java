@@ -42,30 +42,31 @@ class RetrieveFdoTest {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
 
-        try (MockedStatic<GetNanopub> mockedStatic = mockStatic(GetNanopub.class, CALLS_REAL_METHODS);
-             MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
-            ApiResponse mockedApiResponse = mock();
+        try (MockedStatic<GetNanopub> mockedStatic = mockStatic(GetNanopub.class)) {
+            try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
+                ApiResponse mockedApiResponse = mock();
 
-            List<ApiResponseEntry> responseEntryList = new ArrayList<>();
-            ApiResponseEntry apiResponseEntry = new ApiResponseEntry();
-            apiResponseEntry.add("np", nanopub.getUri().toString());
-            responseEntryList.add(apiResponseEntry);
+                List<ApiResponseEntry> responseEntryList = new ArrayList<>();
+                ApiResponseEntry apiResponseEntry = new ApiResponseEntry();
+                apiResponseEntry.add("np", nanopub.getUri().toString());
+                responseEntryList.add(apiResponseEntry);
 
-            when(mockedApiResponse.getData()).thenReturn(responseEntryList);
-            mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mockedApiResponse);
+                when(mockedApiResponse.getData()).thenReturn(responseEntryList);
+                mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mockedApiResponse);
 
-            Nanopub nanopubFromId = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np")))));
-            mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
+                Nanopub nanopubFromId = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np")))));
+                mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
 
-            Nanopub retrievedNanopub = RetrieveFdo.resolveInNanopubNetwork(handle);
-            assertEquals(nanopub, retrievedNanopub);
+                Nanopub retrievedNanopub = RetrieveFdo.resolveInNanopubNetwork(handle);
+                assertEquals(nanopub, retrievedNanopub);
+            }
         }
     }
 
     @Test
     void resolveInNanopubNetworkWithInvalidHandle() throws FailedApiCallException {
         String handle = "notAValidHandle";
-        try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class, CALLS_REAL_METHODS)) {
+        try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
             mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mock(ApiResponse.class));
 
             Nanopub np = RetrieveFdo.resolveInNanopubNetwork(handle);
@@ -76,7 +77,9 @@ class RetrieveFdoTest {
     @Test
     void resolveIdWithInvalidHandle() {
         String handle = "notAValidHandle";
-        assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.resolveId(handle));
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.resolveId(handle));
+        }
     }
 
     @Test
@@ -84,11 +87,13 @@ class RetrieveFdoTest {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
 
-        try (MockedStatic<RetrieveFdo> mockedStatic = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
-            mockedStatic.when(() -> RetrieveFdo.resolveInNanopubNetwork(handle)).thenReturn(nanopub);
-            FdoRecord fdoRecord = RetrieveFdo.resolveId(handle);
-            assertNotNull(fdoRecord);
-            assertEquals(handle, FdoUtils.extractHandle(fdoRecord.getId()));
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            try (MockedStatic<RetrieveFdo> mockedStatic = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
+                mockedStatic.when(() -> RetrieveFdo.resolveInNanopubNetwork(handle)).thenReturn(nanopub);
+                FdoRecord fdoRecord = RetrieveFdo.resolveId(handle);
+                assertNotNull(fdoRecord);
+                assertEquals(handle, FdoUtils.extractHandle(fdoRecord.getId()));
+            }
         }
     }
 
@@ -98,12 +103,14 @@ class RetrieveFdoTest {
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
         FdoRecord fdoRecord = new FdoRecord(nanopub);
 
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
-            mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handle)).thenReturn(null);
-            mocked.when(() -> RetrieveFdo.resolveInHandleSystem(handle)).thenReturn(fdoRecord);
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
+                mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handle)).thenReturn(null);
+                mocked.when(() -> RetrieveFdo.resolveInHandleSystem(handle)).thenReturn(fdoRecord);
 
-            FdoRecord retrievedFdoRecord = RetrieveFdo.resolveId(handle);
-            assertEquals(fdoRecord, retrievedFdoRecord);
+                FdoRecord retrievedFdoRecord = RetrieveFdo.resolveId(handle);
+                assertEquals(fdoRecord, retrievedFdoRecord);
+            }
         }
     }
 
@@ -114,31 +121,36 @@ class RetrieveFdoTest {
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
         FdoRecord fdoRecord = new FdoRecord(nanopub);
 
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
-            mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handleIri)).thenReturn(null);
-            mocked.when(() -> RetrieveFdo.resolveInHandleSystem(handle)).thenReturn(fdoRecord);
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
+                mocked.when(() -> RetrieveFdo.resolveInNanopubNetwork(handleIri)).thenReturn(null);
+                mocked.when(() -> RetrieveFdo.resolveInHandleSystem(handle)).thenReturn(fdoRecord);
 
-            FdoRecord retrievedFdoRecord = RetrieveFdo.resolveId(handleIri);
-            assertEquals(fdoRecord, retrievedFdoRecord);
+                FdoRecord retrievedFdoRecord = RetrieveFdo.resolveId(handleIri);
+                assertEquals(fdoRecord, retrievedFdoRecord);
+            }
         }
     }
 
     @Test
     void resolveIdNotFoundAnywhere() {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        try (MockedStatic<RetrieveFdo> retrieveFdoMock = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS);
-             MockedStatic<FdoUtils> fdoUtilsMock = mockStatic(FdoUtils.class)) {
-            retrieveFdoMock.when(() -> RetrieveFdo.resolveInNanopubNetwork(any())).thenReturn(null);
-            fdoUtilsMock.when(() -> FdoUtils.looksLikeHandle(any())).thenReturn(false);
-            fdoUtilsMock.when(() -> FdoUtils.isHandleIri(any())).thenReturn(false);
-            assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.resolveId(handle));
+        try (MockedStatic<RetrieveFdo> retrieveFdoMock = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
+            try (MockedStatic<FdoUtils> fdoUtilsMock = mockStatic(FdoUtils.class)) {
+                retrieveFdoMock.when(() -> RetrieveFdo.resolveInNanopubNetwork(any())).thenReturn(null);
+                fdoUtilsMock.when(() -> FdoUtils.looksLikeHandle(any())).thenReturn(false);
+                fdoUtilsMock.when(() -> FdoUtils.isHandleIri(any())).thenReturn(false);
+                assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.resolveId(handle));
+            }
         }
     }
 
     @Test
     void retrieveContentFromIdWithoutDataRef() {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.retrieveContentFromId(handle));
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.retrieveContentFromId(handle));
+            }
     }
 
     @Test
@@ -152,25 +164,27 @@ class RetrieveFdoTest {
         FdoRecord record = new FdoRecord(fdoNanopub);
         assertEquals(dataRef, record.getDataRef());
 
-        try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
-            try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
-                mocked.when(HttpClient::newHttpClient).thenThrow(RuntimeException.class); // workaround, since the mocked method from next line is executed anyway.
-                mocked.when(() -> RetrieveFdo.resolveId(fdoNanopubId)).thenReturn(record);
-            }
+        try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
+            try (MockedStatic<RetrieveFdo> mocked = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
+                try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+                    mocked.when(HttpClient::newHttpClient).thenThrow(RuntimeException.class); // workaround, since the mocked method from next line is executed anyway.
+                    mocked.when(() -> RetrieveFdo.resolveId(fdoNanopubId)).thenReturn(record);
+                }
 
-            // mock the HttpRequest and the HttpResponse
-            try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
-                HttpClient mockClient = mock();
-                HttpResponse<InputStream> httpResponse = mock();
-                when(httpResponse.body()).thenReturn(content);
-                when(mockClient.send(Mockito.any(), ArgumentMatchers.<HttpResponse.BodyHandler<InputStream>>any())).thenReturn(httpResponse);
-                mocked.when(HttpClient::newHttpClient).thenReturn(mockClient);
+                // mock the HttpRequest and the HttpResponse
+                try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+                    HttpClient mockClient = mock();
+                    HttpResponse<InputStream> httpResponse = mock();
+                    when(httpResponse.body()).thenReturn(content);
+                    when(mockClient.send(Mockito.any(), ArgumentMatchers.<HttpResponse.BodyHandler<InputStream>>any())).thenReturn(httpResponse);
+                    mocked.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
-                InputStream contentStream = RetrieveFdo.retrieveContentFromId(fdoNanopubId);
-                assertNotNull(contentStream);
+                    InputStream contentStream = RetrieveFdo.retrieveContentFromId(fdoNanopubId);
+                    assertNotNull(contentStream);
 
-                String contentString = new String(contentStream.readAllBytes(), StandardCharsets.UTF_8);
-                assertTrue(contentString.contains("![logo](nanodash.png)"));
+                    String contentString = new String(contentStream.readAllBytes(), StandardCharsets.UTF_8);
+                    assertTrue(contentString.contains("![logo](nanodash.png)"));
+                }
             }
         }
     }
