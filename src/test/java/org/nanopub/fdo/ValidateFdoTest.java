@@ -1,8 +1,10 @@
 package org.nanopub.fdo;
 
+import org.eclipse.rdf4j.repository.RepositoryException;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 
@@ -66,6 +68,39 @@ class ValidateFdoTest {
 
                 assertFalse(ValidateFdo.validate(new FdoRecord(nanopub)).isValid());
             }
+        }
+    }
+
+    @Test
+    void shaclValidationCliSucessfull () throws Exception {
+        try (MockedStatic<ShaclValidator> mocked = mockStatic(ShaclValidator.class)) {
+            mocked.when(() -> ShaclValidator.validateShacl(any(Nanopub.class), any(Nanopub.class))).thenReturn(new ValidationResult());
+
+            System.out.println(MOCKED_NANOPUB_PATH);
+
+            ShaclValidator ro = CliRunner.initJc(new ShaclValidator(), new String[]{
+                    "-n", MOCKED_NANOPUB_PATH + "validFdo.trig",
+                    "-s", MOCKED_NANOPUB_PATH + "validFdo.trig" // just any np will do
+            });
+            ro.run();
+        }
+    }
+
+    @Test
+    void shaclValidationCliUnsucessfull () throws Exception {
+
+        ValidationResult testResult = new ValidationResult();
+        testResult.setShacleValidationException(new RepositoryException("TEST"));
+        try (MockedStatic<ShaclValidator> mocked = mockStatic(ShaclValidator.class)) {
+            mocked.when(() -> ShaclValidator.validateShacl(any(Nanopub.class), any(Nanopub.class))).thenReturn(testResult);
+
+            System.out.println(MOCKED_NANOPUB_PATH);
+
+            ShaclValidator ro = CliRunner.initJc(new ShaclValidator(), new String[]{
+                    "-n", MOCKED_NANOPUB_PATH + "validFdo.trig",
+                    "-s", MOCKED_NANOPUB_PATH + "validFdo.trig" // just any np will do
+            });
+            ro.run();
         }
     }
 

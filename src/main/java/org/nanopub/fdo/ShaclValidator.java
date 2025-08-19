@@ -52,13 +52,6 @@ public class ShaclValidator extends CliRunner {
         }
     }
 
-
-    private static void printStatements(Set<Statement> statements) {
-        for (Statement s : statements) {
-            System.out.println(s.getSubject().toString() + " " + s.getPredicate().toString() + " " + s.getObject().toString());
-        }
-    }
-
     /**
      * Logs constraints validation to System.out
      *
