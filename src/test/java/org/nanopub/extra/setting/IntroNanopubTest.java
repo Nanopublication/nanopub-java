@@ -20,7 +20,7 @@ class IntroNanopubTest {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
-        IntroNanopub introNanopub = new IntroNanopub(nanopub, userName, userUri);
+        IntroNanopub introNanopub = new IntroNanopub(nanopub, userUri);
         assertEquals(nanopub, introNanopub.getNanopub());
     }
 
@@ -29,7 +29,7 @@ class IntroNanopubTest {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
-        IntroNanopub introNanopub = new IntroNanopub(nanopub, userName, userUri);
+        IntroNanopub introNanopub = new IntroNanopub(nanopub, userUri);
         assertEquals(userUri, introNanopub.getUser());
     }
 
@@ -38,7 +38,7 @@ class IntroNanopubTest {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
-        IntroNanopub introNanopub = new IntroNanopub(nanopub, userName, userUri);
+        IntroNanopub introNanopub = new IntroNanopub(nanopub, userUri);
         assertNull(introNanopub.getName());
     }
 
@@ -53,7 +53,7 @@ class IntroNanopubTest {
         nanopubCreator.addPubinfoStatement(nanopubCreator.getNanopubUri(), TestUtils.anyIri, TestUtils.anyIri);
 
         Nanopub nanopub = nanopubCreator.finalizeNanopub();
-        IntroNanopub introNanopub = new IntroNanopub(nanopub, userName, userUri);
+        IntroNanopub introNanopub = new IntroNanopub(nanopub, userUri);
 
         assertEquals(userName, introNanopub.getName());
     }

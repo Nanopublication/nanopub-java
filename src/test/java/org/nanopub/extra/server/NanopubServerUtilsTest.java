@@ -8,14 +8,10 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.NPX;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NanopubServerUtilsTest {
-
-    @Test
-    void constructor() {
-        assertThrows(RuntimeException.class, NanopubServerUtils::new);
-    }
 
     @Test
     void isProtectedNanopubTrue() throws MalformedNanopubException {

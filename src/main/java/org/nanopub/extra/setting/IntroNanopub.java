@@ -60,7 +60,7 @@ public class IntroNanopub implements Serializable {
     public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
         IntroExtractor ie = extract(userId, httpClient);
         if (ie != null) {
-            return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+            return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
         }
         return null;
     }
@@ -73,7 +73,7 @@ public class IntroNanopub implements Serializable {
      * @return the IntroNanopub for the userId, or null if not found
      */
     public static IntroNanopub get(String userId, IntroExtractor ie) {
-        return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+        return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
     }
 
     /**
@@ -123,7 +123,7 @@ public class IntroNanopub implements Serializable {
      * @param nanopub the Nanopub that contains the introduction
      */
     public IntroNanopub(Nanopub nanopub) {
-        this(nanopub, null, null);
+        this(nanopub, null);
     }
 
     /**
@@ -133,18 +133,6 @@ public class IntroNanopub implements Serializable {
      * @param user    the IRI of the user
      */
     public IntroNanopub(Nanopub nanopub, IRI user) {
-        this(nanopub, null, user);
-    }
-
-    /**
-     * Constructor for IntroNanopub with user and name.
-     *
-     * @param nanopub the Nanopub that contains the introduction
-     * @param name    the name of the user
-     * @param user    the IRI of the user
-     */
-    // TODO: Do we still need name and user here? We can extract it from the content.
-    public IntroNanopub(Nanopub nanopub, String name, IRI user) {
         this.nanopub = nanopub;
         this.user = user;
         for (Statement st : nanopub.getAssertion()) {

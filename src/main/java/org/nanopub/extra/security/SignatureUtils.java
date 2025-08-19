@@ -134,7 +134,6 @@ public class SignatureUtils {
      */
     public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
             throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
-        // TODO: Test this more
 
         String u = preNanopub.getUri().stringValue();
         if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||

@@ -19,11 +19,9 @@ import java.util.List;
 public class NanopubServerUtils {
 
     /**
-     * Default constructor.
+     * Singleton, no instances.
      */
-    // TODO make the constructor private?
-    protected NanopubServerUtils() {
-        throw new RuntimeException("no instances allowed");
+    private NanopubServerUtils() {
     }
 
     private static final List<String> bootstrapServerList = new ArrayList<>();
