@@ -9,7 +9,9 @@ import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
@@ -19,11 +21,17 @@ import java.security.SignatureException;
  */
 public class RoCrateImporter extends CliRunner {
 
+    // The complete url of the ro-crate-metadata.json, including the filename.
     @com.beust.jcommander.Parameter(description = "Url of RoCrate metadata", required = true)
     private String metadataUrl;
 
     @com.beust.jcommander.Parameter(names = "-l", description = "write to std.out, no publishing")
     private boolean createLocally;
+
+    @com.beust.jcommander.Parameter(names = "-f", description = "Use this local file for a ro-crate-metadata.json, " +
+            "instead of downloading from metadataUrl.")
+    private String localFileName;
+
 
     private ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -56,11 +64,17 @@ public class RoCrateImporter extends CliRunner {
      * @throws java.security.InvalidKeyException     if the signing key is invalid
      */
     public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException {
-        String metadataFilename = metadataUrl.substring(metadataUrl.lastIndexOf('/'));
+
+        InputStream roCreateMetadata = null;
+        if (localFileName != null) {
+            roCreateMetadata = new FileInputStream(localFileName);
+        } else {
+            roCreateMetadata = RoCrateParser.downloadRoCreateMetadataFile(metadataUrl);
+        }
         String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));
 
         RoCrateParser parser = new RoCrateParser();
-        Nanopub np = parser.parseRoCreate(metadataPath, metadataFilename);
+        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata);
 
         if (createLocally) {
             NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);

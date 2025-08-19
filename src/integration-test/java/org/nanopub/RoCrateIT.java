@@ -1,5 +1,6 @@
 package org.nanopub;
 
+import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -7,7 +8,11 @@ import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 
 public class RoCrateIT {
 
@@ -16,7 +21,25 @@ public class RoCrateIT {
         GeneralIntegrationTestsIT.makeSureKeysAreAvailable();
     }
 
-    Nanopub createNpFromRoCrate (String url, String metadata) throws Exception {
+    @Test
+    void importFromFile() throws IOException, MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException {
+//        String url = "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/";
+//        String filename = "/Users/zip/Downloads/7ad44bec-6784-437f-b5f3-2199b43a5303.jsonld";
+        String url = "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/";
+        String filename = "/Users/zip/Downloads/588ada8d-a185-402e-8b60-3c17435110ee.jsonld";
+
+        FileInputStream metadata = new FileInputStream(filename);
+        RoCrateParser parser = new RoCrateParser();
+        Nanopub np = parser.parseRoCreate(url, metadata);
+
+        Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+        NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
+//        PublishNanopub.publish(signedNp);
+    }
+
+    Nanopub createNpFromRoCrate (String url, String metadataFilename) throws Exception {
+        InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(url + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(url, metadata);
 
