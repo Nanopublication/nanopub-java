@@ -62,8 +62,12 @@ For the complete code checkout ``UsageExamples.java``.
 See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
 source code documentation.
 
+[Here](https://nanopublication.github.io/nanopub-java/) you can find more documentation.
+
 
 ## Usage of Unix Command-Line
+
+Check out this list of all [command line commands](https://nanopublication.github.io/nanopub-java/quick-start/cli/).
 
 To use this library on the command line, just download the [np
 script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np).
