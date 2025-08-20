@@ -140,6 +140,11 @@ Overwrite report in `reports` with latest report:
 ```bash
 cp -r target/site/jacoco reports/test-coverage
 ```
+Make plain-text versions of overview tables:
+```bash
+html2text -nobs -o reports/test-coverage/index.txt reports/test-coverage/index.html
+html2text -nobs -o reports/test-coverage/org.nanopub.fdo/index.txt reports/test-coverage/org.nanopub.fdo/index.html
+```
 
 
 ## License
