@@ -22,17 +22,26 @@ public class NanopubRdfHandler extends AbstractRDFHandler {
 
     private boolean finished = false;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void endRDF() throws RDFHandlerException {
         finished = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
         nsPrefixes.add(prefix);
         ns.put(prefix, uri);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void handleStatement(Statement st) throws RDFHandlerException {
         statements.add(st);
@@ -42,7 +51,7 @@ public class NanopubRdfHandler extends AbstractRDFHandler {
      * Returns a Nanopub object containing the collected statements and namespaces.
      *
      * @return Nanopub object
-     * @throws MalformedNanopubException if the RDF document is not complete or malformed
+     * @throws org.nanopub.MalformedNanopubException if the RDF document is not complete or malformed
      */
     public Nanopub getNanopub() throws MalformedNanopubException {
         if (!finished) {

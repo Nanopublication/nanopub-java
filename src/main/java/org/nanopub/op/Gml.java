@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
@@ -77,17 +76,12 @@ public class Gml extends CliRunner {
             writer = new BufferedWriter(new OutputStreamWriter(outputStream));
             writer.write("graph [\n");
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException | IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException | IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             writer.write("]\n");

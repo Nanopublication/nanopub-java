@@ -33,7 +33,7 @@ public class MakeKeys extends CliRunner {
      * Main method to run the MakeKeys command line tool.
      *
      * @param args Command line arguments
-     * @throws IOException If an I/O error occurs while creating key files
+     * @throws java.io.IOException If an I/O error occurs while creating key files
      */
     public static void main(String[] args) throws IOException {
         try {
@@ -57,7 +57,7 @@ public class MakeKeys extends CliRunner {
      *
      * @param pathAndFilenamePrefix The path and filename prefix for the key files
      * @param algorithm             The signature algorithm to use (RSA or DSA)
-     * @throws IOException If an I/O error occurs while creating key files
+     * @throws java.io.IOException If an I/O error occurs while creating key files
      */
     public static void make(String pathAndFilenamePrefix, SignatureAlgorithm algorithm) throws IOException {
 

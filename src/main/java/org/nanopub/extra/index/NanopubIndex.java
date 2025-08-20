@@ -1,7 +1,6 @@
 package org.nanopub.extra.index;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 
 import java.util.Set;
@@ -24,36 +23,6 @@ import java.util.Set;
  * @author Tobias Kuhn
  */
 public interface NanopubIndex extends Nanopub {
-
-    /**
-     * The URI of the nanopublication index type.
-     */
-    public static final IRI NANOPUB_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/NanopubIndex");
-
-    /**
-     * The URI of the nanopublication index incomplete type.
-     */
-    public static final IRI INCOMPLETE_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IncompleteIndex");
-
-    /**
-     * The URI of the nanopublication index assertion.
-     */
-    public static final IRI INDEX_ASSERTION_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/IndexAssertion");
-
-    /**
-     * The URI of the nanopublication index includes element.
-     */
-    public static final IRI INCLUDES_ELEMENT_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesElement");
-
-    /**
-     * The URI of the nanopublication index includes sub-index.
-     */
-    public static final IRI INCLUDES_SUBINDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/includesSubindex");
-
-    /**
-     * The URI of the nanopublication index appends index.
-     */
-    public static final IRI APPENDS_INDEX_URI = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/appendsIndex");
 
     /**
      * The maximum number of elements.

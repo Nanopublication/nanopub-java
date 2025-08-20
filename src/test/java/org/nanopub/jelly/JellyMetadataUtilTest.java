@@ -2,7 +2,7 @@ package org.nanopub.jelly;
 
 import com.google.protobuf.ByteString;
 import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -34,8 +34,8 @@ public class JellyMetadataUtilTest {
     public void testGetCounterEmptyArray() {
         var m = List.<RdfStreamFrame.MetadataEntry>of(
                 RdfStreamFrame.MetadataEntry.newInstance()
-                    .setKey(JellyMetadataUtil.COUNTER_KEY)
-                    .setValue(ByteString.copyFrom(new byte[0]))
+                        .setKey(JellyMetadataUtil.COUNTER_KEY)
+                        .setValue(ByteString.copyFrom(new byte[0]))
         );
 
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(m);

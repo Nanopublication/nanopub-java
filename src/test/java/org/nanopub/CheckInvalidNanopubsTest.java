@@ -6,48 +6,54 @@ import org.nanopub.CheckNanopub.Report;
 import java.io.File;
 
 public class CheckInvalidNanopubsTest {
- 
-	@Test
-	public void runTest() throws Exception {
-		for (File testFile : new File("src/test/resources/testsuite/invalid/plain/").listFiles()) {
-			testPlain(testFile.getName());
-		}
-		for (File testFile : new File("src/test/resources/testsuite/invalid/trusty/").listFiles()) {
-			testTrusty(testFile.getName());
-		}
-		for (File testFile : new File("src/test/resources/testsuite/invalid/signed/").listFiles()) {
-			testSigned(testFile.getName());
-		}
-	}
 
-	public void testPlain(String filename) throws Exception {
-		Report report = null;
-		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/plain/" + filename});
-			report = c.check();
-			System.out.println(report.getSummary());
-		} catch (Exception ex) {}
-		assert report == null || !report.areAllValid();
-	}
+    @Test
+    public void runTest() {
+        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/plain/").getPath()).listFiles()) {
+            testPlain(testFile.getName());
+        }
+        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/trusty/").getPath()).listFiles()) {
+            testTrusty(testFile.getName());
+        }
+        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/signed/").getPath()).listFiles()) {
+            testSigned(testFile.getName());
+        }
+    }
 
-	public void testTrusty(String filename) throws Exception {
-		Report report = null;
-		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/trusty/" + filename});
-			report = c.check();
-			System.out.println(report.getSummary());
-		} catch (Exception ex) {}
-		assert report == null || !report.areAllTrusty();
-	}
+    public void testPlain(String filename) throws RuntimeException {
+        Report report = null;
+        try {
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/plain/" + filename).getPath()});
+            report = c.check();
+            System.out.println(report.getSummary());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        assert report == null || !report.areAllValid();
+    }
 
-	public void testSigned(String filename) throws Exception {
-		Report report = null;
-		try {
-			CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[] {"src/test/resources/testsuite/invalid/signed/" + filename});
-			report = c.check();
-			System.out.println(report.getSummary());
-		} catch (Exception ex) {}
-		assert report == null || !report.areAllSigned();
-	}
+    public void testTrusty(String filename) throws RuntimeException {
+        Report report = null;
+        try {
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/trusty/" + filename).getPath()});
+            report = c.check();
+            System.out.println(report.getSummary());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        assert report == null || !report.areAllTrusty();
+    }
+
+    public void testSigned(String filename) throws RuntimeException {
+        Report report = null;
+        try {
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/signed/" + filename).getPath()});
+            report = c.check();
+            System.out.println(report.getSummary());
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        assert report == null || !report.areAllSigned();
+    }
 
 }

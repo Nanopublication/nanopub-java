@@ -27,16 +27,16 @@ public class HandleResolver {
      *
      * @param id the handle ID to resolve
      * @return ParsedJsonResponse containing the resolved handle information
-     * @throws URISyntaxException   if the URI is malformed
-     * @throws IOException          if an I/O error occurs
-     * @throws InterruptedException if the operation is interrupted
+     * @throws java.net.URISyntaxException    if the URI is malformed
+     * @throws java.io.IOException            if an I/O error occurs
+     * @throws java.lang.InterruptedException if the operation is interrupted
      */
     public ParsedJsonResponse call(String id) throws URISyntaxException, IOException, InterruptedException {
 
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(BASE_URI + id)).build();
         HttpResponse<String> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());
-
-        ParsedJsonResponse r = new Gson().fromJson(httpResponse.body(), ParsedJsonResponse.class);
+        String responseBody = httpResponse.body();
+        ParsedJsonResponse r = new Gson().fromJson(responseBody, ParsedJsonResponse.class);
         return r;
     }
 

@@ -11,10 +11,9 @@ import org.nanopub.op.Topic.TopicHandler;
 public class MetaboliteSpeciesTopics implements TopicHandler {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the topic for a given nanopub.
-     *
-     * @param np the nanopub for which to get the topic
-     * @return a string representing the topic of the nanopub
      */
     @Override
     public String getTopic(Nanopub np) {

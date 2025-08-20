@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +24,9 @@ public class DisgenetFingerprints implements FingerprintHandler {
      */
     public static final IRI disgenetGdaPlaceholder = vf.createIRI("http://purl.org/nanopub/placeholders/disgenet-gda");
 
-    private static final IRI pav1importedOn = vf.createIRI("http://purl.org/pav/importedOn");
-    private static final IRI pav2importedOn = vf.createIRI("http://purl.org/pav/2.0/importedOn");
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getFingerprint(Nanopub np) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());
@@ -61,8 +62,8 @@ public class DisgenetFingerprints implements FingerprintHandler {
                     subj = disgenetGdaPlaceholder;
                 }
             } else if (isInProvenance) {
-                if (pred.equals(pav1importedOn) || pred.equals(pav2importedOn)) {
-                    pred = pav2importedOn;
+                if (pred.equals(PAV.IMPORTED_ON) || pred.equals(PAV.IMPORTED_ON_V2)) {
+                    pred = PAV.IMPORTED_ON_V2;
                     obj = timestampPlaceholder;
                 }
                 if (subj.equals(np.getAssertionUri())) {
@@ -76,7 +77,7 @@ public class DisgenetFingerprints implements FingerprintHandler {
 
     private Value transform(Value v) {
         if (v instanceof IRI) {
-            String s = ((IRI) v).stringValue();
+            String s = v.stringValue();
             if (s.matches("http://rdf.disgenet.org/v.*/void.*")) {
                 if (s.matches("http://rdf.disgenet.org/v.*/void.*-20[0-9]*")) {
                     String r = s.replaceFirst("^http://rdf.disgenet.org/v.*/void.*(/|#)(.*)-20[0-9]*$", "http://rdf.disgenet.org/vx.x.x/void/$2");

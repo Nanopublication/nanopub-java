@@ -3,8 +3,14 @@ package org.nanopub;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DC;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -14,9 +20,9 @@ import java.util.*;
 public class SimpleCreatorPattern implements NanopubPattern {
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the name of the pattern.
-     *
-     * @return the name of the pattern
      */
     @Override
     public String getName() {
@@ -24,10 +30,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns true if the pattern applies to the given nanopub.
-     *
-     * @param nanopub the nanopub to check
-     * @return true if the pattern applies to the given nanopub
      */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
@@ -35,10 +40,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if the pattern is correctly used by the given nanopub.
-     *
-     * @param nanopub the nanopub to check
-     * @return true if the pattern is correctly used by the given nanopub,
      */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
@@ -46,10 +50,9 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a description of the pattern for the given nanopub.
-     *
-     * @param nanopub the nanopub to describe
-     * @return a description of the pattern for the given nanopub
      */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
@@ -74,14 +77,13 @@ public class SimpleCreatorPattern implements NanopubPattern {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a URL to the pattern information.
-     *
-     * @return a URL to the pattern information
-     * @throws MalformedURLException if the URL is malformed
      */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java").toURL();
     }
 
     /**
@@ -170,18 +172,24 @@ public class SimpleCreatorPattern implements NanopubPattern {
         return creators;
     }
 
-    public static final IRI PAV_CREATEDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/createdBy");
+    // TODO think about importing this from the PAV vocabulary
+    /**
+     * Constant <code>PAV_CREATEDBY_1</code>
+     */
     public static final IRI PAV_CREATEDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy");
-    public static final IRI PAV_CREATEDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/createdBy");
-    public static final IRI DCT_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/terms/creator");
-    public static final IRI DCE_CREATOR = SimpleValueFactory.getInstance().createIRI("http://purl.org/dc/elements/1.1/creator");
-    public static final IRI PROV_WASATTRIBUTEDTO = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/ns/prov#wasAttributedTo");
 
-    public static final IRI PAV_AUTHOREDBY = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/authoredBy");
+    /**
+     * Constant <code>PAV_AUTHOREDBY_1</code>
+     */
     public static final IRI PAV_AUTHOREDBY_1 = SimpleValueFactory.getInstance().createIRI("http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy");
-    public static final IRI PAV_AUTHOREDBY_2 = SimpleValueFactory.getInstance().createIRI("http://purl.org/pav/2.0/authoredBy");
 
+    /**
+     * Constant <code>BIBO_AUTHOR_LIST</code>
+     */
     public static final IRI BIBO_AUTHOR_LIST = SimpleValueFactory.getInstance().createIRI("http://purl.org/ontology/bibo/authorList");
+    /**
+     * Constant <code>RDF_ELEMENT_PROPERTY_REGEX</code>
+     */
     public static final String RDF_ELEMENT_PROPERTY_REGEX = "http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_([1-9][0-9]*)";
 
     /**
@@ -191,8 +199,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      * @return true if the IRI is a creator property, false otherwise
      */
     public static boolean isCreatorProperty(IRI uri) {
-        return uri.equals(PAV_CREATEDBY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV_CREATEDBY_2)
-                || uri.equals(DCT_CREATOR) || uri.equals(DCE_CREATOR) || uri.equals(PROV_WASATTRIBUTEDTO);
+        return uri.equals(PAV.CREATED_BY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV.CREATED_BY_V2) || uri.equals(DCTERMS.CREATOR) || uri.equals(DC.CREATOR) || uri.equals(PROV.WAS_ATTRIBUTED_TO);
     }
 
     /**
@@ -202,7 +209,7 @@ public class SimpleCreatorPattern implements NanopubPattern {
      * @return true if the IRI is an author property, false otherwise
      */
     public static boolean isAuthorProperty(IRI uri) {
-        return uri.equals(PAV_AUTHOREDBY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV_AUTHOREDBY_2);
+        return uri.equals(PAV.AUTHORED_BY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV.AUTHORED_BY_V2);
     }
 
 }

@@ -8,6 +8,9 @@ import org.nanopub.fdo.rest.gson.Value;
  */
 public class ResponsePrinter {
 
+    private ResponsePrinter() {
+    }
+
     /**
      * Prints the parsed JSON response to the console.
      *

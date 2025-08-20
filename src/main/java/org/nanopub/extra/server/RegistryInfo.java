@@ -7,7 +7,7 @@ import org.nanopub.NanopubUtils;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * RegistryInfo class represents the information about a nanopub registry server.
@@ -35,7 +35,7 @@ public class RegistryInfo implements Serializable {
      *
      * @param registryUrl the URL of the registry server
      * @return a RegistryInfo object containing the server information
-     * @throws RegistryInfoException if there is an error loading the registry information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
      */
     public static RegistryInfo load(String registryUrl) throws RegistryInfoException {
         return load(registryUrl, RegistryInfo.class);
@@ -47,7 +47,7 @@ public class RegistryInfo implements Serializable {
      * @param url             the URL of the registry server
      * @param serverInfoClass the class to use for deserializing the registry information
      * @return a RegistryInfo object containing the server information
-     * @throws RegistryInfoException if there is an error loading the registry information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
      */
     protected static RegistryInfo load(String url, Class<? extends RegistryInfo> serverInfoClass) throws RegistryInfoException {
         HttpGet get = null;
@@ -59,7 +59,7 @@ public class RegistryInfo implements Serializable {
         get.setHeader("Accept", "application/json");
         RegistryInfo r = null;
         try (InputStream in = NanopubUtils.getHttpClient().execute(get).getEntity().getContent()) {
-            r = new Gson().fromJson(new InputStreamReader(in, Charset.forName("UTF-8")), serverInfoClass);
+            r = new Gson().fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), serverInfoClass);
             r.url = url;
         } catch (Exception ex) {
             throw new RegistryInfoException(url);
@@ -234,20 +234,22 @@ public class RegistryInfo implements Serializable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URL of the registry server as a string.
-     *
-     * @return true if the object is equal to the given object, false otherwise
      */
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof RegistryInfo)) return false;
+        if (!(obj instanceof RegistryInfo)) {
+            return false;
+        }
         return toString().equals(obj.toString());
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the hash code of the registry server.
-     *
-     * @return the hash code
      */
     @Override
     public int hashCode() {
@@ -255,9 +257,9 @@ public class RegistryInfo implements Serializable {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the string representation of the registry server URL.
-     *
-     * @return the URL of the registry server
      */
     @Override
     public String toString() {

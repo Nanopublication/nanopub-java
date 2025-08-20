@@ -14,10 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ExportJsonTest {
 
     @Test
-    void initNoArgs() throws Exception {
-        assertThrows(ParameterException.class, () -> {
-            CliRunner.initJc(new ExportJson(), new String[0]);
-        });
+    void initNoArgs() {
+        assertThrows(ParameterException.class, () -> CliRunner.initJc(new ExportJson(), new String[0]));
     }
 
     @Test
@@ -30,14 +28,14 @@ class ExportJsonTest {
     }
 
     @Test
-    void initValidArgs() throws Exception {
-        ExportJson obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile"});
+    void initValidArgs() {
+        ExportJson obj = CliRunner.initJc(new ExportJson(), new String[]{"inputFile"});
         assertNotNull(obj);
 
-        obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile", "-o", "outputFile"});
+        obj = CliRunner.initJc(new ExportJson(), new String[]{"inputFile", "-o", "outputFile"});
         assertNotNull(obj);
 
-        obj = CliRunner.initJc(new ExportJson(), new String[] {"inputFile", "--in-format", "trig"});
+        obj = CliRunner.initJc(new ExportJson(), new String[]{"inputFile", "--in-format", "trig"});
         assertNotNull(obj);
     }
 

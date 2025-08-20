@@ -12,7 +12,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -126,17 +126,12 @@ public class Filter extends CliRunner {
                 }
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             outputStream.flush();
@@ -178,18 +173,13 @@ public class Filter extends CliRunner {
     }
 
     /**
-     * Example nanopublication type IRI.
-     */
-    public static IRI exampleNanopubType = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/ExampleNanopub");
-
-    /**
      * Checks if a given nanopublication is an example nanopub.
      *
      * @param np The nanopublication to check
      * @return true if the nanopub is an example, false otherwise
      */
     public static boolean isExampleNanopub(Nanopub np) {
-        if (np.getPubinfo().contains(SimpleValueFactory.getInstance().createStatement(np.getUri(), RDF.TYPE, exampleNanopubType))) {
+        if (np.getPubinfo().contains(SimpleValueFactory.getInstance().createStatement(np.getUri(), RDF.TYPE, NPX.EXAMPLE_NANOPUB))) {
             return true;
         }
         for (Statement st : NanopubUtils.getStatements(np)) {

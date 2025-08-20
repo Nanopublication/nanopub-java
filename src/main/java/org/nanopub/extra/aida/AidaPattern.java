@@ -2,14 +2,12 @@ package org.nanopub.extra.aida;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubPattern;
+import org.nanopub.vocabulary.NPX;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A nanopublication pattern for AIDA nanopublications.
@@ -22,29 +20,36 @@ public class AidaPattern implements NanopubPattern {
     public static final String AIDA_URI_PREFIX = "http://purl.org/aida/";
 
     /**
-     * The IRI for the AIDA sentence predicate.
+     * {@inheritDoc}
      */
-    public static final IRI AS_SENTENCE = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/asSentence");
-
     @Override
     public String getName() {
         return "AIDA nanopublication";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean appliesTo(Nanopub nanopub) {
         for (Statement st : nanopub.getAssertion()) {
-            if (st.getPredicate().equals(AS_SENTENCE)) return true;
+            if (st.getPredicate().equals(NPX.AS_SENTENCE)) return true;
         }
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCorrectlyUsedBy(Nanopub nanopub) {
         IRI aidaUri = getAidaUri(nanopub);
         return aidaUri != null && aidaUri.toString().startsWith(AIDA_URI_PREFIX);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getDescriptionFor(Nanopub nanopub) {
         if (isCorrectlyUsedBy(nanopub)) {
@@ -54,9 +59,12 @@ public class AidaPattern implements NanopubPattern {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public URL getPatternInfoUrl() throws MalformedURLException {
-        return new URL("https://github.com/tkuhn/aida");
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+        return new URI("https://github.com/tkuhn/aida").toURL();
     }
 
     /**
@@ -70,7 +78,7 @@ public class AidaPattern implements NanopubPattern {
         boolean error = false;
         for (Statement st : nanopub.getAssertion()) {
             if (!st.getSubject().equals(nanopub.getAssertionUri())) continue;
-            if (!st.getPredicate().equals(AS_SENTENCE)) continue;
+            if (!st.getPredicate().equals(NPX.AS_SENTENCE)) continue;
             if (!(st.getObject() instanceof IRI)) {
                 error = true;
                 break;
@@ -95,11 +103,7 @@ public class AidaPattern implements NanopubPattern {
         if (aidaUri == null) return null;
         if (!aidaUri.toString().startsWith(AIDA_URI_PREFIX)) return null;
         String aidaSentence = aidaUri.toString().substring(AIDA_URI_PREFIX.length());
-        try {
-            aidaSentence = URLDecoder.decode(aidaSentence, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            ex.printStackTrace();
-        }
+        aidaSentence = URLDecoder.decode(aidaSentence, StandardCharsets.UTF_8);
         return aidaSentence;
     }
 

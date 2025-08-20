@@ -64,7 +64,17 @@ And then nanopublications can be created and published programmatically like thi
 For the complete code checkout ``UsageExamples.java``. 
 
 
-## Usage on Unix Command-Line
+## Documentation
+
+See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
+source code documentation.
+
+[Here](https://nanopublication.github.io/nanopub-java/) you can find more documentation.
+
+
+## Usage of Unix Command-Line
+
+Check out this list of all [command line commands](https://nanopublication.github.io/nanopub-java/quick-start/cli/).
 
 To use this library on the command line, just download the [np
 script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np).
@@ -125,7 +135,7 @@ Create the file target/jacoco.exec which includes the test coverage information 
 ```bash
 mvn clean verify
 ```
-To create a html report out of jacoco.exec (target/site/jacoco/index.html) use:
+To create a HTML report out of jacoco.exec (target/site/jacoco/index.html) use:
 ```bash
 mvn jacoco:report
 ```

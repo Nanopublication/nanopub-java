@@ -14,9 +14,11 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.fdo.FdoNanopubTest;
+import org.nanopub.fdo.FdoNanopubCreatorTest;
 import org.nanopub.fdo.FdoQuery;
 import org.nanopub.fdo.RetrieveFdo;
+import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,9 +43,9 @@ public class UsageExamples {
         NanopubCreator npCreator = new NanopubCreator(true);
 
         final IRI anne = vf.createIRI("https://example.com/anne");
-        npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+        npCreator.addAssertionStatement(anne, RDF.TYPE, SCHEMA.PERSON);
         npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
-        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
         Nanopub np = npCreator.finalizeNanopub(true);
         System.err.println("# Nanopub before signing:");
         NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
@@ -67,15 +69,15 @@ public class UsageExamples {
     }
 
     void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
-        new FdoNanopubTest().exampleCreateFdoNanopubManuallyWithoutHandleSystem();
+        new FdoNanopubCreatorTest().exampleCreateFdoNanopubManuallyWithoutHandleSystem();
     }
 
     void createNanopubWithFdoIri() throws MalformedNanopubException {
-        new FdoNanopubTest().exampleCreateWithFdoIri();
+        new FdoNanopubCreatorTest().createWithFdoIri();
     }
 
     void createNanopubWithFdoIriSuffix() throws MalformedNanopubException {
-        new FdoNanopubTest().exampleCreateWithFdoIriSuffix();
+        new FdoNanopubCreatorTest().createWithFdoSuffix();
     }
 
     void shaclValidation() {
@@ -88,7 +90,7 @@ public class UsageExamples {
         new GeneralIntegrationTestsIT();
     }
 
-    void examplesForQueryingFdo () throws FailedApiCallException {
+    void examplesForQueryingFdo() throws FailedApiCallException {
         // This query performs a full-text search on the FDO nanopublications.
         ApiResponse response1 = FdoQuery.textSearch("myText");
 

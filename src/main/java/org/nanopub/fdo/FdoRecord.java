@@ -12,13 +12,13 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.nanopub.Nanopub.SUPERSEDES;
 import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
 import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 
@@ -31,6 +31,7 @@ import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 public class FdoRecord implements Serializable {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    final static String SCHEMA_ID = "21.T11966/JsonSchema";
 
     private IRI id = null;
     private final HashMap<IRI, Value> tuples = new HashMap<>();
@@ -38,7 +39,7 @@ public class FdoRecord implements Serializable {
     private final Set<IRI> derivesFrom = new HashSet<>();
 
     /**
-     * When teh FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it.
+     * When the FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it.
      */
     private Nanopub originalNanopub = null;
 
@@ -75,11 +76,14 @@ public class FdoRecord implements Serializable {
     }
 
     /**
-     * Build statements out of tuples, requires the id (fdoIri) to be set
+     * Build statements out of tuples.
      *
      * @return a Set of RDF Statements representing this FdoRecord
      */
     public Set<Statement> buildStatements() {
+        if (id == null) {
+            throw new RuntimeException("FdoRecord id (fdoIri) must be set before building statements");
+        }
         Set<Statement> statements = new HashSet<>();
         for (var entry : tuples.entrySet()) {
             statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));
@@ -159,11 +163,11 @@ public class FdoRecord implements Serializable {
      * @return the schema URL as a String, or null if not set
      */
     public String getSchemaUrl() {
-        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + "21.T11966/JsonSchema"));
+        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + SCHEMA_ID));
         if (schemaEntry != null) {
+            // TODO check if the schemaEntry is a valid JSON Schema reference
             // assume the entry looks like {"$ref": "https://the-url"}
-            String url = schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);
-            return url;
+            return schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);
         }
         return null;
     }
@@ -232,7 +236,7 @@ public class FdoRecord implements Serializable {
      * Create a new NanopubCreator for this FdoRecord, which can be used to create a new Nanopub.
      *
      * @return a NanopubCreator for this FdoRecord
-     * @throws MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
     public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
         return createUpdatedNanopub(TransformContext.makeDefault());
@@ -243,7 +247,7 @@ public class FdoRecord implements Serializable {
      *
      * @param tc the TransformContext to use for the Nanopub creation, must not be null
      * @return a NanopubCreator for this FdoRecord
-     * @throws MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
     public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
         if (originalNanopub == null) {
@@ -255,7 +259,7 @@ public class FdoRecord implements Serializable {
         for (Statement st : originalNanopub.getProvenance()) {
             creator.addProvenanceStatement(assertionUri, st.getPredicate(), st.getObject());
         }
-        creator.addPubinfoStatement(SUPERSEDES, originalNanopub.getUri());
+        creator.addPubinfoStatement(NPX.SUPERSEDES, originalNanopub.getUri());
         return creator;
     }
 

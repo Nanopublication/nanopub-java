@@ -1,23 +1,24 @@
 package org.nanopub.trusty;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
-import java.util.List;
-
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdfSetting;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NP;
 
-import net.trustyuri.TrustyUriUtils;
-import net.trustyuri.rdf.RdfHasher;
-import net.trustyuri.rdf.RdfPreprocessor;
-import net.trustyuri.rdf.TransformRdfSetting;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Utility class for handling Trusty Nanopubs.
@@ -27,7 +28,7 @@ public class TrustyNanopubUtils {
     /**
      * The RDF format for serialized Trusty Nanopubs.
      */
-    public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", Charset.forName("UTF8"), "stnp", false, true, false);
+    public static RDFFormat STNP_FORMAT = new RDFFormat("Serialized Trusty Nanopub", "text/plain", StandardCharsets.UTF_8, "stnp", false, true, false);
 
     private TrustyNanopubUtils() {
     }  // no instances allowed
@@ -43,11 +44,11 @@ public class TrustyNanopubUtils {
      * @param nanopub the Nanopub to write
      * @param out     the OutputStream to write to
      * @param format  the RDF format to use for serialization
-     * @throws RDFHandlerException if there is an error during writing
-     * @throws IOException         if there is an I/O error
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error during writing
+     * @throws java.io.IOException                       if there is an I/O error
      */
     public static void writeNanopub(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException, IOException {
-        try (OutputStreamWriter sw = new OutputStreamWriter(out, Charset.forName("UTF-8"))) {
+        try (OutputStreamWriter sw = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
             RDFWriter writer = Rio.createWriter(format, sw);
             writer.startRDF();
             String s = nanopub.getUri().toString();
@@ -56,15 +57,15 @@ public class TrustyNanopubUtils {
             if (!(transformRdfSetting.getBnodeChar() + "").matches("[A-Za-z0-9\\-_]")) {
                 writer.handleNamespace("node", s + transformRdfSetting.getPostAcChar() + transformRdfSetting.getBnodeChar());
             }
-            writer.handleNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-            writer.handleNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+            writer.handleNamespace(RDF.PREFIX, RDF.NAMESPACE);
+            writer.handleNamespace(RDFS.PREFIX, RDFS.NAMESPACE);
             writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
-            writer.handleNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-            writer.handleNamespace("owl", "http://www.w3.org/2002/07/owl#");
-            writer.handleNamespace("dct", "http://purl.org/dc/terms/");
-            writer.handleNamespace("dce", "http://purl.org/dc/elements/1.1/");
-            writer.handleNamespace("pav", "http://swan.mindinformatics.org/ontologies/1.2/pav/");
-            writer.handleNamespace("np", "http://www.nanopub.org/nschema#");
+            writer.handleNamespace(XSD.PREFIX, XSD.NAMESPACE);
+            writer.handleNamespace(OWL.PREFIX, OWL.NAMESPACE);
+            writer.handleNamespace("dct", DCTERMS.NAMESPACE);
+            writer.handleNamespace("dce", DC.NAMESPACE);
+            writer.handleNamespace("pav", "http://purl.org/pav/");
+            writer.handleNamespace(NP.PREFIX, NP.NAMESPACE);
             for (Statement st : NanopubUtils.getStatements(nanopub)) {
                 writer.handleStatement(st);
             }

@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
@@ -76,7 +75,7 @@ public class Namespaces extends CliRunner {
      *
      * @param args Command-line arguments
      * @return An instance of Namespaces
-     * @throws ParameterException if there is an error in the parameters
+     * @throws com.beust.jcommander.ParameterException if there is an error in the parameters
      */
     public static Namespaces getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -100,11 +99,11 @@ public class Namespaces extends CliRunner {
     /**
      * Runs the Namespaces utility to extract namespaces from nanopublications.
      *
-     * @throws IOException               if there is an error reading or writing files
-     * @throws RDFParseException         if there is an error parsing RDF data
-     * @throws RDFHandlerException       if there is an error handling RDF data
-     * @throws MalformedNanopubException if a nanopub is malformed
-     * @throws TrustyUriException        if there is an error with Trusty URIs
+     * @throws java.io.IOException                       if there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {
@@ -122,17 +121,12 @@ public class Namespaces extends CliRunner {
                 rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException | IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException | IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
         }
@@ -146,8 +140,8 @@ public class Namespaces extends CliRunner {
      * Processes a single nanopublication to extract namespaces from its graphs.
      *
      * @param np the nanopublication to process
-     * @throws RDFHandlerException if there is an error handling RDF data
-     * @throws IOException         if there is an error writing to output files
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws java.io.IOException                       if there is an error writing to output files
      */
     public void process(Nanopub np) throws RDFHandlerException, IOException {
         writeNamespaces(np.getHead(), headWriter);

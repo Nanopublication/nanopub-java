@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +58,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publish(Nanopub nanopub) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub);
@@ -71,7 +70,7 @@ public class PublishNanopub extends CliRunner {
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publish(Nanopub nanopub, String serverUrl) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub, serverUrl);
@@ -88,7 +87,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public static String publishToTestServer(Nanopub nanopub) throws IOException {
         return new PublishNanopub().publishNanopub(nanopub, TEST_SERVER_URL);
@@ -125,12 +124,9 @@ public class PublishNanopub extends CliRunner {
                     if (verbose) {
                         System.out.println("Reading file: " + s);
                     }
-                    MultiNanopubRdfHandler.process(new File(s), new NanopubHandler() {
-                        @Override
-                        public void handleNanopub(Nanopub np) {
-                            if (failed) return;
-                            processNanopub(np);
-                        }
+                    MultiNanopubRdfHandler.process(new File(s), np -> {
+                        if (failed) return;
+                        processNanopub(np);
                     });
                     if (count == 0) {
                         System.out.println("NO NANOPUB FOUND: " + s);
@@ -185,7 +181,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub the nanopublication to publish
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub) throws IOException {
         return publishNanopub(nanopub, null);
@@ -197,7 +193,7 @@ public class PublishNanopub extends CliRunner {
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
      * @return the URL of the published nanopublication
-     * @throws IOException if an error occurs during publishing
+     * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
         if (registryInfo == null) {
@@ -265,7 +261,6 @@ public class PublishNanopub extends CliRunner {
      *
      * @return the registry information
      */
-
     public RegistryInfo getUsedServer() {
         return registryInfo;
     }

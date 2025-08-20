@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
+import org.nanopub.vocabulary.NPX;
 
 import java.util.*;
 
@@ -31,7 +32,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
      * Creates a new NanopubIndexImpl instance from a given Nanopub.
      *
      * @param npIndex the Nanopub to be used as an index
-     * @throws MalformedNanopubException if the Nanopub does not conform to the expected structure of an index
+     * @throws org.nanopub.MalformedNanopubException if the Nanopub does not conform to the expected structure of an index
      */
     protected NanopubIndexImpl(Nanopub npIndex) throws MalformedNanopubException {
         this.np = npIndex;
@@ -43,7 +44,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
         Set<IRI> subIndexSet = new HashSet<>();
         for (Statement st : np.getAssertion()) {
             if (!st.getSubject().equals(np.getUri())) continue;
-            if (st.getPredicate().equals(NanopubIndex.APPENDS_INDEX_URI)) {
+            if (st.getPredicate().equals(NPX.APPENDS_INDEX)) {
                 if (appendedIndex != null) {
                     throw new MalformedNanopubException("Multiple appends-statements found for index");
                 }
@@ -51,12 +52,12 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
                     throw new MalformedNanopubException("URI expected for object of appends-statement");
                 }
                 appendedIndex = (IRI) st.getObject();
-            } else if (st.getPredicate().equals(NanopubIndex.INCLUDES_ELEMENT_URI)) {
+            } else if (st.getPredicate().equals(NPX.INCLUDES_ELEMENT)) {
                 if (!(st.getObject() instanceof IRI)) {
                     throw new MalformedNanopubException("Element has to be a URI");
                 }
                 elementSet.add((IRI) st.getObject());
-            } else if (st.getPredicate().equals(NanopubIndex.INCLUDES_SUBINDEX_URI)) {
+            } else if (st.getPredicate().equals(NPX.INCLUDES_SUBINDEX)) {
                 if (!(st.getObject() instanceof IRI)) {
                     throw new MalformedNanopubException("Sub-index has to be a URI");
                 }
@@ -66,7 +67,7 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
         for (Statement st : np.getPubinfo()) {
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!st.getPredicate().equals(RDF.TYPE)) continue;
-            if (st.getObject().equals(NanopubIndex.INCOMPLETE_INDEX_URI)) {
+            if (st.getObject().equals(NPX.INCOMPLETE_INDEX)) {
                 isIncompleteIndex = true;
             }
         }
@@ -79,9 +80,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the nanopublication index.
-     *
-     * @return the URI of the nanopublication index
      */
     @Override
     public IRI getUri() {
@@ -89,9 +90,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the head of the nanopublication.
-     *
-     * @return the URI of the head
      */
     @Override
     public IRI getHeadUri() {
@@ -99,9 +100,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the set of statements that form the head of the nanopublication.
-     *
-     * @return the set of statements in the head
      */
     @Override
     public Set<Statement> getHead() {
@@ -109,9 +110,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the assertion information of the nanopublication.
-     *
-     * @return the URI of the assertion information
      */
     @Override
     public IRI getAssertionUri() {
@@ -119,9 +120,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the set of statements that form the assertion of the nanopublication.
-     *
-     * @return the set of assertion statements
      */
     @Override
     public Set<Statement> getAssertion() {
@@ -129,9 +130,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the provenance information of the nanopublication.
-     *
-     * @return the URI of the provenance information
      */
     @Override
     public IRI getProvenanceUri() {
@@ -139,9 +140,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the set of statements that provide provenance information about the nanopublication.
-     *
-     * @return the set of provenance statements
      */
     @Override
     public Set<Statement> getProvenance() {
@@ -149,9 +150,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the publication information of the nanopublication.
-     *
-     * @return the URI of the publication information
      */
     @Override
     public IRI getPubinfoUri() {
@@ -159,24 +160,27 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the set of statements that provide publication information about the nanopublication.
-     *
-     * @return the set of publication information statements
      */
     @Override
     public Set<Statement> getPubinfo() {
         return np.getPubinfo();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<IRI> getGraphUris() {
         return np.getGraphUris();
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the creation time of the nanopublication.
-     *
-     * @return a Calendar object representing the creation time
      */
     @Override
     public Calendar getCreationTime() {
@@ -184,9 +188,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a set of URIs that are defined as authors in the nanopublication.
-     *
-     * @return a set of IRI objects representing the authors
      */
     @Override
     public Set<IRI> getAuthors() {
@@ -194,9 +198,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a set of URIs that are defined as creators in the nanopublication.
-     *
-     * @return a set of IRI objects representing the creators
      */
     @Override
     public Set<IRI> getCreators() {
@@ -204,24 +208,27 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the count of triples in the nanopublication.
-     *
-     * @return the number of triples in the nanopublication
      */
     @Override
     public int getTripleCount() {
         return np.getTripleCount();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getByteCount() {
         return np.getByteCount();
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a set of URIs that are included as elements in the nanopublication index.
-     *
-     * @return a set of IRI objects representing the elements
      */
     @Override
     public Set<IRI> getElements() {
@@ -229,9 +236,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a set of sub-indexes that this nanopublication index includes.
-     *
-     * @return a set of IRI objects representing the sub-indexes
      */
     @Override
     public Set<IRI> getSubIndexes() {
@@ -239,9 +246,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the URI of the index that this nanopublication appends to.
-     *
-     * @return the URI of the appended index, or null if this index does not append to another
      */
     @Override
     public IRI getAppendedIndex() {
@@ -249,9 +256,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if the nanopublication index is incomplete.
-     *
-     * @return true if the index is incomplete, false otherwise
      */
     @Override
     public boolean isIncomplete() {
@@ -259,9 +266,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a list of namespace prefixes used in the nanopublication.
-     *
-     * @return a list of namespace prefixes as Strings, or an empty list if none are defined
      */
     @Override
     public List<String> getNsPrefixes() {
@@ -273,10 +280,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the namespace URI for a given prefix.
-     *
-     * @param prefix the prefix for which the namespace URI is requested
-     * @return the namespace URI as a String, or null if the prefix is not defined
      */
     @Override
     public String getNamespace(String prefix) {
@@ -288,9 +294,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the name of the nanopublication, which is typically derived from the title statement in the pubinfo.
-     *
-     * @return the name as a String, or null if not found
      */
     @Override
     public String getName() {
@@ -304,9 +310,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the description of the nanopublication.
-     *
-     * @return the description as a String, or null if not found
      */
     @Override
     public String getDescription() {
@@ -336,6 +342,8 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Removes unused namespace prefixes from the nanopublication.
      */
     @Override
@@ -346,9 +354,9 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns a map of namespace prefixes to their corresponding URIs used in the nanopublication.
-     *
-     * @return a map where keys are namespace prefixes and values are their URIs, or an empty map if none are defined
      */
     @Override
     public Map<String, String> getNs() {
@@ -358,4 +366,23 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
             return ImmutableMap.of();
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        NanopubIndexImpl that = (NanopubIndexImpl) o;
+        return Objects.equals(np, that.np);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(np);
+    }
+
 }

@@ -9,11 +9,10 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.op.fingerprint.FingerprintHandler;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -74,20 +73,15 @@ public class Decontextualize extends CliRunner {
                 }
             }
 
-            writer = Rio.createWriter(RDFFormat.NQUADS, new OutputStreamWriter(outputStream, Charset.forName("UTF-8")));
+            writer = Rio.createWriter(RDFFormat.NQUADS, new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
             writer.startRDF();
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             writer.endRDF();

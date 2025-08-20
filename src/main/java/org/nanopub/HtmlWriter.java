@@ -14,7 +14,7 @@ import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
@@ -75,12 +75,12 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * The RDF format for HTML output.
      */
-    public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", Charset.forName("UTF8"), "html", true, true, false);
+    public static RDFFormat HTML_FORMAT = new RDFFormat("TriG HTML", "text/html", StandardCharsets.UTF_8, "html", true, true, false);
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Gets the RDF format that this writer supports.
-     *
-     * @return the RDF format for HTML output
      */
     @Override
     public RDFFormat getRDFFormat() {
@@ -88,9 +88,9 @@ public class HtmlWriter extends TurtleWriter {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Starts the RDF document writing process.
-     *
-     * @throws RDFHandlerException if an error occurs while starting the RDF document
      */
     @Override
     public void startRDF()
@@ -103,9 +103,9 @@ public class HtmlWriter extends TurtleWriter {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Ends the RDF document writing process.
-     *
-     * @throws RDFHandlerException if an error occurs while ending the RDF document
      */
     @Override
     public void endRDF()
@@ -121,10 +121,9 @@ public class HtmlWriter extends TurtleWriter {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Handles a statement by writing it to the output in HTML format.
-     *
-     * @param st the statement to handle
-     * @throws RDFHandlerException if an error occurs while handling the statement
      */
     @Override
     public void handleStatement(Statement st)
@@ -216,6 +215,9 @@ public class HtmlWriter extends TurtleWriter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void writeCommentLine(String line)
             throws IOException {
@@ -224,6 +226,9 @@ public class HtmlWriter extends TurtleWriter {
         //super.writeCommentLine(line);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void writeNamespace(String prefix, String name)
             throws IOException {
@@ -263,7 +268,7 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * Closes the currently active context, if any.
      *
-     * @throws IOException if an I/O error occurs while closing the context
+     * @throws java.io.IOException if an I/O error occurs while closing the context
      */
     protected void closeActiveContext()
             throws IOException {
@@ -277,16 +282,21 @@ public class HtmlWriter extends TurtleWriter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected void writePredicate(IRI predicate)
             throws IOException {
         if (predicate.equals(RDF.TYPE)) {
-            // Write short-cut for rdf:type
-            writer.write("<a href=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#type\">a</a>");
+            writer.write("<a href=\"" + RDF.TYPE + "\">a</a>");
         } else {
             writeURI(predicate);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected void writeURI(IRI uri)
             throws IOException {
         String uriString = uri.toString();
@@ -376,11 +386,17 @@ public class HtmlWriter extends TurtleWriter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected void writeBNode(BNode bNode)
             throws IOException {
         throw new RuntimeException("Unexpected blank node");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected void writeLiteral(Literal lit)
             throws IOException {
         String label = lit.getLabel();
@@ -423,6 +439,11 @@ public class HtmlWriter extends TurtleWriter {
         }
     }
 
+    /**
+     * <p>closePreviousStatement.</p>
+     *
+     * @throws java.io.IOException if any.
+     */
     protected void closePreviousStatement()
             throws IOException {
         if (!statementClosed) {
@@ -441,7 +462,7 @@ public class HtmlWriter extends TurtleWriter {
      * Starts a new part in the HTML output.
      *
      * @param partName the name of the part to start
-     * @throws IOException if an I/O error occurs while starting the part
+     * @throws java.io.IOException if an I/O error occurs while starting the part
      */
     public void startPart(String partName)
             throws IOException {
@@ -457,7 +478,7 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * Ends the current part in the HTML output.
      *
-     * @throws IOException if an I/O error occurs while ending the part
+     * @throws java.io.IOException if an I/O error occurs while ending the part
      */
     public void endPart()
             throws IOException {
@@ -470,7 +491,7 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * Writes the start of an HTML document, including the necessary HTML tags and styles.
      *
-     * @throws IOException if an I/O error occurs while writing the HTML start
+     * @throws java.io.IOException if an I/O error occurs while writing the HTML start
      */
     public void writeHtmlStart()
             throws IOException {
@@ -497,7 +518,7 @@ public class HtmlWriter extends TurtleWriter {
     /**
      * Writes the end of an HTML document, closing all open tags.
      *
-     * @throws IOException if an I/O error occurs while writing the HTML end
+     * @throws java.io.IOException if an I/O error occurs while writing the HTML end
      */
     public void writeHtmlEnd()
             throws IOException {

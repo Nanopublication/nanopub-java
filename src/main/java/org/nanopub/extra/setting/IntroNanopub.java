@@ -18,10 +18,10 @@ import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
-import org.nanopub.extra.security.CryptoElement;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,8 +41,8 @@ public class IntroNanopub implements Serializable {
      *
      * @param userId the userId to get the IntroNanopub for
      * @return the IntroNanopub for the userId, or null if not found
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroNanopub get(String userId) throws IOException, RDF4JException {
         return get(userId, (HttpClient) null);
@@ -54,13 +54,13 @@ public class IntroNanopub implements Serializable {
      * @param userId     the userId to get the IntroNanopub for
      * @param httpClient the HttpClient to use for fetching the IntroNanopub
      * @return the IntroNanopub for the userId, or null if not found
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
         IntroExtractor ie = extract(userId, httpClient);
         if (ie != null) {
-            return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+            return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
         }
         return null;
     }
@@ -73,7 +73,7 @@ public class IntroNanopub implements Serializable {
      * @return the IntroNanopub for the userId, or null if not found
      */
     public static IntroNanopub get(String userId, IntroExtractor ie) {
-        return new IntroNanopub(ie.getIntroNanopub(), ie.getName(), SimpleValueFactory.getInstance().createIRI(userId));
+        return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));
     }
 
     /**
@@ -82,8 +82,8 @@ public class IntroNanopub implements Serializable {
      * @param userId     the userId to extract the IntroNanopub for
      * @param httpClient the HttpClient to use for fetching the IntroNanopub
      * @return the IntroExtractor containing the extracted data
-     * @throws IOException    if there is an error fetching the IntroNanopub
-     * @throws RDF4JException if there is an error parsing the RDF data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
      */
     public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
         if (httpClient == null) httpClient = NanopubUtils.getHttpClient();
@@ -123,7 +123,7 @@ public class IntroNanopub implements Serializable {
      * @param nanopub the Nanopub that contains the introduction
      */
     public IntroNanopub(Nanopub nanopub) {
-        this(nanopub, null, null);
+        this(nanopub, null);
     }
 
     /**
@@ -133,25 +133,13 @@ public class IntroNanopub implements Serializable {
      * @param user    the IRI of the user
      */
     public IntroNanopub(Nanopub nanopub, IRI user) {
-        this(nanopub, null, user);
-    }
-
-    /**
-     * Constructor for IntroNanopub with user and name.
-     *
-     * @param nanopub the Nanopub that contains the introduction
-     * @param name    the name of the user
-     * @param user    the IRI of the user
-     */
-    // TODO: Do we still need name and user here? We can extract it from the content.
-    public IntroNanopub(Nanopub nanopub, String name, IRI user) {
         this.nanopub = nanopub;
         this.user = user;
         for (Statement st : nanopub.getAssertion()) {
             if (!(st.getObject() instanceof IRI obj)) continue;
             IRI subj = (IRI) st.getSubject();
             IRI pred = st.getPredicate();
-            if (pred.equals(KeyDeclaration.DECLARED_BY) || pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+            if (pred.equals(NPX.DECLARED_BY) || pred.equals(NPX.HAS_KEY_LOCATION)) {
                 KeyDeclaration d;
                 if (keyDeclarations.containsKey(subj)) {
                     d = keyDeclarations.get(subj);
@@ -159,11 +147,11 @@ public class IntroNanopub implements Serializable {
                     d = new KeyDeclaration(subj);
                     keyDeclarations.put(subj, d);
                 }
-                if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+                if (pred.equals(NPX.DECLARED_BY)) {
                     if (this.user == null) this.user = obj;
                     if (!this.user.equals(obj)) continue;
                     d.addDeclarer(this.user);
-                } else if (pred.equals(KeyDeclaration.HAS_KEY_LOCATION)) {
+                } else if (pred.equals(NPX.HAS_KEY_LOCATION)) {
                     d.setKeyLocation(obj);
                 }
             }
@@ -176,13 +164,13 @@ public class IntroNanopub implements Serializable {
                 KeyDeclaration d = keyDeclarations.get(subj);
                 IRI pred = st.getPredicate();
                 Value obj = st.getObject();
-                if (pred.equals(CryptoElement.HAS_ALGORITHM) && obj instanceof Literal) {
+                if (pred.equals(NPX.HAS_ALGORITHM) && obj instanceof Literal) {
                     try {
                         d.setAlgorithm((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {
                         //ex.printStackTrace();
                     }
-                } else if (pred.equals(CryptoElement.HAS_PUBLIC_KEY) && obj instanceof Literal) {
+                } else if (pred.equals(NPX.HAS_PUBLIC_KEY) && obj instanceof Literal) {
                     try {
                         d.setPublicKeyLiteral((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {

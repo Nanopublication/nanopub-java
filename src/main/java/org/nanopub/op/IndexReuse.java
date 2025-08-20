@@ -9,11 +9,11 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.extra.index.NanopubIndexCreator;
 import org.nanopub.extra.index.SimpleIndexCreator;
+import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class IndexReuse extends CliRunner {
     private boolean addSupersedesBacklinks = false;
 
     @com.beust.jcommander.Parameter(names = "-U", description = "Base URI for index nanopubs")
-    private String baseUri = "http://purl.org/nanopub/temp/index/";
+    private String baseUri = TempUriReplacer.tempUri + "index/";
 
     @com.beust.jcommander.Parameter(names = "-T", description = "Title of index")
     private String iTitle;
@@ -147,17 +147,12 @@ public class IndexReuse extends CliRunner {
                 } else {
                     rdfReuseFormat = Rio.getParserFormatForFileName(reuseIndexFile.toString()).orElse(null);
                 }
-                MultiNanopubRdfHandler.process(rdfReuseFormat, reuseIndexFile, new NanopubHandler() {
-
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            processIndexNanopub(np);
-                        } catch (IOException | MalformedNanopubException | RDFHandlerException ex) {
-                            throw new RuntimeException(ex);
-                        }
+                MultiNanopubRdfHandler.process(rdfReuseFormat, reuseIndexFile, np -> {
+                    try {
+                        processIndexNanopub(np);
+                    } catch (IOException | MalformedNanopubException | RDFHandlerException ex) {
+                        throw new RuntimeException(ex);
                     }
-
                 });
             }
 

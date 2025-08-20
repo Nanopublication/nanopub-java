@@ -1,7 +1,6 @@
 package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -10,16 +9,6 @@ import java.util.Set;
  * Represents a declaration of a cryptographic key.
  */
 public class KeyDeclaration extends CryptoElement {
-
-    /**
-     * The IRI for the property that indicates who declared the key.
-     */
-    public static final IRI DECLARED_BY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/declaredBy");
-
-    /**
-     * The IRI for the property that indicates the location of the key.
-     */
-    public static final IRI HAS_KEY_LOCATION = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasKeyLocation");
 
     // TODO: Shouldn't there be only one declarer?
     private Set<IRI> declarers = new LinkedHashSet<>();
@@ -31,6 +20,7 @@ public class KeyDeclaration extends CryptoElement {
      * @param uri the IRI of the key declaration
      */
     public KeyDeclaration(IRI uri) {
+        // TODO this set the uri property, but not the keyLocation property
         super(uri);
     }
 
@@ -68,6 +58,7 @@ public class KeyDeclaration extends CryptoElement {
      * @param keyLocation the IRI representing the location of the key
      */
     public void setKeyLocation(IRI keyLocation) {
+        // TODO shouldn't this set the uri property?
         this.keyLocation = keyLocation;
     }
 
@@ -77,6 +68,7 @@ public class KeyDeclaration extends CryptoElement {
      * @return the IRI representing the key location, or null if not set
      */
     public IRI getKeyLocation() {
+        // TODO shouldn't this return the uri property?
         return keyLocation;
     }
 

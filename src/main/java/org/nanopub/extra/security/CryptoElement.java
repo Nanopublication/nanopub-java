@@ -2,7 +2,6 @@ package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.io.Serializable;
 
@@ -10,21 +9,6 @@ import java.io.Serializable;
  * Abstract class representing a cryptographic element used in signatures.
  */
 public abstract class CryptoElement implements Serializable {
-
-    /**
-     * The IRI for the CryptoElement class.
-     */
-    public static final IRI CRYPTO_ELEMENT = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/CryptoElement");
-
-    /**
-     * The IRI for the hasAlgorithm property.
-     */
-    public static final IRI HAS_ALGORITHM = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasAlgorithm");
-
-    /**
-     * The IRI for the hasPublicKey property.
-     */
-    public static final IRI HAS_PUBLIC_KEY = SimpleValueFactory.getInstance().createIRI("http://purl.org/nanopub/x/hasPublicKey");
 
     /**
      * The IRI of the crypto element.
@@ -63,7 +47,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the public key string for this crypto element.
      *
      * @param publicKeyLiteral the literal containing the public key string
-     * @throws MalformedCryptoElementException if a public key is already set
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if a public key is already set
      */
     public void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedCryptoElementException {
         if (publicKeyString != null) {
@@ -85,7 +69,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the algorithm used for this crypto element.
      *
      * @param algorithm the signature algorithm to set
-     * @throws MalformedCryptoElementException if an algorithm is already set
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set
      */
     public void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedCryptoElementException {
         if (this.algorithm != null) {
@@ -98,7 +82,7 @@ public abstract class CryptoElement implements Serializable {
      * Sets the algorithm used for this crypto element from a Literal.
      *
      * @param algorithmLiteral the literal containing the algorithm name
-     * @throws MalformedCryptoElementException if an algorithm is already set or if the algorithm is not recognized
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set or if the algorithm is not recognized
      */
     public void setAlgorithm(Literal algorithmLiteral) throws MalformedCryptoElementException {
         if (algorithm != null) {

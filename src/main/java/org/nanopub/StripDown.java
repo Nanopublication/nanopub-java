@@ -9,11 +9,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.extra.security.CryptoElement;
-import org.nanopub.extra.security.NanopubSignatureElement;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
@@ -51,8 +51,8 @@ public class StripDown extends CliRunner {
     /**
      * Runs the StripDown process.
      *
-     * @throws MalformedNanopubException if a nanopublication is malformed.
-     * @throws IOException               if an I/O error occurs.
+     * @throws org.nanopub.MalformedNanopubException if a nanopublication is malformed.
+     * @throws java.io.IOException                   if an I/O error occurs.
      */
     public void run() throws MalformedNanopubException, IOException {
 
@@ -84,28 +84,24 @@ public class StripDown extends CliRunner {
             final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
             final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
             try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, new MultiNanopubRdfHandler.NanopubHandler() {
+                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                    try {
+                        String replacement = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
+                        List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
 
-                    @Override
-                    public void handleNanopub(Nanopub np) {
-                        try {
-                            String replacement = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
-                            List<Statement> newStatements = removeHashesAndSignaturesFromStatements(np, replacement);
+                        NanopubImpl oldNp = (NanopubImpl) np;
+                        Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
 
-                            NanopubImpl oldNp = (NanopubImpl) np;
-                            Map<String, String> namespaces = removeHashFromNamespaces(oldNp, replacement);
+                        NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
 
-                            NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);
+                        RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, StandardCharsets.UTF_8));
+                        NanopubUtils.propagateToHandler(updatedNp, w);
 
-                            RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, Charset.forName("UTF-8")));
-                            NanopubUtils.propagateToHandler(updatedNp, w);
-
-                        } catch (RDFHandlerException ex) {
-                            ex.printStackTrace();
-                            throw new RuntimeException(ex);
-                        } catch (MalformedNanopubException e) {
-                            throw new RuntimeException(e);
-                        }
+                    } catch (RDFHandlerException ex) {
+                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
+                    } catch (MalformedNanopubException e) {
+                        throw new RuntimeException(e);
                     }
                 });
             }
@@ -136,12 +132,12 @@ public class StripDown extends CliRunner {
         List<Statement> newStatements = new ArrayList<>();
         for (Statement st : statements) {
             // skip signatures
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_ELEMENT)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE_TARGET)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.HAS_SIGNATURE)) continue;
-            if (st.getPredicate().equals(CryptoElement.HAS_PUBLIC_KEY)) continue;
-            if (st.getPredicate().equals(CryptoElement.HAS_ALGORITHM)) continue;
-            if (st.getPredicate().equals(NanopubSignatureElement.SIGNED_BY)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) continue;
+            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) continue;
+            if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) continue;
+            if (st.getPredicate().equals(NPX.SIGNED_BY)) continue;
 
             // remove hashes
             Resource context = transform(st.getContext(), artifactCode, replacement);
@@ -171,8 +167,7 @@ public class StripDown extends CliRunner {
         } else if (r instanceof BNode) {
             throw new RuntimeException("Unexpected blank node encountered");
         } else {
-            IRI transformedURI = vf.createIRI(r.toString().replaceFirst("http.*" + artifact + ".?", replacement));
-            return transformedURI;
+            return vf.createIRI(r.toString().replaceFirst("http.*" + artifact + ".?", replacement));
         }
     }
 

@@ -1,10 +1,14 @@
 package org.nanopub.extra.index;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.PAV;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +72,7 @@ public abstract class NanopubIndexCreator {
             newNpCreator();
         }
         itemCount++;
-        npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_ELEMENT_URI, npUri);
+        npCreator.addAssertionStatement(npCreator.getNanopubUri(), NPX.INCLUDES_ELEMENT, npUri);
         int nsSplit = TurtleUtil.findURISplitIndex(npUri.toString());
         if (nsSplit > 0) {
             String ns = npUri.toString().substring(0, nsSplit);
@@ -103,7 +107,7 @@ public abstract class NanopubIndexCreator {
             newNpCreator();
         }
         itemCount++;
-        npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.INCLUDES_SUBINDEX_URI, npcUri);
+        npCreator.addAssertionStatement(npCreator.getNanopubUri(), NPX.INCLUDES_SUBINDEX, npcUri);
     }
 
     /**
@@ -134,7 +138,7 @@ public abstract class NanopubIndexCreator {
             newNpCreator();
         }
         if (supersededIndexUri != null) {
-            npCreator.addPubinfoStatement(npCreator.getNanopubUri(), Nanopub.SUPERSEDES, supersededIndexUri);
+            npCreator.addPubinfoStatement(npCreator.getNanopubUri(), NPX.SUPERSEDES, supersededIndexUri);
         }
         enrichCompleteIndex(npCreator);
         try {
@@ -222,7 +226,7 @@ public abstract class NanopubIndexCreator {
     private void newNpCreator() {
         // Finalize existing index nanopub:
         if (npCreator != null) {
-            npCreator.addPubinfoStatement(RDF.TYPE, NanopubIndex.INCOMPLETE_INDEX_URI);
+            npCreator.addPubinfoStatement(RDF.TYPE, NPX.INCOMPLETE_INDEX);
             enrichIncompleteIndex(npCreator);
             try {
                 Nanopub np;
@@ -242,24 +246,24 @@ public abstract class NanopubIndexCreator {
         elementNsCount = 0;
         itemCount = 0;
         String baseUri = getBaseUri();
-        if (baseUri.startsWith("http://purl.org/nanopub/temp/")) {
+        if (baseUri.startsWith(TempUriReplacer.tempUri)) {
             baseUri += Math.abs(random.nextLong()) + "/";
         }
         npCreator = new NanopubCreator(baseUri);
         npCreator.addNamespace("", baseUri);
-        npCreator.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-        npCreator.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-        npCreator.addNamespace("xsd", "http://www.w3.org/2001/XMLSchema#");
-        npCreator.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-        npCreator.addNamespace("dct", "http://purl.org/dc/terms/");
-        npCreator.addNamespace("dce", "http://purl.org/dc/elements/1.1/");
-        npCreator.addNamespace("pav", "http://purl.org/pav/");
-        npCreator.addNamespace("np", "http://www.nanopub.org/nschema#");
-        npCreator.addNamespace("npx", "http://purl.org/nanopub/x/");
-        npCreator.addProvenanceStatement(RDF.TYPE, NanopubIndex.INDEX_ASSERTION_URI);
-        npCreator.addPubinfoStatement(RDF.TYPE, NanopubIndex.NANOPUB_INDEX_URI);
+        npCreator.addNamespace(RDF.NS);
+        npCreator.addNamespace(RDFS.NS);
+        npCreator.addNamespace(XSD.NS);
+        npCreator.addNamespace(OWL.NS);
+        npCreator.addNamespace("dct", DCTERMS.NAMESPACE);
+        npCreator.addNamespace("dce", DC.NAMESPACE);
+        npCreator.addNamespace(PAV.PREFIX, PAV.NAMESPACE);
+        npCreator.addNamespace(NP.PREFIX, NP.NAMESPACE);
+        npCreator.addNamespace(NPX.PREFIX, NPX.NAMESPACE);
+        npCreator.addProvenanceStatement(RDF.TYPE, NPX.INDEX_ASSERTION);
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.NANOPUB_INDEX);
         if (previousIndexUri != null) {
-            npCreator.addAssertionStatement(npCreator.getNanopubUri(), NanopubIndex.APPENDS_INDEX_URI, previousIndexUri);
+            npCreator.addAssertionStatement(npCreator.getNanopubUri(), NPX.APPENDS_INDEX, previousIndexUri);
         }
     }
 

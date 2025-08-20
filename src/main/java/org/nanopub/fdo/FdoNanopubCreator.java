@@ -12,6 +12,8 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.fdo.rest.gson.Value;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -41,7 +43,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
-        IRI npIri = vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
+        IRI npIri = vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
@@ -53,7 +55,7 @@ public class FdoNanopubCreator {
      * @return a NanopubCreator instance ready to create a Nanopub
      */
     public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
-        String npIriString = "http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/";
+        String npIriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
         IRI npIri = vf.createIRI(npIriString);
@@ -61,27 +63,27 @@ public class FdoNanopubCreator {
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
-    private static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
+    static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
         fdoRecord.setId(fdoIri);
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
         creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
         creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        creator.addPubinfoStatement(npIri, vf.createIRI("http://purl.org/nanopub/x/introduces"), fdoIri);
+        creator.addPubinfoStatement(npIri, NPX.INTRODUCES, fdoIri);
         creator.addAssertionStatements(fdoRecord.buildStatements().toArray(new Statement[0]));
 
         return creator;
     }
 
     /**
-     * Creation of Nanopub from handle system.
+     * Creation of Nanopub from the handle system.
      *
      * @param id the handle system identifier
      * @return Nanopub containing the data from the handle system
-     * @throws MalformedNanopubException if the Nanopub cannot be created due to malformed data
-     * @throws URISyntaxException        if the handle system identifier is not a valid URI
-     * @throws IOException               if there is an error during the HTTP request to the handle system
-     * @throws InterruptedException      if the thread is interrupted while waiting for the HTTP request to complete
+     * @throws org.nanopub.MalformedNanopubException if the Nanopub cannot be created due to malformed data
+     * @throws java.net.URISyntaxException           if the handle system identifier is not a valid URI
+     * @throws java.io.IOException                   if there is an error during the HTTP request to the handle system
+     * @throws java.lang.InterruptedException        if the thread is interrupted while waiting for the HTTP request to complete
      */
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
         FdoRecord record = createFdoRecordFromHandleSystem(id);
@@ -89,8 +91,7 @@ public class FdoNanopubCreator {
         IRI fdoIri = FdoUtils.createIri(id);
         NanopubCreator creator = createWithFdoIri(record, fdoIri);
         creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + id));
-        Nanopub np = creator.finalizeNanopub(true);
-        return np;
+        return creator.finalizeNanopub(true);
     }
 
     /**
@@ -98,9 +99,9 @@ public class FdoNanopubCreator {
      *
      * @param id the handle system identifier
      * @return FdoRecord containing the data from the handle system
-     * @throws URISyntaxException   if the handle system identifier is not a valid URI
-     * @throws IOException          if there is an error during the HTTP request to the handle system
-     * @throws InterruptedException if the thread is interrupted while waiting for the HTTP request to complete
+     * @throws java.net.URISyntaxException    if the handle system identifier is not a valid URI
+     * @throws java.io.IOException            if there is an error during the HTTP request to the handle system
+     * @throws java.lang.InterruptedException if the thread is interrupted while waiting for the HTTP request to complete
      */
     public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException {
         ParsedJsonResponse response = new HandleResolver().call(id);
@@ -156,8 +157,7 @@ public class FdoNanopubCreator {
             }
         }
 
-        FdoRecord record = new FdoRecord(profile, label, null);
-        return record;
+        return new FdoRecord(profile, label, null);
     }
 
 }

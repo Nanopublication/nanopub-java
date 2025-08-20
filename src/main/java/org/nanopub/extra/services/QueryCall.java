@@ -7,7 +7,6 @@ import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -105,12 +104,8 @@ public class QueryCall {
             paramString = "?";
             for (String k : params.keySet()) {
                 if (paramString.length() > 1) paramString += "&";
-                try {
-                    paramString += k + "=";
-                    paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8.toString());
-                } catch (UnsupportedEncodingException ex) {
-                    ex.printStackTrace();
-                }
+                paramString += k + "=";
+                paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8);
             }
         }
         System.err.println("Invoking API operation " + queryId + " " + paramString);

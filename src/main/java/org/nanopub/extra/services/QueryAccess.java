@@ -40,7 +40,7 @@ public abstract class QueryAccess {
      *
      * @param queryId the ID of the query to call
      * @param params  the parameters to pass to the query
-     * @throws FailedApiCallException if the API call fails
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
     public void call(String queryId, Map<String, String> params) throws FailedApiCallException {
         HttpResponse resp = QueryCall.run(queryId, params);
@@ -66,7 +66,7 @@ public abstract class QueryAccess {
      * @param queryId the ID of the query to call
      * @param params  the parameters to pass to the query
      * @param writer  the writer to print the CSV response to
-     * @throws FailedApiCallException if the API call fails
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
     public static void printCvsResponse(String queryId, Map<String, String> params, Writer writer) throws FailedApiCallException {
         ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();
@@ -93,7 +93,7 @@ public abstract class QueryAccess {
      * @param queryId the ID of the query to call
      * @param params  the parameters to pass to the query
      * @return an ApiResponse object containing the response data
-     * @throws FailedApiCallException if the API call fails
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
     public static ApiResponse get(String queryId, Map<String, String> params) throws FailedApiCallException {
         final ApiResponse response = new ApiResponse();
@@ -141,7 +141,7 @@ public abstract class QueryAccess {
                     }
                 }
                 if (latestList.size() == 1) {
-                    String latest = latestList.get(0);
+                    String latest = latestList.getFirst();
                     latestVersionMap.put(nanopubId, Pair.of(currentTime, latest));
                     return latest;
                 } else {

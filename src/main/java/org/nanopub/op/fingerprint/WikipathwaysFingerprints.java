@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NPX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,9 @@ import static org.nanopub.SimpleTimestampPattern.isCreationTimeProperty;
  */
 public class WikipathwaysFingerprints implements FingerprintHandler {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getFingerprint(Nanopub np) {
         String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());
@@ -55,7 +59,7 @@ public class WikipathwaysFingerprints implements FingerprintHandler {
             if (isInPubinfo && subj.equals(np.getUri()) && isCreationTimeProperty(pred)) {
                 continue;
             }
-            if (isInPubinfo && subj.equals(np.getUri()) && pred.equals(Nanopub.SUPERSEDES)) {
+            if (isInPubinfo && subj.equals(np.getUri()) && pred.equals(NPX.SUPERSEDES)) {
                 continue;
             }
             n.add(SimpleValueFactory.getInstance().createStatement(subj, pred, obj, graphURI));

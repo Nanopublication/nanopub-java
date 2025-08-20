@@ -17,6 +17,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Set up JDK
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
@@ -24,5 +25,8 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: 'maven'
 
-      - name: Test with Maven
-        run: mvn -B test
+      - name: Tests and Integration Tests with Maven
+        run: ./mvnw -B test
+
+      - name: Publish coverage to Coveralls
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6

@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.op.topic.DefaultTopics;
 
@@ -61,7 +60,7 @@ public class Topic extends CliRunner {
      *
      * @param args Command-line arguments as a single string.
      * @return An instance of Topic initialized with the provided arguments.
-     * @throws ParameterException If the arguments are invalid or missing.
+     * @throws com.beust.jcommander.ParameterException If the arguments are invalid or missing.
      */
     public static Topic getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -96,11 +95,11 @@ public class Topic extends CliRunner {
     /**
      * Runs the Topic command-line utility.
      *
-     * @throws IOException               if there is an error reading or writing files.
-     * @throws RDFParseException         if there is an error parsing RDF data.
-     * @throws RDFHandlerException       if there is an error handling RDF data.
-     * @throws MalformedNanopubException if a nanopublication is malformed.
-     * @throws TrustyUriException        if there is an error with Trusty URIs.
+     * @throws java.io.IOException                       if there is an error reading or writing files.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data.
+     * @throws org.nanopub.MalformedNanopubException     if a nanopublication is malformed.
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs.
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {
@@ -123,17 +122,12 @@ public class Topic extends CliRunner {
 
             writer = new BufferedWriter(new OutputStreamWriter(outputStream));
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        writer.write(np.getUri() + " " + getTopic(np) + "\n");
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    writer.write(np.getUri() + " " + getTopic(np) + "\n");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             writer.flush();

@@ -21,7 +21,7 @@ import org.nanopub.fdo.FdoRecord;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.List;
@@ -36,7 +36,7 @@ public class MySandboxIT {
         // it's just here for the @Test annotation to not disappear from the imports
     }
 
-//     @Test
+    //     @Test
     public void exampleCreateWithFdoIri() throws MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, IOException {
         IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "ExampleFdoToUpdate";
@@ -74,14 +74,14 @@ public class MySandboxIT {
         creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
 
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
         String result = PublishNanopub.publish(signedNp);
     }
 
-//        @Test
+    //        @Test
     public void createComplexFdo2() throws Exception {
 
         IRI fdoProfile = vf.createIRI("https://w3id.org/np/RAudZj6DD7iByABdBXAWSsNh3kd6kj5P2bmHi6hzg1xcE/aggregate-fdo-profile");
@@ -98,7 +98,7 @@ public class MySandboxIT {
         creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
 
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
@@ -125,36 +125,36 @@ public class MySandboxIT {
         creator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, vf.createIRI("https://orcid.org/0009-0008-3635-347X"));
         Nanopub np = creator.finalizeNanopub(true);
 
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         NanopubUtils.propagateToHandler(np, w);
 
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
         PublishNanopub.publish(signedNp);
     }
 
-//    @Test
+    //    @Test
     void specificQuery() throws Exception {
         String textSearch = "RAkYh4UPJryajbtIDbLG-Bfd6A4JD2SbU9bmZdvaEdFRY/fdo-text-search";
         String findByRef = "RAQiQjx3OiO9ra9ImWl9kpuDpT8d3EiBSrftckOAAwGKc/find-fdos-by-ref";
         String getFeed = "RAP1G35VvTs3gfMaucv_xZUMZuvjB9lxM8tWUGttr5mmo/get-fdo-feed";
         String getFavorites = "RAsyc6zFFnE8mblnDfdCCNRsrcN1CSCBDW9I4Ppidgk9g/get-favorite-things";
 
-        ApiResponse apiResponse = QueryAccess.get(getFeed, Map.of("creator","https://orcid.org/0009-0008-3635-347X"));
+        ApiResponse apiResponse = QueryAccess.get(getFeed, Map.of("creator", "https://orcid.org/0009-0008-3635-347X"));
         List<ApiResponseEntry> data = apiResponse.getData();
         for (ApiResponseEntry entry : data) {
-            for (String k: entry.getKeys()) {
+            for (String k : entry.getKeys()) {
                 System.out.println(k + ": " + entry.get(k));
             }
             System.out.println();
         }
     }
 
-//    @Test
+    //    @Test
     void retractNanopubTest() throws Exception {
         Nanopub original = GetNanopub.get("https://w3id.org/np/RA1Lhd0Rt5xuz63vjeUYgGJrgeUvH-7QKwAiPgj44WWgg");
         Nanopub retraction = NanopubRetractor.createRetraction(original, TransformContext.makeDefault());
-        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
-        NanopubUtils.propagateToHandler(retraction, w);
+//        RDFWriter w = Rio.createWriter(RDFFormat.TRIG, new OutputStreamWriter(System.out, Charset.forName("UTF-8")));
+//        NanopubUtils.propagateToHandler(retraction, w);
         PublishNanopub.publish(retraction);
     }
 

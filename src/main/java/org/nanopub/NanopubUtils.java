@@ -9,17 +9,17 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
-import org.nanopub.extra.security.KeyDeclaration;
+import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.PAV;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -29,22 +29,30 @@ import java.util.*;
  */
 public class NanopubUtils {
 
+    private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
+    private static final Random random = new Random();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    private static CloseableHttpClient httpClient;
+
+    /**
+     * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
+     */
+    public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
+
     private NanopubUtils() {
     }  // no instances allowed
 
-    private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
-
     static {
-        defaultNamespaces.add(Pair.of("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
-        defaultNamespaces.add(Pair.of("rdfs", "http://www.w3.org/2000/01/rdf-schema#"));
+        defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));
+        defaultNamespaces.add(Pair.of(RDFS.PREFIX, RDFS.NAMESPACE));
         defaultNamespaces.add(Pair.of("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/"));
-        defaultNamespaces.add(Pair.of("xsd", "http://www.w3.org/2001/XMLSchema#"));
-        defaultNamespaces.add(Pair.of("owl", "http://www.w3.org/2002/07/owl#"));
-        defaultNamespaces.add(Pair.of("dct", "http://purl.org/dc/terms/"));
-        defaultNamespaces.add(Pair.of("dce", "http://purl.org/dc/elements/1.1/"));
-        defaultNamespaces.add(Pair.of("pav", "http://purl.org/pav/"));
-        defaultNamespaces.add(Pair.of("prov", "http://www.w3.org/ns/prov#"));
-        defaultNamespaces.add(Pair.of("np", "http://www.nanopub.org/nschema#"));
+        defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));
+        defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));
+        defaultNamespaces.add(Pair.of("dct", DCTERMS.NAMESPACE));
+        defaultNamespaces.add(Pair.of("dce", DC.NAMESPACE));
+        defaultNamespaces.add(Pair.of(PAV.PREFIX, PAV.NAMESPACE));
+        defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));
+        defaultNamespaces.add(Pair.of(NP.PREFIX, NP.NAMESPACE));
     }
 
     /**
@@ -74,16 +82,11 @@ public class NanopubUtils {
 
     private static List<Statement> getSortedList(Set<Statement> s) {
         List<Statement> l = new ArrayList<>(s);
-        l.sort(new Comparator<>() {
-
-            @Override
-            public int compare(Statement st1, Statement st2) {
-                // TODO better sorting
-                // it works fine for now, since AbstractStatement has a valid toString()
-                // implementation, which does not consist of any runtime object references
-                return st1.toString().compareTo(st2.toString());
-            }
-
+        l.sort((st1, st2) -> {
+            // TODO better sorting
+            // it works fine for now, since AbstractStatement has a valid toString()
+            // implementation, which does not consist of any runtime object references
+            return st1.toString().compareTo(st2.toString());
         });
         return l;
     }
@@ -94,10 +97,10 @@ public class NanopubUtils {
      * @param nanopub the Nanopub to write
      * @param out     the output stream to write to
      * @param format  the RDF format to use
-     * @throws RDFHandlerException if an error occurs while writing
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
      */
     public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException {
-        writeNanopub(nanopub, format, new OutputStreamWriter(out, Charset.forName("UTF-8")));
+        writeNanopub(nanopub, format, new OutputStreamWriter(out, StandardCharsets.UTF_8));
     }
 
     /**
@@ -106,8 +109,8 @@ public class NanopubUtils {
      * @param nanopub the Nanopub to write
      * @param format  the RDF format to use
      * @return a string representation of the Nanopub in the specified format
-     * @throws RDFHandlerException if an error occurs while writing
-     * @throws IOException         if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
+     * @throws java.io.IOException                       if an I/O error occurs
      */
     public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException, IOException {
         try (StringWriter sw = new StringWriter()) {
@@ -135,11 +138,11 @@ public class NanopubUtils {
      *
      * @param nanopub the Nanopub to propagate
      * @param handler the RDFHandler to propagate to
-     * @throws RDFHandlerException if an error occurs while handling RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
      */
     public static void propagateToHandler(Nanopub nanopub, RDFHandler handler) throws RDFHandlerException {
         handler.startRDF();
-        if (nanopub instanceof NanopubWithNs np && !((NanopubWithNs) nanopub).getNsPrefixes().isEmpty()) {
+        if (nanopub instanceof NanopubWithNs np && !np.getNsPrefixes().isEmpty()) {
             for (String p : np.getNsPrefixes()) {
                 handler.handleNamespace(p, np.getNamespace(p));
             }
@@ -193,6 +196,7 @@ public class NanopubUtils {
      * @return a string label for the Nanopub, or null if no label can be found
      */
     public static String getLabel(Nanopub np) {
+        final String separator = " ";
         String npLabel = "", npTitle = "", aLabel = "", aTitle = "", introLabel = "";
         final IRI npId = np.getUri();
         final IRI aId = np.getAssertionUri();
@@ -202,12 +206,12 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(npId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                npLabel += " " + obj.stringValue();
+                npLabel += separator + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
-                npTitle += " " + obj.stringValue();
+            if (subj.equals(npId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
+                npTitle += separator + obj.stringValue();
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -216,10 +220,10 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                aLabel += " " + obj.stringValue();
+                aLabel += separator + obj.stringValue();
             }
             if (subj.equals(aId) && pred.equals(DCTERMS.TITLE) && obj instanceof Literal) {
-                aTitle += " " + obj.stringValue();
+                aTitle += separator + obj.stringValue();
             }
         }
         for (Statement st : np.getAssertion()) {
@@ -227,13 +231,13 @@ public class NanopubUtils {
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (subj.equals(aId) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                aLabel += " " + obj.stringValue();
+                aLabel += separator + obj.stringValue();
             }
-            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DCE_TITLE)) && obj instanceof Literal) {
-                aTitle += " " + obj.stringValue();
+            if (subj.equals(aId) && (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) && obj instanceof Literal) {
+                aTitle += separator + obj.stringValue();
             }
             if (introMap.containsKey(subj) && pred.equals(RDFS.LABEL) && obj instanceof Literal) {
-                introLabel += " " + obj.stringValue();
+                introLabel += separator + obj.stringValue();
             }
         }
         if (!npLabel.isEmpty()) return npLabel.substring(1);
@@ -262,7 +266,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!subj.equals(npId)) continue;
             if (obj instanceof Literal) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     npDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     npComment += "\n" + obj.stringValue();
@@ -270,7 +274,7 @@ public class NanopubUtils {
                     npDef += "\n" + obj.stringValue();
                 }
             } else {
-                if (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) {
+                if (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) {
                     introMap.put((IRI) obj, true);
                 }
             }
@@ -281,7 +285,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (!subj.equals(aId)) continue;
-            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                 aDesc += "\n" + obj.stringValue();
             } else if (pred.equals(RDFS.COMMENT)) {
                 aComment += "\n" + obj.stringValue();
@@ -295,7 +299,7 @@ public class NanopubUtils {
             final Value obj = st.getObject();
             if (!(obj instanceof Literal)) continue;
             if (subj.equals(aId)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     aDesc += "\n" + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     aComment += "\n" + obj.stringValue();
@@ -304,7 +308,7 @@ public class NanopubUtils {
                 }
             }
             if (introMap.containsKey(subj)) {
-                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DCE_DESCRIPTION)) {
+                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {
                     iDesc += " " + obj.stringValue();
                 } else if (pred.equals(RDFS.COMMENT)) {
                     iComment += " " + obj.stringValue();
@@ -347,10 +351,10 @@ public class NanopubUtils {
             if (subj.equals(npId) && pred.equals(RDF.TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && pred.equals(HAS_NANOPUB_TYPE) && obj instanceof IRI) {
+            if (subj.equals(npId) && pred.equals(NPX.HAS_NANOPUB_TYPE) && obj instanceof IRI) {
                 types.add((IRI) obj);
             }
-            if (subj.equals(npId) && (pred.equals(INTRODUCES) || pred.equals(DESCRIBES) || pred.equals(EMBEDS)) && obj instanceof IRI) {
+            if (subj.equals(npId) && (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) && obj instanceof IRI) {
                 introMap.put((IRI) obj, true);
             }
         }
@@ -376,7 +380,7 @@ public class NanopubUtils {
                 if (subj.equals(aId)) types.add((IRI) obj);
                 if (introMap.containsKey(subj)) types.add((IRI) obj);
             }
-            if (pred.equals(KeyDeclaration.DECLARED_BY)) {
+            if (pred.equals(NPX.DECLARED_BY)) {
                 // This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
                 // this predicate is treated as a special case that triggers a type assignment.
                 types.add(pred);
@@ -398,11 +402,6 @@ public class NanopubUtils {
     }
 
     /**
-     * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
-     */
-    public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
-
-    /**
      * For the first 32 bytes of the checksum, XOR them with the nanupub ID (starting at 3rd character)
      *
      * @param nanopubId the IRI of the Nanopub
@@ -411,47 +410,15 @@ public class NanopubUtils {
      */
     public static String updateXorChecksum(IRI nanopubId, String checksum) {
         byte[] checksumBytes = TrustyUriUtils.getBase64Bytes(checksum);
+        if (checksumBytes.length < 32) {
+            throw new IllegalArgumentException("Checksum must be at least 32 bytes long.");
+        }
         byte[] addBytes = TrustyUriUtils.getBase64Bytes(TrustyUriUtils.getArtifactCode(nanopubId.stringValue()).substring(2));
         for (int i = 0; i < 32; i++) {
             checksumBytes[i] = (byte) (checksumBytes[i] ^ addBytes[i]);
         }
         return TrustyUriUtils.getBase64(checksumBytes);
     }
-
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    /**
-     * The IRI for the introduces predicate.
-     */
-    public static final IRI INTRODUCES = vf.createIRI("http://purl.org/nanopub/x/introduces");
-
-    /**
-     * The IRI for the describes predicate.
-     */
-    public static final IRI DESCRIBES = vf.createIRI("http://purl.org/nanopub/x/describes");
-
-    /**
-     * The IRI for the embeds predicate.
-     */
-    public static final IRI EMBEDS = vf.createIRI("http://purl.org/nanopub/x/embeds");
-
-    /**
-     * The IRI for the hasNanopubType predicate.
-     */
-    public static final IRI HAS_NANOPUB_TYPE = vf.createIRI("http://purl.org/nanopub/x/hasNanopubType");
-
-    /**
-     * The IRI for the DCTERMS title predicate.
-     */
-    private static final IRI DCE_TITLE = vf.createIRI("http://purl.org/dc/elements/1.1/title");
-
-    /**
-     * The IRI for the DCTERMS description predicate.
-     */
-    private static final IRI DCE_DESCRIPTION = vf.createIRI("http://purl.org/dc/elements/1.1/description");
-
-
-    private static CloseableHttpClient httpClient;
 
     /**
      * Returns a singleton instance of CloseableHttpClient with a custom configuration.
@@ -469,16 +436,13 @@ public class NanopubUtils {
         return httpClient;
     }
 
-
-    private static Random random = new Random();
-
     /**
      * Creates a temporary Nanopub IRI with a random integer.
      *
      * @return a new IRI for a temporary Nanopub
      */
     public static IRI createTempNanopubIri() {
-        return vf.createIRI("http://purl.org/nanopub/temp/" + Math.abs(random.nextInt()) + "/");
+        return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
     }
 
 }

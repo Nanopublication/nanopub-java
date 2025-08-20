@@ -11,8 +11,8 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.trusty.FixTrustyNanopub;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -170,26 +170,21 @@ public class Reuse extends CliRunner {
             } else {
                 rdfReuseFormat = Rio.getParserFormatForFileName(reuseNanopubFile.toString()).orElse(null);
             }
-            MultiNanopubRdfHandler.process(rdfReuseFormat, reuseNanopubFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        String fp = fingerprint.getFingerprint(np);
-                        String uri = np.getUri().toString();
-                        reusableNanopubs.put(fp, uri);
-                        reusableCount++;
-                        if (addSupersedesBacklinks) {
-                            recordTopic(topic.getTopic(np), uri);
-                        }
-                        if (allOutputFile != null) {
-                            reuseNanopubMap.put(fp, NanopubUtils.writeToString(np, rdfOutFormat));
-                        }
-                    } catch (IOException | RDFHandlerException ex) {
-                        throw new RuntimeException(ex);
+            MultiNanopubRdfHandler.process(rdfReuseFormat, reuseNanopubFile, np -> {
+                try {
+                    String fp = fingerprint.getFingerprint(np);
+                    String uri = np.getUri().toString();
+                    reusableNanopubs.put(fp, uri);
+                    reusableCount++;
+                    if (addSupersedesBacklinks) {
+                        recordTopic(topic.getTopic(np), uri);
                     }
+                    if (allOutputFile != null) {
+                        reuseNanopubMap.put(fp, NanopubUtils.writeToString(np, rdfOutFormat));
+                    }
+                } catch (IOException | RDFHandlerException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
         }
         uniqueReusableCount = reusableNanopubs.size();
@@ -223,17 +218,12 @@ public class Reuse extends CliRunner {
                 }
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             outputStream.flush();
@@ -360,7 +350,7 @@ public class Reuse extends CliRunner {
 
         @Override
         public void handleStatement(Statement st) throws RDFHandlerException {
-            if (st.getSubject().equals(newNp.getUri()) && st.getPredicate().equals(Nanopub.SUPERSEDES)) {
+            if (st.getSubject().equals(newNp.getUri()) && st.getPredicate().equals(NPX.SUPERSEDES)) {
                 // remove existing supersedes-triple
                 return;
             }
@@ -370,7 +360,7 @@ public class Reuse extends CliRunner {
         @Override
         public void endRDF() throws RDFHandlerException {
             super.handleStatement(SimpleValueFactory.getInstance().createStatement(
-                    newNp.getUri(), Nanopub.SUPERSEDES, oldUri, newNp.getPubinfoUri()));
+                    newNp.getUri(), NPX.SUPERSEDES, oldUri, newNp.getPubinfoUri()));
             super.endRDF();
         }
 

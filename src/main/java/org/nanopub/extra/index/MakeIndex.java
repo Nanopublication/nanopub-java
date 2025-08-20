@@ -4,11 +4,14 @@ import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.*;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.NanopubUtils;
+import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -40,7 +43,7 @@ public class MakeIndex extends CliRunner {
     private File outputFile = new File("index.trig");
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Base URI for index nanopubs")
-    private String baseUri = "http://purl.org/nanopub/temp/index/";
+    private String baseUri = TempUriReplacer.tempUri + "index/";
 
     @com.beust.jcommander.Parameter(names = "-t", description = "Title of index")
     private String iTitle;
@@ -73,7 +76,7 @@ public class MakeIndex extends CliRunner {
      * Main method to run the MakeIndex tool.
      *
      * @param args command-line arguments
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public static void main(String[] args) throws IOException {
         try {
@@ -100,9 +103,9 @@ public class MakeIndex extends CliRunner {
         count = 0;
         outFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(RDFFormat.TRIG);
         if (outputFile.getName().endsWith(".gz")) {
-            writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), Charset.forName("UTF-8"));
+            writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), StandardCharsets.UTF_8);
         } else {
-            writer = new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF-8"));
+            writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8);
         }
 
         indexCreator = new SimpleIndexCreator(!plainNanopub) {
@@ -183,22 +186,19 @@ public class MakeIndex extends CliRunner {
                     }
                 } else {
                     RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(RDFFormat.TRIG);
-                    MultiNanopubRdfHandler.process(format, f, new NanopubHandler() {
-                        @Override
-                        public void handleNanopub(Nanopub np) {
-                            if (useSubindexes && IndexUtils.isIndex(np)) {
-                                try {
-                                    indexCreator.addSubIndex(IndexUtils.castToIndex(np));
-                                } catch (MalformedNanopubException ex) {
-                                    throw new RuntimeException(ex);
-                                }
-                            } else {
-                                indexCreator.addElement(np);
+                    MultiNanopubRdfHandler.process(format, f, np -> {
+                        if (useSubindexes && IndexUtils.isIndex(np)) {
+                            try {
+                                indexCreator.addSubIndex(IndexUtils.castToIndex(np));
+                            } catch (MalformedNanopubException ex) {
+                                throw new RuntimeException(ex);
                             }
-                            count++;
-                            if (count % 100 == 0) {
-                                System.err.print(count + " nanopubs...\r");
-                            }
+                        } else {
+                            indexCreator.addElement(np);
+                        }
+                        count++;
+                        if (count % 100 == 0) {
+                            System.err.print(count + " nanopubs...\r");
                         }
                     });
                 }

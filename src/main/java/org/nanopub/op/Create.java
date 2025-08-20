@@ -4,6 +4,7 @@ import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -69,7 +70,7 @@ public class Create extends CliRunner {
         IRI creatorIri = vf.createIRI(nanopubIri.stringValue() + "creator");
         NanopubCreator npCreator = new NanopubCreator(nanopubIri);
         npCreator.addAssertionStatement(npCreator.getAssertionUri(), RDFS.COMMENT, vf.createLiteral("Replace this with your assertion content."));
-        npCreator.addProvenanceStatement(vf.createIRI("http://www.w3.org/ns/prov#hadPrimarySource"), creatorIri);
+        npCreator.addProvenanceStatement(PROV.HAD_PRIMARY_SOURCE, creatorIri);
         npCreator.addTimestampNow();
         npCreator.addCreator(creatorIri);
         Nanopub np = npCreator.finalizeNanopub();

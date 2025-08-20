@@ -12,6 +12,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,26 +27,28 @@ import java.net.http.HttpResponse;
  */
 public class RoCrateParser {
 
-    private HttpClient client = HttpClient.newHttpClient();
-    private final ValueFactory vf = SimpleValueFactory.getInstance();
-    private boolean verbose = false;
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+
+    private static HttpClient client = HttpClient.newHttpClient();
+
+    public static InputStream downloadRoCreateMetadataFile(String uri) throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(uri)).build();
+        HttpResponse<InputStream> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+        return httpResponse.body();
+    }
 
     /**
      * Parses a RO-Crate metadata file from a given URL.
      *
      * @param url          the url where the metadata file is published (including trailing "/")
-     * @param metadataFile the name of the metadata file.
+     * @param roCrateMetadata the ro-create metadata.
      * @return a Nanopub object containing the parsed data.
-     * @throws MalformedNanopubException if the parsed data does not conform to the expected structure.
-     * @throws IOException               if an I/O error occurs while reading the metadata file.
-     * @throws InterruptedException      if the operation is interrupted.
-     * @throws URISyntaxException        if the URL is malformed.
+     * @throws org.nanopub.MalformedNanopubException if the parsed data does not conform to the expected structure.
+     * @throws java.io.IOException                   if an I/O error occurs while reading the metadata file.
+     * @throws java.lang.InterruptedException        if the operation is interrupted.
+     * @throws java.net.URISyntaxException           if the URL is malformed.
      */
-    public Nanopub parseRoCreate(String url, String metadataFile) throws MalformedNanopubException, IOException, InterruptedException, URISyntaxException {
-        HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(url + metadataFile)).build();
-        HttpResponse<InputStream> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
-
-
+    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
 
         // Configure parser settings
@@ -61,19 +64,15 @@ public class RoCrateParser {
         StatementCollector handler = new StatementCollector(model);
 
         parser.setRDFHandler(handler);
-        parser.parse(httpResponse.body(), url);
-
-        // The 'model' now contains the parsed RDF data
-        if (verbose) {
-            System.out.println("Parsed " + model.size() + " statements.");
-        }
+        parser.parse(roCrateMetadata, url);
 
         // Create Nanopub
         NanopubCreator npCreator = new NanopubCreator(true);
         npCreator.addAssertionStatements(handler.getStatements());
 
-        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url + metadataFile));
-        npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+        // we always use the specified name: "ro-crate-metadata.json"
+        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ "ro-crate-metadata.json"));
+        npCreator.addPubinfoStatement(RDF.TYPE, NPX.RO_CRATE_NANOPUB);
 
         return npCreator.finalizeNanopub(true);
     }

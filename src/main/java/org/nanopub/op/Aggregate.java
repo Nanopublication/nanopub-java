@@ -11,7 +11,6 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
@@ -63,7 +62,7 @@ public class Aggregate extends CliRunner {
      *
      * @param args Command line arguments
      * @return An instance of Aggregate
-     * @throws ParameterException If there is an error in the parameters
+     * @throws com.beust.jcommander.ParameterException If there is an error in the parameters
      */
     public static Aggregate getInstance(String args) throws ParameterException {
         if (args == null) {
@@ -79,11 +78,11 @@ public class Aggregate extends CliRunner {
     /**
      * Runs the aggregation operation on the input nanopubs.
      *
-     * @throws IOException               If there is an error reading or writing files
-     * @throws RDFParseException         If there is an error parsing RDF data
-     * @throws RDFHandlerException       If there is an error handling RDF data
-     * @throws MalformedNanopubException If a nanopub is malformed
-     * @throws TrustyUriException        If there is an error with Trusty URIs
+     * @throws java.io.IOException                       If there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException          If there is an error with Trusty URIs
      */
     public void run() throws IOException, RDFParseException, RDFHandlerException,
             MalformedNanopubException, TrustyUriException {
@@ -101,17 +100,12 @@ public class Aggregate extends CliRunner {
                 rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);
             }
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException | IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException | IOException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
         }
@@ -125,8 +119,8 @@ public class Aggregate extends CliRunner {
      * Processes a single nanopub and aggregates its statements.
      *
      * @param np The nanopub to process
-     * @throws RDFHandlerException If there is an error handling RDF data
-     * @throws IOException         If there is an error writing to files
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws java.io.IOException                       If there is an error writing to files
      */
     public void process(Nanopub np) throws RDFHandlerException, IOException {
         aggregate(np.getHead(), np, headCounts);
@@ -184,12 +178,7 @@ public class Aggregate extends CliRunner {
         if (statementCounts == null) return;
         BufferedWriter w = makeWriter(outputFile);
         List<Statement> statementList = new ArrayList<>(statementCounts.keySet());
-        statementList.sort(new Comparator<>() {
-            @Override
-            public int compare(Statement st1, Statement st2) {
-                return -statementCounts.get(st1).compareTo(statementCounts.get(st2));
-            }
-        });
+        statementList.sort((st1, st2) -> -statementCounts.get(st1).compareTo(statementCounts.get(st2)));
         for (Statement st : statementList) {
             w.write(statementCounts.get(st) + " " + st.toString().replaceAll("http://example.org/npop-dummy-uri/", "") + "\n");
         }

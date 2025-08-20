@@ -8,11 +8,10 @@ import org.eclipse.rdf4j.rio.*;
 import org.nanopub.CliRunner;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.MultiNanopubRdfHandler.NanopubHandler;
 import org.nanopub.Nanopub;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -92,20 +91,15 @@ public class Extract extends CliRunner {
                 }
             }
 
-            writer = Rio.createWriter(rdfOutFormat, new OutputStreamWriter(outputStream, Charset.forName("UTF-8")));
+            writer = Rio.createWriter(rdfOutFormat, new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
             writer.startRDF();
 
-            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, new NanopubHandler() {
-
-                @Override
-                public void handleNanopub(Nanopub np) {
-                    try {
-                        process(np);
-                    } catch (RDFHandlerException ex) {
-                        throw new RuntimeException(ex);
-                    }
+            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
+                try {
+                    process(np);
+                } catch (RDFHandlerException ex) {
+                    throw new RuntimeException(ex);
                 }
-
             });
 
             writer.endRDF();

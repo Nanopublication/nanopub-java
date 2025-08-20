@@ -11,11 +11,13 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -26,37 +28,12 @@ public class NanopubSetting implements Serializable {
     private static ValueFactory vf = SimpleValueFactory.getInstance();
 
     /**
-     * The IRI for the agents relation.
-     */
-    public static final IRI HAS_AGENTS = vf.createIRI("http://purl.org/nanopub/x/hasAgents");
-
-    /**
-     * The IRI for the services relation.
-     */
-    public static final IRI HAS_SERVICES = vf.createIRI("http://purl.org/nanopub/x/hasServices");
-
-    /**
-     * The IRI for the bootstrap service relation.
-     */
-    public static final IRI HAS_BOOTSTRAP_SERVICE = vf.createIRI("http://purl.org/nanopub/x/hasBootstrapService");
-
-    /**
-     * The IRI for the trust range algorithm relation.
-     */
-    public static final IRI HAS_TRUST_RANGE_ALGORITHM = vf.createIRI("http://purl.org/nanopub/x/hasTrustRangeAlgorithm");
-
-    /**
-     * The IRI for the update strategy relation.
-     */
-    public static final IRI HAS_UPDATE_STRATEGY = vf.createIRI("http://purl.org/nanopub/x/hasUpdateStrategy");
-
-    /**
      * Retrieves the default local nanopub setting.
      *
      * @return the NanopubSetting object for the default setting.
-     * @throws RDF4JException            if there is an error with RDF4J operations.
-     * @throws MalformedNanopubException if the nanopub is malformed.
-     * @throws IOException               if there is an error reading the input stream.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
      */
     public static NanopubSetting getLocalSetting() throws RDF4JException, MalformedNanopubException, IOException {
         return getLocalSetting(null);
@@ -67,9 +44,9 @@ public class NanopubSetting implements Serializable {
      *
      * @param name the name of the setting, or "default" if null is provided.
      * @return the NanopubSetting object corresponding to the specified name.
-     * @throws RDF4JException            if there is an error with RDF4J operations.
-     * @throws MalformedNanopubException if the nanopub is malformed.
-     * @throws IOException               if there is an error reading the input stream.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
      */
     public static NanopubSetting getLocalSetting(String name) throws RDF4JException, MalformedNanopubException, IOException {
         if (name == null) name = "default";
@@ -113,21 +90,21 @@ public class NanopubSetting implements Serializable {
                 continue;
             }
             if (!(st.getObject() instanceof IRI obj)) continue;
-            if (pred.equals(HAS_AGENTS)) {
+            if (pred.equals(NPX.HAS_AGENTS)) {
                 if (agentIntroCollection != null)
                     throw new RuntimeException("Two agent intro collections found: " + nanopub.getUri());
                 agentIntroCollection = obj;
-            } else if (pred.equals(HAS_SERVICES)) {
+            } else if (pred.equals(NPX.HAS_SERVICES)) {
                 if (serviceIntroCollection != null)
                     throw new RuntimeException("Two service intro collections found: " + nanopub.getUri());
                 serviceIntroCollection = obj;
-            } else if (pred.equals(HAS_BOOTSTRAP_SERVICE)) {
+            } else if (pred.equals(NPX.HAS_BOOTSTRAP_SERVICE)) {
                 bootstrapServices.add(obj);
-            } else if (pred.equals(HAS_TRUST_RANGE_ALGORITHM)) {
+            } else if (pred.equals(NPX.HAS_TRUST_RANGE_ALGORITHM)) {
                 if (trustRangeAlgorithm != null)
                     throw new RuntimeException("Two trust range algorithms found: " + nanopub.getUri());
                 trustRangeAlgorithm = obj;
-            } else if (pred.equals(HAS_UPDATE_STRATEGY)) {
+            } else if (pred.equals(NPX.HAS_UPDATE_STRATEGY)) {
                 if (updateStrategy != null)
                     throw new RuntimeException("Two update strategies found: " + nanopub.getUri());
                 updateStrategy = obj;
@@ -196,6 +173,26 @@ public class NanopubSetting implements Serializable {
      */
     public IRI getUpdateStrategy() {
         return updateStrategy;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        NanopubSetting that = (NanopubSetting) o;
+        return Objects.equals(nanopub, that.nanopub);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(nanopub);
     }
 
 }

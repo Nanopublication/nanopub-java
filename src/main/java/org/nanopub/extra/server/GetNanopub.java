@@ -15,7 +15,6 @@ import org.nanopub.trusty.TrustyNanopubUtils;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -147,9 +146,9 @@ public class GetNanopub extends CliRunner {
      * @param artifactCode the artifact code of the nanopub
      * @param registryInfo the RegistryInfo object containing server details
      * @return the Nanopub object
-     * @throws IOException               if an I/O error occurs
-     * @throws RDF4JException            if an RDF4J error occurs
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
     public static Nanopub get(String artifactCode, RegistryInfo registryInfo)
             throws IOException, RDF4JException, MalformedNanopubException {
@@ -163,9 +162,9 @@ public class GetNanopub extends CliRunner {
      * @param registryInfo the RegistryInfo object containing server details
      * @param httpClient   the HttpClient to use for the request
      * @return the Nanopub object
-     * @throws IOException               if an I/O error occurs
-     * @throws RDF4JException            if an RDF4J error occurs
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
     public static Nanopub get(String artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
             throws IOException, RDF4JException, MalformedNanopubException {
@@ -225,9 +224,9 @@ public class GetNanopub extends CliRunner {
     /**
      * Runs the GetNanopub command line tool.
      *
-     * @throws IOException               if an I/O error occurs
-     * @throws RDFHandlerException       if an error occurs while handling RDF data
-     * @throws MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if the nanopub is malformed
      */
     protected void run() throws IOException, RDFHandlerException, MalformedNanopubException {
         if (showReport) {
@@ -304,12 +303,7 @@ public class GetNanopub extends CliRunner {
             System.err.println("Used servers:");
             List<RegistryInfo> usedServers = fetchIndex.getRegistries();
             final FetchIndex fi = fetchIndex;
-            usedServers.sort(new Comparator<>() {
-                @Override
-                public int compare(RegistryInfo o1, RegistryInfo o2) {
-                    return fi.getServerUsage(o2) - fi.getServerUsage(o1);
-                }
-            });
+            usedServers.sort((o1, o2) -> fi.getServerUsage(o2) - fi.getServerUsage(o1));
             int usedServerCount = 0;
             for (RegistryInfo si : usedServers) {
                 if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;
@@ -319,7 +313,7 @@ public class GetNanopub extends CliRunner {
         }
     }
 
-    private void outputNanopub(String nanopubId, Nanopub np) throws IOException, RDFHandlerException {
+    private void outputNanopub(String nanopubId, Nanopub np) throws RDFHandlerException {
         if (np == null) {
             System.err.println("NOT FOUND: " + nanopubId);
             return;

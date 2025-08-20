@@ -62,9 +62,9 @@ public class ServerIterator implements Iterator<RegistryInfo> {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Checks if there are more servers to iterate over.
-     *
-     * @return true if there are more servers, false otherwise
      */
     @Override
     public boolean hasNext() {
@@ -75,9 +75,9 @@ public class ServerIterator implements Iterator<RegistryInfo> {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Returns the next server in the iteration.
-     *
-     * @return the next RegistryInfo object, or null if no more servers are available
      */
     @Override
     public RegistryInfo next() {
@@ -90,6 +90,8 @@ public class ServerIterator implements Iterator<RegistryInfo> {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Removes the current server from the iteration.
      */
     @Override
@@ -100,11 +102,11 @@ public class ServerIterator implements Iterator<RegistryInfo> {
     private RegistryInfo getNextServer() {
         if (cachedServers != null) {
             if (cachedServers.isEmpty()) return null;
-            return cachedServers.remove(0);
+            return cachedServers.removeFirst();
         } else {
             while (!serversToContact.isEmpty()) {
                 if (!serversToContact.isEmpty()) {
-                    String url = serversToContact.remove(0);
+                    String url = serversToContact.removeFirst();
                     if (serversContacted.containsKey(url)) continue;
                     serversContacted.put(url, true);
                     RegistryInfo info = getServerInfo(url);
@@ -150,7 +152,7 @@ public class ServerIterator implements Iterator<RegistryInfo> {
      * Writes the cached servers to a file.
      *
      * @param cachedServers the list of cached servers to write
-     * @throws IOException if an I/O error occurs
+     * @throws java.io.IOException if an I/O error occurs
      */
     public static void writeCachedServers(List<RegistryInfo> cachedServers) throws IOException {
         if (cachedServers.size() < 5) return;
