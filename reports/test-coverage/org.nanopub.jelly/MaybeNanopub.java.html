@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MaybeNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.jelly</a> &gt; <span class="el_source">MaybeNanopub.java</span></div><h1>MaybeNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.jelly;
+
+import org.nanopub.Nanopub;
+
+/**
+ * Simple wrapper around the Nanopub class that can also hold an exception.
+ * &lt;p&gt;
+ * This is basically the same as Try&lt;Nanopub&gt; in Scala.
+ */
+public class MaybeNanopub {
+    private final boolean success;
+    private final Nanopub nanopub;
+    private final Exception exception;
+    private final long counter;
+
+    /**
+     * Create a MaybeNanopub.
+     *
+     * @param ex Exception that caused the failure
+     */
+<span class="nc" id="L21">    public MaybeNanopub(Exception ex) {</span>
+<span class="nc" id="L22">        success = false;</span>
+<span class="nc" id="L23">        nanopub = null;</span>
+<span class="nc" id="L24">        exception = ex;</span>
+<span class="nc" id="L25">        counter = -1;</span>
+<span class="nc" id="L26">    }</span>
+
+    /**
+     * Create a MaybeNanopub with a Nanopub.
+     *
+     * @param np Nanopub that was successfully created
+     */
+<span class="nc" id="L33">    public MaybeNanopub(Nanopub np) {</span>
+<span class="nc" id="L34">        success = true;</span>
+<span class="nc" id="L35">        nanopub = np;</span>
+<span class="nc" id="L36">        exception = null;</span>
+<span class="nc" id="L37">        counter = -1;</span>
+<span class="nc" id="L38">    }</span>
+
+    /**
+     * Create a MaybeNanopub with a Nanopub and a counter.
+     *
+     * @param np      Nanopub that was successfully created
+     * @param counter Counter value, may be negative if not present
+     */
+<span class="nc" id="L46">    public MaybeNanopub(Nanopub np, long counter) {</span>
+<span class="nc" id="L47">        success = true;</span>
+<span class="nc" id="L48">        nanopub = np;</span>
+<span class="nc" id="L49">        exception = null;</span>
+<span class="nc" id="L50">        this.counter = counter;</span>
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Check if the MaybeNanopub is successful.
+     *
+     * @return true if the MaybeNanopub contains a Nanopub, false if it contains an exception.
+     */
+    public boolean isSuccess() {
+<span class="nc" id="L59">        return success;</span>
+    }
+
+    /**
+     * Check if the MaybeNanopub is a failure.
+     *
+     * @return true if the MaybeNanopub contains an exception, false if it contains a Nanopub.
+     */
+    public boolean isFailure() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        return !success;</span>
+    }
+
+    /**
+     * Get the Nanopub if the MaybeNanopub is successful.
+     *
+     * @return Nanopub object if successful, null if it contains an exception.
+     */
+    public Nanopub getNanopub() {
+<span class="nc" id="L77">        return nanopub;</span>
+    }
+
+    /**
+     * Counter may be attached to Jelly responses from the Registry.
+     * It can be used to track the progress of a stream of Nanopubs.
+     * Will return a negative value if the counter is not present.
+     *
+     * @return counter
+     */
+    public long getCounter() {
+<span class="nc" id="L88">        return counter;</span>
+    }
+
+    /**
+     * Get the exception if the MaybeNanopub is a failure.
+     *
+     * @return Exception object if it contains an exception, null if it contains a Nanopub.
+     */
+    public Exception getException() {
+<span class="nc" id="L97">        return exception;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

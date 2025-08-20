@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Filter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Filter.java</span></div><h1>Filter.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to filter nanopublications based on URIs or literals.
+ */
+<span class="nc" id="L28">public class Filter extends CliRunner {</span>
+
+<span class="nc" id="L30">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L33">    @com.beust.jcommander.Parameter(names = &quot;-f&quot;, description = &quot;Filter by URI or literal&quot;)</span>
+    private String filter = null;
+
+<span class="nc" id="L36">    @com.beust.jcommander.Parameter(names = &quot;-F&quot;, description = &quot;Filter by URI or literal read from file&quot;)</span>
+    private File filterFile = null;
+
+<span class="nc" id="L39">    @com.beust.jcommander.Parameter(names = &quot;--split&quot;, description = &quot;Treat blanks in filter string as OR connectives&quot;)</span>
+    private boolean splitFilter = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+<span class="nc" id="L45">    @com.beust.jcommander.Parameter(names = &quot;--no-examples&quot;, description = &quot;Do not output example nanopublications&quot;)</span>
+    private boolean noExamples = false;
+
+<span class="nc" id="L48">    @com.beust.jcommander.Parameter(names = &quot;--only-examples&quot;, description = &quot;Output only example nanopublications&quot;)</span>
+    private boolean onlyExamples = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--out-format&quot;, description = &quot;Format of the output nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String outFormat;
+
+    /**
+     * Main method to run the filter command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L64">            Filter obj = CliRunner.initJc(new Filter(), args);</span>
+<span class="nc" id="L65">            obj.run();</span>
+<span class="nc" id="L66">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L67">            System.exit(1);</span>
+<span class="nc" id="L68">        } catch (Exception ex) {</span>
+<span class="nc" id="L69">            ex.printStackTrace();</span>
+<span class="nc" id="L70">            System.exit(1);</span>
+<span class="nc" id="L71">        }</span>
+<span class="nc" id="L72">    }</span>
+
+    private RDFFormat rdfInFormat, rdfOutFormat;
+<span class="nc" id="L75">    private OutputStream outputStream = System.out;</span>
+<span class="nc" id="L76">    private Map&lt;String, Boolean&gt; filterComponents = new HashMap&lt;&gt;();</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (splitFilter) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            for (String s : filter.split(&quot; &quot;)) {</span>
+<span class="nc" id="L82">                filterComponents.put(s, true);</span>
+            }
+        } else {
+<span class="nc" id="L85">            filterComponents.put(filter, true);</span>
+        }
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (filterFile != null) {</span>
+<span class="nc" id="L88">            BufferedReader br = null;</span>
+            try {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                if (filterFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L91">                    br = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filterFile))));</span>
+                } else {
+<span class="nc" id="L93">                    br = new BufferedReader(new FileReader(filterFile));</span>
+                }
+                String line;
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                while ((line = br.readLine()) != null) {</span>
+<span class="nc" id="L97">                    line = line.trim();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (line.isEmpty()) continue;</span>
+<span class="nc" id="L99">                    filterComponents.put(line, true);</span>
+                }
+            } finally {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (br != null) br.close();</span>
+            }
+        }
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        if (filter == null &amp;&amp; filterFile == null) {</span>
+<span class="nc" id="L106">            filterComponents = null;</span>
+        }
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L111">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L113">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (outputFile == null) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                if (outFormat == null) {</span>
+<span class="nc" id="L117">                    outFormat = &quot;trig&quot;;</span>
+                }
+<span class="nc" id="L119">                rdfOutFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + outFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L121">                rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L123">                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L125">                    outputStream = new FileOutputStream(outputFile);</span>
+                }
+            }
+
+<span class="nc" id="L129">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L131">                    process(np);</span>
+<span class="nc" id="L132">                } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L133">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L134">                }</span>
+<span class="nc" id="L135">            });</span>
+
+<span class="nc" id="L137">            outputStream.flush();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L139">                outputStream.close();</span>
+            }
+<span class="nc" id="L141">        }</span>
+<span class="nc" id="L142">    }</span>
+
+    private void process(Nanopub np) throws RDFHandlerException {
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (matchesFilter(np)) {</span>
+<span class="nc" id="L146">            NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);</span>
+        }
+<span class="nc" id="L148">    }</span>
+
+    private boolean matchesFilter(Nanopub np) {
+<span class="nc bnc" id="L151" title="All 4 branches missed.">        if (noExamples &amp;&amp; isExampleNanopub(np)) {</span>
+<span class="nc" id="L152">            return false;</span>
+        }
+<span class="nc bnc" id="L154" title="All 4 branches missed.">        if (onlyExamples &amp;&amp; !isExampleNanopub(np)) {</span>
+<span class="nc" id="L155">            return false;</span>
+        }
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        if (filterComponents == null) return true;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        for (Statement st : NanopubUtils.getStatements(np)) {</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (filterComponents.containsKey(st.getSubject().stringValue())) {</span>
+<span class="nc" id="L160">                return true;</span>
+            }
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (filterComponents.containsKey(st.getPredicate().stringValue())) {</span>
+<span class="nc" id="L163">                return true;</span>
+            }
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (filterComponents.containsKey(st.getObject().stringValue())) {</span>
+<span class="nc" id="L166">                return true;</span>
+            }
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (filterComponents.containsKey(st.getContext().stringValue())) {</span>
+<span class="nc" id="L169">                return true;</span>
+            }
+<span class="nc" id="L171">        }</span>
+<span class="nc" id="L172">        return false;</span>
+    }
+
+    /**
+     * Checks if a given nanopublication is an example nanopub.
+     *
+     * @param np The nanopublication to check
+     * @return true if the nanopub is an example, false otherwise
+     */
+    public static boolean isExampleNanopub(Nanopub np) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (np.getPubinfo().contains(SimpleValueFactory.getInstance().createStatement(np.getUri(), RDF.TYPE, NPX.EXAMPLE_NANOPUB))) {</span>
+<span class="nc" id="L183">            return true;</span>
+        }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        for (Statement st : NanopubUtils.getStatements(np)) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">            if (isExampleUri(st.getSubject())) return true;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (isExampleUri(st.getPredicate())) return true;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (isExampleUri(st.getObject())) return true;</span>
+<span class="nc" id="L189">        }</span>
+<span class="nc" id="L190">        return false;</span>
+    }
+
+    /**
+     * Checks if a given RDF value is an example URI.
+     *
+     * @param v The RDF value to check
+     * @return true if the value is an example URI, false otherwise
+     */
+    public static boolean isExampleUri(Value v) {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        if (!(v instanceof IRI)) return false;</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (v.stringValue().startsWith(&quot;http://example.org/&quot;)) return true;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (v.stringValue().startsWith(&quot;https://example.org/&quot;)) return true;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (v.stringValue().startsWith(&quot;http://example.com/&quot;)) return true;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (v.stringValue().startsWith(&quot;https://example.com/&quot;)) return true;</span>
+<span class="nc" id="L205">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

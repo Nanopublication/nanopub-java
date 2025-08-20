@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FixTrustyNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.trusty</a> &gt; <span class="el_source">FixTrustyNanopub.java</span></div><h1>FixTrustyNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.trusty;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.RdfUtils;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Fixes nanopubs with broken Trusty URIs.
+ */
+<span class="nc" id="L21">public class FixTrustyNanopub extends CliRunner {</span>
+
+<span class="nc" id="L23">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L26">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+    /**
+     * Main method to run the FixTrustyNanopub tool.
+     *
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L36">            FixTrustyNanopub obj = CliRunner.initJc(new FixTrustyNanopub(), args);</span>
+<span class="nc" id="L37">            obj.run();</span>
+<span class="nc" id="L38">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L39">            System.exit(1);</span>
+<span class="nc" id="L40">        } catch (Exception ex) {</span>
+<span class="nc" id="L41">            ex.printStackTrace();</span>
+<span class="nc" id="L42">            System.exit(1);</span>
+<span class="nc" id="L43">        }</span>
+<span class="nc" id="L44">    }</span>
+
+    private int count;
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc" id="L51">            File outFile = new File(inputFile.getParent(), &quot;fixed.&quot; + inputFile.getName());</span>
+            final OutputStream out;
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (inputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L54">                out = new GZIPOutputStream(new FileOutputStream(outFile));</span>
+            } else {
+<span class="nc" id="L56">                out = new FileOutputStream(outFile);</span>
+            }
+<span class="nc" id="L58">            final RDFFormat format = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="nc" id="L59">            try (out) {</span>
+<span class="nc" id="L60">                MultiNanopubRdfHandler.process(format, inputFile, np -&gt; {</span>
+                    try {
+<span class="nc" id="L62">                        np = writeAsFixedNanopub(np, format, out);</span>
+<span class="nc" id="L63">                        count++;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                        if (verbose) {</span>
+<span class="nc" id="L65">                            System.out.println(&quot;Nanopub URI: &quot; + np.getUri());</span>
+                        } else {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                            if (count % 100 == 0) {</span>
+<span class="nc" id="L68">                                System.err.print(count + &quot; nanopubs...\r&quot;);</span>
+                            }
+                        }
+<span class="nc" id="L71">                    } catch (RDFHandlerException | TrustyUriException ex) {</span>
+<span class="nc" id="L72">                        throw new RuntimeException(ex);</span>
+<span class="nc" id="L73">                    }</span>
+<span class="nc" id="L74">                });</span>
+            }
+<span class="nc" id="L76">        }</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * Fixes a nanopub with a broken Trusty URI.
+     *
+     * @param nanopub the nanopub to fix
+     * @return the fixed nanopub
+     * @throws net.trustyuri.TrustyUriException if the nanopub cannot be fixed due to a malformed Trusty URI
+     */
+    public static Nanopub fix(Nanopub nanopub) throws TrustyUriException {
+        Nanopub np;
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (nanopub instanceof NanopubWithNs) {</span>
+<span class="nc" id="L89">            ((NanopubWithNs) nanopub).removeUnusedPrefixes();</span>
+        }
+        try {
+<span class="nc" id="L92">            RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="nc" id="L93">            NanopubUtils.propagateToHandler(nanopub, r);</span>
+<span class="nc" id="L94">            NanopubRdfHandler h = new NanopubRdfHandler();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (!TrustyUriUtils.isPotentialTrustyUri(nanopub.getUri())) {</span>
+<span class="nc" id="L96">                throw new TrustyUriException(&quot;Not a (broken) trusty URI: &quot; + nanopub.getUri());</span>
+            }
+<span class="nc" id="L98">            String oldArtifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());</span>
+<span class="nc" id="L99">            RdfUtils.fixTrustyRdf(r, oldArtifactCode, h);</span>
+<span class="nc" id="L100">            np = h.getNanopub();</span>
+<span class="nc" id="L101">        } catch (RDFHandlerException | MalformedNanopubException ex) {</span>
+<span class="nc" id="L102">            throw new TrustyUriException(ex);</span>
+<span class="nc" id="L103">        }</span>
+<span class="nc" id="L104">        return np;</span>
+    }
+
+    /**
+     * Transforms a multi-nanopub file into fixed nanopubs and writes them to the output stream.
+     *
+     * @param format the RDF format of the input nanopubs
+     * @param file   the input file containing multiple nanopubs
+     * @param out    the output stream to write the fixed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if an error occurs while parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L120">        InputStream in = new FileInputStream(file);</span>
+<span class="nc" id="L121">        transformMultiNanopub(format, in, out);</span>
+<span class="nc" id="L122">    }</span>
+
+    /**
+     * Transforms a multi-nanopub input stream into fixed nanopubs and writes them to the output stream.
+     *
+     * @param format the RDF format of the input nanopubs
+     * @param in     the input stream containing multiple nanopubs
+     * @param out    the output stream to write the fixed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if an error occurs while parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L137">        try (in; out) {</span>
+<span class="nc" id="L138">            MultiNanopubRdfHandler.process(format, in, np -&gt; {</span>
+                try {
+<span class="nc" id="L140">                    writeAsFixedNanopub(np, format, out);</span>
+<span class="nc" id="L141">                } catch (RDFHandlerException | TrustyUriException ex) {</span>
+<span class="nc" id="L142">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L143">                }</span>
+<span class="nc" id="L144">            });</span>
+        }
+<span class="nc" id="L146">    }</span>
+
+    /**
+     * Writes a fixed nanopub to the output stream in the specified RDF format.
+     *
+     * @param np     the nanopub to write
+     * @param format the RDF format to use for writing
+     * @param out    the output stream to write the fixed nanopub
+     * @return the fixed nanopub
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing RDF
+     * @throws net.trustyuri.TrustyUriException          if the nanopub cannot be fixed due to a malformed Trusty URI
+     */
+    public static Nanopub writeAsFixedNanopub(Nanopub np, RDFFormat format, OutputStream out)
+            throws RDFHandlerException, TrustyUriException {
+<span class="nc" id="L160">        np = FixTrustyNanopub.fix(np);</span>
+<span class="nc" id="L161">        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="nc" id="L162">        NanopubUtils.propagateToHandler(np, w);</span>
+<span class="nc" id="L163">        return np;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

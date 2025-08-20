@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CryptoElement.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.security</a> &gt; <span class="el_source">CryptoElement.java</span></div><h1>CryptoElement.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.security;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+
+import java.io.Serializable;
+
+/**
+ * Abstract class representing a cryptographic element used in signatures.
+ */
+public abstract class CryptoElement implements Serializable {
+
+    /**
+     * The IRI of the crypto element.
+     */
+    protected IRI uri;
+
+    /**
+     * The public key string associated with this crypto element.
+     */
+    protected String publicKeyString;
+
+    /**
+     * The signature algorithm used for this crypto element.
+     */
+    protected SignatureAlgorithm algorithm;
+
+    /**
+     * Constructor for CryptoElement.
+     *
+     * @param uri the IRI of the crypto element
+     */
+<span class="fc" id="L33">    protected CryptoElement(IRI uri) {</span>
+<span class="fc" id="L34">        this.uri = uri;</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Returns the IRI of the crypto element.
+     *
+     * @return the IRI of the crypto element
+     */
+    public IRI getUri() {
+<span class="fc" id="L43">        return uri;</span>
+    }
+
+    /**
+     * Sets the public key string for this crypto element.
+     *
+     * @param publicKeyLiteral the literal containing the public key string
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if a public key is already set
+     */
+    public void setPublicKeyLiteral(Literal publicKeyLiteral) throws MalformedCryptoElementException {
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (publicKeyString != null) {</span>
+<span class="nc" id="L54">            throw new MalformedCryptoElementException(&quot;Two public keys found for signature element&quot;);</span>
+        }
+<span class="fc" id="L56">        publicKeyString = publicKeyLiteral.getLabel();</span>
+<span class="fc" id="L57">    }</span>
+
+    /**
+     * Returns the public key string for this crypto element.
+     *
+     * @return the public key string
+     */
+    public String getPublicKeyString() {
+<span class="fc" id="L65">        return publicKeyString;</span>
+    }
+
+    /**
+     * Sets the algorithm used for this crypto element.
+     *
+     * @param algorithm the signature algorithm to set
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set
+     */
+    public void setAlgorithm(SignatureAlgorithm algorithm) throws MalformedCryptoElementException {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (this.algorithm != null) {</span>
+<span class="nc" id="L76">            throw new MalformedCryptoElementException(&quot;Two algorithms found for signature element&quot;);</span>
+        }
+<span class="nc" id="L78">        this.algorithm = algorithm;</span>
+<span class="nc" id="L79">    }</span>
+
+    /**
+     * Sets the algorithm used for this crypto element from a Literal.
+     *
+     * @param algorithmLiteral the literal containing the algorithm name
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if an algorithm is already set or if the algorithm is not recognized
+     */
+    public void setAlgorithm(Literal algorithmLiteral) throws MalformedCryptoElementException {
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (algorithm != null) {</span>
+<span class="nc" id="L89">            throw new MalformedCryptoElementException(&quot;Two algorithms found for signature element&quot;);</span>
+        }
+<span class="fc" id="L91">        String alString = algorithmLiteral.getLabel().toUpperCase();</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        for (SignatureAlgorithm al : SignatureAlgorithm.values()) {</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (al.name().equals(alString)) {</span>
+<span class="fc" id="L94">                algorithm = al;</span>
+<span class="fc" id="L95">                break;</span>
+            }
+        }
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (algorithm == null) {</span>
+<span class="nc" id="L99">            throw new MalformedCryptoElementException(&quot;Algorithm not recognized: &quot; + algorithmLiteral.getLabel());</span>
+        }
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * Returns the algorithm used for this crypto element.
+     *
+     * @return the signature algorithm
+     */
+    public SignatureAlgorithm getAlgorithm() {
+<span class="fc" id="L109">        return algorithm;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CliRunner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">CliRunner.java</span></div><h1>CliRunner.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
+
+/**
+ * Abstract class for command-line interface (CLI) runners.
+ */
+<span class="fc" id="L9">public abstract class CliRunner {</span>
+
+    /**
+     * The JCommander instance that handles command-line arguments.
+     */
+    private JCommander jc;
+
+    /**
+     * Initializes the JCommander instance with the given object and command-line arguments.
+     *
+     * @param obj  the object to be initialized
+     * @param args the command-line arguments
+     * @param &lt;T&gt;  the type of the object
+     * @return the initialized object
+     */
+    public static &lt;T extends CliRunner&gt; T initJc(T obj, String[] args) {
+<span class="fc" id="L25">        JCommander jc = new JCommander(obj);</span>
+<span class="fc" id="L26">        ((CliRunner) obj).setJc(jc);</span>
+        try {
+<span class="fc" id="L28">            jc.parse(args);</span>
+<span class="fc" id="L29">        } catch (ParameterException ex) {</span>
+<span class="fc" id="L30">            jc.usage();</span>
+<span class="fc" id="L31">            throw ex;</span>
+<span class="fc" id="L32">        }</span>
+<span class="fc" id="L33">        return obj;</span>
+    }
+
+    /**
+     * Returns the initialized JCommander instance.
+     *
+     * @return the JCommander instance
+     */
+    public JCommander getJc() {
+<span class="nc" id="L42">        return jc;</span>
+    }
+
+    /**
+     * Sets the JCommander instance.
+     *
+     * @param jc the JCommander instance to set
+     */
+    private void setJc(JCommander jc) {
+<span class="fc" id="L51">        this.jc = jc;</span>
+<span class="fc" id="L52">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

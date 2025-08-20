@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WikipathwaysTopics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op.topic</a> &gt; <span class="el_source">WikipathwaysTopics.java</span></div><h1>WikipathwaysTopics.java</h1><pre class="source lang-java linenums">package org.nanopub.op.topic;
+
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.Nanopub;
+import org.nanopub.op.Topic.TopicHandler;
+
+import java.util.*;
+
+/**
+ * This class implements a topic handler for Wikipathways.
+ */
+<span class="nc" id="L15">public class WikipathwaysTopics implements TopicHandler {</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTopic(Nanopub np) {
+<span class="nc" id="L22">        Map&lt;Resource, Integer&gt; resourceCount = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L23">        List&lt;String&gt; organismNames = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L24">        List&lt;String&gt; pathwayIds = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        for (Statement st : np.getAssertion()) {</span>
+<span class="nc" id="L26">            Resource subj = st.getSubject();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">            if (subj.equals(np.getUri())) continue;</span>
+<span class="nc" id="L28">            String ps = st.getPredicate().stringValue();</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">            if (ps.equals(RDF.TYPE.stringValue())) continue;</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">            if (ps.equals(&quot;http://vocabularies.wikipathways.org/wp#pathwayOntologyTag&quot;)) continue;</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">            if (ps.equals(DCTERMS.IS_PART_OF.stringValue())) {</span>
+<span class="nc" id="L32">                pathwayIds.add(st.getObject().stringValue().replace(&quot;http://identifiers.org/wikipathways/&quot;, &quot;&quot;));</span>
+            }
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            if (ps.equals(&quot;http://vocabularies.wikipathways.org/wp#organismName&quot;)) {</span>
+<span class="nc" id="L35">                organismNames.add(st.getObject().stringValue().replace(&quot; &quot;, &quot;_&quot;));</span>
+            }
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (!resourceCount.containsKey(subj)) resourceCount.put(subj, 0);</span>
+<span class="nc" id="L38">            resourceCount.put(subj, resourceCount.get(subj) + 1);</span>
+<span class="nc" id="L39">        }</span>
+<span class="nc" id="L40">        int max = 0;</span>
+<span class="nc" id="L41">        Resource topic = null;</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        for (Resource r : resourceCount.keySet()) {</span>
+<span class="nc" id="L43">            int c = resourceCount.get(r);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (c &gt; max) {</span>
+<span class="nc" id="L45">                topic = r;</span>
+<span class="nc" id="L46">                max = c;</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            } else if (c == max) {</span>
+<span class="nc" id="L48">                topic = null;</span>
+            }
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">        String pathways = &quot;&quot;;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (!pathwayIds.isEmpty()) {</span>
+<span class="nc" id="L53">            Collections.sort(pathwayIds);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">            for (String s : pathwayIds) {</span>
+<span class="nc" id="L55">                pathways += &quot;|&quot; + s;</span>
+<span class="nc" id="L56">            }</span>
+        }
+<span class="nc" id="L58">        String organisms = &quot;&quot;;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (!organismNames.isEmpty()) {</span>
+<span class="nc" id="L60">            Collections.sort(organismNames);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            for (String s : organismNames) {</span>
+<span class="nc" id="L62">                organisms += &quot;|&quot; + s;</span>
+<span class="nc" id="L63">            }</span>
+        }
+<span class="nc" id="L65">        return topic + &quot;:&quot; + pathways + &quot;:&quot; + organisms;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

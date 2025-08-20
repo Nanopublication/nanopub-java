@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Nanopub2Html.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">Nanopub2Html.java</span></div><h1>Nanopub2Html.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.ParameterException;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * This class provides methods to convert nanopublications to HTML format.
+ */
+public class Nanopub2Html extends CliRunner {
+
+<span class="nc" id="L20">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;String&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L23">    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Stand-alone HTML&quot;)</span>
+    private boolean standalone = false;
+
+<span class="nc" id="L26">    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;No context indentation&quot;)</span>
+    private boolean indentContextDisabled = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+<span class="nc" id="L32">    private OutputStream outputStream = System.out;</span>
+
+<span class="nc" id="L34">    private static final Charset utf8Charset = StandardCharsets.UTF_8;</span>
+
+    /**
+     * Main method to run the Nanopub2Html command line tool.
+     *
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L43">            Nanopub2Html obj = CliRunner.initJc(new Nanopub2Html(), args);</span>
+<span class="nc" id="L44">            obj.run();</span>
+<span class="nc" id="L45">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L46">            System.exit(1);</span>
+<span class="nc" id="L47">        } catch (Exception ex) {</span>
+<span class="nc" id="L48">            ex.printStackTrace();</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">    }</span>
+
+    /**
+     * Default constructor for Nanopub2Html.
+     */
+<span class="nc" id="L56">    public Nanopub2Html() {</span>
+<span class="nc" id="L57">    }</span>
+
+<span class="nc" id="L59">    private Nanopub2Html(OutputStream outputStream, boolean standalone, boolean indentContext) {</span>
+<span class="nc" id="L60">        this.outputStream = outputStream;</span>
+<span class="nc" id="L61">        this.standalone = standalone;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        this.indentContextDisabled = !indentContext;</span>
+<span class="nc" id="L63">    }</span>
+
+
+    private void run() throws IOException {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (outputFile != null) {</span>
+<span class="nc" id="L68">            outputStream = new FileOutputStream(outputFile);</span>
+        }
+
+        try {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            for (String s : inputNanopubs) {</span>
+                try {
+<span class="nc" id="L74">                    MultiNanopubRdfHandler.process(new File(s), np -&gt; {</span>
+                        try {
+<span class="nc" id="L76">                            createHtml(np);</span>
+<span class="nc" id="L77">                        } catch (IOException | RDFHandlerException ex) {</span>
+<span class="nc" id="L78">                            ex.printStackTrace();</span>
+<span class="nc" id="L79">                        }</span>
+<span class="nc" id="L80">                    });</span>
+<span class="nc" id="L81">                } catch (RDF4JException | MalformedNanopubException ex) {</span>
+<span class="nc" id="L82">                    ex.printStackTrace();</span>
+<span class="nc" id="L83">                }</span>
+<span class="nc" id="L84">            }</span>
+<span class="nc" id="L85">            outputStream.flush();</span>
+        } finally {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L88">                outputStream.close();</span>
+            }
+        }
+<span class="nc" id="L91">    }</span>
+
+    private void createHtml(Nanopub np) throws IOException, RDFHandlerException {
+        PrintStream printHtml;
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (outputStream instanceof PrintStream) {</span>
+<span class="nc" id="L96">            printHtml = (PrintStream) outputStream;</span>
+        } else {
+<span class="nc" id="L98">            printHtml = new PrintStream(outputStream);</span>
+        }
+<span class="nc" id="L100">        try (printHtml) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (np instanceof NanopubWithNs npNs) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                for (String prefix : npNs.getNsPrefixes()) {</span>
+<span class="nc" id="L104">                    htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));</span>
+<span class="nc" id="L105">                }</span>
+            }
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (standalone) {</span>
+<span class="nc" id="L108">                htmlWriter.writeHtmlStart();</span>
+            }
+<span class="nc" id="L110">            htmlWriter.startPart(&quot;nanopub&quot;);</span>
+<span class="nc" id="L111">            htmlWriter.startPart(&quot;nanopub-prefixes&quot;);</span>
+<span class="nc" id="L112">            htmlWriter.startRDF();</span>
+<span class="nc" id="L113">            htmlWriter.endPart();</span>
+<span class="nc" id="L114">            htmlWriter.startPart(&quot;nanopub-head&quot;);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            for (Statement st : np.getHead()) {</span>
+<span class="nc" id="L116">                htmlWriter.handleStatement(st);</span>
+<span class="nc" id="L117">            }</span>
+<span class="nc" id="L118">            htmlWriter.endPart();</span>
+<span class="nc" id="L119">            htmlWriter.startPart(&quot;nanopub-assertion&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            for (Statement st : np.getAssertion()) {</span>
+<span class="nc" id="L121">                htmlWriter.handleStatement(st);</span>
+<span class="nc" id="L122">            }</span>
+<span class="nc" id="L123">            htmlWriter.endPart();</span>
+<span class="nc" id="L124">            htmlWriter.startPart(&quot;nanopub-provenance&quot;);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            for (Statement st : np.getProvenance()) {</span>
+<span class="nc" id="L126">                htmlWriter.handleStatement(st);</span>
+<span class="nc" id="L127">            }</span>
+<span class="nc" id="L128">            htmlWriter.endPart();</span>
+<span class="nc" id="L129">            htmlWriter.startPart(&quot;nanopub-pubinfo&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            for (Statement st : np.getPubinfo()) {</span>
+<span class="nc" id="L131">                htmlWriter.handleStatement(st);</span>
+<span class="nc" id="L132">            }</span>
+<span class="nc" id="L133">            htmlWriter.endPart();</span>
+<span class="nc" id="L134">            htmlWriter.endPart();</span>
+<span class="nc" id="L135">            htmlWriter.endRDF();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (standalone) {</span>
+<span class="nc" id="L137">                htmlWriter.writeHtmlEnd();</span>
+            }
+        }
+<span class="nc" id="L140">    }</span>
+
+    /**
+     * Creates HTML output for a collection of nanopublications and writes it to the specified output stream.
+     *
+     * @param nanopubs      the collection of nanopublications to convert
+     * @param htmlOut       the output stream to write the HTML to
+     * @param standalone    if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @param indentContext if true, the context will be indented in the HTML output
+     */
+    public static void createHtml(Collection&lt;Nanopub&gt; nanopubs, OutputStream htmlOut, boolean standalone, boolean indentContext) {
+<span class="nc" id="L151">        Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone, indentContext);</span>
+        try {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            for (Nanopub np : nanopubs) {</span>
+<span class="nc" id="L154">                nanopub2html.createHtml(np);</span>
+<span class="nc" id="L155">            }</span>
+<span class="nc" id="L156">        } catch (IOException | RDFHandlerException ex) {</span>
+<span class="nc" id="L157">            ex.printStackTrace();</span>
+<span class="nc" id="L158">        }</span>
+<span class="nc" id="L159">    }</span>
+
+    /**
+     * Creates HTML output for a collection of nanopublications and writes it to the specified output stream.
+     *
+     * @param nanopubs   the collection of nanopublications to convert
+     * @param htmlOut    the output stream to write the HTML to
+     * @param standalone if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     */
+    public static void createHtml(Collection&lt;Nanopub&gt; nanopubs, OutputStream htmlOut, boolean standalone) {
+<span class="nc" id="L169">        createHtml(nanopubs, htmlOut, standalone, true);</span>
+<span class="nc" id="L170">    }</span>
+
+
+    /**
+     * Creates HTML output for a single nanopublication and writes it to the specified output stream.
+     *
+     * @param np            the nanopublication to convert
+     * @param htmlOut       the output stream to write the HTML to
+     * @param standalone    if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @param indentContext if true, the context will be indented in the HTML output
+     */
+    public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone, boolean indentContext) {
+<span class="nc" id="L182">        Nanopub2Html nanopub2html = new Nanopub2Html(htmlOut, standalone, indentContext);</span>
+        try {
+<span class="nc" id="L184">            nanopub2html.createHtml(np);</span>
+<span class="nc" id="L185">        } catch (IOException | RDFHandlerException ex) {</span>
+<span class="nc" id="L186">            ex.printStackTrace();</span>
+<span class="nc" id="L187">        }</span>
+<span class="nc" id="L188">    }</span>
+
+    /**
+     * Creates HTML output for a single nanopublication and writes it to the specified output stream.
+     *
+     * @param np         the nanopublication to convert
+     * @param htmlOut    the output stream to write the HTML to
+     * @param standalone if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     */
+    public static void createHtml(Nanopub np, OutputStream htmlOut, boolean standalone) {
+<span class="nc" id="L198">        createHtml(np, htmlOut, standalone, true);</span>
+<span class="nc" id="L199">    }</span>
+
+    /**
+     * Creates an HTML string representation of a collection of nanopublications.
+     *
+     * @param nanopubs      the collection of nanopublications to convert
+     * @param standalone    if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @param indentContext if true, the context will be indented in the HTML output
+     * @return the HTML string representation of the nanopublications
+     */
+    public static String createHtmlString(Collection&lt;Nanopub&gt; nanopubs, boolean standalone, boolean indentContext) {
+<span class="nc" id="L210">        try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L211">            createHtml(nanopubs, htmlOut, standalone, indentContext);</span>
+<span class="nc" id="L212">            htmlOut.flush();</span>
+<span class="nc" id="L213">            return htmlOut.toString(utf8Charset);</span>
+<span class="nc" id="L214">        } catch (IOException ex) {</span>
+<span class="nc" id="L215">            ex.printStackTrace();</span>
+<span class="nc" id="L216">            return &quot;&quot;;</span>
+        }
+    }
+
+    /**
+     * Creates an HTML string representation of a collection of nanopublications.
+     *
+     * @param nanopubs   the collection of nanopublications to convert
+     * @param standalone if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @return the HTML string representation of the nanopublications
+     */
+    public static String createHtmlString(Collection&lt;Nanopub&gt; nanopubs, boolean standalone) {
+<span class="nc" id="L228">        return createHtmlString(nanopubs, standalone, true);</span>
+    }
+
+    /**
+     * Creates an HTML string representation of a single nanopublication.
+     *
+     * @param np            the nanopublication to convert
+     * @param standalone    if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @param indentContext if true, the context will be indented in the HTML output
+     * @return the HTML string representation of the nanopublication
+     */
+    public static String createHtmlString(Nanopub np, boolean standalone, boolean indentContext) {
+<span class="nc" id="L240">        try (ByteArrayOutputStream htmlOut = new ByteArrayOutputStream()) {</span>
+<span class="nc" id="L241">            createHtml(np, htmlOut, standalone, indentContext);</span>
+<span class="nc" id="L242">            htmlOut.flush();</span>
+<span class="nc" id="L243">            return htmlOut.toString(utf8Charset);</span>
+<span class="nc" id="L244">        } catch (IOException ex) {</span>
+<span class="nc" id="L245">            ex.printStackTrace();</span>
+<span class="nc" id="L246">            return &quot;&quot;;</span>
+        }
+    }
+
+    /**
+     * Creates an HTML string representation of a single nanopublication.
+     *
+     * @param np         the nanopublication to convert
+     * @param standalone if true, the HTML will be a standalone document with header and footer; if false, it will be a fragment
+     * @return the HTML string representation of the nanopublication
+     */
+    public static String createHtmlString(Nanopub np, boolean standalone) {
+<span class="nc" id="L258">        return createHtmlString(np, standalone, true);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

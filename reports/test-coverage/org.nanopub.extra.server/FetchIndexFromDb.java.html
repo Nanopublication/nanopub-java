@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FetchIndexFromDb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">FetchIndexFromDb.java</span></div><h1>FetchIndexFromDb.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
+
+import java.io.OutputStream;
+
+/**
+ * Fetches a nanopub index from a database.
+ */
+public class FetchIndexFromDb extends FetchIndex {
+
+    /**
+     * Max parallel requests.
+     */
+    public static final int maxParallelRequestsPerServer = 5;
+
+    private String indexUri;
+    private NanopubDb db;
+    private OutputStream out;
+    private RDFFormat format;
+    private boolean writeIndex, writeContent;
+    private int nanopubCount;
+    private FetchIndex.Listener listener;
+
+    /**
+     * Constructor for fetching an index from a database.
+     *
+     * @param indexUri     the URI of the index to fetch
+     * @param db           the database to fetch from
+     * @param out          the output stream to write the nanopubs to
+     * @param format       the RDF format to use for writing
+     * @param writeIndex   whether to write the index nanopub itself
+     * @param writeContent whether to write the content nanopubs referenced by the index
+     */
+<span class="nc" id="L42">    public FetchIndexFromDb(String indexUri, NanopubDb db, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent) {</span>
+<span class="nc" id="L43">        this.indexUri = indexUri;</span>
+<span class="nc" id="L44">        this.db = db;</span>
+<span class="nc" id="L45">        this.out = out;</span>
+<span class="nc" id="L46">        this.format = format;</span>
+<span class="nc" id="L47">        this.writeIndex = writeIndex;</span>
+<span class="nc" id="L48">        this.writeContent = writeContent;</span>
+<span class="nc" id="L49">        nanopubCount = 0;</span>
+<span class="nc" id="L50">    }</span>
+
+    /**
+     * Fetches the index and its content from the database.
+     */
+    public void run() {
+        try {
+<span class="nc" id="L57">            getIndex(indexUri);</span>
+<span class="nc" id="L58">        } catch (RDFHandlerException | MalformedNanopubException ex) {</span>
+<span class="nc" id="L59">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L60">        }</span>
+<span class="nc" id="L61">    }</span>
+
+    private void getIndex(String indexUri) throws RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L64">        NanopubIndex npi = getIndex(indexUri, db);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        while (npi != null) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (writeIndex) {</span>
+<span class="nc" id="L67">                writeNanopub(npi);</span>
+            }
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (writeContent) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                for (IRI elementUri : npi.getElements()) {</span>
+<span class="nc" id="L71">                    writeNanopub(GetNanopub.get(elementUri.toString(), db));</span>
+<span class="nc" id="L72">                }</span>
+            }
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            for (IRI subIndexUri : npi.getSubIndexes()) {</span>
+<span class="nc" id="L75">                getIndex(subIndexUri.toString());</span>
+<span class="nc" id="L76">            }</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            if (npi.getAppendedIndex() != null) {</span>
+<span class="nc" id="L78">                npi = getIndex(npi.getAppendedIndex().toString(), db);</span>
+            } else {
+<span class="nc" id="L80">                npi = null;</span>
+            }
+        }
+<span class="nc" id="L83">    }</span>
+
+    private static NanopubIndex getIndex(String indexUri, NanopubDb db) throws MalformedNanopubException {
+<span class="nc" id="L86">        Nanopub np = GetNanopub.get(indexUri, db);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (!IndexUtils.isIndex(np)) {</span>
+<span class="nc" id="L88">            throw new RuntimeException(&quot;NOT AN INDEX: &quot; + np.getUri());</span>
+        }
+<span class="nc" id="L90">        return IndexUtils.castToIndex(np);</span>
+    }
+
+    private void writeNanopub(Nanopub np) throws RDFHandlerException {
+<span class="nc" id="L94">        nanopubCount++;</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">        if (listener != null &amp;&amp; nanopubCount % 100 == 0) {</span>
+<span class="nc" id="L96">            listener.progress(nanopubCount);</span>
+        }
+<span class="nc" id="L98">        NanopubUtils.writeToStream(np, out, format);</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * Returns the count of the nanopubs fetched.
+     *
+     * @return the number of nanopubs fetched
+     */
+    public int getNanopubCount() {
+<span class="nc" id="L107">        return nanopubCount;</span>
+    }
+
+    /**
+     * Sets a listener to be notified of progress.
+     *
+     * @param l the listener to set
+     */
+    public void setProgressListener(Listener l) {
+<span class="nc" id="L116">        listener = l;</span>
+<span class="nc" id="L117">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

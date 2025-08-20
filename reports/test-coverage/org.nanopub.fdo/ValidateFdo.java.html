@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidateFdo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.fdo</a> &gt; <span class="el_source">ValidateFdo.java</span></div><h1>ValidateFdo.java</h1><pre class="source lang-java linenums">package org.nanopub.fdo;
+
+import com.google.gson.Gson;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.SHACL;
+import org.nanopub.fdo.rest.gson.ParsedSchemaResponse;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.nanopub.fdo.FdoUtils.*;
+
+/**
+ * ValidateFdo provides methods to validate FDO records using SHACL shapes.
+ */
+// TODO class that provides the Op.Validate operations.
+//      See https://fdo-connect.gitlab.io/ap1/architecture-documentation/main/operation-specification/
+public class ValidateFdo {
+
+<span class="fc" id="L32">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    private static final String SHACL_PROPERTY_SHAPE = &quot;propertyShape&quot;;
+
+<span class="fc" id="L36">    private static HttpClient client = HttpClient.newHttpClient();</span>
+
+    private ValidateFdo() {
+    }  // no instances allowed
+
+    /**
+     * Validate an FdoRecord against the shapes defined.
+     *
+     * @param fdoRecord the FdoRecord to validate
+     * @return ValidationResult containing the result of the validation
+     * @throws org.nanopub.fdo.FdoNotFoundException if the profile ID in the FdoRecord cannot be resolved
+     * @throws java.net.URISyntaxException          if the schema URL is not a valid URI
+     * @throws java.io.IOException                  if there is an error reading the schema
+     * @throws java.lang.InterruptedException       if the HTTP request is interrupted
+     */
+    public static ValidationResult validate(FdoRecord fdoRecord) throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException {
+
+<span class="fc" id="L53">        String profileId = fdoRecord.getProfile();</span>
+<span class="fc" id="L54">        String schemaUrl = RetrieveFdo.resolveId(profileId).getSchemaUrl();</span>
+
+<span class="fc" id="L56">        HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(schemaUrl)).build();</span>
+<span class="fc" id="L57">        HttpResponse&lt;String&gt; httpResponse = client.send(req, HttpResponse.BodyHandlers.ofString());</span>
+
+<span class="fc" id="L59">        Set&lt;Statement&gt; shaclShape = createShaclValidationShapeFromJson(httpResponse);</span>
+<span class="fc" id="L60">        Set&lt;Statement&gt; data = addTypeStatement(fdoRecord);</span>
+
+<span class="fc" id="L62">        System.out.println(&quot;Validating FdoRecord &quot; + fdoRecord.getId());</span>
+<span class="fc" id="L63">        System.out.println(&quot;Against Schema &quot; + schemaUrl);</span>
+
+<span class="fc" id="L65">        return ShaclValidator.validateShacl(shaclShape, data);</span>
+    }
+
+    private static Set&lt;Statement&gt; addTypeStatement(FdoRecord fdoRecord) {
+<span class="fc" id="L69">        Set&lt;Statement&gt; data = fdoRecord.buildStatements();</span>
+<span class="fc" id="L70">        Statement first = data.toArray(new Statement[0])[0];</span>
+<span class="fc" id="L71">        data.add(vf.createStatement(first.getSubject(), RDF.TYPE, RDF_TYPE_FDO));</span>
+<span class="fc" id="L72">        return data;</span>
+    }
+
+    /**
+     * Read all the *property* fields from the profile.json in the httpResponse and convert them to a set of statements
+     * for shacl validation. *required* fields have min-count 1, the others do not have a min-count. (We assume that
+     * additionalProperties is always true.)
+     * When we just want to validate a shape, this method is fine. If the profile should be published as a nanopub,
+     * we want to specify the subject-prefix for the statements with the surrounding nanopub uri by using @createShaclValidationShapeFromJson(httpResponse, subjPrefix)
+     *
+     * @param httpResponse the HTTP response containing the profile JSON
+     * @return a set of statements representing the SHACL validation shape
+     */
+    public static Set&lt;Statement&gt; createShaclValidationShapeFromJson(HttpResponse&lt;String&gt; httpResponse) {
+<span class="fc" id="L86">        return createShaclValidationShapeFromJson(httpResponse, &quot;https://w3id.org/kpxl/shacl/temp/&quot;);</span>
+    }
+
+    /**
+     * Read all the *property* fields from the profile.json in the httpResponse and convert them to a set of statements
+     * for shacl validation. *required* fields have min-count 1, the others do not have a min-count. (We assume that
+     * additionalProperties is always true.)
+     * If the profile should be published as a nanopub, we want to specify the subject-prefix for the statements with the surrounding nanopub uri
+     *
+     * @param httpResponse the HTTP response containing the profile JSON
+     * @param subjPrefix   the prefix to use for the subject of the statements
+     * @return a set of statements representing the SHACL validation shape
+     */
+    public static Set&lt;Statement&gt; createShaclValidationShapeFromJson(HttpResponse&lt;String&gt; httpResponse, String subjPrefix) {
+<span class="fc" id="L100">        ParsedSchemaResponse r = new Gson().fromJson(httpResponse.body(), ParsedSchemaResponse.class);</span>
+
+<span class="fc" id="L102">        Set&lt;Statement&gt; shaclShape = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L103">        IRI nodeShape = vf.createIRI(subjPrefix + &quot;nodeShape&quot;);</span>
+<span class="fc" id="L104">        List&lt;String&gt; reqired = Arrays.asList(r.required);</span>
+<span class="fc" id="L105">        int i = 0;</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (String s : r.properties.keySet()) {</span>
+<span class="fc" id="L107">            i++;</span>
+<span class="fc" id="L108">            IRI propertyShape = vf.createIRI(subjPrefix + SHACL_PROPERTY_SHAPE + i);</span>
+<span class="fc" id="L109">            shaclShape.add(vf.createStatement(propertyShape, SHACL.MAX_COUNT, vf.createLiteral(1)));</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            if (reqired.contains(s)) {</span>
+<span class="fc" id="L111">                shaclShape.add(vf.createStatement(propertyShape, SHACL.MIN_COUNT, vf.createLiteral(1)));</span>
+            }
+<span class="pc bpc" id="L113" title="2 of 6 branches missed.">            if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {</span>
+<span class="fc" id="L114">                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, PROFILE_IRI));</span>
+            } else {
+<span class="fc" id="L116">                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, vf.createIRI(FDO_URI_PREFIX + s)));</span>
+            }
+<span class="fc" id="L118">            shaclShape.add(vf.createStatement(nodeShape, SHACL.PROPERTY, propertyShape));</span>
+<span class="fc" id="L119">        }</span>
+<span class="fc" id="L120">        shaclShape.add(vf.createStatement(nodeShape, SHACL.TARGET_CLASS, RDF_TYPE_FDO));</span>
+<span class="fc" id="L121">        shaclShape.add(vf.createStatement(nodeShape, RDF.TYPE, SHACL.NODE_SHAPE));</span>
+
+<span class="fc" id="L123">        return shaclShape;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

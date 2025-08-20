@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiResponseEntry.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.services</a> &gt; <span class="el_source">ApiResponseEntry.java</span></div><h1>ApiResponseEntry.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.services;
+
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Represents a single entry in an API response.
+ */
+public class ApiResponseEntry implements Serializable {
+
+<span class="fc" id="L14">    private Map&lt;String, String&gt; data = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Default constructor.
+     */
+<span class="fc" id="L19">    public ApiResponseEntry() {</span>
+<span class="fc" id="L20">    }</span>
+
+    /**
+     * Constructor to initialize with a key-value pair.
+     *
+     * @param key   the key for the entry
+     * @param value the value for the entry
+     */
+    public void add(String key, String value) {
+<span class="fc" id="L29">        data.put(key, value);</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Retrieves the value associated with the specified key.
+     *
+     * @param key the key to look up
+     * @return the value associated with the key, or null if not found
+     */
+    public String get(String key) {
+<span class="fc" id="L39">        return data.get(key);</span>
+    }
+
+    /**
+     * Retrieves the value associated with the specified key as a boolean.
+     *
+     * @param key the key to look up
+     * @return true if the value is &quot;1&quot; or &quot;true&quot;, false otherwise
+     */
+    public boolean getAsBoolean(String key) {
+<span class="fc" id="L49">        String v = data.get(key);</span>
+<span class="fc bfc" id="L50" title="All 4 branches covered.">        return v.equals(&quot;1&quot;) || v.equals(&quot;true&quot;);</span>
+    }
+
+    /**
+     * Retrieves the keys present in this entry.
+     *
+     * @return a set of keys in this entry
+     */
+    public Set&lt;String&gt; getKeys() {
+<span class="fc" id="L59">        return data.keySet();</span>
+    }
+
+    /**
+     * Comparator for ApiResponseEntry objects.
+     */
+<span class="fc" id="L65">    public static class DataComparator implements Comparator&lt;ApiResponseEntry&gt; {</span>
+
+        /**
+         * Compares two ApiResponseEntry objects based on their &quot;date&quot; field.
+         *
+         * @param e1 the first object to be compared.
+         * @param e2 the second object to be compared.
+         * @return a negative integer, zero, or a positive integer as the first argument is less than,
+         */
+        public int compare(ApiResponseEntry e1, ApiResponseEntry e2) {
+<span class="fc" id="L75">            String d1 = e1.get(&quot;date&quot;);</span>
+<span class="fc" id="L76">            String d2 = e2.get(&quot;date&quot;);</span>
+<span class="fc bfc" id="L77" title="All 4 branches covered.">            if (d1 == null &amp;&amp; d2 == null) return 0;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (d1 == null) return 1;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (d2 == null) return -1;</span>
+<span class="fc" id="L80">            return d2.compareTo(d1);</span>
+        }
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

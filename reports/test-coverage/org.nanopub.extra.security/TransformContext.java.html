@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransformContext.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.security</a> &gt; <span class="el_source">TransformContext.java</span></div><h1>TransformContext.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.security;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.NanopubProfile;
+import org.nanopub.trusty.CrossRefResolver;
+
+import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
+
+/**
+ * Context for transformations that require a signature, such as signing a nanopub or making it trustworthy.
+ */
+public class TransformContext {
+    /**
+     * Constant &lt;code&gt;DEFAULT_KEY_PATH=&quot;~/.nanopub/id_rsa&quot;&lt;/code&gt;
+     */
+    public static final String DEFAULT_KEY_PATH = &quot;~/.nanopub/id_rsa&quot;;
+
+    // TODO: Use this also for MakeTrustyNanopub
+
+<span class="fc" id="L31">    private static ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Creates a default TransformContext.
+     *
+     * @return a TransformContext with the default RSA algorithm, a key loaded from ~/.nanopub/id_rsa, and the signer IRI from the NanopubProfile.
+     */
+    public static TransformContext makeDefault() {
+<span class="fc" id="L39">        IRI signerIri = null;</span>
+<span class="fc" id="L40">        NanopubProfile profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (profile.getOrcidId() != null) {</span>
+<span class="nc" id="L42">            signerIri = vf.createIRI(profile.getOrcidId());</span>
+        }
+        KeyPair key;
+        try {
+<span class="fc" id="L46">            key = SignNanopub.loadKey(DEFAULT_KEY_PATH, RSA);</span>
+<span class="nc" id="L47">        } catch (Exception ex) {</span>
+<span class="nc" id="L48">            throw new RuntimeException(&quot;Could not load key &quot; + ex.getMessage());</span>
+<span class="fc" id="L49">        }</span>
+<span class="fc" id="L50">        return new TransformContext(RSA, key, signerIri, false, false, false);</span>
+    }
+
+    private SignatureAlgorithm algorithm;
+    private KeyPair key;
+    private IRI signer;
+    private Map&lt;Resource, IRI&gt; tempRefMap;
+    private Map&lt;String, String&gt; tempPrefixMap;
+    private boolean ignoreSigned;
+
+    /**
+     * Creates a TransformContext with the specified parameters.
+     *
+     * @param algorithm                   the signature algorithm to use
+     * @param key                         the key pair to use for signing
+     * @param signer                      the IRI of the signer
+     * @param resolveCrossRefs            whether to resolve cross-references in the nanopub
+     * @param resolveCrossRefsPrefixBased whether to resolve cross-references based on prefixes
+     * @param ignoreSigned                whether to ignore signed statements in the nanopub
+     */
+<span class="fc" id="L70">    public TransformContext(SignatureAlgorithm algorithm, KeyPair key, IRI signer, boolean resolveCrossRefs, boolean resolveCrossRefsPrefixBased, boolean ignoreSigned) {</span>
+<span class="fc" id="L71">        this.algorithm = algorithm;</span>
+<span class="fc" id="L72">        this.key = key;</span>
+<span class="fc" id="L73">        this.signer = signer;</span>
+<span class="fc" id="L74">        this.ignoreSigned = ignoreSigned;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (resolveCrossRefsPrefixBased) {</span>
+<span class="fc" id="L76">            tempPrefixMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L77">            tempRefMap = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        } else if (resolveCrossRefs) {</span>
+<span class="nc" id="L79">            tempRefMap = new HashMap&lt;&gt;();</span>
+        }
+<span class="fc" id="L81">    }</span>
+
+    /**
+     * Returns the signature algorithm used in this context.
+     *
+     * @return the signature algorithm
+     */
+    public SignatureAlgorithm getSignatureAlgorithm() {
+<span class="fc" id="L89">        return algorithm;</span>
+    }
+
+    /**
+     * Returns the key pair used for signing.
+     *
+     * @return the key pair
+     */
+    public KeyPair getKey() {
+<span class="fc" id="L98">        return key;</span>
+    }
+
+    /**
+     * Returns the IRI of the signer.
+     *
+     * @return the IRI of the signer
+     */
+    public IRI getSigner() {
+<span class="fc" id="L107">        return signer;</span>
+    }
+
+    /**
+     * Returns true if ignore signed is enabled.
+     *
+     * @return true if ignore signed is enabled, false otherwise
+     */
+    public boolean isIgnoreSignedEnabled() {
+<span class="nc" id="L116">        return ignoreSigned;</span>
+    }
+
+    /**
+     * Returns a map of temporary references.
+     *
+     * @return a map of temporary references
+     */
+    public Map&lt;Resource, IRI&gt; getTempRefMap() {
+<span class="nc" id="L125">        return tempRefMap;</span>
+    }
+
+    /**
+     * Returns a map of temporary prefixes.
+     *
+     * @return a map of temporary prefixes, where the key is a string representing the prefix and the value is the corresponding IRI
+     */
+    public Map&lt;String, String&gt; getTempPrefixMap() {
+<span class="nc" id="L134">        return tempPrefixMap;</span>
+    }
+
+    /**
+     * Resolves cross-references in the given RdfFileContent.
+     *
+     * @param input the RdfFileContent to resolve cross-references in
+     * @return a new RdfFileContent with resolved cross-references, or the input if no temporary reference map is available
+     */
+    public RdfFileContent resolveCrossRefs(RdfFileContent input) {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (tempRefMap == null) return input;</span>
+<span class="fc" id="L145">        RdfFileContent output = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="fc" id="L146">        input.propagate(new CrossRefResolver(tempRefMap, tempPrefixMap, output));</span>
+<span class="fc" id="L147">        return output;</span>
+    }
+
+    /**
+     * Merges the given map of transformations into the temporary reference map and prefix map.
+     *
+     * @param map the map of transformations to merge, where the key is a Resource and the value is an IRI
+     */
+    public void mergeTransformMap(Map&lt;Resource, IRI&gt; map) {
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (map == null) return;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (tempRefMap != null) {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">            for (Resource r : new HashSet&lt;&gt;(tempRefMap.keySet())) {</span>
+<span class="fc" id="L159">                IRI v = tempRefMap.get(r);</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">                if (map.containsKey(v)) {</span>
+<span class="fc" id="L161">                    tempRefMap.put(r, map.get(v));</span>
+<span class="fc" id="L162">                    map.remove(v);</span>
+                }
+<span class="fc" id="L164">            }</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">            for (Resource r : map.keySet()) {</span>
+<span class="fc" id="L166">                tempRefMap.put(r, map.get(r));</span>
+<span class="fc" id="L167">            }</span>
+        }
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (tempPrefixMap != null) {</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            for (Resource r : map.keySet()) {</span>
+<span class="pc bpc" id="L171" title="2 of 4 branches missed.">                if (r instanceof IRI &amp;&amp; TrustyUriUtils.isPotentialTrustyUri(map.get(r).stringValue())) {</span>
+<span class="nc" id="L172">                    tempPrefixMap.put(r.stringValue(), map.get(r).stringValue());</span>
+                }
+<span class="fc" id="L174">            }</span>
+        }
+<span class="fc" id="L176">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

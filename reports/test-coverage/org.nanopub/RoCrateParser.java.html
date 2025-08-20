@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoCrateParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">RoCrateParser.java</span></div><h1>RoCrateParser.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.LinkedHashModel;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFParser;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.eclipse.rdf4j.rio.helpers.StatementCollector;
+import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+/**
+ * This class represents a parser for RO-Crate metadata files.
+ */
+<span class="fc" id="L28">public class RoCrateParser {</span>
+
+<span class="fc" id="L30">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+<span class="fc" id="L32">    private static HttpClient client = HttpClient.newHttpClient();</span>
+
+    public static InputStream downloadRoCreateMetadataFile(String uri) throws URISyntaxException, IOException, InterruptedException {
+<span class="fc" id="L35">        HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(uri)).build();</span>
+<span class="fc" id="L36">        HttpResponse&lt;InputStream&gt; httpResponse = client.send(req, HttpResponse.BodyHandlers.ofInputStream());</span>
+<span class="fc" id="L37">        return httpResponse.body();</span>
+    }
+
+    /**
+     * Parses a RO-Crate metadata file from a given URL.
+     *
+     * @param url          the url where the metadata file is published (including trailing &quot;/&quot;)
+     * @param roCrateMetadata the ro-create metadata.
+     * @return a Nanopub object containing the parsed data.
+     * @throws org.nanopub.MalformedNanopubException if the parsed data does not conform to the expected structure.
+     * @throws java.io.IOException                   if an I/O error occurs while reading the metadata file.
+     * @throws java.lang.InterruptedException        if the operation is interrupted.
+     * @throws java.net.URISyntaxException           if the URL is malformed.
+     */
+    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException {
+<span class="fc" id="L52">        RDFParser parser = Rio.createParser(RDFFormat.JSONLD);</span>
+
+        // Configure parser settings
+<span class="fc" id="L55">        parser.getParserConfig().set(BasicParserSettings.VERIFY_DATATYPE_VALUES, true);</span>
+
+        // We do not accept spaces in urls (@id elements)
+        // parser.getParserConfig().set(BasicParserSettings.VERIFY_URI_SYNTAX, false);
+
+        // Since JSONLDSettings.WHITELIST does not contain &quot;https://w3id.org/ro/crate/1.0/context&quot; we disable SECURE MODE
+<span class="fc" id="L61">        parser.getParserConfig().set(JSONLDSettings.SECURE_MODE, false);</span>
+
+<span class="fc" id="L63">        Model model = new LinkedHashModel();</span>
+<span class="fc" id="L64">        StatementCollector handler = new StatementCollector(model);</span>
+
+<span class="fc" id="L66">        parser.setRDFHandler(handler);</span>
+<span class="fc" id="L67">        parser.parse(roCrateMetadata, url);</span>
+
+        // Create Nanopub
+<span class="fc" id="L70">        NanopubCreator npCreator = new NanopubCreator(true);</span>
+<span class="fc" id="L71">        npCreator.addAssertionStatements(handler.getStatements());</span>
+
+        // we always use the specified name: &quot;ro-crate-metadata.json&quot;
+<span class="fc" id="L74">        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ &quot;ro-crate-metadata.json&quot;));</span>
+<span class="fc" id="L75">        npCreator.addPubinfoStatement(RDF.TYPE, NPX.RO_CRATE_NANOPUB);</span>
+
+<span class="fc" id="L77">        return npCreator.finalizeNanopub(true);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

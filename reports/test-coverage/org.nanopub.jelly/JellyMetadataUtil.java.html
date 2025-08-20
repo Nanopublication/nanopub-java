@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JellyMetadataUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.jelly</a> &gt; <span class="el_source">JellyMetadataUtil.java</span></div><h1>JellyMetadataUtil.java</h1><pre class="source lang-java linenums">package org.nanopub.jelly;
+
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
+
+import java.io.IOException;
+import java.util.Collection;
+
+/**
+ * Utilities for working with metadata of Jelly RdfStreamFrames.
+ * This is used for example to serve the counter metadata in the Registry.
+ */
+<span class="nc" id="L15">public class JellyMetadataUtil {</span>
+
+    /**
+     * Key for the counter in the metadata map.
+     */
+    public static final String COUNTER_KEY = &quot;c&quot;;
+
+    /**
+     * Create a metadata map with the counter key.
+     * The counter is encoded as a Protobuf varint.
+     *
+     * @param counter The counter value to store
+     * @return A map with the counter key and the counter value
+     */
+    public static RdfStreamFrame.MetadataEntry getCounterMetadata(long counter) {
+<span class="fc" id="L30">        int size = CodedOutputStream.computeUInt64SizeNoTag(counter);</span>
+<span class="fc" id="L31">        byte[] bytes = new byte[size];</span>
+<span class="fc" id="L32">        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(bytes);</span>
+        try {
+<span class="fc" id="L34">            codedOutputStream.writeInt64NoTag(counter);</span>
+<span class="nc" id="L35">        } catch (IOException e) {</span>
+            // Should not happen, really
+<span class="nc" id="L37">            throw new RuntimeException(e);</span>
+<span class="fc" id="L38">        }</span>
+
+<span class="fc" id="L40">        return RdfStreamFrame.MetadataEntry.newInstance()</span>
+<span class="fc" id="L41">                .setKey(COUNTER_KEY)</span>
+<span class="fc" id="L42">                .setValue(ByteString.copyFrom(bytes));</span>
+    }
+
+    /**
+     * Try to get the counter value from the metadata.
+     * If the counter is not present or cannot be read, -1 is returned.
+     *
+     * @param metadata The metadata map to read from
+     * @return The counter value, or -1 if it cannot be read
+     */
+    public static long tryGetCounterFromMetadata(Collection&lt;RdfStreamFrame.MetadataEntry&gt; metadata) {
+<span class="fc" id="L53">        var maybeCounterBytes = metadata</span>
+<span class="fc" id="L54">                .stream()</span>
+<span class="fc" id="L55">                .filter(entry -&gt; COUNTER_KEY.equals(entry.getKey()))</span>
+<span class="fc" id="L56">                .map(RdfStreamFrame.MetadataEntry::getValue)</span>
+<span class="fc" id="L57">                .findFirst();</span>
+
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (maybeCounterBytes.isEmpty()) {</span>
+<span class="fc" id="L60">            return -1;</span>
+        }
+
+<span class="fc" id="L63">        var is = CodedInputStream.newInstance(maybeCounterBytes.get().asReadOnlyByteBuffer());</span>
+        try {
+<span class="fc" id="L65">            return is.readInt64();</span>
+<span class="fc" id="L66">        } catch (IOException e) {</span>
+<span class="fc" id="L67">            return -1;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

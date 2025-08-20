@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryCall.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.services</a> &gt; <span class="el_source">QueryCall.java</span></div><h1>QueryCall.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.services;
+
+import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
+import org.nanopub.NanopubUtils;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Second-generation query API call.
+ */
+public class QueryCall {
+
+<span class="fc" id="L21">    private static int parallelCallCount = 2;</span>
+<span class="fc" id="L22">    private static int maxRetryCount = 3;</span>
+
+    /**
+     * Run a query call with the given query ID and parameters.
+     *
+     * @param queryId the ID of the query to run
+     * @param params  the parameters to pass to the query
+     * @return the HTTP response from the query API
+     */
+    public static HttpResponse run(String queryId, Map&lt;String, String&gt; params) {
+<span class="fc" id="L32">        int retryCount = 0;</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        while (retryCount &lt; maxRetryCount) {</span>
+<span class="fc" id="L34">            QueryCall apiCall = new QueryCall(queryId, params);</span>
+<span class="fc" id="L35">            apiCall.run();</span>
+<span class="pc bpc" id="L36" title="1 of 4 branches missed.">            while (!apiCall.calls.isEmpty() &amp;&amp; apiCall.resp == null) {</span>
+                try {
+<span class="fc" id="L38">                    Thread.sleep(50);</span>
+<span class="nc" id="L39">                } catch (InterruptedException ex) {</span>
+<span class="nc" id="L40">                    Thread.currentThread().interrupt();</span>
+<span class="pc" id="L41">                }</span>
+            }
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if (apiCall.resp != null) {</span>
+<span class="fc" id="L44">                return apiCall.resp;</span>
+            }
+<span class="nc" id="L46">            retryCount = retryCount + 1;</span>
+<span class="nc" id="L47">        }</span>
+<span class="nc" id="L48">        throw new RuntimeException(&quot;Giving up contacting API: &quot; + queryId);</span>
+    }
+
+    /**
+     * List of available query API instances.
+     */
+    // TODO Available services should be retrieved from a setting, not hard-coded:
+<span class="fc" id="L55">    public static String[] queryApiInstances = new String[]{</span>
+            &quot;https://query.knowledgepixels.com/&quot;,
+            &quot;https://query.petapico.org/&quot;,
+            &quot;https://query.np.trustyuri.net/&quot;
+    };
+
+    private static List&lt;String&gt; checkedApiInstances;
+
+    /**
+     * Returns the list of available query API instances that are currently accessible.
+     *
+     * @return a list of accessible query API instance
+     */
+    public static List&lt;String&gt; getApiInstances() {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (checkedApiInstances != null) return checkedApiInstances;</span>
+<span class="fc" id="L70">        checkedApiInstances = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (String a : queryApiInstances) {</span>
+            try {
+<span class="fc" id="L73">                System.err.println(&quot;Checking API instance: &quot; + a);</span>
+<span class="fc" id="L74">                HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">                if (wasSuccessful(resp)) {</span>
+<span class="fc" id="L76">                    System.err.println(&quot;SUCCESS: Nanopub Query instance is accessible: &quot; + a);</span>
+<span class="fc" id="L77">                    checkedApiInstances.add(a);</span>
+                } else {
+<span class="fc" id="L79">                    System.err.println(&quot;FAILURE: Nanopub Query instance isn't accessible: &quot; + a);</span>
+                }
+<span class="nc" id="L81">            } catch (IOException ex) {</span>
+<span class="nc" id="L82">                System.err.println(&quot;FAILURE: Nanopub Query instance isn't accessible: &quot; + a);</span>
+<span class="fc" id="L83">            }</span>
+        }
+<span class="fc" id="L85">        System.err.println(checkedApiInstances.size() + &quot; accessible Nanopub Query instances&quot;);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (checkedApiInstances.size() &lt; 2) {</span>
+<span class="fc" id="L87">            checkedApiInstances = null;</span>
+<span class="fc" id="L88">            throw new RuntimeException(&quot;Not enough healthy Nanopub Query instances available&quot;);</span>
+        }
+<span class="fc" id="L90">        return checkedApiInstances;</span>
+    }
+
+    private String queryId;
+    private String paramString;
+<span class="fc" id="L95">    private List&lt;String&gt; apisToCall = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L96">    private List&lt;Call&gt; calls = new ArrayList&lt;&gt;();</span>
+
+    private HttpResponse resp;
+
+<span class="fc" id="L100">    private QueryCall(String queryId, Map&lt;String, String&gt; params) {</span>
+<span class="fc" id="L101">        this.queryId = queryId;</span>
+<span class="fc" id="L102">        paramString = &quot;&quot;;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (params != null) {</span>
+<span class="fc" id="L104">            paramString = &quot;?&quot;;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (String k : params.keySet()) {</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">                if (paramString.length() &gt; 1) paramString += &quot;&amp;&quot;;</span>
+<span class="fc" id="L107">                paramString += k + &quot;=&quot;;</span>
+<span class="fc" id="L108">                paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8);</span>
+<span class="fc" id="L109">            }</span>
+        }
+<span class="fc" id="L111">        System.err.println(&quot;Invoking API operation &quot; + queryId + &quot; &quot; + paramString);</span>
+<span class="fc" id="L112">    }</span>
+
+    private void run() {
+<span class="fc" id="L115">        List&lt;String&gt; apiInstancesToTry = new LinkedList&lt;&gt;(getApiInstances());</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">        while (!apiInstancesToTry.isEmpty() &amp;&amp; apisToCall.size() &lt; parallelCallCount) {</span>
+<span class="fc" id="L117">            int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));</span>
+<span class="fc" id="L118">            String apiUrl = apiInstancesToTry.get(randomIndex);</span>
+<span class="fc" id="L119">            apisToCall.add(apiUrl);</span>
+<span class="fc" id="L120">            System.err.println(&quot;Trying API (&quot; + apisToCall.size() + &quot;) &quot; + apiUrl);</span>
+<span class="fc" id="L121">            apiInstancesToTry.remove(randomIndex);</span>
+<span class="fc" id="L122">        }</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        for (String api : apisToCall) {</span>
+<span class="fc" id="L124">            Call call = new Call(api);</span>
+<span class="fc" id="L125">            calls.add(call);</span>
+<span class="fc" id="L126">            new Thread(call).start();</span>
+<span class="fc" id="L127">        }</span>
+<span class="fc" id="L128">    }</span>
+
+    private synchronized void finished(Call call, HttpResponse resp, String apiUrl) {
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (this.resp != null) { // result already in</span>
+<span class="nc" id="L132">            EntityUtils.consumeQuietly(resp.getEntity());</span>
+<span class="nc" id="L133">            return;</span>
+        }
+<span class="fc" id="L135">        System.err.println(&quot;Result in from &quot; + apiUrl + &quot;:&quot;);</span>
+<span class="fc" id="L136">        System.err.println(&quot;- Request: &quot; + queryId + &quot; &quot; + paramString);</span>
+<span class="fc" id="L137">        System.err.println(&quot;- Response size: &quot; + resp.getEntity().getContentLength());</span>
+<span class="fc" id="L138">        this.resp = resp;</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        for (Call c : calls) {</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (c != call) c.abort();</span>
+<span class="fc" id="L142">        }</span>
+<span class="fc" id="L143">    }</span>
+
+    private static boolean wasSuccessful(HttpResponse resp) {
+<span class="pc bpc" id="L146" title="2 of 4 branches missed.">        if (resp == null || resp.getEntity() == null) return false;</span>
+<span class="fc" id="L147">        int c = resp.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L148" title="1 of 4 branches missed.">        if (c &lt; 200 || c &gt;= 300) return false;</span>
+<span class="fc" id="L149">        return true;</span>
+    }
+
+    private static boolean wasSuccessfulNonempty(HttpResponse resp) {
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (!wasSuccessful(resp)) return false;</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if (resp.getEntity().getContentLength() &lt; 0) return false;</span>
+<span class="fc" id="L155">        return true;</span>
+    }
+
+
+    private class Call implements Runnable {
+
+        private String apiUrl;
+        private HttpGet get;
+
+<span class="fc" id="L164">        public Call(String apiUrl) {</span>
+<span class="fc" id="L165">            this.apiUrl = apiUrl;</span>
+<span class="fc" id="L166">        }</span>
+
+        public void run() {
+<span class="fc" id="L169">            get = new HttpGet(apiUrl + &quot;api/&quot; + queryId + paramString);</span>
+<span class="fc" id="L170">            get.setHeader(&quot;Accept&quot;, &quot;text/csv&quot;);</span>
+<span class="fc" id="L171">            HttpResponse resp = null;</span>
+            try {
+<span class="fc" id="L173">                resp = NanopubUtils.getHttpClient().execute(get);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                if (!wasSuccessfulNonempty(resp)) {</span>
+<span class="nc" id="L175">                    throw new IOException(resp.getStatusLine().toString());</span>
+                }
+<span class="fc" id="L177">                finished(this, resp, apiUrl);</span>
+<span class="fc" id="L178">            } catch (Exception ex) {</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                if (resp != null) EntityUtils.consumeQuietly(resp.getEntity());</span>
+<span class="fc" id="L180">                System.err.println(&quot;Request to &quot; + apiUrl + &quot; was not successful: &quot; + ex.getMessage());</span>
+<span class="fc" id="L181">            }</span>
+<span class="fc" id="L182">            calls.remove(this);</span>
+<span class="fc" id="L183">        }</span>
+
+        private void abort() {
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if (get == null) return;</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">            if (get.isAborted()) return;</span>
+<span class="fc" id="L188">            get.abort();</span>
+<span class="fc" id="L189">        }</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

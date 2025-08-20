@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Topic.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Topic.java</span></div><h1>Topic.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.Nanopub;
+import org.nanopub.op.topic.DefaultTopics;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to work with topics in nanopublications.
+ */
+<span class="nc" id="L23">public class Topic extends CliRunner {</span>
+
+<span class="nc" id="L25">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;Property URIs to ignore, separated by '|' (has no effect if -d is set)&quot;)
+    private String ignoreProperties;
+
+    @com.beust.jcommander.Parameter(names = &quot;-h&quot;, description = &quot;Topic handler class&quot;)
+    private String handlerClass;
+
+    /**
+     * Main method to run the Topic command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L47">            Topic obj = CliRunner.initJc(new Topic(), args);</span>
+<span class="nc" id="L48">            obj.init();</span>
+<span class="nc" id="L49">            obj.run();</span>
+<span class="nc" id="L50">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L51">            System.exit(1);</span>
+<span class="nc" id="L52">        } catch (Exception ex) {</span>
+<span class="nc" id="L53">            ex.printStackTrace();</span>
+<span class="nc" id="L54">            System.exit(1);</span>
+<span class="nc" id="L55">        }</span>
+<span class="nc" id="L56">    }</span>
+
+    /**
+     * Creates an instance of the Topic class with the given arguments.
+     *
+     * @param args Command-line arguments as a single string.
+     * @return An instance of Topic initialized with the provided arguments.
+     * @throws com.beust.jcommander.ParameterException If the arguments are invalid or missing.
+     */
+    public static Topic getInstance(String args) throws ParameterException {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (args == null) {</span>
+<span class="nc" id="L67">            args = &quot;&quot;;</span>
+        }
+<span class="nc" id="L69">        Topic obj = CliRunner.initJc(new Topic(), args.trim().split(&quot; &quot;));</span>
+<span class="nc" id="L70">        obj.init();</span>
+<span class="nc" id="L71">        return obj;</span>
+    }
+
+    private RDFFormat rdfInFormat;
+<span class="nc" id="L75">    private OutputStream outputStream = System.out;</span>
+    private BufferedWriter writer;
+    private TopicHandler topicHandler;
+
+    private void init() {
+<span class="nc bnc" id="L80" title="All 4 branches missed.">        if (handlerClass != null &amp;&amp; !handlerClass.isEmpty()) {</span>
+<span class="nc" id="L81">            String detectorClassName = handlerClass;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (!handlerClass.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L83">                detectorClassName = &quot;org.nanopub.op.topic.&quot; + handlerClass;</span>
+            }
+            try {
+<span class="nc" id="L86">                topicHandler = (TopicHandler) Class.forName(detectorClassName).getConstructor().newInstance();</span>
+<span class="nc" id="L87">            } catch (ReflectiveOperationException ex) {</span>
+<span class="nc" id="L88">                throw new RuntimeException(ex);</span>
+<span class="nc" id="L89">            }</span>
+<span class="nc" id="L90">        } else {</span>
+<span class="nc" id="L91">            topicHandler = new DefaultTopics(ignoreProperties);</span>
+        }
+<span class="nc" id="L93">    }</span>
+
+    /**
+     * Runs the Topic command-line utility.
+     *
+     * @throws java.io.IOException                       if there is an error reading or writing files.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data.
+     * @throws org.nanopub.MalformedNanopubException     if a nanopublication is malformed.
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs.
+     */
+    public void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L106" title="All 4 branches missed.">        if (inputNanopubs == null || inputNanopubs.isEmpty()) {</span>
+<span class="nc" id="L107">            throw new ParameterException(&quot;No input files given&quot;);</span>
+        }
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L111">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L113">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (outputFile != null) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L117">                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L119">                    outputStream = new FileOutputStream(outputFile);</span>
+                }
+            }
+
+<span class="nc" id="L123">            writer = new BufferedWriter(new OutputStreamWriter(outputStream));</span>
+
+<span class="nc" id="L125">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L127">                    writer.write(np.getUri() + &quot; &quot; + getTopic(np) + &quot;\n&quot;);</span>
+<span class="nc" id="L128">                } catch (IOException ex) {</span>
+<span class="nc" id="L129">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L130">                }</span>
+<span class="nc" id="L131">            });</span>
+
+<span class="nc" id="L133">            writer.flush();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L135">                writer.close();</span>
+            }
+<span class="nc" id="L137">        }</span>
+<span class="nc" id="L138">    }</span>
+
+    /**
+     * Gets the topic of a given nanopublication using the configured topic handler.
+     *
+     * @param np The nanopublication for which to get the topic.
+     * @return The topic of the nanopublication as a String.
+     */
+    public String getTopic(Nanopub np) {
+<span class="nc" id="L147">        return topicHandler.getTopic(np);</span>
+    }
+
+
+    /**
+     * Interface for handling topics in nanopublications.
+     */
+    public interface TopicHandler {
+
+        /**
+         * Gets the topic of a given nanopublication.
+         *
+         * @param np The nanopublication for which to get the topic.
+         * @return The topic of the nanopublication as a String.
+         */
+        public String getTopic(Nanopub np);
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

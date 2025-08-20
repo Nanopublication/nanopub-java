@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Reuse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Reuse.java</span></div><h1>Reuse.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.trusty.FixTrustyNanopub;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to reuse nanopublications.
+ */
+<span class="nc" id="L28">public class Reuse extends CliRunner {</span>
+
+<span class="nc" id="L30">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-x&quot;, description = &quot;Nanopubs to be reused (if not given, an initial dataset is created)&quot;)
+    private File reuseNanopubFile;
+
+<span class="nc" id="L36">    @com.beust.jcommander.Parameter(names = &quot;-n&quot;, description = &quot;Output new nanopubs&quot;)</span>
+    private boolean outputNew = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file (requires option -n to be set)&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Output file of all nanopublications (-x file needs to be a full nanopub file)&quot;)
+    private File allOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-c&quot;, description = &quot;Output cache file, which can afterwards be used for argument -x or to create an index)&quot;)
+    private File cacheFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Append line to this table file&quot;)
+    private File tableFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--reuse-format&quot;, description = &quot;Format of the nanopubs to be reused: trig, nq, trix, trig.gz, ...&quot;)
+    private String reuseFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--out-format&quot;, description = &quot;Format of the output nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String outFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;-f&quot;, description = &quot;Fingerprinting options&quot;)
+    private String fingerprintOptions;
+
+<span class="nc" id="L63">    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Add npx:supersedes backlinks for changed nanopublications&quot;)</span>
+    private boolean addSupersedesBacklinks = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-t&quot;, description = &quot;Topic options&quot;)
+    private String topicOptions;
+
+    /**
+     * Main method to run the Reuse command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L76">            Reuse obj = CliRunner.initJc(new Reuse(), args);</span>
+<span class="nc" id="L77">            obj.init();</span>
+<span class="nc" id="L78">            obj.run();</span>
+<span class="nc" id="L79">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L80">            System.exit(1);</span>
+<span class="nc" id="L81">        } catch (Exception ex) {</span>
+<span class="nc" id="L82">            ex.printStackTrace();</span>
+<span class="nc" id="L83">            System.exit(1);</span>
+<span class="nc" id="L84">        }</span>
+<span class="nc" id="L85">    }</span>
+
+    private static final String multipleNanopubs = &quot;MULTI&quot;;
+    private static final String matchedNanopub = &quot;MATCHED&quot;;
+
+    private RDFFormat rdfInFormat, rdfReuseFormat, rdfOutFormat;
+<span class="nc" id="L91">    private PrintStream outputStream = System.out;</span>
+    private PrintStream allOutputStream;
+    private PrintStream cacheStream;
+<span class="nc" id="L94">    private Map&lt;String, String&gt; reusableNanopubs = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L95">    private Map&lt;String, String&gt; existingTopics = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L96">    private Map&lt;String, String&gt; reuseNanopubMap = new HashMap&lt;&gt;();</span>
+    private int reusableCount, uniqueReusableCount, inputCount, reuseCount, inTopicDuplCount, outTopicDuplCount, topicMatchErrors, topicMatchCount;
+    private Fingerprint fingerprint;
+    private Topic topic;
+
+    private void init() {
+        try {
+<span class="nc" id="L103">            fingerprint = Fingerprint.getInstance(fingerprintOptions);</span>
+<span class="nc" id="L104">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L105">            System.err.println(ex);</span>
+<span class="nc" id="L106">        }</span>
+        try {
+<span class="nc" id="L108">            topic = Topic.getInstance(topicOptions);</span>
+<span class="nc" id="L109">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L110">            System.err.println(ex);</span>
+<span class="nc" id="L111">        }</span>
+<span class="nc" id="L112">    }</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+
+<span class="nc" id="L117">        reusableCount = 0;</span>
+<span class="nc" id="L118">        uniqueReusableCount = 0;</span>
+<span class="nc" id="L119">        inputCount = 0;</span>
+<span class="nc" id="L120">        reuseCount = 0;</span>
+<span class="nc" id="L121">        inTopicDuplCount = 0;</span>
+<span class="nc" id="L122">        topicMatchCount = 0;</span>
+<span class="nc" id="L123">        topicMatchErrors = 0;</span>
+
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (outputFile == null) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (outFormat == null) {</span>
+<span class="nc" id="L128">                outFormat = &quot;trig&quot;;</span>
+            }
+<span class="nc" id="L130">            rdfOutFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + outFormat).orElse(null);</span>
+        } else {
+<span class="nc" id="L132">            rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);</span>
+        }
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (reuseNanopubFile == null) {</span>
+            // Initial dataset creation
+<span class="nc bnc" id="L137" title="All 4 branches missed.">        } else if (reuseNanopubFile.getName().endsWith(&quot;.txt&quot;) || reuseNanopubFile.getName().endsWith(&quot;.txt.gz&quot;)) {</span>
+            // Reuse nanopubs from cache file
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (allOutputFile != null) {</span>
+<span class="nc" id="L140">                throw new RuntimeException(&quot;-x needs to specify a full nanopub file if -a is specified&quot;);</span>
+            }
+<span class="nc" id="L142">            BufferedReader br = null;</span>
+            try {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (reuseNanopubFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L145">                    br = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(reuseNanopubFile))));</span>
+                } else {
+<span class="nc" id="L147">                    br = new BufferedReader(new FileReader(reuseNanopubFile));</span>
+                }
+                String line;
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                while ((line = br.readLine()) != null) {</span>
+<span class="nc" id="L151">                    line = line.trim();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (line.isEmpty()) continue;</span>
+<span class="nc" id="L153">                    String[] columns = line.split(&quot; &quot;);</span>
+<span class="nc" id="L154">                    String uri = columns[0];</span>
+<span class="nc" id="L155">                    String fingerprint = columns[1];</span>
+<span class="nc" id="L156">                    reusableNanopubs.put(fingerprint, uri);</span>
+<span class="nc" id="L157">                    reusableCount++;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">                    if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L159">                        String topic = columns[2];</span>
+<span class="nc" id="L160">                        recordTopic(topic, uri);</span>
+                    }
+<span class="nc" id="L162">                }</span>
+            } finally {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                if (br != null) br.close();</span>
+            }
+<span class="nc" id="L166">        } else {</span>
+            // Reuse nanopubs from full nanopub file
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (reuseFormat != null) {</span>
+<span class="nc" id="L169">                rdfReuseFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + reuseFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L171">                rdfReuseFormat = Rio.getParserFormatForFileName(reuseNanopubFile.toString()).orElse(null);</span>
+            }
+<span class="nc" id="L173">            MultiNanopubRdfHandler.process(rdfReuseFormat, reuseNanopubFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L175">                    String fp = fingerprint.getFingerprint(np);</span>
+<span class="nc" id="L176">                    String uri = np.getUri().toString();</span>
+<span class="nc" id="L177">                    reusableNanopubs.put(fp, uri);</span>
+<span class="nc" id="L178">                    reusableCount++;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                    if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L180">                        recordTopic(topic.getTopic(np), uri);</span>
+                    }
+<span class="nc bnc" id="L182" title="All 2 branches missed.">                    if (allOutputFile != null) {</span>
+<span class="nc" id="L183">                        reuseNanopubMap.put(fp, NanopubUtils.writeToString(np, rdfOutFormat));</span>
+                    }
+<span class="nc" id="L185">                } catch (IOException | RDFHandlerException ex) {</span>
+<span class="nc" id="L186">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L187">                }</span>
+<span class="nc" id="L188">            });</span>
+        }
+<span class="nc" id="L190">        uniqueReusableCount = reusableNanopubs.size();</span>
+
+        // Reuse matching nanopubs:
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (cacheFile != null) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (cacheFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L195">                cacheStream = new PrintStream(new GZIPOutputStream(new FileOutputStream(cacheFile)));</span>
+            } else {
+<span class="nc" id="L197">                cacheStream = new PrintStream(new FileOutputStream(cacheFile));</span>
+            }
+        }
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L202">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L204">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L206" title="All 2 branches missed.">            if (outputFile != null) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L208">                    outputStream = new PrintStream(new GZIPOutputStream(new FileOutputStream(outputFile)));</span>
+                } else {
+<span class="nc" id="L210">                    outputStream = new PrintStream(new FileOutputStream(outputFile));</span>
+                }
+            }
+<span class="nc bnc" id="L213" title="All 2 branches missed.">            if (allOutputFile != null) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                if (allOutputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L215">                    allOutputStream = new PrintStream(new GZIPOutputStream(new FileOutputStream(allOutputFile)));</span>
+                } else {
+<span class="nc" id="L217">                    allOutputStream = new PrintStream(new FileOutputStream(allOutputFile));</span>
+                }
+            }
+
+<span class="nc" id="L221">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L223">                    process(np);</span>
+<span class="nc" id="L224">                } catch (Exception ex) {</span>
+<span class="nc" id="L225">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L226">                }</span>
+<span class="nc" id="L227">            });</span>
+
+<span class="nc" id="L229">            outputStream.flush();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L231">                outputStream.close();</span>
+            }
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L234">                allOutputStream.flush();</span>
+<span class="nc" id="L235">                allOutputStream.close();</span>
+            }
+<span class="nc bnc" id="L237" title="All 2 branches missed.">            if (cacheStream != null) {</span>
+<span class="nc" id="L238">                cacheStream.flush();</span>
+<span class="nc" id="L239">                cacheStream.close();</span>
+            }
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (tableFile != null) {</span>
+<span class="nc" id="L243">                PrintStream st = new PrintStream(new FileOutputStream(tableFile, true));</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L245">                    st.println(inputFile.getName() + &quot;,&quot; + reusableCount + &quot;,&quot; + inputCount + &quot;,&quot; + reuseCount + &quot;,&quot; + topicMatchCount + &quot;,&quot; +</span>
+                            inTopicDuplCount + &quot;,&quot; + outTopicDuplCount + &quot;,&quot; + topicMatchErrors);
+                } else {
+<span class="nc" id="L248">                    st.println(inputFile.getName() + &quot;,&quot; + reusableCount + &quot;,&quot; + inputCount + &quot;,&quot; + reuseCount);</span>
+                }
+<span class="nc" id="L250">                st.close();</span>
+            }
+<span class="nc" id="L252">            System.err.println(&quot;Older dataset count (unique): &quot; + reusableCount + &quot; (&quot; + uniqueReusableCount + &quot;)&quot;);</span>
+<span class="nc" id="L253">            System.err.println(&quot;Newer dataset count: &quot; + inputCount);</span>
+<span class="nc" id="L254">            System.err.println(&quot;Reuse count: &quot; + reuseCount);</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">            if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L256">                System.err.println(&quot;Topic match count: &quot; + topicMatchCount);</span>
+<span class="nc" id="L257">                System.err.println(&quot;Duplicate topics in older dataset: &quot; + inTopicDuplCount);</span>
+<span class="nc" id="L258">                System.err.println(&quot;Duplicate topics in newer dataset: &quot; + outTopicDuplCount);</span>
+<span class="nc" id="L259">                System.err.println(&quot;Total topic matching errors: &quot; + topicMatchErrors);</span>
+            }
+<span class="nc" id="L261">        }</span>
+<span class="nc" id="L262">    }</span>
+
+    private void recordTopic(String topic, String uri) {
+<span class="nc bnc" id="L265" title="All 2 branches missed.">        if (existingTopics.containsKey(topic)) {</span>
+<span class="nc" id="L266">            existingTopics.put(topic, multipleNanopubs);</span>
+<span class="nc" id="L267">            inTopicDuplCount++;</span>
+<span class="nc" id="L268">            topicMatchErrors++;</span>
+        } else {
+<span class="nc" id="L270">            existingTopics.put(topic, uri);</span>
+        }
+<span class="nc" id="L272">    }</span>
+
+    private void process(Nanopub np) throws IOException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
+<span class="nc" id="L275">        inputCount++;</span>
+<span class="nc" id="L276">        String fp = fingerprint.getFingerprint(np);</span>
+<span class="nc" id="L277">        String t = null;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L279">            t = topic.getTopic(np);</span>
+        }
+<span class="nc" id="L281">        String uri = np.getUri().toString();</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        if (reusableNanopubs.containsKey(fp)) {</span>
+<span class="nc" id="L283">            reuseCount++;</span>
+<span class="nc" id="L284">            uri = reusableNanopubs.get(fp);</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">            if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L286">                String et = existingTopics.get(t);</span>
+<span class="nc bnc" id="L287" title="All 4 branches missed.">                if (et == multipleNanopubs || et == matchedNanopub) {</span>
+<span class="nc" id="L288">                    topicMatchErrors++;</span>
+                }
+<span class="nc" id="L290">                existingTopics.put(t, matchedNanopub);</span>
+            }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L293">                allOutputStream.println(reuseNanopubMap.get(fp));</span>
+            }
+        } else {
+<span class="nc bnc" id="L296" title="All 2 branches missed.">            if (addSupersedesBacklinks) {</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">                if (existingTopics.containsKey(t)) {</span>
+<span class="nc" id="L298">                    String et = existingTopics.get(t);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">                    if (et == multipleNanopubs) {</span>
+<span class="nc" id="L300">                        topicMatchErrors++;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                    } else if (et == matchedNanopub) {</span>
+<span class="nc" id="L302">                        topicMatchErrors++;</span>
+<span class="nc" id="L303">                        outTopicDuplCount++;</span>
+                    } else {
+<span class="nc" id="L305">                        topicMatchCount++;</span>
+<span class="nc" id="L306">                        String oldNpUri = existingTopics.get(t);</span>
+<span class="nc" id="L307">                        existingTopics.put(t, matchedNanopub);</span>
+<span class="nc" id="L308">                        np = addSupersedesBacklink(np, SimpleValueFactory.getInstance().createIRI(oldNpUri));</span>
+<span class="nc" id="L309">                        uri = np.getUri().toString();</span>
+                    }
+                }
+            }
+<span class="nc bnc" id="L313" title="All 2 branches missed.">            if (outputNew) {</span>
+<span class="nc" id="L314">                NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);</span>
+            }
+<span class="nc bnc" id="L316" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L317">                NanopubUtils.writeToStream(np, allOutputStream, rdfOutFormat);</span>
+            }
+        }
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        if (cacheStream != null) {</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">            if (addSupersedesBacklinks) {</span>
+<span class="nc" id="L322">                cacheStream.println(uri + &quot; &quot; + fp + &quot; &quot; + t);</span>
+            } else {
+<span class="nc" id="L324">                cacheStream.println(uri + &quot; &quot; + fp);</span>
+            }
+        }
+<span class="nc" id="L327">    }</span>
+
+    private Nanopub addSupersedesBacklink(final Nanopub newNp, final IRI oldUri)
+            throws RDFHandlerException, MalformedNanopubException, TrustyUriException {
+<span class="nc" id="L331">        SupersedesLinkAdder linkAdder = new SupersedesLinkAdder(oldUri, newNp);</span>
+<span class="nc" id="L332">        NanopubUtils.propagateToHandler(newNp, linkAdder);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (TrustyUriUtils.isPotentialTrustyUri(newNp.getUri().stringValue())) {</span>
+<span class="nc" id="L334">            return FixTrustyNanopub.fix(linkAdder.getNanopub());</span>
+        } else {
+<span class="nc" id="L336">            return linkAdder.getNanopub();</span>
+        }
+    }
+
+
+    private class SupersedesLinkAdder extends NanopubRdfHandler {
+
+        private IRI oldUri;
+        private Nanopub newNp;
+
+<span class="nc" id="L346">        public SupersedesLinkAdder(IRI oldUri, Nanopub newNp) {</span>
+<span class="nc" id="L347">            this.oldUri = oldUri;</span>
+<span class="nc" id="L348">            this.newNp = newNp;</span>
+<span class="nc" id="L349">        }</span>
+
+        @Override
+        public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="nc bnc" id="L353" title="All 4 branches missed.">            if (st.getSubject().equals(newNp.getUri()) &amp;&amp; st.getPredicate().equals(NPX.SUPERSEDES)) {</span>
+                // remove existing supersedes-triple
+<span class="nc" id="L355">                return;</span>
+            }
+<span class="nc" id="L357">            super.handleStatement(st);</span>
+<span class="nc" id="L358">        }</span>
+
+        @Override
+        public void endRDF() throws RDFHandlerException {
+<span class="nc" id="L362">            super.handleStatement(SimpleValueFactory.getInstance().createStatement(</span>
+<span class="nc" id="L363">                    newNp.getUri(), NPX.SUPERSEDES, oldUri, newNp.getPubinfoUri()));</span>
+<span class="nc" id="L364">            super.endRDF();</span>
+<span class="nc" id="L365">        }</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

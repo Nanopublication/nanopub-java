@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Create.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Create.java</span></div><h1>Create.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line tool to create a new nanopublication with a placeholder assertion.
+ */
+<span class="nc" id="L24">public class Create extends CliRunner {</span>
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--format&quot;, description = &quot;Format of the output nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String format;
+
+    /**
+     * Main method to run the Create command-line tool.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L39">            Create obj = CliRunner.initJc(new Create(), args);</span>
+<span class="nc" id="L40">            obj.run();</span>
+<span class="nc" id="L41">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L42">            System.exit(1);</span>
+<span class="nc" id="L43">        } catch (Exception ex) {</span>
+<span class="nc" id="L44">            ex.printStackTrace();</span>
+<span class="nc" id="L45">            System.exit(1);</span>
+<span class="nc" id="L46">        }</span>
+<span class="nc" id="L47">    }</span>
+
+    private RDFFormat rdfOutFormat;
+<span class="nc" id="L50">    private OutputStream outputStream = System.out;</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (outputFile == null) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (format == null) {</span>
+<span class="nc" id="L57">                format = &quot;trig&quot;;</span>
+            }
+<span class="nc" id="L59">            rdfOutFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + format).orElse(null);</span>
+        } else {
+<span class="nc" id="L61">            rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L63">                outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+            } else {
+<span class="nc" id="L65">                outputStream = new FileOutputStream(outputFile);</span>
+            }
+        }
+
+<span class="nc" id="L69">        IRI nanopubIri = NanopubUtils.createTempNanopubIri();</span>
+<span class="nc" id="L70">        IRI creatorIri = vf.createIRI(nanopubIri.stringValue() + &quot;creator&quot;);</span>
+<span class="nc" id="L71">        NanopubCreator npCreator = new NanopubCreator(nanopubIri);</span>
+<span class="nc" id="L72">        npCreator.addAssertionStatement(npCreator.getAssertionUri(), RDFS.COMMENT, vf.createLiteral(&quot;Replace this with your assertion content.&quot;));</span>
+<span class="nc" id="L73">        npCreator.addProvenanceStatement(PROV.HAD_PRIMARY_SOURCE, creatorIri);</span>
+<span class="nc" id="L74">        npCreator.addTimestampNow();</span>
+<span class="nc" id="L75">        npCreator.addCreator(creatorIri);</span>
+<span class="nc" id="L76">        Nanopub np = npCreator.finalizeNanopub();</span>
+<span class="nc" id="L77">        NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);</span>
+
+<span class="nc" id="L79">        outputStream.flush();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (outputStream != System.out) {</span>
+<span class="nc" id="L81">            outputStream.close();</span>
+        }
+<span class="nc" id="L83">    }</span>
+
+<span class="nc" id="L85">    private static SimpleValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

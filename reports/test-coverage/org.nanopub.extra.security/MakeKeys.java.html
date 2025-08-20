@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakeKeys.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.security</a> &gt; <span class="el_source">MakeKeys.java</span></div><h1>MakeKeys.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.security;
+
+import com.beust.jcommander.ParameterException;
+import jakarta.xml.bind.DatatypeConverter;
+import org.nanopub.CliRunner;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
+
+/**
+ * Command line tool to create RSA or DSA key files for signing nanopublications.
+ */
+<span class="fc" id="L19">public class MakeKeys extends CliRunner {</span>
+
+    /**
+     * Default path and file name prefix for key files.
+     */
+    public static final String DEFAULT_KEYFILE_PREFIX = &quot;~/.nanopub/id&quot;;
+
+<span class="fc" id="L26">    @com.beust.jcommander.Parameter(names = &quot;-f&quot;, description = &quot;Path and file name prefix of key files&quot;)</span>
+    private String pathAndFilenamePrefix = DEFAULT_KEYFILE_PREFIX;
+
+<span class="fc" id="L29">    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Signature algorithm: either RSA or DSA, default is RSA&quot;)</span>
+    private SignatureAlgorithm algorithm = SignatureAlgorithm.RSA;
+
+    /**
+     * Main method to run the MakeKeys command line tool.
+     *
+     * @param args Command line arguments
+     * @throws java.io.IOException If an I/O error occurs while creating key files
+     */
+    public static void main(String[] args) throws IOException {
+        try {
+<span class="nc" id="L40">            MakeKeys obj = CliRunner.initJc(new MakeKeys(), args);</span>
+<span class="nc" id="L41">            obj.run();</span>
+<span class="nc" id="L42">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L43">            System.exit(1);</span>
+<span class="nc" id="L44">        } catch (Exception ex) {</span>
+<span class="nc" id="L45">            ex.printStackTrace();</span>
+<span class="nc" id="L46">            System.exit(1);</span>
+<span class="nc" id="L47">        }</span>
+<span class="nc" id="L48">    }</span>
+
+    private void run() throws IOException {
+<span class="nc" id="L51">        make(pathAndFilenamePrefix, algorithm);</span>
+<span class="nc" id="L52">        System.out.println(&quot;Created &quot; + algorithm + &quot; key files at: &quot; + pathAndFilenamePrefix);</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Creates RSA or DSA key files at the specified path and filename prefix.
+     *
+     * @param pathAndFilenamePrefix The path and filename prefix for the key files
+     * @param algorithm             The signature algorithm to use (RSA or DSA)
+     * @throws java.io.IOException If an I/O error occurs while creating key files
+     */
+    public static void make(String pathAndFilenamePrefix, SignatureAlgorithm algorithm) throws IOException {
+
+        // Preparation:
+<span class="fc" id="L65">        String pathAndFilename = SignatureUtils.getFullFilePath(pathAndFilenamePrefix) + &quot;_&quot; + algorithm.name().toLowerCase();</span>
+<span class="fc" id="L66">        File publicKeyFile = new File(pathAndFilename + &quot;.pub&quot;);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (publicKeyFile.exists()) {</span>
+<span class="fc" id="L68">            throw new FileAlreadyExistsException(&quot;Key file already exists: &quot; + publicKeyFile);</span>
+        }
+<span class="fc" id="L70">        File privateKeyFile = new File(pathAndFilename);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (privateKeyFile.exists()) {</span>
+<span class="fc" id="L72">            throw new FileAlreadyExistsException(&quot;Key file already exists: &quot; + privateKeyFile);</span>
+        }
+<span class="fc" id="L74">        File parentDir = privateKeyFile.getParentFile();</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (parentDir != null) parentDir.mkdir();</span>
+<span class="fc" id="L76">        publicKeyFile.createNewFile();</span>
+<span class="fc" id="L77">        publicKeyFile.setReadable(true, false);</span>
+<span class="fc" id="L78">        publicKeyFile.setWritable(false, false);</span>
+<span class="fc" id="L79">        publicKeyFile.setWritable(true, true);</span>
+<span class="fc" id="L80">        privateKeyFile.createNewFile();</span>
+<span class="fc" id="L81">        privateKeyFile.setReadable(false, false);</span>
+<span class="fc" id="L82">        privateKeyFile.setReadable(true, true);</span>
+<span class="fc" id="L83">        privateKeyFile.setWritable(false, false);</span>
+<span class="fc" id="L84">        privateKeyFile.setWritable(true, true);</span>
+
+        // Creating and writing keys
+        KeyPairGenerator keyPairGenerator;
+        SecureRandom random;
+        try {
+<span class="fc" id="L90">            keyPairGenerator = KeyPairGenerator.getInstance(algorithm.name());</span>
+<span class="fc" id="L91">            random = SecureRandom.getInstance(&quot;SHA1PRNG&quot;);</span>
+<span class="nc" id="L92">        } catch (GeneralSecurityException ex) {</span>
+<span class="nc" id="L93">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc" id="L95">        keyPairGenerator.initialize(2048, random);</span>
+<span class="fc" id="L96">        KeyPair keyPair = keyPairGenerator.genKeyPair();</span>
+
+<span class="fc" id="L98">        try (FileOutputStream outPublic = new FileOutputStream(publicKeyFile)) {</span>
+<span class="fc" id="L99">            outPublic.write(DatatypeConverter.printBase64Binary(keyPair.getPublic().getEncoded()).getBytes());</span>
+        }
+<span class="fc" id="L101">        try (FileOutputStream outPrivate = new FileOutputStream(privateKeyFile)) {</span>
+<span class="fc" id="L102">            outPrivate.write(DatatypeConverter.printBase64Binary(keyPair.getPrivate().getEncoded()).getBytes());</span>
+        }
+<span class="fc" id="L104">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

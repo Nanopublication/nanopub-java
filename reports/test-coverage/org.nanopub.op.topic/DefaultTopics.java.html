@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultTopics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op.topic</a> &gt; <span class="el_source">DefaultTopics.java</span></div><h1>DefaultTopics.java</h1><pre class="source lang-java linenums">package org.nanopub.op.topic;
+
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.nanopub.Nanopub;
+import org.nanopub.op.Topic.TopicHandler;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Default topic handler.
+ */
+public class DefaultTopics implements TopicHandler {
+
+<span class="fc" id="L16">    private Map&lt;String, Boolean&gt; ignore = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Create a new DefaultTopics instance.
+     * This constructor allows specifying a list of property URIs to ignore when determining the topic.
+     *
+     * @param ignoreProperties A pipe-separated list of property URIs to ignore when determining the topic.
+     */
+<span class="fc" id="L24">    public DefaultTopics(String ignoreProperties) {</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (ignoreProperties != null) {</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">            for (String s : ignoreProperties.trim().split(&quot;\\|&quot;)) {</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">                if (!s.isEmpty()) ignore.put(s, true);</span>
+            }
+        }
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Get the topic of a nanopublication.
+     * This method analyzes the assertions in the nanopublication and determines the topic based on the most frequently occurring subject.
+     */
+    @Override
+    public String getTopic(Nanopub np) {
+<span class="fc" id="L40">        Map&lt;Resource, Integer&gt; resourceCount = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc" id="L42">            Resource subj = st.getSubject();</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if (subj.equals(np.getUri())) continue;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            if (ignore.containsKey(st.getPredicate().stringValue())) continue;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            if (!resourceCount.containsKey(subj)) resourceCount.put(subj, 0);</span>
+<span class="fc" id="L46">            resourceCount.put(subj, resourceCount.get(subj) + 1);</span>
+<span class="fc" id="L47">        }</span>
+<span class="fc" id="L48">        int max = 0;</span>
+<span class="fc" id="L49">        Resource topic = null;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (Resource r : resourceCount.keySet()) {</span>
+<span class="fc" id="L51">            int c = resourceCount.get(r);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (c &gt; max) {</span>
+<span class="fc" id="L53">                topic = r;</span>
+<span class="fc" id="L54">                max = c;</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            } else if (c == max) {</span>
+<span class="fc" id="L56">                topic = null;</span>
+            }
+<span class="fc" id="L58">        }</span>
+        // TODO return null instead of &quot;null&quot; string?
+<span class="fc" id="L60">        return String.valueOf(topic);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndexReuse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">IndexReuse.java</span></div><h1>IndexReuse.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
+import org.nanopub.extra.index.NanopubIndexCreator;
+import org.nanopub.extra.index.SimpleIndexCreator;
+import org.nanopub.trusty.TempUriReplacer;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to reuse existing index nanopublications.
+ */
+<span class="nc" id="L29">public class IndexReuse extends CliRunner {</span>
+
+<span class="nc" id="L31">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-cache&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubCache = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-x&quot;, description = &quot;Index nanopubs to be reused (need to be sorted; no subindex supported)&quot;)
+    private File reuseIndexFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file of new index nanopublications&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Output file of all index nanopublications&quot;)
+    private File allOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Append line to this table file&quot;)
+    private File tableFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--reuse-format&quot;, description = &quot;Format of the nanopubs to be reused: trig, nq, trix, trig.gz, ...&quot;)
+    private String reuseFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--out-format&quot;, description = &quot;Format of the output nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String outFormat;
+
+<span class="nc" id="L52">    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Add npx:supersedes backlinks for changed nanopublications&quot;)</span>
+    private boolean addSupersedesBacklinks = false;
+
+<span class="nc" id="L55">    @com.beust.jcommander.Parameter(names = &quot;-U&quot;, description = &quot;Base URI for index nanopubs&quot;)</span>
+    private String baseUri = TempUriReplacer.tempUri + &quot;index/&quot;;
+
+    @com.beust.jcommander.Parameter(names = &quot;-T&quot;, description = &quot;Title of index&quot;)
+    private String iTitle;
+
+    @com.beust.jcommander.Parameter(names = &quot;-D&quot;, description = &quot;Description of index&quot;)
+    private String iDesc;
+
+<span class="nc" id="L64">    @com.beust.jcommander.Parameter(names = &quot;-C&quot;, description = &quot;Creator of index&quot;)</span>
+    private List&lt;String&gt; iCreators = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L67">    @com.beust.jcommander.Parameter(names = &quot;-A&quot;, description = &quot;'See also' resources&quot;)</span>
+    private List&lt;String&gt; seeAlso = new ArrayList&lt;&gt;();
+
+    /**
+     * Main method to run the IndexReuse command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L77">            IndexReuse obj = CliRunner.initJc(new IndexReuse(), args);</span>
+<span class="nc" id="L78">            obj.run();</span>
+<span class="nc" id="L79">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L80">            System.exit(1);</span>
+<span class="nc" id="L81">        } catch (Exception ex) {</span>
+<span class="nc" id="L82">            ex.printStackTrace();</span>
+<span class="nc" id="L83">            System.exit(1);</span>
+<span class="nc" id="L84">        }</span>
+<span class="nc" id="L85">    }</span>
+
+<span class="nc" id="L87">    private IRI previousIndexUri = null;</span>
+    private NanopubIndex lastIndexNp;
+    private RDFFormat rdfReuseFormat, rdfOutFormat;
+<span class="nc" id="L90">    private PrintStream outputStream = System.out;</span>
+    private PrintStream allOutputStream;
+<span class="nc" id="L92">    private List&lt;String&gt; contentNanopubList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L93">    private Map&lt;String, Boolean&gt; contentNanopubMap = new HashMap&lt;&gt;();</span>
+    private int reuseCount;
+<span class="nc" id="L95">    private boolean reuseStopped = false;</span>
+<span class="nc" id="L96">    private NanopubIndexCreator indexCreator = null;</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
+
+<span class="nc" id="L100">        reuseCount = 0;</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        for (File inputFile : inputNanopubCache) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (outputFile == null) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                if (outFormat == null) {</span>
+<span class="nc" id="L105">                    outFormat = &quot;trig&quot;;</span>
+                }
+<span class="nc" id="L107">                rdfOutFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + outFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L109">                rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L111">                    outputStream = new PrintStream(new GZIPOutputStream(new FileOutputStream(outputFile)));</span>
+                } else {
+<span class="nc" id="L113">                    outputStream = new PrintStream(new FileOutputStream(outputFile));</span>
+                }
+            }
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (allOutputFile != null) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                if (allOutputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L118">                    allOutputStream = new PrintStream(new GZIPOutputStream(new FileOutputStream(allOutputFile)));</span>
+                } else {
+<span class="nc" id="L120">                    allOutputStream = new PrintStream(new FileOutputStream(allOutputFile));</span>
+                }
+            }
+
+<span class="nc" id="L124">            BufferedReader br = null;</span>
+            try {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                if (inputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L127">                    br = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(inputFile))));</span>
+                } else {
+<span class="nc" id="L129">                    br = new BufferedReader(new FileReader(inputFile));</span>
+                }
+                String line;
+<span class="nc bnc" id="L132" title="All 2 branches missed.">                while ((line = br.readLine()) != null) {</span>
+<span class="nc" id="L133">                    line = line.trim();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                    if (line.isEmpty()) continue;</span>
+<span class="nc" id="L135">                    String[] columns = line.split(&quot; &quot;);</span>
+<span class="nc" id="L136">                    String uri = columns[0];</span>
+<span class="nc" id="L137">                    contentNanopubList.add(uri);</span>
+<span class="nc" id="L138">                    contentNanopubMap.put(uri, true);</span>
+<span class="nc" id="L139">                }</span>
+            } finally {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">                if (br != null) br.close();</span>
+            }
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (reuseIndexFile != null) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if (reuseFormat != null) {</span>
+<span class="nc" id="L146">                    rdfReuseFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + reuseFormat).orElse(null);</span>
+                } else {
+<span class="nc" id="L148">                    rdfReuseFormat = Rio.getParserFormatForFileName(reuseIndexFile.toString()).orElse(null);</span>
+                }
+<span class="nc" id="L150">                MultiNanopubRdfHandler.process(rdfReuseFormat, reuseIndexFile, np -&gt; {</span>
+                    try {
+<span class="nc" id="L152">                        processIndexNanopub(np);</span>
+<span class="nc" id="L153">                    } catch (IOException | MalformedNanopubException | RDFHandlerException ex) {</span>
+<span class="nc" id="L154">                        throw new RuntimeException(ex);</span>
+<span class="nc" id="L155">                    }</span>
+<span class="nc" id="L156">                });</span>
+            }
+
+<span class="nc bnc" id="L159" title="All 4 branches missed.">            if (lastIndexNp != null &amp;&amp; lastIndexNp.isIncomplete()) {</span>
+<span class="nc" id="L160">                throw new RuntimeException(&quot;Last index nanopub in file is not a complete index&quot;);</span>
+            }
+<span class="nc" id="L162">            indexCreator = new IndexCreator(previousIndexUri);</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">            if (lastIndexNp != null &amp;&amp; addSupersedesBacklinks) {</span>
+<span class="nc" id="L164">                indexCreator.setSupersededIndex(lastIndexNp);</span>
+            }
+
+<span class="nc bnc" id="L167" title="All 2 branches missed.">            for (String npUri : contentNanopubList) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                if (!contentNanopubMap.containsKey(npUri)) continue;</span>
+<span class="nc" id="L169">                indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(npUri));</span>
+<span class="nc" id="L170">            }</span>
+<span class="nc" id="L171">            indexCreator.finalizeNanopub();</span>
+
+<span class="nc" id="L173">            outputStream.flush();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L175">                outputStream.close();</span>
+            }
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L178">                allOutputStream.flush();</span>
+<span class="nc" id="L179">                allOutputStream.close();</span>
+            }
+
+<span class="nc" id="L182">            System.err.println(&quot;Index reuse count: &quot; + reuseCount);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            if (tableFile != null) {</span>
+<span class="nc" id="L184">                PrintStream st = new PrintStream(new FileOutputStream(tableFile, true));</span>
+<span class="nc" id="L185">                st.println(inputFile.getName() + &quot;,&quot; + reuseCount);</span>
+<span class="nc" id="L186">                st.close();</span>
+            }
+<span class="nc" id="L188">        }</span>
+<span class="nc" id="L189">    }</span>
+
+    private void processIndexNanopub(Nanopub np) throws IOException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L192">        NanopubIndex npi = IndexUtils.castToIndex(np);</span>
+<span class="nc" id="L193">        lastIndexNp = npi;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (reuseStopped) {</span>
+<span class="nc" id="L195">            return;</span>
+        }
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (!npi.getSubIndexes().isEmpty()) {</span>
+<span class="nc" id="L198">            throw new RuntimeException(&quot;Subindexes are not supported&quot;);</span>
+        }
+<span class="nc bnc" id="L200" title="All 4 branches missed.">        if (previousIndexUri == null &amp;&amp; npi.getAppendedIndex() != null) {</span>
+<span class="nc" id="L201">            throw new RuntimeException(&quot;Starting index nanopub expected first in file&quot;);</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">        } else if (previousIndexUri != null &amp;&amp; npi.getAppendedIndex() == null) {</span>
+<span class="nc" id="L203">            throw new RuntimeException(&quot;Non-appending index nanopub found after first position&quot;);</span>
+        }
+<span class="nc" id="L205">        boolean canBeReused = true;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        for (IRI c : npi.getElements()) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (!contentNanopubMap.containsKey(c.stringValue())) {</span>
+<span class="nc" id="L208">                canBeReused = false;</span>
+<span class="nc" id="L209">                break;</span>
+            }
+<span class="nc" id="L211">        }</span>
+<span class="nc bnc" id="L212" title="All 4 branches missed.">        if (canBeReused &amp;&amp; !npi.getElements().isEmpty()) {</span>
+<span class="nc" id="L213">            reuseCount++;</span>
+<span class="nc" id="L214">            outputOld(npi);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            for (IRI c : npi.getElements()) {</span>
+<span class="nc" id="L216">                contentNanopubMap.remove(c.stringValue());</span>
+<span class="nc" id="L217">            }</span>
+<span class="nc" id="L218">            previousIndexUri = npi.getUri();</span>
+        } else {
+<span class="nc" id="L220">            reuseStopped = true;</span>
+        }
+<span class="nc" id="L222">    }</span>
+
+    private void output(NanopubIndex npi) {
+        try {
+<span class="nc" id="L226">            outputStream.print(NanopubUtils.writeToString(npi, rdfOutFormat) + &quot;\n\n&quot;);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L228">                allOutputStream.print(NanopubUtils.writeToString(npi, rdfOutFormat) + &quot;\n\n&quot;);</span>
+            }
+<span class="nc" id="L230">        } catch (Exception ex) {</span>
+<span class="nc" id="L231">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L232">        }</span>
+<span class="nc" id="L233">    }</span>
+
+    private void outputOld(NanopubIndex npi) {
+        try {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">            if (allOutputStream != null) {</span>
+<span class="nc" id="L238">                allOutputStream.print(NanopubUtils.writeToString(npi, rdfOutFormat) + &quot;\n\n&quot;);</span>
+            }
+<span class="nc" id="L240">        } catch (Exception ex) {</span>
+<span class="nc" id="L241">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L242">        }</span>
+<span class="nc" id="L243">    }</span>
+
+
+    private class IndexCreator extends SimpleIndexCreator {
+
+<span class="nc" id="L248">        public IndexCreator(IRI previousIndexUri) {</span>
+<span class="nc" id="L249">            super(previousIndexUri, true);</span>
+
+<span class="nc" id="L251">            setBaseUri(baseUri);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (iTitle != null) {</span>
+<span class="nc" id="L253">                setTitle(iTitle);</span>
+            }
+<span class="nc bnc" id="L255" title="All 2 branches missed.">            if (iDesc != null) {</span>
+<span class="nc" id="L256">                setDescription(iDesc);</span>
+            }
+<span class="nc bnc" id="L258" title="All 2 branches missed.">            for (String creator : iCreators) {</span>
+<span class="nc" id="L259">                addCreator(creator);</span>
+<span class="nc" id="L260">            }</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">            for (String sa : seeAlso) {</span>
+<span class="nc" id="L262">                addSeeAlsoUri(SimpleValueFactory.getInstance().createIRI(sa));</span>
+<span class="nc" id="L263">            }</span>
+<span class="nc" id="L264">        }</span>
+
+        @Override
+        public void handleIncompleteIndex(NanopubIndex npi) {
+<span class="nc" id="L268">            output(npi);</span>
+<span class="nc" id="L269">        }</span>
+
+        @Override
+        public void handleCompleteIndex(NanopubIndex npi) {
+<span class="nc" id="L273">            System.out.println(&quot;Index URI: &quot; + npi.getUri());</span>
+<span class="nc" id="L274">            output(npi);</span>
+<span class="nc" id="L275">        }</span>
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

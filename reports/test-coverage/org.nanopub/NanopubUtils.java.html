@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">NanopubUtils.java</span></div><h1>NanopubUtils.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import net.trustyuri.TrustyUriUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.*;
+import org.eclipse.rdf4j.rio.*;
+import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.PAV;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+/**
+ * Utility class for working with Nanopubs.
+ *
+ * @author Tobias Kuhn
+ */
+public class NanopubUtils {
+
+<span class="fc" id="L32">    private static final List&lt;Pair&lt;String, String&gt;&gt; defaultNamespaces = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L33">    private static final Random random = new Random();</span>
+<span class="fc" id="L34">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+    private static CloseableHttpClient httpClient;
+
+    /**
+     * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
+     */
+<span class="fc" id="L40">    public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);</span>
+
+    private NanopubUtils() {
+    }  // no instances allowed
+
+    static {
+<span class="fc" id="L46">        defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));</span>
+<span class="fc" id="L47">        defaultNamespaces.add(Pair.of(RDFS.PREFIX, RDFS.NAMESPACE));</span>
+<span class="fc" id="L48">        defaultNamespaces.add(Pair.of(&quot;rdfg&quot;, &quot;http://www.w3.org/2004/03/trix/rdfg-1/&quot;));</span>
+<span class="fc" id="L49">        defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));</span>
+<span class="fc" id="L50">        defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));</span>
+<span class="fc" id="L51">        defaultNamespaces.add(Pair.of(&quot;dct&quot;, DCTERMS.NAMESPACE));</span>
+<span class="fc" id="L52">        defaultNamespaces.add(Pair.of(&quot;dce&quot;, DC.NAMESPACE));</span>
+<span class="fc" id="L53">        defaultNamespaces.add(Pair.of(PAV.PREFIX, PAV.NAMESPACE));</span>
+<span class="fc" id="L54">        defaultNamespaces.add(Pair.of(PROV.PREFIX, PROV.NAMESPACE));</span>
+<span class="fc" id="L55">        defaultNamespaces.add(Pair.of(NP.PREFIX, NP.NAMESPACE));</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Returns the default namespaces used in Nanopubs.
+     *
+     * @return a list of pairs containing namespace prefixes and URIs
+     */
+    public static List&lt;Pair&lt;String, String&gt;&gt; getDefaultNamespaces() {
+<span class="fc" id="L64">        return defaultNamespaces;</span>
+    }
+
+    /**
+     * Returns a sorted list of all statements in the given Nanopub.
+     * The order is: head, assertion, provenance, pubinfo.
+     *
+     * @param nanopub the Nanopub to get the statements from
+     * @return a sorted list of statements
+     */
+    public static List&lt;Statement&gt; getStatements(Nanopub nanopub) {
+<span class="fc" id="L75">        List&lt;Statement&gt; s = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L76">        s.addAll(getSortedList(nanopub.getHead()));</span>
+<span class="fc" id="L77">        s.addAll(getSortedList(nanopub.getAssertion()));</span>
+<span class="fc" id="L78">        s.addAll(getSortedList(nanopub.getProvenance()));</span>
+<span class="fc" id="L79">        s.addAll(getSortedList(nanopub.getPubinfo()));</span>
+<span class="fc" id="L80">        return s;</span>
+    }
+
+    private static List&lt;Statement&gt; getSortedList(Set&lt;Statement&gt; s) {
+<span class="fc" id="L84">        List&lt;Statement&gt; l = new ArrayList&lt;&gt;(s);</span>
+<span class="fc" id="L85">        l.sort((st1, st2) -&gt; {</span>
+            // TODO better sorting
+            // it works fine for now, since AbstractStatement has a valid toString()
+            // implementation, which does not consist of any runtime object references
+<span class="fc" id="L89">            return st1.toString().compareTo(st2.toString());</span>
+        });
+<span class="fc" id="L91">        return l;</span>
+    }
+
+    /**
+     * Writes the given Nanopub to the specified output stream in the given RDF format.
+     *
+     * @param nanopub the Nanopub to write
+     * @param out     the output stream to write to
+     * @param format  the RDF format to use
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
+     */
+    public static void writeToStream(Nanopub nanopub, OutputStream out, RDFFormat format) throws RDFHandlerException {
+<span class="fc" id="L103">        writeNanopub(nanopub, format, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="fc" id="L104">    }</span>
+
+    /**
+     * Writes the given Nanopub to a string in the specified RDF format.
+     *
+     * @param nanopub the Nanopub to write
+     * @param format  the RDF format to use
+     * @return a string representation of the Nanopub in the specified format
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while writing
+     * @throws java.io.IOException                       if an I/O error occurs
+     */
+    public static String writeToString(Nanopub nanopub, RDFFormat format) throws RDFHandlerException, IOException {
+<span class="fc" id="L116">        try (StringWriter sw = new StringWriter()) {</span>
+<span class="fc" id="L117">            writeNanopub(nanopub, format, sw);</span>
+<span class="fc" id="L118">            return sw.toString();</span>
+        }
+    }
+
+    private static void writeNanopub(Nanopub nanopub, RDFFormat format, Writer writer) throws RDFHandlerException {
+        try {
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (format.equals(TrustyNanopubUtils.STNP_FORMAT)) {</span>
+<span class="nc" id="L125">                writer.write(TrustyNanopubUtils.getTrustyDigestString(nanopub));</span>
+<span class="nc" id="L126">                writer.flush();</span>
+            } else {
+<span class="fc" id="L128">                RDFWriter rdfWriter = Rio.createWriter(format, writer);</span>
+<span class="fc" id="L129">                propagateToHandler(nanopub, rdfWriter);</span>
+            }
+<span class="nc" id="L131">        } catch (IOException ex) {</span>
+<span class="nc" id="L132">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L133">        }</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * Propagates the Nanopub to the given RDFHandler, starting with the RDF header and namespaces.
+     *
+     * @param nanopub the Nanopub to propagate
+     * @param handler the RDFHandler to propagate to
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF
+     */
+    public static void propagateToHandler(Nanopub nanopub, RDFHandler handler) throws RDFHandlerException {
+<span class="fc" id="L144">        handler.startRDF();</span>
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">        if (nanopub instanceof NanopubWithNs np &amp;&amp; !np.getNsPrefixes().isEmpty()) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            for (String p : np.getNsPrefixes()) {</span>
+<span class="fc" id="L147">                handler.handleNamespace(p, np.getNamespace(p));</span>
+<span class="fc" id="L148">            }</span>
+        } else {
+<span class="fc" id="L150">            handler.handleNamespace(&quot;this&quot;, nanopub.getUri().toString());</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (Pair&lt;String, String&gt; p : defaultNamespaces) {</span>
+<span class="fc" id="L152">                handler.handleNamespace(p.getLeft(), p.getRight());</span>
+<span class="fc" id="L153">            }</span>
+        }
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        for (Statement st : getStatements(nanopub)) {</span>
+<span class="fc" id="L156">            handler.handleStatement(st);</span>
+<span class="fc" id="L157">        }</span>
+<span class="fc" id="L158">        handler.endRDF();</span>
+<span class="fc" id="L159">    }</span>
+
+    /**
+     * Creates an RDFParser for the specified RDF format.
+     *
+     * @param format the RDF format to create a parser for
+     * @return an RDFParser configured for the specified format
+     */
+    public static RDFParser getParser(RDFFormat format) {
+<span class="fc" id="L168">        RDFParser p = Rio.createParser(format);</span>
+<span class="fc" id="L169">        p.getParserConfig().set(BasicParserSettings.NAMESPACES, new HashSet&lt;&gt;());</span>
+<span class="fc" id="L170">        return p;</span>
+    }
+
+    /**
+     * Returns a set of prefixes used in the Nanopub's namespaces.
+     *
+     * @param np the Nanopub to analyze
+     * @return a set of namespace prefixes
+     */
+    public static Set&lt;String&gt; getUsedPrefixes(NanopubWithNs np) {
+<span class="fc" id="L180">        Set&lt;String&gt; usedPrefixes = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L181">        CustomTrigWriter writer = new CustomTrigWriter(usedPrefixes);</span>
+        try {
+<span class="fc" id="L183">            NanopubUtils.propagateToHandler(np, writer);</span>
+<span class="nc" id="L184">        } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L185">            ex.printStackTrace();</span>
+<span class="nc" id="L186">            return usedPrefixes;</span>
+<span class="fc" id="L187">        }</span>
+<span class="fc" id="L188">        return usedPrefixes;</span>
+    }
+
+    /**
+     * Returns a label for the Nanopub, which is derived from its assertion and pubinfo.
+     * The label is constructed from RDFS labels and DCTERMS titles.
+     *
+     * @param np the Nanopub to get the label for
+     * @return a string label for the Nanopub, or null if no label can be found
+     */
+    public static String getLabel(Nanopub np) {
+<span class="fc" id="L199">        final String separator = &quot; &quot;;</span>
+<span class="fc" id="L200">        String npLabel = &quot;&quot;, npTitle = &quot;&quot;, aLabel = &quot;&quot;, aTitle = &quot;&quot;, introLabel = &quot;&quot;;</span>
+<span class="fc" id="L201">        final IRI npId = np.getUri();</span>
+<span class="fc" id="L202">        final IRI aId = np.getAssertionUri();</span>
+<span class="fc" id="L203">        final Map&lt;IRI, Boolean&gt; introMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        for (Statement st : np.getPubinfo()) {</span>
+<span class="fc" id="L205">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L206">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L207">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L208" title="2 of 6 branches missed.">            if (subj.equals(npId) &amp;&amp; pred.equals(RDFS.LABEL) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L209">                npLabel += separator + obj.stringValue();</span>
+            }
+<span class="pc bpc" id="L211" title="2 of 8 branches missed.">            if (subj.equals(npId) &amp;&amp; (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L212">                npTitle += separator + obj.stringValue();</span>
+            }
+<span class="pc bpc" id="L214" title="4 of 10 branches missed.">            if (subj.equals(npId) &amp;&amp; (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) &amp;&amp; obj instanceof IRI) {</span>
+<span class="fc" id="L215">                introMap.put((IRI) obj, true);</span>
+            }
+<span class="fc" id="L217">        }</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        for (Statement st : np.getProvenance()) {</span>
+<span class="fc" id="L219">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L220">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L221">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L222" title="2 of 6 branches missed.">            if (subj.equals(aId) &amp;&amp; pred.equals(RDFS.LABEL) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L223">                aLabel += separator + obj.stringValue();</span>
+            }
+<span class="pc bpc" id="L225" title="2 of 6 branches missed.">            if (subj.equals(aId) &amp;&amp; pred.equals(DCTERMS.TITLE) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L226">                aTitle += separator + obj.stringValue();</span>
+            }
+<span class="fc" id="L228">        }</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc" id="L230">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L231">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L232">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L233" title="1 of 6 branches missed.">            if (subj.equals(aId) &amp;&amp; pred.equals(RDFS.LABEL) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L234">                aLabel += separator + obj.stringValue();</span>
+            }
+<span class="pc bpc" id="L236" title="1 of 8 branches missed.">            if (subj.equals(aId) &amp;&amp; (pred.equals(DCTERMS.TITLE) || pred.equals(DC.TITLE)) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L237">                aTitle += separator + obj.stringValue();</span>
+            }
+<span class="pc bpc" id="L239" title="2 of 6 branches missed.">            if (introMap.containsKey(subj) &amp;&amp; pred.equals(RDFS.LABEL) &amp;&amp; obj instanceof Literal) {</span>
+<span class="fc" id="L240">                introLabel += separator + obj.stringValue();</span>
+            }
+<span class="fc" id="L242">        }</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        if (!npLabel.isEmpty()) return npLabel.substring(1);</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (!npTitle.isEmpty()) return npTitle.substring(1);</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (!aLabel.isEmpty()) return aLabel.substring(1);</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (!aTitle.isEmpty()) return aTitle.substring(1);</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        if (!introLabel.isEmpty()) return introLabel.substring(1);</span>
+<span class="fc" id="L248">        return null;</span>
+    }
+
+    /**
+     * Returns a description for the Nanopub, which is derived from its assertion, pubinfo, and introduction.
+     * The description is constructed from DCTERMS descriptions, RDFS comments, and SKOS definitions.
+     *
+     * @param np the Nanopub to get the description for
+     * @return a string description for the Nanopub, or null if no description can be found
+     */
+    public static String getDescription(Nanopub np) {
+<span class="fc" id="L259">        String npDesc = &quot;&quot;, npComment = &quot;&quot;, npDef = &quot;&quot;, aDesc = &quot;&quot;, aComment = &quot;&quot;, aDef = &quot;&quot;, iDesc = &quot;&quot;, iComment = &quot;&quot;, iDef = &quot;&quot;;</span>
+<span class="fc" id="L260">        final IRI npId = np.getUri();</span>
+<span class="fc" id="L261">        final IRI aId = np.getAssertionUri();</span>
+<span class="fc" id="L262">        final Map&lt;IRI, Boolean&gt; introMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        for (Statement st : np.getPubinfo()) {</span>
+<span class="fc" id="L264">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L265">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L266">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">            if (!subj.equals(npId)) continue;</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">            if (obj instanceof Literal) {</span>
+<span class="nc bnc" id="L269" title="All 4 branches missed.">                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {</span>
+<span class="nc" id="L270">                    npDesc += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">                } else if (pred.equals(RDFS.COMMENT)) {</span>
+<span class="nc" id="L272">                    npComment += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">                } else if (pred.equals(SKOS.DEFINITION)) {</span>
+<span class="nc" id="L274">                    npDef += &quot;\n&quot; + obj.stringValue();</span>
+                }
+            } else {
+<span class="pc bpc" id="L277" title="3 of 6 branches missed.">                if (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) {</span>
+<span class="nc" id="L278">                    introMap.put((IRI) obj, true);</span>
+                }
+            }
+<span class="fc" id="L281">        }</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        for (Statement st : np.getProvenance()) {</span>
+<span class="fc" id="L283">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L284">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L285">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">            if (!(obj instanceof Literal)) continue;</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">            if (!subj.equals(aId)) continue;</span>
+<span class="nc bnc" id="L288" title="All 4 branches missed.">            if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {</span>
+<span class="nc" id="L289">                aDesc += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">            } else if (pred.equals(RDFS.COMMENT)) {</span>
+<span class="nc" id="L291">                aComment += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            } else if (pred.equals(SKOS.DEFINITION)) {</span>
+<span class="nc" id="L293">                aDef += &quot;\n&quot; + obj.stringValue();</span>
+            }
+<span class="nc" id="L295">        }</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc" id="L297">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L298">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L299">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">            if (!(obj instanceof Literal)) continue;</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">            if (subj.equals(aId)) {</span>
+<span class="pc bpc" id="L302" title="3 of 4 branches missed.">                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {</span>
+<span class="fc" id="L303">                    aDesc += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">                } else if (pred.equals(RDFS.COMMENT)) {</span>
+<span class="nc" id="L305">                    aComment += &quot;\n&quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">                } else if (pred.equals(SKOS.DEFINITION)) {</span>
+<span class="nc" id="L307">                    aDef += &quot;\n&quot; + obj.stringValue();</span>
+                }
+            }
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">            if (introMap.containsKey(subj)) {</span>
+<span class="nc bnc" id="L311" title="All 4 branches missed.">                if (pred.equals(DCTERMS.DESCRIPTION) || pred.equals(DC.DESCRIPTION)) {</span>
+<span class="nc" id="L312">                    iDesc += &quot; &quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">                } else if (pred.equals(RDFS.COMMENT)) {</span>
+<span class="nc" id="L314">                    iComment += &quot; &quot; + obj.stringValue();</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">                } else if (pred.equals(SKOS.DEFINITION)) {</span>
+<span class="nc" id="L316">                    iDef += &quot; &quot; + obj.stringValue();</span>
+                }
+            }
+<span class="fc" id="L319">        }</span>
+<span class="fc" id="L320">        String description = &quot;&quot;;</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">        if (!npDesc.isEmpty()) description += npDesc;</span>
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        if (!npComment.isEmpty()) description += npComment;</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">        if (!npDef.isEmpty()) description += npDef;</span>
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">        if (!aDesc.isEmpty()) description += aDesc;</span>
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        if (!aComment.isEmpty()) description += aComment;</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (!aDef.isEmpty()) description += aDef;</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">        if (!iDesc.isEmpty()) description += iDesc;</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if (!iComment.isEmpty()) description += iComment;</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">        if (!iDef.isEmpty()) description += iDef;</span>
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">        if (description.isEmpty()) return null;</span>
+<span class="fc" id="L331">        return description.substring(1);</span>
+    }
+
+    /**
+     * Returns a set of types for the given Nanopub.
+     * Types are derived from RDF type statements in the assertion and pubinfo,
+     * as well as introduction nanopubs.
+     *
+     * @param np the Nanopub to get the types for
+     * @return a set of IRI types associated with the Nanopub
+     */
+    public static Set&lt;IRI&gt; getTypes(Nanopub np) {
+<span class="fc" id="L343">        final Set&lt;IRI&gt; types = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L344">        final IRI npId = np.getUri();</span>
+<span class="fc" id="L345">        final IRI aId = np.getAssertionUri();</span>
+<span class="fc" id="L346">        final Map&lt;IRI, Boolean&gt; introMap = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        for (Statement st : np.getPubinfo()) {</span>
+<span class="fc" id="L348">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L349">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L350">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L351" title="4 of 6 branches missed.">            if (subj.equals(npId) &amp;&amp; pred.equals(RDF.TYPE) &amp;&amp; obj instanceof IRI) {</span>
+<span class="nc" id="L352">                types.add((IRI) obj);</span>
+            }
+<span class="pc bpc" id="L354" title="4 of 6 branches missed.">            if (subj.equals(npId) &amp;&amp; pred.equals(NPX.HAS_NANOPUB_TYPE) &amp;&amp; obj instanceof IRI) {</span>
+<span class="nc" id="L355">                types.add((IRI) obj);</span>
+            }
+<span class="pc bpc" id="L357" title="6 of 10 branches missed.">            if (subj.equals(npId) &amp;&amp; (pred.equals(NPX.INTRODUCES) || pred.equals(NPX.DESCRIBES) || pred.equals(NPX.EMBEDS)) &amp;&amp; obj instanceof IRI) {</span>
+<span class="nc" id="L358">                introMap.put((IRI) obj, true);</span>
+            }
+<span class="fc" id="L360">        }</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">        for (Statement st : np.getProvenance()) {</span>
+<span class="fc" id="L362">            final Resource subj = st.getSubject();</span>
+<span class="fc" id="L363">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L364">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L365" title="4 of 6 branches missed.">            if (subj.equals(aId) &amp;&amp; pred.equals(RDF.TYPE) &amp;&amp; obj instanceof IRI) {</span>
+<span class="nc" id="L366">                types.add((IRI) obj);</span>
+            }
+<span class="fc" id="L368">        }</span>
+<span class="fc" id="L369">        IRI onlySubjectInAssertion = null;</span>
+<span class="fc" id="L370">        List&lt;IRI&gt; allTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L371">        boolean hasOnlySubjectInAssertion = true;</span>
+<span class="fc" id="L372">        IRI onlyPredicateInAssertion = null;</span>
+<span class="fc" id="L373">        boolean hasOnlyPredicateInAssertion = true;</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc" id="L375">            final IRI subj = (IRI) st.getSubject();</span>
+<span class="fc" id="L376">            final IRI pred = st.getPredicate();</span>
+<span class="fc" id="L377">            final Value obj = st.getObject();</span>
+<span class="pc bpc" id="L378" title="3 of 4 branches missed.">            if (pred.equals(RDF.TYPE) &amp;&amp; obj instanceof IRI) {</span>
+<span class="nc" id="L379">                allTypes.add((IRI) obj);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                if (subj.equals(aId)) types.add((IRI) obj);</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">                if (introMap.containsKey(subj)) types.add((IRI) obj);</span>
+            }
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">            if (pred.equals(NPX.DECLARED_BY)) {</span>
+                // This predicate is used in introduction nanopubs for users. To simplify backwards compatibility,
+                // this predicate is treated as a special case that triggers a type assignment.
+<span class="nc" id="L386">                types.add(pred);</span>
+            }
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">            if (onlySubjectInAssertion == null) {</span>
+<span class="fc" id="L389">                onlySubjectInAssertion = subj;</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">            } else if (!onlySubjectInAssertion.equals(subj)) {</span>
+<span class="nc" id="L391">                hasOnlySubjectInAssertion = false;</span>
+            }
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">            if (onlyPredicateInAssertion == null) {</span>
+<span class="fc" id="L394">                onlyPredicateInAssertion = pred;</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">            } else if (!onlyPredicateInAssertion.equals(pred)) {</span>
+<span class="nc" id="L396">                hasOnlyPredicateInAssertion = false;</span>
+            }
+<span class="fc" id="L398">        }</span>
+<span class="pc bpc" id="L399" title="1 of 2 branches missed.">        if (hasOnlySubjectInAssertion) types.addAll(allTypes);</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">        if (hasOnlyPredicateInAssertion) types.add(onlyPredicateInAssertion);</span>
+<span class="fc" id="L401">        return types;</span>
+    }
+
+    /**
+     * For the first 32 bytes of the checksum, XOR them with the nanupub ID (starting at 3rd character)
+     *
+     * @param nanopubId the IRI of the Nanopub
+     * @param checksum  the base64-encoded checksum to update
+     * @return base64 representation of (checksum XOR nanopubId)
+     */
+    public static String updateXorChecksum(IRI nanopubId, String checksum) {
+<span class="fc" id="L412">        byte[] checksumBytes = TrustyUriUtils.getBase64Bytes(checksum);</span>
+<span class="fc bfc" id="L413" title="All 2 branches covered.">        if (checksumBytes.length &lt; 32) {</span>
+<span class="fc" id="L414">            throw new IllegalArgumentException(&quot;Checksum must be at least 32 bytes long.&quot;);</span>
+        }
+<span class="fc" id="L416">        byte[] addBytes = TrustyUriUtils.getBase64Bytes(TrustyUriUtils.getArtifactCode(nanopubId.stringValue()).substring(2));</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">        for (int i = 0; i &lt; 32; i++) {</span>
+<span class="fc" id="L418">            checksumBytes[i] = (byte) (checksumBytes[i] ^ addBytes[i]);</span>
+        }
+<span class="fc" id="L420">        return TrustyUriUtils.getBase64(checksumBytes);</span>
+    }
+
+    /**
+     * Returns a singleton instance of CloseableHttpClient with a custom configuration.
+     *
+     * @return a CloseableHttpClient instance
+     */
+    public static CloseableHttpClient getHttpClient() {
+<span class="fc bfc" id="L429" title="All 2 branches covered.">        if (httpClient == null) {</span>
+<span class="fc" id="L430">            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(500).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();</span>
+<span class="fc" id="L431">            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();</span>
+<span class="fc" id="L432">            connManager.setDefaultMaxPerRoute(10);</span>
+<span class="fc" id="L433">            connManager.setMaxTotal(100);</span>
+<span class="fc" id="L434">            httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).setConnectionManager(connManager).build();</span>
+        }
+<span class="fc" id="L436">        return httpClient;</span>
+    }
+
+    /**
+     * Creates a temporary Nanopub IRI with a random integer.
+     *
+     * @return a new IRI for a temporary Nanopub
+     */
+    public static IRI createTempNanopubIri() {
+<span class="fc" id="L445">        return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + &quot;/&quot;);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

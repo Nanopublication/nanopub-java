@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StripDown.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">StripDown.java</span></div><h1>StripDown.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Takes a signed nanopublication and removes the signature and the trusty url.
+ */
+<span class="fc" id="L23">public class StripDown extends CliRunner {</span>
+
+<span class="fc" id="L25">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-files&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubFiles = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File singleOutputFile; // only possible if there is only one inputFile
+
+<span class="fc" id="L31">    private ValueFactory vf = SimpleValueFactory.getInstance();</span>
+<span class="fc" id="L32">    private Random random = new Random();</span>
+
+    /**
+     * Main method to run the StripDown tool.
+     *
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L41">            StripDown obj = CliRunner.initJc(new StripDown(), args);</span>
+<span class="nc" id="L42">            obj.run();</span>
+<span class="nc" id="L43">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L44">            System.exit(1);</span>
+<span class="nc" id="L45">        } catch (Exception ex) {</span>
+<span class="nc" id="L46">            ex.printStackTrace();</span>
+<span class="nc" id="L47">            System.exit(1);</span>
+<span class="nc" id="L48">        }</span>
+<span class="nc" id="L49">    }</span>
+
+    /**
+     * Runs the StripDown process.
+     *
+     * @throws org.nanopub.MalformedNanopubException if a nanopublication is malformed.
+     * @throws java.io.IOException                   if an I/O error occurs.
+     */
+    public void run() throws MalformedNanopubException, IOException {
+
+        final OutputStream singleOut;
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (singleOutputFile != null) {</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">            if (singleOutputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L62">                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));</span>
+            } else {
+<span class="fc" id="L64">                singleOut = new FileOutputStream(singleOutputFile);</span>
+            }
+        } else {
+<span class="nc" id="L67">            singleOut = null;</span>
+        }
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (File inputFile : inputNanopubFiles) {</span>
+            File outputFile;
+            final OutputStream out;
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (singleOutputFile == null) {</span>
+<span class="nc" id="L74">                outputFile = new File(inputFile.getParent(), &quot;plain.&quot; + inputFile.getName());</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                if (inputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L76">                    out = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L78">                    out = new FileOutputStream(outputFile);</span>
+                }
+            } else {
+<span class="fc" id="L81">                outputFile = singleOutputFile;</span>
+<span class="fc" id="L82">                out = singleOut;</span>
+            }
+<span class="fc" id="L84">            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L85">            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L86">            try (out) {</span>
+<span class="fc" id="L87">                MultiNanopubRdfHandler.process(inFormat, inputFile, np -&gt; {</span>
+                    try {
+<span class="fc" id="L89">                        String replacement = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + &quot;/&quot;;</span>
+<span class="fc" id="L90">                        List&lt;Statement&gt; newStatements = removeHashesAndSignaturesFromStatements(np, replacement);</span>
+
+<span class="fc" id="L92">                        NanopubImpl oldNp = (NanopubImpl) np;</span>
+<span class="fc" id="L93">                        Map&lt;String, String&gt; namespaces = removeHashFromNamespaces(oldNp, replacement);</span>
+
+<span class="fc" id="L95">                        NanopubImpl updatedNp = new NanopubImpl(newStatements, oldNp.getNsPrefixes(), namespaces);</span>
+
+<span class="fc" id="L97">                        RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="fc" id="L98">                        NanopubUtils.propagateToHandler(updatedNp, w);</span>
+
+<span class="nc" id="L100">                    } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L101">                        ex.printStackTrace();</span>
+<span class="nc" id="L102">                        throw new RuntimeException(ex);</span>
+<span class="nc" id="L103">                    } catch (MalformedNanopubException e) {</span>
+<span class="nc" id="L104">                        throw new RuntimeException(e);</span>
+<span class="fc" id="L105">                    }</span>
+<span class="fc" id="L106">                });</span>
+            }
+<span class="fc" id="L108">        }</span>
+<span class="fc" id="L109">    }</span>
+
+    private Map&lt;String, String&gt; removeHashFromNamespaces(NanopubImpl np, String replacement) {
+<span class="fc" id="L112">        String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (artifactCode == null) {</span>
+<span class="nc" id="L114">            throw new RuntimeException(&quot;No artifact code found for &quot; + np.getUri());</span>
+        }
+<span class="fc" id="L116">        Map&lt;String, String&gt; newNamespaces = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        for (String prefix : np.getNsPrefixes()) {</span>
+<span class="fc" id="L118">            String ns = np.getNamespace(prefix);</span>
+<span class="fc" id="L119">            newNamespaces.put(prefix, ns.replaceFirst(&quot;http.*&quot; + artifactCode + &quot;.?&quot;, replacement));</span>
+<span class="fc" id="L120">        }</span>
+<span class="fc" id="L121">        return newNamespaces;</span>
+    }
+
+    private List&lt;Statement&gt; removeHashesAndSignaturesFromStatements(Nanopub np, String replacement) {
+<span class="fc" id="L125">        String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (artifactCode == null) {</span>
+<span class="nc" id="L127">            throw new RuntimeException(&quot;No artifact code found for &quot; + np.getUri());</span>
+        }
+
+<span class="fc" id="L130">        List&lt;Statement&gt; statements = NanopubUtils.getStatements(np);</span>
+
+<span class="fc" id="L132">        List&lt;Statement&gt; newStatements = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+            // skip signatures
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) continue;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) continue;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) continue;</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.SIGNED_BY)) continue;</span>
+
+            // remove hashes
+<span class="fc" id="L143">            Resource context = transform(st.getContext(), artifactCode, replacement);</span>
+<span class="fc" id="L144">            Resource subject = transform(st.getSubject(), artifactCode, replacement);</span>
+<span class="fc" id="L145">            IRI predicate = transform(st.getPredicate(), artifactCode, replacement);</span>
+<span class="fc" id="L146">            Value object = st.getObject();</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            if (object instanceof Resource) {</span>
+<span class="fc" id="L148">                object = transform((Resource) object, artifactCode, replacement);</span>
+            }
+<span class="fc" id="L150">            Statement n = vf.createStatement(subject, predicate, object, context);</span>
+<span class="fc" id="L151">            newStatements.add(n);</span>
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">        return newStatements;</span>
+    }
+
+    /**
+     * Transforms a Resource by replacing the artifact code with a replacement string.
+     *
+     * @param r           the Resource to transform
+     * @param artifact    the artifact code to look for in the Resource's string representation
+     * @param replacement the string to replace the artifact code with
+     * @return the transformed IRI, or null if the input Resource is null
+     */
+    protected IRI transform(Resource r, String artifact, String replacement) {
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (r == null) {</span>
+<span class="fc" id="L166">            return null;</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        } else if (r instanceof BNode) {</span>
+<span class="fc" id="L168">            throw new RuntimeException(&quot;Unexpected blank node encountered&quot;);</span>
+        } else {
+<span class="fc" id="L170">            return vf.createIRI(r.toString().replaceFirst(&quot;http.*&quot; + artifact + &quot;.?&quot;, replacement));</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

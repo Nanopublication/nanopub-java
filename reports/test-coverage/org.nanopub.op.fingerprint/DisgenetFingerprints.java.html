@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DisgenetFingerprints.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op.fingerprint</a> &gt; <span class="el_source">DisgenetFingerprints.java</span></div><h1>DisgenetFingerprints.java</h1><pre class="source lang-java linenums">package org.nanopub.op.fingerprint;
+
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.PAV;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Generates fingerprints for Disgenet nanopublications.
+ */
+<span class="nc" id="L18">public class DisgenetFingerprints implements FingerprintHandler {</span>
+
+<span class="nc" id="L20">    private static ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Placeholder for the disgenet gda.
+     */
+<span class="nc" id="L25">    public static final IRI disgenetGdaPlaceholder = vf.createIRI(&quot;http://purl.org/nanopub/placeholders/disgenet-gda&quot;);</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getFingerprint(Nanopub np) {
+<span class="nc" id="L32">        String artifactCode = TrustyUriUtils.getArtifactCode(np.getUri().toString());</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if (artifactCode == null) {</span>
+<span class="nc" id="L34">            throw new RuntimeException(&quot;Not a trusty URI: &quot; + np.getUri());</span>
+        }
+<span class="nc" id="L36">        List&lt;Statement&gt; statements = getNormalizedStatements(np);</span>
+<span class="nc" id="L37">        statements = RdfPreprocessor.run(statements, artifactCode);</span>
+<span class="nc" id="L38">        String fingerprint = RdfHasher.makeArtifactCode(statements);</span>
+<span class="nc" id="L39">        return fingerprint.substring(2);</span>
+    }
+
+    private List&lt;Statement&gt; getNormalizedStatements(Nanopub np) {
+<span class="nc" id="L43">        List&lt;Statement&gt; statements = NanopubUtils.getStatements(np);</span>
+<span class="nc" id="L44">        List&lt;Statement&gt; n = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc" id="L46">            boolean isInAssertion = st.getContext().equals(np.getAssertionUri());</span>
+<span class="nc" id="L47">            boolean isInProvenance = st.getContext().equals(np.getProvenanceUri());</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">            if (!isInProvenance &amp;&amp; !isInAssertion) continue;</span>
+            IRI graphURI;
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            if (isInAssertion) {</span>
+<span class="nc" id="L51">                graphURI = assertionUriPlaceholder;</span>
+            } else {
+<span class="nc" id="L53">                graphURI = provUriPlaceholder;</span>
+            }
+<span class="nc" id="L55">            Resource subj = st.getSubject();</span>
+<span class="nc" id="L56">            IRI pred = st.getPredicate();</span>
+<span class="nc" id="L57">            Value obj = st.getObject();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (isInAssertion) {</span>
+<span class="nc" id="L59">                String subjS = subj.stringValue();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                if (subjS.startsWith(&quot;http://rdf.disgenet.org/resource/gda/DGN&quot;) ||</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                        subjS.startsWith(&quot;http://rdf.disgenet.org/gene-disease-association.ttl#DGN&quot;)) {</span>
+<span class="nc" id="L62">                    subj = disgenetGdaPlaceholder;</span>
+                }
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            } else if (isInProvenance) {</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">                if (pred.equals(PAV.IMPORTED_ON) || pred.equals(PAV.IMPORTED_ON_V2)) {</span>
+<span class="nc" id="L66">                    pred = PAV.IMPORTED_ON_V2;</span>
+<span class="nc" id="L67">                    obj = timestampPlaceholder;</span>
+                }
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (subj.equals(np.getAssertionUri())) {</span>
+<span class="nc" id="L70">                    subj = assertionUriPlaceholder;</span>
+                }
+            }
+<span class="nc" id="L73">            n.add(vf.createStatement((Resource) transform(subj), (IRI) transform(pred), transform(obj), graphURI));</span>
+<span class="nc" id="L74">        }</span>
+<span class="nc" id="L75">        return n;</span>
+    }
+
+    private Value transform(Value v) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (v instanceof IRI) {</span>
+<span class="nc" id="L80">            String s = v.stringValue();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (s.matches(&quot;http://rdf.disgenet.org/v.*/void.*&quot;)) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                if (s.matches(&quot;http://rdf.disgenet.org/v.*/void.*-20[0-9]*&quot;)) {</span>
+<span class="nc" id="L83">                    String r = s.replaceFirst(&quot;^http://rdf.disgenet.org/v.*/void.*(/|#)(.*)-20[0-9]*$&quot;, &quot;http://rdf.disgenet.org/vx.x.x/void/$2&quot;);</span>
+<span class="nc" id="L84">                    return vf.createIRI(r);</span>
+                } else {
+<span class="nc" id="L86">                    String r = s.replaceFirst(&quot;^http://rdf.disgenet.org/v.*/void.*(/|#)&quot;, &quot;http://rdf.disgenet.org/vx.x.x/void/&quot;);</span>
+<span class="nc" id="L87">                    return vf.createIRI(r);</span>
+                }
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            } else if (s.startsWith(&quot;http://purl.obolibrary.org/obo/eco.owl#&quot;)) {</span>
+<span class="nc" id="L90">                return vf.createIRI(s.replace(&quot;http://purl.obolibrary.org/obo/eco.owl#&quot;, &quot;http://purl.obolibrary.org/obo/&quot;));</span>
+            }
+        }
+<span class="nc" id="L93">        return v;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

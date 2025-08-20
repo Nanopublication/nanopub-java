@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportJson.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">ExportJson.java</span></div><h1>ExportJson.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.Nanopub;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to export nanopublications in JSON format.
+ */
+<span class="fc" id="L26">public class ExportJson extends CliRunner {</span>
+
+<span class="fc" id="L28">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    /**
+     * Main method to run the ExportJson utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L44">            ExportJson obj = CliRunner.initJc(new ExportJson(), args);</span>
+<span class="nc" id="L45">            obj.run();</span>
+<span class="nc" id="L46">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L47">            System.exit(1);</span>
+<span class="nc" id="L48">        } catch (Exception ex) {</span>
+<span class="nc" id="L49">            ex.printStackTrace();</span>
+<span class="nc" id="L50">            System.exit(1);</span>
+<span class="nc" id="L51">        }</span>
+<span class="nc" id="L52">    }</span>
+
+    private RDFFormat rdfInFormat;
+<span class="fc" id="L55">    private OutputStream outputStream = System.out;</span>
+    private BufferedWriter writer;
+    private boolean isFirstNp;
+    private boolean isFirstSt;
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L64">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L66">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (outputFile != null) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L70">                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L72">                    outputStream = new FileOutputStream(outputFile);</span>
+                }
+            }
+
+<span class="nc" id="L76">            writer = new BufferedWriter(new OutputStreamWriter(outputStream));</span>
+<span class="nc" id="L77">            writer.write(&quot;[\n&quot;);</span>
+<span class="nc" id="L78">            isFirstNp = true;</span>
+
+<span class="nc" id="L80">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L82">                    process(np);</span>
+<span class="nc" id="L83">                } catch (RDFHandlerException | IOException ex) {</span>
+<span class="nc" id="L84">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L85">                }</span>
+<span class="nc" id="L86">            });</span>
+
+<span class="nc" id="L88">            writer.write(&quot;\n]\n&quot;);</span>
+
+<span class="nc" id="L90">            writer.flush();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L92">                writer.close();</span>
+            }
+<span class="nc" id="L94">        }</span>
+<span class="nc" id="L95">    }</span>
+
+    private void process(Nanopub np) throws RDFHandlerException, IOException {
+<span class="nc" id="L98">        IRI npUri = np.getUri();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (!isFirstNp) {</span>
+<span class="nc" id="L100">            writer.write(&quot;,\n&quot;);</span>
+        }
+<span class="nc" id="L102">        isFirstNp = false;</span>
+<span class="nc" id="L103">        writer.write(&quot; [\n&quot;);</span>
+<span class="nc" id="L104">        isFirstSt = true;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        for (Statement st : np.getAssertion()) {</span>
+<span class="nc" id="L106">            writeStatement(st, &quot;npa&quot;, np.getAssertionUri(), npUri);</span>
+<span class="nc" id="L107">        }</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        for (Statement st : np.getProvenance()) {</span>
+<span class="nc" id="L109">            writeStatement(st, &quot;npp&quot;, np.getProvenanceUri(), npUri);</span>
+<span class="nc" id="L110">        }</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        for (Statement st : np.getPubinfo()) {</span>
+<span class="nc" id="L112">            writeStatement(st, &quot;npi&quot;, np.getPubinfoUri(), npUri);</span>
+<span class="nc" id="L113">        }</span>
+<span class="nc" id="L114">        writer.write(&quot;\n ]&quot;);</span>
+<span class="nc" id="L115">    }</span>
+
+    private void writeStatement(Statement st, String type, IRI graphUri, IRI npUri) throws RDFHandlerException, IOException {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (!isFirstSt) {</span>
+<span class="nc" id="L119">            writer.write(&quot;,\n&quot;);</span>
+        }
+<span class="nc" id="L121">        isFirstSt = false;</span>
+<span class="nc" id="L122">        writer.write(&quot;  {\n&quot;);</span>
+<span class="nc" id="L123">        writer.write(&quot;  \&quot;type\&quot;: \&quot;&quot; + type + &quot;\&quot;,\n&quot;);</span>
+<span class="nc" id="L124">        writer.write(&quot;  \&quot;s\&quot;: \&quot;&quot; + escape(st.getSubject()) + &quot;\&quot;,\n&quot;);</span>
+<span class="nc" id="L125">        writer.write(&quot;  \&quot;p\&quot;: \&quot;&quot; + escape(st.getPredicate()) + &quot;\&quot;,\n&quot;);</span>
+<span class="nc" id="L126">        writer.write(&quot;  \&quot;o\&quot;: \&quot;&quot; + escape(st.getObject()) + &quot;\&quot;,\n&quot;);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (st.getObject() instanceof Literal l) {</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (l.getLanguage() != null) {</span>
+<span class="nc" id="L129">                writer.write(&quot;  \&quot;dt\&quot;: \&quot;&quot; + escape(l.getDatatype()) + &quot;\&quot;,\n&quot;);</span>
+            } else {
+<span class="nc" id="L131">                writer.write(&quot;  \&quot;l\&quot;: \&quot;&quot; + l.getLanguage() + &quot;\&quot;,\n&quot;);</span>
+            }
+        }
+<span class="nc" id="L134">        writer.write(&quot;  \&quot;g\&quot;: \&quot;&quot; + graphUri + &quot;\&quot;,\n&quot;);</span>
+<span class="nc" id="L135">        writer.write(&quot;  \&quot;np\&quot;: \&quot;&quot; + npUri + &quot;\&quot;\n&quot;);</span>
+<span class="nc" id="L136">        writer.write(&quot;  }&quot;);</span>
+<span class="nc" id="L137">    }</span>
+
+    private String escape(Value v) {
+<span class="nc" id="L140">        return v.stringValue().replace(&quot;\\&quot;, &quot;\\\\&quot;).replace(&quot;\&quot;&quot;, &quot;\\\&quot;&quot;);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

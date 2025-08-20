@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Decontextualize.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Decontextualize.java</span></div><h1>Decontextualize.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+import org.nanopub.op.fingerprint.FingerprintHandler;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command line tool to decontextualize nanopubs.
+ */
+<span class="nc" id="L23">public class Decontextualize extends CliRunner {</span>
+
+    /**
+     * Placeholder for graph.
+     */
+<span class="nc" id="L28">    public static final IRI graphPlaceholer = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/graph&quot;);</span>
+
+<span class="nc" id="L30">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    /**
+     * Main method to run the decontextualization.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L46">            Decontextualize obj = CliRunner.initJc(new Decontextualize(), args);</span>
+<span class="nc" id="L47">            obj.run();</span>
+<span class="nc" id="L48">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        } catch (Exception ex) {</span>
+<span class="nc" id="L51">            ex.printStackTrace();</span>
+<span class="nc" id="L52">            System.exit(1);</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">    }</span>
+
+    private RDFFormat rdfInFormat;
+<span class="nc" id="L57">    private OutputStream outputStream = System.out;</span>
+    private RDFWriter writer;
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L64">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L66">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (outputFile != null) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L70">                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L72">                    outputStream = new FileOutputStream(outputFile);</span>
+                }
+            }
+
+<span class="nc" id="L76">            writer = Rio.createWriter(RDFFormat.NQUADS, new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));</span>
+<span class="nc" id="L77">            writer.startRDF();</span>
+
+<span class="nc" id="L79">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L81">                    process(np);</span>
+<span class="nc" id="L82">                } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L83">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L84">                }</span>
+<span class="nc" id="L85">            });</span>
+
+<span class="nc" id="L87">            writer.endRDF();</span>
+<span class="nc" id="L88">            outputStream.flush();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L90">                outputStream.close();</span>
+            }
+<span class="nc" id="L92">        }</span>
+<span class="nc" id="L93">    }</span>
+
+    private void process(Nanopub np) throws RDFHandlerException {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        for (Statement st : getNormalizedStatements(np)) {</span>
+<span class="nc" id="L97">            writer.handleStatement(st);</span>
+<span class="nc" id="L98">        }</span>
+<span class="nc" id="L99">    }</span>
+
+    private List&lt;Statement&gt; getNormalizedStatements(Nanopub np) {
+<span class="nc" id="L102">        List&lt;Statement&gt; statements = NanopubUtils.getStatements(np);</span>
+<span class="nc" id="L103">        List&lt;Statement&gt; n = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc" id="L105">            boolean isInHead = st.getContext().equals(np.getHeadUri());</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (isInHead) continue;</span>
+<span class="nc" id="L107">            boolean isInProvenance = st.getContext().equals(np.getProvenanceUri());</span>
+<span class="nc" id="L108">            boolean isInPubinfo = st.getContext().equals(np.getPubinfoUri());</span>
+<span class="nc" id="L109">            IRI toBeReplacedUri = null;</span>
+<span class="nc" id="L110">            IRI replacementUri = null;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (isInProvenance) {</span>
+<span class="nc" id="L112">                toBeReplacedUri = np.getAssertionUri();</span>
+<span class="nc" id="L113">                replacementUri = FingerprintHandler.assertionUriPlaceholder;</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            } else if (isInPubinfo) {</span>
+<span class="nc" id="L115">                toBeReplacedUri = np.getUri();</span>
+<span class="nc" id="L116">                replacementUri = FingerprintHandler.nanopubUriPlaceholder;</span>
+            }
+<span class="nc" id="L118">            Resource subj = st.getSubject();</span>
+<span class="nc" id="L119">            IRI pred = st.getPredicate();</span>
+<span class="nc" id="L120">            Value obj = st.getObject();</span>
+<span class="nc" id="L121">            n.add(SimpleValueFactory.getInstance().createStatement(</span>
+<span class="nc" id="L122">                    (Resource) transform(subj, toBeReplacedUri, replacementUri),</span>
+<span class="nc" id="L123">                    (IRI) transform(pred, toBeReplacedUri, replacementUri),</span>
+<span class="nc" id="L124">                    transform(obj, toBeReplacedUri, replacementUri),</span>
+                    graphPlaceholer));
+<span class="nc" id="L126">        }</span>
+<span class="nc" id="L127">        return n;</span>
+    }
+
+    private Value transform(Value v, IRI toBeReplacedUri, IRI replacementUri) {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (toBeReplacedUri == null) return v;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (v.equals(toBeReplacedUri)) {</span>
+<span class="nc" id="L133">            return replacementUri;</span>
+        }
+<span class="nc" id="L135">        return v;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

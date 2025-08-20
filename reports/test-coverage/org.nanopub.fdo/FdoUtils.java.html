@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FdoUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.fdo</a> &gt; <span class="el_source">FdoUtils.java</span></div><h1>FdoUtils.java</h1><pre class="source lang-java linenums">package org.nanopub.fdo;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.Nanopub;
+
+/**
+ * Utility class for handling FAIR Digital Objects (FDOs).
+ */
+public final class FdoUtils {
+
+<span class="fc" id="L16">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * The prefix for FDOs.
+     */
+    public static final String FDO_URI_PREFIX = &quot;https://hdl.handle.net/&quot;;
+
+    /**
+     * The IRI for the RDF type of a FAIR Digital Object (FDO).
+     */
+<span class="fc" id="L26">    public static final IRI RDF_TYPE_FDO = vf.createIRI(&quot;https://w3id.org/fdof/ontology#FAIRDigitalObject&quot;);</span>
+
+    /**
+     * The IRI for the FDO has part relation.
+     */
+<span class="fc" id="L31">    public static final IRI FDO_HAS_PART = vf.createIRI(&quot;https://purl.org/dc/terms/hasPart&quot;);</span>
+
+    /**
+     * The IRI for the FDO derived from relation.
+     */
+<span class="fc" id="L36">    public static final IRI FDO_DERIVES_FROM = vf.createIRI(&quot;https://www.w3.org/ns/prov#wasDerivedFrom&quot;);</span>
+
+    /**
+     * The IRI for the FDO profile.
+     */
+<span class="fc" id="L41">    public static final IRI PROFILE_CLASS_IRI = vf.createIRI(&quot;https://w3id.org/fdoc/o/terms/FdoProfile&quot;);</span>
+
+    /**
+     * The IRI for the FDO profile conformsTo relation.
+     */
+<span class="fc" id="L46">    public static final IRI PROFILE_IRI = vf.createIRI(&quot;http://purl.org/dc/terms/conformsTo&quot;);</span>
+
+    /**
+     * The handle for the FDO profile.
+     */
+    public static final String PROFILE_HANDLE_2 = &quot;0.FDO/Profile&quot;;
+
+    /**
+     * Then handle for the FDO profile.
+     */
+    public static final String PROFILE_HANDLE_1 = &quot;FdoProfile&quot;;
+
+    /**
+     * The handle for the FDO profile.
+     */
+    public static final String PROFILE_HANDLE = &quot;21.T11966/FdoProfile&quot;;
+
+    /**
+     * The IRI for the FDO shape link relation.
+     */
+<span class="fc" id="L66">    public static final IRI SHAPE_LINK_IRI = vf.createIRI(&quot;https://w3id.org/fdoc/o/terms/hasShape&quot;);</span>
+
+    /**
+     * The IRI for the FDO data reference relation.
+     */
+<span class="fc" id="L71">    public static final IRI DATA_REF_IRI = vf.createIRI(&quot;https://w3id.org/fdof/ontology#isMaterializedBy&quot;);</span>
+
+    /**
+     * The handle for the FDO data reference.
+     */
+    public static final String DATA_REF_HANDLE = &quot;21.T11966/06a6c27e3e2ef27779ec&quot;;
+
+    private FdoUtils() {
+        // no instances
+    }
+
+    /**
+     * Add the prefix &quot;&lt;a href=&quot;https://hdl.handle.net/&quot;&gt;...&lt;/a&gt;&quot; to the fdoHandle and returns it as IRI.
+     *
+     * @param fdoHandle the handle of the FDO
+     * @return the IRI of the FDO
+     */
+    public static IRI toIri(String fdoHandle) {
+<span class="fc" id="L89">        return vf.createIRI(FDO_URI_PREFIX + fdoHandle);</span>
+    }
+
+    /**
+     * Remove the prefix &quot;&lt;a href=&quot;https://hdl.handle.net/&quot;&gt;...&lt;/a&gt;&quot; from the IRI and returns the handle as string.
+     * returns the iri as string otherwise.
+     *
+     * @param iri the IRI of the FDO
+     * @return the handle of the FDO as string
+     */
+    public static String extractHandle(Resource iri) {
+<span class="fc" id="L100">        String iriString = iri.toString();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (iriString.startsWith(FDO_URI_PREFIX)) {</span>
+<span class="fc" id="L102">            return iriString.substring(FDO_URI_PREFIX.length());</span>
+        }
+<span class="fc" id="L104">        return iriString;</span>
+    }
+
+    /**
+     * Test if the iri starts with &quot;&lt;a href=&quot;https://hdl.handle.net/&quot;&gt;...&lt;/a&gt;&quot; followed by a handle.
+     *
+     * @param iri the IRI to check
+     * @return true if the IRI is a handle, false otherwise
+     */
+    public static boolean isHandleIri(Resource iri) {
+<span class="fc" id="L114">        String potentialHandle = extractHandle(iri);</span>
+<span class="fc" id="L115">        return looksLikeHandle(potentialHandle);</span>
+    }
+
+    /**
+     * We here assume that a handle starts with 2 digits (minimal prefix),
+     * no whitespaces, and contains at least one &quot;/&quot;.
+     *
+     * @param potentialHandle the string to check
+     * @return true if the string looks like a handle, false otherwise
+     */
+    public static boolean looksLikeHandle(String potentialHandle) {
+<span class="fc" id="L126">        return potentialHandle.matches(&quot;\\d\\d\\S*/+\\S*&quot;);</span>
+    }
+
+    /**
+     * Check if the given string looks like a URL.
+     *
+     * @param potentialUrl the string to check
+     * @return true if the string looks like a URL, false otherwise
+     */
+    public static boolean looksLikeUrl(String potentialUrl) {
+<span class="fc" id="L136">        return potentialUrl.matches(&quot;http(s)?://\\S+\\.[a-z]{2,}.*&quot;);</span>
+    }
+
+    /**
+     * Create an IRI by prefixing a handle with &lt;a href=&quot;https://hdl.handle.net/&quot;&gt;...&lt;/a&gt; if it's a handle,
+     * or by just converting an url.
+     *
+     * @param handleOrUrl the handle or URL to convert
+     * @return the IRI of the FDO
+     */
+    public static IRI createIri(String handleOrUrl) {
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (looksLikeHandle(handleOrUrl)) {</span>
+<span class="fc" id="L148">            return vf.createIRI(FDO_URI_PREFIX + handleOrUrl);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        } else if (looksLikeUrl(handleOrUrl)) {</span>
+<span class="fc" id="L150">            return vf.createIRI(handleOrUrl);</span>
+        }
+<span class="fc" id="L152">        throw new IllegalArgumentException(&quot;Neither handle nor url found: &quot; + handleOrUrl);</span>
+    }
+
+    /**
+     * Check if the given Nanopub is a FDO Nanopub.
+     *
+     * @param np the Nanopub to check
+     * @return true if the Nanopub is a FDO Nanopub, false otherwise
+     */
+    public static boolean isFdoNanopub(Nanopub np) {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc bfc" id="L163" title="All 4 branches covered.">            if (st.getPredicate().equals(RDF.TYPE) &amp;&amp; st.getObject().equals(RDF_TYPE_FDO)) {</span>
+<span class="fc" id="L164">                return true;</span>
+            }
+<span class="fc" id="L166">        }</span>
+<span class="fc" id="L167">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Build.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Build.java</span></div><h1>Build.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to build nanopublications from RDF files.
+ */
+<span class="nc" id="L25">public class Build extends CliRunner {</span>
+
+<span class="nc" id="L27">    @com.beust.jcommander.Parameter(description = &quot;input-rdf-files&quot;, required = true)</span>
+    private List&lt;File&gt; inputRdfdFiles = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-d&quot;, description = &quot;Point to the URI of the resource the created nanopublications are derived from&quot;)
+    private String derivedFrom;
+
+<span class="nc" id="L33">    @com.beust.jcommander.Parameter(names = &quot;-c&quot;, description = &quot;Creator of nanopublication&quot;)</span>
+    private List&lt;String&gt; creators = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input RDF files: ttl, jsonld, nt, ttl.gz, ...&quot;)
+    private String inFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--out-format&quot;, description = &quot;Format of the output nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String outFormat;
+
+    /**
+     * Main method to run the Build command-line utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L52">            Build obj = CliRunner.initJc(new Build(), args);</span>
+<span class="nc" id="L53">            obj.run();</span>
+<span class="nc" id="L54">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L55">            System.exit(1);</span>
+<span class="nc" id="L56">        } catch (Exception ex) {</span>
+<span class="nc" id="L57">            ex.printStackTrace();</span>
+<span class="nc" id="L58">            System.exit(1);</span>
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">    }</span>
+
+    private RDFFormat rdfInFormat, rdfOutFormat;
+<span class="nc" id="L63">    private OutputStream outputStream = System.out;</span>
+<span class="nc" id="L64">    private Random random = new Random();</span>
+    private NanopubCreator npCreator;
+    private IRI nanopubIri, assertionIri;
+    private Resource previousSubj;
+    private IRI derivedFromUri;
+<span class="nc" id="L69">    private List&lt;Pair&lt;String, String&gt;&gt; namespaces = new ArrayList&lt;&gt;();</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (outputFile == null) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">            if (outFormat == null) {</span>
+<span class="nc" id="L76">                outFormat = &quot;trig&quot;;</span>
+            }
+<span class="nc" id="L78">            rdfOutFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + outFormat).orElse(null);</span>
+        } else {
+<span class="nc" id="L80">            rdfOutFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(null);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L82">                outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+            } else {
+<span class="nc" id="L84">                outputStream = new FileOutputStream(outputFile);</span>
+            }
+        }
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (derivedFrom != null) {</span>
+<span class="nc" id="L88">            derivedFromUri = vf.createIRI(derivedFrom);</span>
+        }
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        for (File inputFile : inputRdfdFiles) {</span>
+            String dummyFileName;
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L94">                dummyFileName = &quot;file.&quot; + inFormat;</span>
+            } else {
+<span class="nc" id="L96">                dummyFileName = inputFile.toString();</span>
+            }
+<span class="nc" id="L98">            rdfInFormat = Rio.getParserFormatForFileName(dummyFileName).orElse(null);</span>
+            InputStream inputStream;
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (dummyFileName.matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L101">                inputStream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(inputFile)));</span>
+            } else {
+<span class="nc" id="L103">                inputStream = new BufferedInputStream(new FileInputStream(inputFile));</span>
+            }
+
+<span class="nc" id="L106">            RDFParser parser = Rio.createParser(rdfInFormat);</span>
+<span class="nc" id="L107">            parser.setRDFHandler(new RDFHandler() {</span>
+
+                @Override
+                public void startRDF() throws RDFHandlerException {
+<span class="nc" id="L111">                }</span>
+
+                @Override
+                public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="nc" id="L115">                    processStatement(st);</span>
+<span class="nc" id="L116">                }</span>
+
+                @Override
+                public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+<span class="nc" id="L120">                    processNamespace(prefix, uri);</span>
+<span class="nc" id="L121">                }</span>
+
+                @Override
+                public void handleComment(String comment) throws RDFHandlerException {
+<span class="nc" id="L125">                }</span>
+
+                @Override
+                public void endRDF() throws RDFHandlerException {
+<span class="nc" id="L129">                }</span>
+
+            });
+<span class="nc" id="L132">            parser.parse(inputStream, &quot;http://example.com/baseuri&quot;);</span>
+
+<span class="nc" id="L134">            inputStream.close();</span>
+<span class="nc" id="L135">        }</span>
+
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (previousSubj != null) finalizeNanopub();</span>
+
+<span class="nc" id="L139">        outputStream.flush();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (outputStream != System.out) {</span>
+<span class="nc" id="L141">            outputStream.close();</span>
+        }
+<span class="nc" id="L143">    }</span>
+
+    private void processStatement(Statement st) {
+<span class="nc" id="L146">        prepareCreator(st.getSubject());</span>
+<span class="nc" id="L147">        npCreator.addAssertionStatements(st);</span>
+<span class="nc" id="L148">    }</span>
+
+    private void processNamespace(String prefix, String uri) {
+<span class="nc" id="L151">        prepareCreator(null);</span>
+<span class="nc" id="L152">        namespaces.add(Pair.of(prefix, uri));</span>
+<span class="nc" id="L153">        npCreator.addNamespace(prefix, uri);</span>
+<span class="nc" id="L154">    }</span>
+
+    private void prepareCreator(Resource subj) {
+<span class="nc bnc" id="L157" title="All 6 branches missed.">        if (previousSubj != null &amp;&amp; subj != null &amp;&amp; !subj.equals(previousSubj)) {</span>
+<span class="nc" id="L158">            finalizeNanopub();</span>
+        }
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (npCreator == null) {</span>
+<span class="nc" id="L161">            initNanopub();</span>
+        }
+<span class="nc" id="L163">        previousSubj = subj;</span>
+<span class="nc" id="L164">    }</span>
+
+    private void initNanopub() {
+<span class="nc" id="L167">        String npUriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + &quot;/&quot;;</span>
+<span class="nc" id="L168">        nanopubIri = vf.createIRI(npUriString);</span>
+<span class="nc" id="L169">        assertionIri = vf.createIRI(npUriString + &quot;assertion&quot;);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (creators.isEmpty()) creators.add(npUriString + &quot;creator&quot;);</span>
+<span class="nc" id="L171">        npCreator = new NanopubCreator(nanopubIri);</span>
+<span class="nc" id="L172">        npCreator.setAssertionUri(assertionIri);</span>
+<span class="nc" id="L173">        npCreator.addDefaultNamespaces();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        for (Pair&lt;String, String&gt; p : namespaces) {</span>
+<span class="nc" id="L175">            npCreator.addNamespace(p.getLeft(), p.getRight());</span>
+<span class="nc" id="L176">        }</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (derivedFromUri != null) {</span>
+<span class="nc" id="L178">            npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, derivedFromUri);</span>
+        } else {
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            for (String c : creators) {</span>
+<span class="nc" id="L181">                npCreator.addProvenanceStatement(PROV.HAD_PRIMARY_SOURCE, vf.createIRI(c));</span>
+<span class="nc" id="L182">            }</span>
+        }
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        for (String c : creators) {</span>
+<span class="nc" id="L185">            npCreator.addCreator(vf.createIRI(c));</span>
+<span class="nc" id="L186">        }</span>
+<span class="nc" id="L187">    }</span>
+
+    private void finalizeNanopub() {
+<span class="nc" id="L190">        npCreator.addTimestampNow();</span>
+<span class="nc" id="L191">        npCreator.setRemoveUnusedPrefixesEnabled(true);</span>
+        try {
+<span class="nc" id="L193">            Nanopub np = npCreator.finalizeNanopub();</span>
+<span class="nc" id="L194">            NanopubUtils.writeToStream(np, outputStream, rdfOutFormat);</span>
+<span class="nc" id="L195">        } catch (MalformedNanopubException ex) {</span>
+<span class="nc" id="L196">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L197">        }</span>
+<span class="nc" id="L198">        npCreator = null;</span>
+<span class="nc" id="L199">    }</span>
+
+<span class="nc" id="L201">    private static SimpleValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

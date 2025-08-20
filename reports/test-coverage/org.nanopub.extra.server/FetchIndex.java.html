@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FetchIndex.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">FetchIndex.java</span></div><h1>FetchIndex.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import net.trustyuri.TrustyUriUtils;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
+import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+
+import java.io.OutputStream;
+import java.util.*;
+
+/**
+ * Fetches index.
+ */
+public class FetchIndex {
+
+    /**
+     * The maximum number of parallel requests that can be made to a single server.
+     */
+    public static final int maxParallelRequestsPerServer = 5;
+
+    private OutputStream out;
+    private RDFFormat format;
+    private boolean writeIndex, writeContent;
+<span class="pc" id="L30">    private boolean running = false;</span>
+    private List&lt;FetchNanopubTask&gt; fetchTasks;
+    private List&lt;RegistryInfo&gt; registries;
+    private RegistryInfo localRegistryInfo;
+    private Map&lt;RegistryInfo, Set&lt;FetchNanopubTask&gt;&gt; serverLoad;
+    private Map&lt;RegistryInfo, Integer&gt; serverUsage;
+    private int nanopubCount;
+    private Listener listener;
+
+    /**
+     * Default constructor for FetchIndex.
+     */
+<span class="nc" id="L42">    protected FetchIndex() {</span>
+<span class="nc" id="L43">    }</span>
+
+    /**
+     * Creates a new FetchIndex instance.
+     *
+     * @param indexUri         the URI of the index to fetch
+     * @param out              the output stream to write the fetched nanopubs to
+     * @param format           the RDF format to use for writing nanopubs
+     * @param writeIndex       true if the index nanopub should be written, false otherwise
+     * @param writeContent     true if the content nanopubs should be written, false otherwise
+     * @param localRegistryUrl the URL of a local registry to use, or null if not needed
+     */
+<span class="fc" id="L55">    public FetchIndex(String indexUri, OutputStream out, RDFFormat format, boolean writeIndex, boolean writeContent, String localRegistryUrl) {</span>
+<span class="fc" id="L56">        this.out = out;</span>
+<span class="fc" id="L57">        this.format = format;</span>
+<span class="fc" id="L58">        this.writeIndex = writeIndex;</span>
+<span class="fc" id="L59">        this.writeContent = writeContent;</span>
+<span class="fc" id="L60">        fetchTasks = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L61">        fetchTasks.add(new FetchNanopubTask(indexUri, true));</span>
+<span class="fc" id="L62">        registries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L63">        serverLoad = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L64">        serverUsage = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L65">        ServerIterator serverIterator = new ServerIterator();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        while (serverIterator.hasNext()) {</span>
+<span class="fc" id="L67">            RegistryInfo registryInfo = serverIterator.next();</span>
+<span class="fc" id="L68">            registries.add(registryInfo);</span>
+<span class="fc" id="L69">            serverLoad.put(registryInfo, new HashSet&lt;&gt;());</span>
+<span class="fc" id="L70">            serverUsage.put(registryInfo, 0);</span>
+<span class="fc" id="L71">        }</span>
+        try {
+<span class="fc" id="L73">            ServerIterator.writeCachedServers(registries);</span>
+<span class="nc" id="L74">        } catch (Exception ex) {</span>
+<span class="fc" id="L75">        }</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (localRegistryUrl != null) {</span>
+            try {
+<span class="nc" id="L78">                localRegistryInfo = RegistryInfo.load(localRegistryUrl);</span>
+<span class="nc" id="L79">                registries.add(localRegistryInfo);</span>
+<span class="nc" id="L80">                serverLoad.put(localRegistryInfo, new HashSet&lt;&gt;());</span>
+<span class="nc" id="L81">                serverUsage.put(localRegistryInfo, 0);</span>
+<span class="nc" id="L82">            } catch (RegistryInfoException ex) {</span>
+<span class="nc" id="L83">                ex.printStackTrace();</span>
+<span class="nc" id="L84">                return;</span>
+<span class="nc" id="L85">            }</span>
+        }
+<span class="fc" id="L87">        nanopubCount = 0;</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * Starts the fetching process.
+     */
+    public void run() {
+<span class="fc" id="L94">        synchronized (this) {</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (running) return;</span>
+<span class="fc" id="L96">            running = true;</span>
+<span class="fc" id="L97">        }</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        while (!fetchTasks.isEmpty()) {</span>
+<span class="fc" id="L99">            checkTasks();</span>
+            try {
+<span class="fc" id="L101">                Thread.sleep(5);</span>
+<span class="nc" id="L102">            } catch (InterruptedException ex) {</span>
+<span class="pc" id="L103">            }</span>
+        }
+<span class="fc" id="L105">    }</span>
+
+    private void checkTasks() {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for (FetchNanopubTask task : new ArrayList&lt;&gt;(fetchTasks)) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (task.isRunning()) continue;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            if (task.isCancelled()) {</span>
+<span class="nc" id="L111">                fetchTasks.remove(task);</span>
+<span class="nc" id="L112">                serverLoad.get(task.getLastRegistry()).remove(task);</span>
+<span class="nc" id="L113">                continue;</span>
+            }
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (task.getLastRegistry() != null) {</span>
+<span class="fc" id="L116">                serverLoad.get(task.getLastRegistry()).remove(task);</span>
+            }
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (task.getNanopub() == null) {</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">                if (task.getTriedServersCount() == registries.size()) {</span>
+<span class="nc" id="L120">                    System.err.println(&quot;Failed to get &quot; + task.getNanopubUri());</span>
+<span class="nc" id="L121">                    fetchTasks.remove(task);</span>
+<span class="nc" id="L122">                    continue;</span>
+                }
+<span class="pc bpc" id="L124" title="3 of 4 branches missed.">                if (localRegistryInfo != null &amp;&amp; !task.hasServerBeenTried(localRegistryInfo)) {</span>
+<span class="nc" id="L125">                    assignTask(task, localRegistryInfo);</span>
+<span class="nc" id="L126">                    break;</span>
+                }
+<span class="fc" id="L128">                List&lt;RegistryInfo&gt; shuffledServers = new ArrayList&lt;&gt;(registries);</span>
+<span class="fc" id="L129">                Collections.shuffle(shuffledServers);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                for (RegistryInfo registryInfo : shuffledServers) {</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                    if (task.hasServerBeenTried(registryInfo)) continue;</span>
+<span class="fc" id="L132">                    int load = serverLoad.get(registryInfo).size();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                    if (load &gt;= maxParallelRequestsPerServer) {</span>
+<span class="fc" id="L134">                        continue;</span>
+                    }
+<span class="fc" id="L136">                    assignTask(task, registryInfo);</span>
+<span class="fc" id="L137">                    break;</span>
+                }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            } else if (task.isIndex()) {</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                if (fetchTasks.size() &lt; 3000) {</span>
+                    try {
+<span class="fc" id="L142">                        Nanopub np = task.getNanopub();</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">                        if (!IndexUtils.isIndex(np)) {</span>
+<span class="nc" id="L144">                            throw new RuntimeException(&quot;NOT AN INDEX: &quot; + np.getUri());</span>
+                        }
+<span class="fc" id="L146">                        NanopubIndex npi = IndexUtils.castToIndex(np);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                        if (writeIndex) {</span>
+<span class="fc" id="L148">                            writeNanopub(npi);</span>
+                        }
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                        if (writeContent) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                            for (IRI elementUri : npi.getElements()) {</span>
+<span class="fc" id="L152">                                fetchTasks.add(new FetchNanopubTask(elementUri.toString(), false));</span>
+<span class="fc" id="L153">                            }</span>
+                        }
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                        for (IRI subIndexUri : npi.getSubIndexes()) {</span>
+                            // Failing to get subindexes can block the entire process, therefore
+                            // we launch three sibling tasks at the same time:
+<span class="nc" id="L158">                            FetchNanopubTask t1 = new FetchNanopubTask(subIndexUri.toString(), true);</span>
+<span class="nc" id="L159">                            fetchTasks.addFirst(t1);</span>
+<span class="nc" id="L160">                            FetchNanopubTask t2 = new FetchNanopubTask(subIndexUri.toString(), true, t1);</span>
+<span class="nc" id="L161">                            fetchTasks.addFirst(t2);</span>
+<span class="nc" id="L162">                            FetchNanopubTask t3 = new FetchNanopubTask(subIndexUri.toString(), true, t1, t2);</span>
+<span class="nc" id="L163">                            fetchTasks.addFirst(t3);</span>
+<span class="nc" id="L164">                        }</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">                        if (npi.getAppendedIndex() != null) {</span>
+                            // Failing to get appended indexes can block the entire process, therefore
+                            // we launch three sibling tasks at the same time:
+<span class="nc" id="L168">                            FetchNanopubTask t1 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true);</span>
+<span class="nc" id="L169">                            fetchTasks.addFirst(t1);</span>
+<span class="nc" id="L170">                            FetchNanopubTask t2 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1);</span>
+<span class="nc" id="L171">                            fetchTasks.addFirst(t2);</span>
+<span class="nc" id="L172">                            FetchNanopubTask t3 = new FetchNanopubTask(npi.getAppendedIndex().toString(), true, t1, t2);</span>
+<span class="nc" id="L173">                            fetchTasks.addFirst(t3);</span>
+                        }
+<span class="nc" id="L175">                    } catch (Exception ex) {</span>
+<span class="nc" id="L176">                        throw new RuntimeException(ex);</span>
+<span class="fc" id="L177">                    }</span>
+<span class="fc" id="L178">                    fetchTasks.remove(task);</span>
+                }
+            } else {
+                try {
+<span class="fc" id="L182">                    writeNanopub(task.getNanopub());</span>
+<span class="nc" id="L183">                } catch (Exception ex) {</span>
+<span class="nc" id="L184">                    throw new RuntimeException(ex);</span>
+<span class="fc" id="L185">                }</span>
+<span class="fc" id="L186">                fetchTasks.remove(task);</span>
+            }
+<span class="fc" id="L188">        }</span>
+<span class="fc" id="L189">    }</span>
+
+    private void writeNanopub(Nanopub np) throws RDFHandlerException {
+<span class="fc" id="L192">        nanopubCount++;</span>
+<span class="pc bpc" id="L193" title="1 of 4 branches missed.">        if (listener != null &amp;&amp; nanopubCount % 100 == 0) {</span>
+<span class="fc" id="L194">            listener.progress(nanopubCount);</span>
+        }
+<span class="fc" id="L196">        NanopubUtils.writeToStream(np, out, format);</span>
+<span class="fc" id="L197">    }</span>
+
+    /**
+     * Returns the number of nanopubs fetched so far.
+     *
+     * @return the number of nanopubs fetched so far
+     */
+    public int getNanopubCount() {
+<span class="fc" id="L205">        return nanopubCount;</span>
+    }
+
+    /**
+     * Returns the list of registries that are being used.
+     *
+     * @return the list of registries
+     */
+    public List&lt;RegistryInfo&gt; getRegistries() {
+<span class="nc" id="L214">        return new ArrayList&lt;&gt;(registries);</span>
+    }
+
+    /**
+     * Returns the number of times a server has been used to fetch a nanopub.
+     *
+     * @param r the registry info of the server
+     * @return the number of times the server has been used
+     */
+    public int getServerUsage(RegistryInfo r) {
+<span class="nc" id="L224">        return serverUsage.get(r);</span>
+    }
+
+    /**
+     * Sets a listener that will be notified about progress and exceptions.
+     *
+     * @param l the listener to set
+     */
+    public void setProgressListener(Listener l) {
+<span class="fc" id="L233">        listener = l;</span>
+<span class="fc" id="L234">    }</span>
+
+    private void assignTask(final FetchNanopubTask task, final RegistryInfo r) {
+<span class="fc" id="L237">        task.prepareForTryingServer(r);</span>
+<span class="fc" id="L238">        serverLoad.get(r).add(task);</span>
+<span class="fc" id="L239">        Runnable runFetchTask = () -&gt; task.tryServer(r);</span>
+<span class="fc" id="L240">        Thread thread = new Thread(runFetchTask);</span>
+<span class="fc" id="L241">        thread.start();</span>
+<span class="fc" id="L242">    }</span>
+
+    private class FetchNanopubTask {
+
+        private String npUri;
+        private boolean isIndex;
+        private Nanopub nanopub;
+<span class="fc" id="L249">        private Set&lt;RegistryInfo&gt; registries = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L250">        private boolean running = false;</span>
+<span class="fc" id="L251">        private boolean cancelled = false;</span>
+        private RegistryInfo lastRegistry;
+        private Set&lt;FetchNanopubTask&gt; siblings;
+
+        /**
+         * Creates a new task to fetch a nanopub.
+         *
+         * @param npUri    the URI of the nanopub to fetch
+         * @param isIndex  true if the nanopub is an index, false otherwise
+         * @param siblings other tasks that are siblings of this task (for sub-indexes)
+         */
+<span class="fc" id="L262">        public FetchNanopubTask(String npUri, boolean isIndex, FetchNanopubTask... siblings) {</span>
+<span class="fc" id="L263">            this.npUri = npUri;</span>
+<span class="fc" id="L264">            this.isIndex = isIndex;</span>
+<span class="fc" id="L265">            this.siblings = new HashSet&lt;&gt;(Arrays.asList(siblings));</span>
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">            for (FetchNanopubTask s : siblings) {</span>
+<span class="nc" id="L267">                s.siblings.add(this);</span>
+            }
+<span class="fc" id="L269">        }</span>
+
+        /**
+         * Returns whether the nanopub is an index or not.
+         *
+         * @return true if the nanopub is an index, false otherwise
+         */
+        public boolean isIndex() {
+<span class="fc" id="L277">            return isIndex;</span>
+        }
+
+        /**
+         * Returns the nanopub fetched by this task.
+         *
+         * @return the fetched nanopub, or null if not yet fetched
+         */
+        public Nanopub getNanopub() {
+<span class="fc" id="L286">            return nanopub;</span>
+        }
+
+        /**
+         * Returns the URI of the nanopub to be fetched.
+         *
+         * @return the URI of the nanopub
+         */
+        public String getNanopubUri() {
+<span class="nc" id="L295">            return npUri;</span>
+        }
+
+        /**
+         * Returns whether the task is currently running.
+         *
+         * @return true if the task is running, false otherwise
+         */
+        public boolean isRunning() {
+<span class="fc" id="L304">            return running;</span>
+        }
+
+        /**
+         * Returns if the task has been cancelled.
+         */
+        public boolean isCancelled() {
+<span class="fc" id="L311">            return cancelled;</span>
+        }
+
+        /**
+         * Returns whether the server has already been tried for this task.
+         *
+         * @param r the registry info of the server
+         * @return true if the server has been tried, false otherwise
+         */
+        public boolean hasServerBeenTried(RegistryInfo r) {
+<span class="fc" id="L321">            return registries.contains(r);</span>
+        }
+
+        /**
+         * Returns the number of servers that have been tried so far for this task.
+         *
+         * @return the number of tried servers
+         */
+        public int getTriedServersCount() {
+<span class="fc" id="L330">            return registries.size();</span>
+        }
+
+        /**
+         * Returns the last registry that was used for this task.
+         *
+         * @return the last registry info, or null if no server has been tried yet
+         */
+        public RegistryInfo getLastRegistry() {
+<span class="fc" id="L339">            return lastRegistry;</span>
+        }
+
+        /**
+         * Prepares the task for trying a server.
+         *
+         * @param r the registry info of the server to try
+         */
+        public void prepareForTryingServer(RegistryInfo r) {
+<span class="fc" id="L348">            registries.add(r);</span>
+<span class="fc" id="L349">            lastRegistry = r;</span>
+<span class="fc" id="L350">            running = true;</span>
+<span class="fc" id="L351">        }</span>
+
+        /**
+         * Attempts to fetch the nanopub from the specified server.
+         *
+         * @param r the registry info of the server to try
+         */
+        public void tryServer(RegistryInfo r) {
+<span class="fc" id="L359">            boolean serverTried = false;</span>
+            try {
+<span class="fc" id="L361">                serverTried = true;</span>
+<span class="fc" id="L362">                nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), r);</span>
+<span class="nc" id="L363">            } catch (ConnectionPoolTimeoutException ex) {</span>
+<span class="nc" id="L364">                serverTried = false;</span>
+                // too many connection attempts; try again later
+<span class="nc" id="L366">            } catch (Exception ex) {</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">                if (listener != null) listener.exceptionHappened(ex, r, TrustyUriUtils.getArtifactCode(npUri));</span>
+            } finally {
+<span class="fc" id="L369">                running = false;</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">                if (serverTried) {</span>
+<span class="fc" id="L371">                    synchronized (FetchIndex.class) {</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">                        if (cancelled) {</span>
+                            // Sibling already did the work...
+                        } else {
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">                            for (FetchNanopubTask s : siblings) {</span>
+<span class="nc" id="L376">                                s.cancelled = true;</span>
+<span class="nc" id="L377">                            }</span>
+<span class="fc" id="L378">                            serverUsage.put(r, serverUsage.get(r) + 1);</span>
+                        }
+<span class="fc" id="L380">                    }</span>
+                }
+            }
+<span class="fc" id="L383">        }</span>
+
+    }
+
+
+    /**
+     * Listener interface for progress and exception handling.
+     */
+    public static interface Listener {
+
+        /**
+         * Called to report progress.
+         *
+         * @param count the number of nanopubs processed so far
+         */
+        public void progress(int count);
+
+        /**
+         * Called when an exception occurs during fetching.
+         *
+         * @param ex           the exception that occurred
+         * @param r            the registry info of the server where the exception occurred
+         * @param artifactCode the artifact code of the nanopub that caused the exception
+         */
+        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode);
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

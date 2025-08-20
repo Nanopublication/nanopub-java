@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegistryInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">RegistryInfo.java</span></div><h1>RegistryInfo.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import com.google.gson.Gson;
+import org.apache.http.client.methods.HttpGet;
+import org.nanopub.NanopubUtils;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+
+/**
+ * RegistryInfo class represents the information about a nanopub registry server.
+ */
+public class RegistryInfo implements Serializable {
+
+    /**
+     * Exception class for handling errors related to loading registry information.
+     */
+    public static class RegistryInfoException extends Exception {
+
+        /**
+         * Constructs a RegistryInfoException with a message indicating an invalid URL.
+         *
+         * @param url the URL that caused the exception
+         */
+        public RegistryInfoException(String url) {
+<span class="fc" id="L28">            super(url);</span>
+<span class="fc" id="L29">        }</span>
+
+    }
+
+    /**
+     * Loads the registry information from the specified URL.
+     *
+     * @param registryUrl the URL of the registry server
+     * @return a RegistryInfo object containing the server information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
+     */
+    public static RegistryInfo load(String registryUrl) throws RegistryInfoException {
+<span class="fc" id="L41">        return load(registryUrl, RegistryInfo.class);</span>
+    }
+
+    /**
+     * Loads the registry information from the specified URL using a specific class for deserialization.
+     *
+     * @param url             the URL of the registry server
+     * @param serverInfoClass the class to use for deserializing the registry information
+     * @return a RegistryInfo object containing the server information
+     * @throws org.nanopub.extra.server.RegistryInfo.RegistryInfoException if there is an error loading the registry information
+     */
+    protected static RegistryInfo load(String url, Class&lt;? extends RegistryInfo&gt; serverInfoClass) throws RegistryInfoException {
+<span class="fc" id="L53">        HttpGet get = null;</span>
+        try {
+<span class="fc" id="L55">            get = new HttpGet(url);</span>
+<span class="nc" id="L56">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L57">            throw new RegistryInfoException(&quot;invalid URL: &quot; + url);</span>
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">        get.setHeader(&quot;Accept&quot;, &quot;application/json&quot;);</span>
+<span class="fc" id="L60">        RegistryInfo r = null;</span>
+<span class="fc" id="L61">        try (InputStream in = NanopubUtils.getHttpClient().execute(get).getEntity().getContent()) {</span>
+<span class="fc" id="L62">            r = new Gson().fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), serverInfoClass);</span>
+<span class="fc" id="L63">            r.url = url;</span>
+<span class="fc" id="L64">        } catch (Exception ex) {</span>
+<span class="fc" id="L65">            throw new RegistryInfoException(url);</span>
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">        return r;</span>
+    }
+
+    /**
+     * Default constructor for RegistryInfo.
+     * Initializes an empty RegistryInfo object.
+     */
+<span class="fc" id="L74">    public RegistryInfo() {</span>
+<span class="fc" id="L75">    }</span>
+
+    protected String url;
+    protected Long setupId;
+    protected Long trustStateCounter;
+    protected String lastTrustStateUpdate;
+    protected String trustStateHash;
+    protected String status;
+    protected String coverageTypes;
+    protected String coverageAgents;
+    protected String currentSetting;
+    protected String originalSetting;
+    protected Long agentCount;
+    protected Long accountCount;
+    protected Long nanopubCount;
+    protected Long loadCounter;
+
+    /**
+     * Returns the URL of the nanopub registry server.
+     *
+     * @return the URL of the registry server
+     */
+    public String getUrl() {
+<span class="fc" id="L98">        return url;</span>
+    }
+
+    /**
+     * Returns the URL for accessing the nanopublications collection of the registry server.
+     *
+     * @return the URL for the nanopublications collection
+     */
+    public String getCollectionUrl() {
+<span class="fc" id="L107">        return url + &quot;np/&quot;;</span>
+    }
+
+    /**
+     * Returns the setup ID of the registry server.
+     *
+     * @return the setup ID
+     */
+    public Long getSetupId() {
+<span class="fc" id="L116">        return setupId;</span>
+    }
+
+    /**
+     * Returns the trust state counter of the registry server.
+     *
+     * @return the trust state counter
+     */
+    public Long getTrustStateCounter() {
+<span class="fc" id="L125">        return trustStateCounter;</span>
+    }
+
+    /**
+     * Returns the last trust state update timestamp of the registry server.
+     *
+     * @return a string representing the last trust state update
+     */
+    public String getLastTrustStateUpdate() {
+<span class="fc" id="L134">        return lastTrustStateUpdate;</span>
+    }
+
+    /**
+     * Returns the hash of the current trust state of the registry server.
+     *
+     * @return a string representing the trust state hash
+     */
+    public String getTrustStateHash() {
+<span class="fc" id="L143">        return trustStateHash;</span>
+    }
+
+    /**
+     * Returns the status of the nanopub registry server.
+     *
+     * @return a string representing the status
+     */
+    public String getStatus() {
+<span class="fc" id="L152">        return status;</span>
+    }
+
+    /**
+     * Returns the types of coverage provided by the registry server.
+     *
+     * @return a string representing the coverage types
+     */
+    public String getCoverageTypes() {
+<span class="fc" id="L161">        return coverageTypes;</span>
+    }
+
+    /**
+     * Returns the agents covered by the registry server.
+     *
+     * @return a string representing the coverage agents
+     */
+    public String getCoverageAgents() {
+<span class="fc" id="L170">        return coverageAgents;</span>
+    }
+
+    /**
+     * Returns the current setting of the registry server.
+     *
+     * @return a string representing the current setting
+     */
+    public String getCurrentSetting() {
+<span class="fc" id="L179">        return currentSetting;</span>
+    }
+
+    /**
+     * Returns the original setting of the registry server.
+     *
+     * @return a string representing the original setting
+     */
+    public String getOriginalSetting() {
+<span class="fc" id="L188">        return originalSetting;</span>
+    }
+
+    /**
+     * Returns the count of agents registered on the server.
+     *
+     * @return the number of agents
+     */
+    public Long getAgentCount() {
+<span class="fc" id="L197">        return agentCount;</span>
+    }
+
+    /**
+     * Returns the count of accounts registered on the server.
+     *
+     * @return the number of accounts
+     */
+    public Long getAccountCount() {
+<span class="fc" id="L206">        return accountCount;</span>
+    }
+
+    /**
+     * Returns the count of nanopublications stored on the server.
+     *
+     * @return the number of nanopublications
+     */
+    public Long getNanopubCount() {
+<span class="fc" id="L215">        return nanopubCount;</span>
+    }
+
+    /**
+     * Returns the load counter for the registry server.
+     *
+     * @return the load counter
+     */
+    public Long getLoadCounter() {
+<span class="fc" id="L224">        return loadCounter;</span>
+    }
+
+    /**
+     * Returns the JSON representation of this RegistryInfo object.
+     *
+     * @return a JSON string representing the RegistryInfo
+     */
+    public String asJson() {
+<span class="fc" id="L233">        return new Gson().toJson(this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns the URL of the registry server as a string.
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (!(obj instanceof RegistryInfo)) {</span>
+<span class="nc" id="L244">            return false;</span>
+        }
+<span class="nc" id="L246">        return toString().equals(obj.toString());</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns the hash code of the registry server.
+     */
+    @Override
+    public int hashCode() {
+<span class="fc" id="L256">        return toString().hashCode();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns the string representation of the registry server URL.
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L266">        return url;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

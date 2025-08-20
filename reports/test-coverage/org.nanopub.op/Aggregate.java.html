@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Aggregate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Aggregate.java</span></div><h1>Aggregate.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.Nanopub;
+
+import java.io.*;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * This class runs the nanopub aggregation operation.
+ */
+<span class="nc" id="L23">public class Aggregate extends CliRunner {</span>
+
+<span class="nc" id="L25">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-h&quot;, description = &quot;Output file for aggregation of head graph&quot;)
+    private File headOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Output file for aggregation of assertion graph&quot;)
+    private File assertionOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-p&quot;, description = &quot;Output file for aggregation of provenance graph&quot;)
+    private File provOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;Output file for aggregation of pubinfo graph&quot;)
+    private File pubinfoOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    /**
+     * Main method to run the Aggregate operation.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L50">            Aggregate obj = CliRunner.initJc(new Aggregate(), args);</span>
+<span class="nc" id="L51">            obj.run();</span>
+<span class="nc" id="L52">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L53">            System.exit(1);</span>
+<span class="nc" id="L54">        } catch (Exception ex) {</span>
+<span class="nc" id="L55">            ex.printStackTrace();</span>
+<span class="nc" id="L56">            System.exit(1);</span>
+<span class="nc" id="L57">        }</span>
+<span class="nc" id="L58">    }</span>
+
+    /**
+     * Creates an instance of the Aggregate class with the given arguments.
+     *
+     * @param args Command line arguments
+     * @return An instance of Aggregate
+     * @throws com.beust.jcommander.ParameterException If there is an error in the parameters
+     */
+    public static Aggregate getInstance(String args) throws ParameterException {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (args == null) {</span>
+<span class="nc" id="L69">            args = &quot;&quot;;</span>
+        }
+<span class="nc" id="L71">        Aggregate obj = CliRunner.initJc(new Aggregate(), args.trim().split(&quot; &quot;));</span>
+<span class="nc" id="L72">        return obj;</span>
+    }
+
+    private RDFFormat rdfInFormat;
+    private Map&lt;Statement, Integer&gt; headCounts, assertionCounts, provCounts, pubinfoCounts;
+
+    /**
+     * Runs the aggregation operation on the input nanopubs.
+     *
+     * @throws java.io.IOException                       If there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException          If there is an error with Trusty URIs
+     */
+    public void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L89" title="All 4 branches missed.">        if (inputNanopubs == null || inputNanopubs.isEmpty()) {</span>
+<span class="nc" id="L90">            throw new ParameterException(&quot;No input files given&quot;);</span>
+        }
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (headOutputFile != null) headCounts = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (assertionOutputFile != null) assertionCounts = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (provOutputFile != null) provCounts = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (pubinfoOutputFile != null) pubinfoCounts = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L98">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L100">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+
+<span class="nc" id="L103">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L105">                    process(np);</span>
+<span class="nc" id="L106">                } catch (RDFHandlerException | IOException ex) {</span>
+<span class="nc" id="L107">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L108">                }</span>
+<span class="nc" id="L109">            });</span>
+
+<span class="nc" id="L111">        }</span>
+<span class="nc" id="L112">        writeStatementCounts(headCounts, headOutputFile);</span>
+<span class="nc" id="L113">        writeStatementCounts(assertionCounts, assertionOutputFile);</span>
+<span class="nc" id="L114">        writeStatementCounts(provCounts, provOutputFile);</span>
+<span class="nc" id="L115">        writeStatementCounts(pubinfoCounts, pubinfoOutputFile);</span>
+<span class="nc" id="L116">    }</span>
+
+    /**
+     * Processes a single nanopub and aggregates its statements.
+     *
+     * @param np The nanopub to process
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If there is an error handling RDF data
+     * @throws java.io.IOException                       If there is an error writing to files
+     */
+    public void process(Nanopub np) throws RDFHandlerException, IOException {
+<span class="nc" id="L126">        aggregate(np.getHead(), np, headCounts);</span>
+<span class="nc" id="L127">        aggregate(np.getAssertion(), np, assertionCounts);</span>
+<span class="nc" id="L128">        aggregate(np.getProvenance(), np, provCounts);</span>
+<span class="nc" id="L129">        aggregate(np.getPubinfo(), np, pubinfoCounts);</span>
+<span class="nc" id="L130">    }</span>
+
+    private void aggregate(Set&lt;Statement&gt; statements, Nanopub np, Map&lt;Statement, Integer&gt; statementCounts) throws IOException {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (statementCounts == null) return;</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc" id="L135">            Statement pst = preprocessStatement(st, np);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (!statementCounts.containsKey(pst)) {</span>
+<span class="nc" id="L137">                statementCounts.put(pst, 1);</span>
+            } else {
+<span class="nc" id="L139">                statementCounts.put(pst, statementCounts.get(pst) + 1);</span>
+            }
+<span class="nc" id="L141">        }</span>
+<span class="nc" id="L142">    }</span>
+
+    private Statement preprocessStatement(Statement st, Nanopub np) {
+<span class="nc" id="L145">        Resource subject = st.getSubject();</span>
+<span class="nc" id="L146">        IRI predicate = st.getPredicate();</span>
+<span class="nc" id="L147">        Value object = st.getObject();</span>
+<span class="nc" id="L148">        subject = (Resource) preprocessValue(subject, np);</span>
+<span class="nc" id="L149">        predicate = (IRI) preprocessValue(predicate, np);</span>
+<span class="nc" id="L150">        object = preprocessValue(object, np);</span>
+<span class="nc" id="L151">        return vf.createStatement(subject, predicate, object);</span>
+    }
+
+<span class="nc" id="L154">    private static ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+<span class="nc" id="L156">    private static final IRI thisNanopub = vf.createIRI(&quot;http://example.org/npop-dummy-uri/this_nanopub&quot;);</span>
+<span class="nc" id="L157">    private static final IRI thisHead = vf.createIRI(&quot;http://example.org/npop-dummy-uri/this_head&quot;);</span>
+<span class="nc" id="L158">    private static final IRI thisAssertion = vf.createIRI(&quot;http://example.org/npop-dummy-uri/this_assertion&quot;);</span>
+<span class="nc" id="L159">    private static final IRI thisProvenance = vf.createIRI(&quot;thttp://example.org/npop-dummy-uri/his_provenance&quot;);</span>
+<span class="nc" id="L160">    private static final IRI thisPubinfo = vf.createIRI(&quot;http://example.org/npop-dummy-uri/this_pubinfo&quot;);</span>
+
+    private Value preprocessValue(Value v, Nanopub np) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (np.getUri().equals(v)) {</span>
+<span class="nc" id="L164">            return thisNanopub;</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        } else if (np.getHeadUri().equals(v)) {</span>
+<span class="nc" id="L166">            return thisHead;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        } else if (np.getAssertionUri().equals(v)) {</span>
+<span class="nc" id="L168">            return thisAssertion;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        } else if (np.getProvenanceUri().equals(v)) {</span>
+<span class="nc" id="L170">            return thisProvenance;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">        } else if (np.getPubinfoUri().equals(v)) {</span>
+<span class="nc" id="L172">            return thisPubinfo;</span>
+        }
+<span class="nc" id="L174">        return v;</span>
+    }
+
+    private void writeStatementCounts(final Map&lt;Statement, Integer&gt; statementCounts, File outputFile) throws IOException {
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        if (statementCounts == null) return;</span>
+<span class="nc" id="L179">        BufferedWriter w = makeWriter(outputFile);</span>
+<span class="nc" id="L180">        List&lt;Statement&gt; statementList = new ArrayList&lt;&gt;(statementCounts.keySet());</span>
+<span class="nc" id="L181">        statementList.sort((st1, st2) -&gt; -statementCounts.get(st1).compareTo(statementCounts.get(st2)));</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        for (Statement st : statementList) {</span>
+<span class="nc" id="L183">            w.write(statementCounts.get(st) + &quot; &quot; + st.toString().replaceAll(&quot;http://example.org/npop-dummy-uri/&quot;, &quot;&quot;) + &quot;\n&quot;);</span>
+<span class="nc" id="L184">        }</span>
+<span class="nc" id="L185">        w.flush();</span>
+<span class="nc" id="L186">        w.close();</span>
+<span class="nc" id="L187">    }</span>
+
+    private BufferedWriter makeWriter(File f) throws IOException {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (f == null) return null;</span>
+<span class="nc" id="L191">        OutputStream stream = null;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (f.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L193">            stream = new GZIPOutputStream(new FileOutputStream(f));</span>
+        } else {
+<span class="nc" id="L195">            stream = new FileOutputStream(f);</span>
+        }
+<span class="nc" id="L197">        return new BufferedWriter(new OutputStreamWriter(stream));</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

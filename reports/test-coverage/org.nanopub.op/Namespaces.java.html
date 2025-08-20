@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Namespaces.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Namespaces.java</span></div><h1>Namespaces.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.Nanopub;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to work with namespaces in nanopublications.
+ */
+<span class="nc" id="L26">public class Namespaces extends CliRunner {</span>
+
+<span class="nc" id="L28">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-h&quot;, description = &quot;Output file for namespaces used in head graph&quot;)
+    private File headOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Output file for namespaces used in assertion graph&quot;)
+    private File assertionOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-p&quot;, description = &quot;Output file for namespaces used in provenance graph&quot;)
+    private File provOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;Output file for namespaces used in pub info graph&quot;)
+    private File pubinfoOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--subj&quot;, description = &quot;Include subject URIs&quot;)
+    private boolean includeSubject;
+
+    @com.beust.jcommander.Parameter(names = &quot;--pred&quot;, description = &quot;Include predicate URIs&quot;)
+    private boolean includePredicate;
+
+    @com.beust.jcommander.Parameter(names = &quot;--obj&quot;, description = &quot;Include object URIs&quot;)
+    private boolean includeObject;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    /**
+     * Main method to run the Namespaces utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L62">            Namespaces obj = CliRunner.initJc(new Namespaces(), args);</span>
+<span class="nc" id="L63">            obj.init();</span>
+<span class="nc" id="L64">            obj.run();</span>
+<span class="nc" id="L65">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L66">            System.exit(1);</span>
+<span class="nc" id="L67">        } catch (Exception ex) {</span>
+<span class="nc" id="L68">            ex.printStackTrace();</span>
+<span class="nc" id="L69">            System.exit(1);</span>
+<span class="nc" id="L70">        }</span>
+<span class="nc" id="L71">    }</span>
+
+    /**
+     * Initializes the Namespaces utility with command-line arguments.
+     *
+     * @param args Command-line arguments
+     * @return An instance of Namespaces
+     * @throws com.beust.jcommander.ParameterException if there is an error in the parameters
+     */
+    public static Namespaces getInstance(String args) throws ParameterException {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (args == null) {</span>
+<span class="nc" id="L82">            args = &quot;&quot;;</span>
+        }
+<span class="nc" id="L84">        Namespaces obj = CliRunner.initJc(new Namespaces(), args.trim().split(&quot; &quot;));</span>
+<span class="nc" id="L85">        return obj;</span>
+    }
+
+    private RDFFormat rdfInFormat;
+    private BufferedWriter headWriter, assertionWriter, provWriter, pubinfoWriter;
+
+    private void init() {
+<span class="nc bnc" id="L92" title="All 6 branches missed.">        if (!includeSubject &amp;&amp; !includePredicate &amp;&amp; !includeObject) {</span>
+<span class="nc" id="L93">            includeSubject = true;</span>
+<span class="nc" id="L94">            includePredicate = true;</span>
+<span class="nc" id="L95">            includeObject = true;</span>
+        }
+<span class="nc" id="L97">    }</span>
+
+    /**
+     * Runs the Namespaces utility to extract namespaces from nanopublications.
+     *
+     * @throws java.io.IOException                       if there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs
+     */
+    public void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        if (inputNanopubs == null || inputNanopubs.isEmpty()) {</span>
+<span class="nc" id="L111">            throw new ParameterException(&quot;No input files given&quot;);</span>
+        }
+<span class="nc" id="L113">        headWriter = makeWriter(headOutputFile);</span>
+<span class="nc" id="L114">        assertionWriter = makeWriter(assertionOutputFile);</span>
+<span class="nc" id="L115">        provWriter = makeWriter(provOutputFile);</span>
+<span class="nc" id="L116">        pubinfoWriter = makeWriter(pubinfoOutputFile);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L119">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L121">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+
+<span class="nc" id="L124">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L126">                    process(np);</span>
+<span class="nc" id="L127">                } catch (RDFHandlerException | IOException ex) {</span>
+<span class="nc" id="L128">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L129">                }</span>
+<span class="nc" id="L130">            });</span>
+
+<span class="nc" id="L132">        }</span>
+<span class="nc" id="L133">        closeWriter(headWriter);</span>
+<span class="nc" id="L134">        closeWriter(assertionWriter);</span>
+<span class="nc" id="L135">        closeWriter(provWriter);</span>
+<span class="nc" id="L136">        closeWriter(pubinfoWriter);</span>
+<span class="nc" id="L137">    }</span>
+
+    /**
+     * Processes a single nanopublication to extract namespaces from its graphs.
+     *
+     * @param np the nanopublication to process
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws java.io.IOException                       if there is an error writing to output files
+     */
+    public void process(Nanopub np) throws RDFHandlerException, IOException {
+<span class="nc" id="L147">        writeNamespaces(np.getHead(), headWriter);</span>
+<span class="nc" id="L148">        writeNamespaces(np.getAssertion(), assertionWriter);</span>
+<span class="nc" id="L149">        writeNamespaces(np.getProvenance(), provWriter);</span>
+<span class="nc" id="L150">        writeNamespaces(np.getPubinfo(), pubinfoWriter);</span>
+<span class="nc" id="L151">    }</span>
+
+    private void writeNamespaces(Set&lt;Statement&gt; statements, BufferedWriter w) throws IOException {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (w == null) return;</span>
+<span class="nc" id="L155">        Set&lt;String&gt; namespaces = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc bnc" id="L157" title="All 4 branches missed.">            if (includeSubject &amp;&amp; st.getSubject() instanceof IRI) {</span>
+<span class="nc" id="L158">                namespaces.add(getNamespace((IRI) st.getSubject()));</span>
+            }
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            if (includePredicate) {</span>
+<span class="nc" id="L161">                namespaces.add(getNamespace(st.getPredicate()));</span>
+            }
+<span class="nc bnc" id="L163" title="All 4 branches missed.">            if (includeObject &amp;&amp; st.getObject() instanceof IRI) {</span>
+<span class="nc" id="L164">                namespaces.add(getNamespace((IRI) st.getObject()));</span>
+            }
+<span class="nc" id="L166">        }</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        for (String n : namespaces) {</span>
+<span class="nc" id="L168">            w.write(n + &quot;\n&quot;);</span>
+<span class="nc" id="L169">        }</span>
+<span class="nc" id="L170">    }</span>
+
+    private String getNamespace(IRI uri) {
+<span class="nc" id="L173">        return uri.toString().replaceFirst(&quot;[A-Za-z0-9_.-]*.$&quot;, &quot;&quot;);</span>
+    }
+
+    private BufferedWriter makeWriter(File f) throws IOException {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (f == null) return null;</span>
+<span class="nc" id="L178">        OutputStream stream = null;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (f.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L180">            stream = new GZIPOutputStream(new FileOutputStream(f));</span>
+        } else {
+<span class="nc" id="L182">            stream = new FileOutputStream(f);</span>
+        }
+<span class="nc" id="L184">        return new BufferedWriter(new OutputStreamWriter(stream));</span>
+    }
+
+    private void closeWriter(Writer w) throws IOException {
+<span class="nc bnc" id="L188" title="All 2 branches missed.">        if (w == null) return;</span>
+<span class="nc" id="L189">        w.flush();</span>
+<span class="nc" id="L190">        w.close();</span>
+<span class="nc" id="L191">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

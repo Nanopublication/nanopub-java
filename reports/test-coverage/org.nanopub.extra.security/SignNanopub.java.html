@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.security</a> &gt; <span class="el_source">SignNanopub.java</span></div><h1>SignNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.security;
+
+import com.beust.jcommander.ParameterException;
+import jakarta.xml.bind.DatatypeConverter;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command line tool to sign nanopubs with a private key.
+ */
+public class SignNanopub extends CliRunner {
+
+<span class="fc" id="L30">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-files&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubFiles = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File singleOutputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-k&quot;, description = &quot;Path and file name of key files&quot;)
+    private String keyFilename;
+
+<span class="fc" id="L39">    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;Ignore already signed nanopubs&quot;)</span>
+    private boolean ignoreSigned = false;
+
+<span class="fc" id="L42">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+<span class="fc" id="L45">    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Resolve cross-nanopub references&quot;)</span>
+    private boolean resolveCrossRefs = false;
+
+<span class="fc" id="L48">    @com.beust.jcommander.Parameter(names = &quot;-R&quot;, description = &quot;Resolve cross-nanopub references based on prefixes&quot;)</span>
+    private boolean resolveCrossRefsPrefixBased = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;The orcid IRI of the signer&quot;)
+    private String signer;
+
+    @com.beust.jcommander.Parameter(names = &quot;--profile&quot;, description = &quot;Profile file for signer iri and key files, &quot; + &quot;defaults to ~/.nanopub/profile.yaml&quot;)
+    private File profileFile;
+
+
+    private SignatureAlgorithm algorithm; // we guess the algorithm is RSA as long as the key name does not end in _dsa
+
+<span class="fc" id="L60">    private ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Main method to run the SignNanopub command line tool.
+     *
+     * @param args command line arguments
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public static void main(String[] args) throws IOException {
+        try {
+<span class="nc" id="L70">            SignNanopub obj = CliRunner.initJc(new SignNanopub(), args);</span>
+<span class="nc" id="L71">            obj.run();</span>
+<span class="nc" id="L72">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L73">            System.exit(1);</span>
+<span class="nc" id="L74">        } catch (Exception ex) {</span>
+<span class="nc" id="L75">            ex.printStackTrace();</span>
+<span class="nc" id="L76">            System.exit(1);</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">    }</span>
+
+    private KeyPair key;
+
+    /**
+     * Default constructor for SignNanopub.
+     * Initializes the command line parameters.
+     */
+<span class="fc" id="L86">    public SignNanopub() {</span>
+<span class="fc" id="L87">    }</span>
+
+    /**
+     * Runs the signing process for the nanopubs.
+     *
+     * @throws java.lang.Exception if an error occurs during signing
+     */
+    protected void run() throws Exception {
+        NanopubProfile profile;
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (profileFile != null) {</span>
+<span class="fc" id="L97">            profile = new NanopubProfile(profileFile.getPath());</span>
+        } else {
+<span class="fc" id="L99">            profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);</span>
+        }
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (keyFilename == null) {</span>
+<span class="fc" id="L102">            keyFilename = profile.getPrivateKeyPath();</span>
+        }
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (keyFilename == null) {</span>
+<span class="nc" id="L105">            keyFilename = &quot;~/.nanopub/id_rsa&quot;;</span>
+        }
+
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (keyFilename.endsWith(&quot;_dsa&quot;)) {</span>
+<span class="nc" id="L109">            algorithm = SignatureAlgorithm.DSA;</span>
+        } else {
+            // Assuming RSA if not other information is available
+<span class="fc" id="L112">            algorithm = SignatureAlgorithm.RSA;</span>
+        }
+
+<span class="fc" id="L115">        key = loadKey(keyFilename, algorithm);</span>
+<span class="fc" id="L116">        IRI signerIri = null;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (signer != null) {</span>
+<span class="fc" id="L118">            signerIri = vf.createIRI(signer);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        } else if (profile.getOrcidId() != null) {</span>
+<span class="fc" id="L120">            signerIri = vf.createIRI(profile.getOrcidId());</span>
+        }
+<span class="fc" id="L122">        final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);</span>
+
+        final OutputStream singleOut;
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (singleOutputFile != null) {</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">            if (singleOutputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L127">                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));</span>
+            } else {
+<span class="fc" id="L129">                singleOut = new FileOutputStream(singleOutputFile);</span>
+            }
+        } else {
+<span class="nc" id="L132">            singleOut = null;</span>
+        }
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        for (File inputFile : inputNanopubFiles) {</span>
+            File outputFile;
+            final OutputStream out;
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">            if (singleOutputFile == null) {</span>
+<span class="nc" id="L139">                outputFile = new File(inputFile.getParent(), &quot;signed.&quot; + inputFile.getName());</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                if (inputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L141">                    out = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L143">                    out = new FileOutputStream(outputFile);</span>
+                }
+            } else {
+<span class="fc" id="L146">                outputFile = singleOutputFile;</span>
+<span class="fc" id="L147">                out = singleOut;</span>
+            }
+<span class="fc" id="L149">            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L150">            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L151">            try (out) {</span>
+<span class="fc" id="L152">                MultiNanopubRdfHandler.process(inFormat, inputFile, np -&gt; {</span>
+                    try {
+<span class="fc" id="L154">                        np = writeAsSignedTrustyNanopub(np, outFormat, c, out);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                        if (verbose) {</span>
+<span class="nc" id="L156">                            System.out.println(&quot;Nanopub URI: &quot; + np.getUri());</span>
+                        }
+<span class="nc" id="L158">                    } catch (RDFHandlerException | SignatureException | InvalidKeyException |</span>
+                             TrustyUriException ex) {
+<span class="nc" id="L160">                        ex.printStackTrace();</span>
+<span class="nc" id="L161">                        throw new RuntimeException(ex);</span>
+<span class="fc" id="L162">                    }</span>
+<span class="fc" id="L163">                });</span>
+            }
+<span class="fc" id="L165">        }</span>
+<span class="fc" id="L166">    }</span>
+
+    /**
+     * Signs and transforms a nanopub.
+     *
+     * @param nanopub the nanopub to sign
+     * @param c       the transform context containing signing information
+     * @return the signed and transformed nanopub
+     * @throws net.trustyuri.TrustyUriException  if there is an error with the Trusty URI
+     * @throws java.security.InvalidKeyException if the key is invalid
+     * @throws java.security.SignatureException  if there is an error during signing
+     */
+    public static Nanopub signAndTransform(Nanopub nanopub, TransformContext c) throws TrustyUriException, InvalidKeyException, SignatureException {
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if (nanopub instanceof NanopubWithNs) {</span>
+<span class="fc" id="L180">            ((NanopubWithNs) nanopub).removeUnusedPrefixes();</span>
+        }
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">        if (SignatureUtils.seemsToHaveSignature(nanopub)) {</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            if (c.isIgnoreSignedEnabled()) {</span>
+<span class="nc" id="L184">                return nanopub;</span>
+            } else {
+<span class="nc" id="L186">                throw new SignatureException(&quot;Seems to have signature before signing: &quot; + nanopub.getUri());</span>
+            }
+        }
+        try {
+<span class="fc" id="L190">            return SignatureUtils.createSignedNanopub(nanopub, c);</span>
+<span class="nc" id="L191">        } catch (Exception ex) {</span>
+<span class="nc" id="L192">            ex.printStackTrace();</span>
+<span class="nc" id="L193">            throw new RuntimeException(ex);</span>
+        }
+    }
+
+    /**
+     * Signs and transforms multiple nanopubs from a file.
+     *
+     * @param format the RDF format of the nanopubs
+     * @param file   the input file containing nanopubs
+     * @param c      the transform context containing signing information
+     * @param out    the output stream to write signed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void signAndTransformMultiNanopub(final RDFFormat format, File file, TransformContext c, OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L210">        InputStream in = new FileInputStream(file);</span>
+<span class="nc" id="L211">        signAndTransformMultiNanopub(format, in, c, out);</span>
+<span class="nc" id="L212">    }</span>
+
+    /**
+     * Signs and transforms multiple nanopubs from an input stream.
+     *
+     * @param format the RDF format of the nanopubs
+     * @param in     the input stream containing nanopubs
+     * @param c      the transform context containing signing information
+     * @param out    the output stream to write signed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void signAndTransformMultiNanopub(final RDFFormat format, InputStream in, final TransformContext c, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L227">        try (out) {</span>
+<span class="nc" id="L228">            MultiNanopubRdfHandler.process(format, in, np -&gt; {</span>
+                try {
+<span class="nc" id="L230">                    writeAsSignedTrustyNanopub(np, format, c, out);</span>
+<span class="nc" id="L231">                } catch (RDFHandlerException | SignatureException | InvalidKeyException | TrustyUriException ex) {</span>
+<span class="nc" id="L232">                    ex.printStackTrace();</span>
+<span class="nc" id="L233">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L234">                }</span>
+<span class="nc" id="L235">            });</span>
+        }
+<span class="nc" id="L237">    }</span>
+
+    /**
+     * Writes a signed nanopub to an output stream in the specified RDF format.
+     *
+     * @param np     the nanopub to write
+     * @param format the RDF format to use for writing
+     * @param c      the transform context containing signing information
+     * @param out    the output stream to write the signed nanopub
+     * @return the signed nanopub
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF
+     * @throws net.trustyuri.TrustyUriException          if there is an error with the Trusty URI
+     * @throws java.security.InvalidKeyException         if the key is invalid
+     * @throws java.security.SignatureException          if there is an error during signing
+     */
+    public static Nanopub writeAsSignedTrustyNanopub(Nanopub np, RDFFormat format, TransformContext c, OutputStream out) throws RDFHandlerException, TrustyUriException, InvalidKeyException, SignatureException {
+<span class="fc" id="L253">        np = signAndTransform(np, c);</span>
+<span class="fc" id="L254">        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="fc" id="L255">        NanopubUtils.propagateToHandler(np, w);</span>
+<span class="fc" id="L256">        return np;</span>
+    }
+
+    /**
+     * Loads a key pair from the specified key file.
+     *
+     * @param keyFilename the path to the key file
+     * @param algorithm   the signature algorithm used for the key
+     * @return the loaded KeyPair
+     * @throws java.security.NoSuchAlgorithmException     if the specified algorithm is not available
+     * @throws java.io.IOException                        if an I/O error occurs while reading the key file
+     * @throws java.security.spec.InvalidKeySpecException if the key specification is invalid
+     */
+    public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+<span class="fc" id="L270">        keyFilename = SignatureUtils.getFullFilePath(keyFilename);</span>
+<span class="fc" id="L271">        KeyFactory kf = KeyFactory.getInstance(algorithm.name());</span>
+<span class="fc" id="L272">        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), StandardCharsets.UTF_8));</span>
+<span class="fc" id="L273">        KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);</span>
+<span class="fc" id="L274">        PrivateKey privateKey = kf.generatePrivate(privateSpec);</span>
+<span class="fc" id="L275">        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + &quot;.pub&quot;), StandardCharsets.UTF_8));</span>
+<span class="fc" id="L276">        KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);</span>
+<span class="fc" id="L277">        PublicKey publicKey = kf.generatePublic(publicSpec);</span>
+<span class="fc" id="L278">        return new KeyPair(publicKey, privateKey);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

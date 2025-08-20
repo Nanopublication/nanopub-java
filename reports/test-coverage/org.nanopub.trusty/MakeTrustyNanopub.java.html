@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakeTrustyNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.trusty</a> &gt; <span class="el_source">MakeTrustyNanopub.java</span></div><h1>MakeTrustyNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.trusty;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.TransformRdf;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.rio.*;
+import org.nanopub.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line tool to transform nanopubs into Trusty Nanopubs.
+ */
+<span class="nc" id="L22">public class MakeTrustyNanopub extends CliRunner {</span>
+
+<span class="nc" id="L24">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-files&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubsFiles = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File singleOutputFile;
+
+<span class="nc" id="L30">    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Resolve cross-nanopub references&quot;)</span>
+    private boolean resolveCrossRefs = false;
+
+<span class="nc" id="L33">    @com.beust.jcommander.Parameter(names = &quot;-R&quot;, description = &quot;Resolve cross-nanopub references based on prefixes&quot;)</span>
+    private boolean resolveCrossRefsPrefixBased = false;
+
+<span class="nc" id="L36">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+    /**
+     * Main method to run the command-line tool.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L46">            MakeTrustyNanopub obj = CliRunner.initJc(new MakeTrustyNanopub(), args);</span>
+<span class="nc" id="L47">            obj.run();</span>
+<span class="nc" id="L48">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        } catch (Exception ex) {</span>
+<span class="nc" id="L51">            ex.printStackTrace();</span>
+<span class="nc" id="L52">            System.exit(1);</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">    }</span>
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
+        final Map&lt;Resource, IRI&gt; tempRefMap;
+        final Map&lt;String, String&gt; tempPrefixMap;
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (resolveCrossRefsPrefixBased) {</span>
+<span class="nc" id="L60">            tempPrefixMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L61">            tempRefMap = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        } else if (resolveCrossRefs) {</span>
+<span class="nc" id="L63">            tempPrefixMap = null;</span>
+<span class="nc" id="L64">            tempRefMap = new HashMap&lt;&gt;();</span>
+        } else {
+<span class="nc" id="L66">            tempPrefixMap = null;</span>
+<span class="nc" id="L67">            tempRefMap = null;</span>
+        }
+        final OutputStream singleOut;
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (singleOutputFile != null) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (singleOutputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L72">                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));</span>
+            } else {
+<span class="nc" id="L74">                singleOut = new FileOutputStream(singleOutputFile);</span>
+            }
+        } else {
+<span class="nc" id="L77">            singleOut = null;</span>
+        }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (File inputFile : inputNanopubsFiles) {</span>
+            File outputFile;
+            final OutputStream out;
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (singleOutputFile == null) {</span>
+<span class="nc" id="L83">                outputFile = new File(inputFile.getParent(), &quot;trusty.&quot; + inputFile.getName());</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                if (inputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L85">                    out = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L87">                    out = new FileOutputStream(outputFile);</span>
+                }
+            } else {
+<span class="nc" id="L90">                outputFile = singleOutputFile;</span>
+<span class="nc" id="L91">                out = singleOut;</span>
+            }
+<span class="nc" id="L93">            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="nc" id="L94">            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="nc" id="L95">            MultiNanopubRdfHandler.process(inFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L97">                    np = writeAsTrustyNanopub(np, outFormat, out, tempRefMap, tempPrefixMap);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L99">                        System.out.println(&quot;Nanopub URI: &quot; + np.getUri());</span>
+                    }
+<span class="nc" id="L101">                } catch (RDFHandlerException | TrustyUriException ex) {</span>
+<span class="nc" id="L102">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L103">                }</span>
+<span class="nc" id="L104">            });</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">            if (singleOutputFile == null) {</span>
+<span class="nc" id="L106">                out.close();</span>
+            }
+<span class="nc" id="L108">        }</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (singleOutputFile != null) {</span>
+<span class="nc" id="L110">            singleOut.close();</span>
+        }
+<span class="nc" id="L112">    }</span>
+
+    /**
+     * Transform a Nanopub into a Trusty Nanopub.
+     *
+     * @param nanopub the Nanopub to transform
+     * @return the transformed Trusty Nanopub
+     * @throws net.trustyuri.TrustyUriException if the transformation fails due to an invalid URI or other issues
+     */
+    public static Nanopub transform(Nanopub nanopub) throws TrustyUriException {
+<span class="nc" id="L122">        return transform(nanopub, null, null);</span>
+    }
+
+    /**
+     * Transform a Nanopub into a Trusty Nanopub, resolving cross-references and prefixes if provided.
+     *
+     * @param nanopub       the Nanopub to transform
+     * @param tempRefMap    a map for temporary resource references, can be null
+     * @param tempPrefixMap a map for temporary prefixes, can be null
+     * @return the transformed Trusty Nanopub
+     * @throws net.trustyuri.TrustyUriException if the transformation fails due to an invalid URI or other issues
+     */
+    public static Nanopub transform(Nanopub nanopub, Map&lt;Resource, IRI&gt; tempRefMap, Map&lt;String, String&gt; tempPrefixMap) throws TrustyUriException {
+<span class="nc" id="L135">        String u = nanopub.getUri().stringValue();</span>
+<span class="nc bnc" id="L136" title="All 8 branches missed.">        if (!nanopub.getHeadUri().stringValue().startsWith(u) || !nanopub.getAssertionUri().stringValue().startsWith(u) || !nanopub.getProvenanceUri().stringValue().startsWith(u) || !nanopub.getPubinfoUri().stringValue().startsWith(u)) {</span>
+<span class="nc" id="L137">            throw new TrustyUriException(&quot;Graph URIs need have the nanopub URI as prefix: &quot; + u + &quot;...&quot;);</span>
+        }
+        Nanopub np;
+        try {
+<span class="nc" id="L141">            RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);</span>
+            String npUri;
+<span class="nc" id="L143">            Map&lt;Resource, IRI&gt; tempUriReplacerMap = null;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (TempUriReplacer.hasTempUri(nanopub)) {</span>
+<span class="nc" id="L145">                npUri = TempUriReplacer.normUri;</span>
+<span class="nc" id="L146">                tempUriReplacerMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L147">                NanopubUtils.propagateToHandler(nanopub, new TempUriReplacer(nanopub, r, tempUriReplacerMap));</span>
+            } else {
+<span class="nc" id="L149">                npUri = nanopub.getUri().toString();</span>
+<span class="nc" id="L150">                NanopubUtils.propagateToHandler(nanopub, r);</span>
+            }
+<span class="nc bnc" id="L152" title="All 4 branches missed.">            if (tempRefMap != null || tempPrefixMap != null) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                if (tempRefMap == null) {</span>
+<span class="nc" id="L154">                    tempRefMap = new HashMap&lt;&gt;();</span>
+                }
+<span class="nc" id="L156">                mergeTransformMaps(tempRefMap, tempUriReplacerMap);</span>
+<span class="nc" id="L157">                RdfFileContent r2 = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="nc" id="L158">                r.propagate(new CrossRefResolver(tempRefMap, tempPrefixMap, r2));</span>
+<span class="nc" id="L159">                r = r2;</span>
+            }
+<span class="nc" id="L161">            NanopubRdfHandler h = new NanopubRdfHandler();</span>
+<span class="nc" id="L162">            Map&lt;Resource, IRI&gt; transformMap = TransformRdf.transformAndGetMap(r, h, npUri, TrustyNanopubUtils.transformRdfSetting);</span>
+<span class="nc" id="L163">            np = h.getNanopub();</span>
+<span class="nc" id="L164">            mergeTransformMaps(tempRefMap, transformMap);</span>
+<span class="nc" id="L165">            mergePrefixTransformMaps(tempPrefixMap, transformMap);</span>
+<span class="nc" id="L166">        } catch (RDFHandlerException | MalformedNanopubException ex) {</span>
+<span class="nc" id="L167">            throw new TrustyUriException(ex);</span>
+<span class="nc" id="L168">        }</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if (np instanceof NanopubWithNs) {</span>
+<span class="nc" id="L170">            ((NanopubWithNs) np).removeUnusedPrefixes();</span>
+        }
+<span class="nc" id="L172">        return np;</span>
+    }
+
+    /**
+     * Transform a multi-nanopub file into Trusty Nanopubs, writing to the specified output stream.
+     *
+     * @param format the RDF format of the input file
+     * @param file   the input file containing multiple nanopubs
+     * @param out    the output stream to write the transformed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L187">        transformMultiNanopub(format, file, out, false);</span>
+<span class="nc" id="L188">    }</span>
+
+    /**
+     * Transform a multi-nanopub file into Trusty Nanopubs, writing to the specified output stream,
+     * with an option to resolve cross-references.
+     *
+     * @param format           the RDF format of the input file
+     * @param file             the input file containing multiple nanopubs
+     * @param out              the output stream to write the transformed nanopubs
+     * @param resolveCrossRefs whether to resolve cross-nanopub references
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, File file, final OutputStream out, boolean resolveCrossRefs) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L204">        InputStream in = new FileInputStream(file);</span>
+<span class="nc" id="L205">        transformMultiNanopub(format, in, out, resolveCrossRefs);</span>
+<span class="nc" id="L206">    }</span>
+
+    /**
+     * Transform a multi-nanopub input stream into Trusty Nanopubs, writing to the specified output stream.
+     *
+     * @param format the RDF format of the input stream
+     * @param in     the input stream containing multiple nanopubs
+     * @param out    the output stream to write the transformed nanopubs
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L220">        transformMultiNanopub(format, in, out, false);</span>
+<span class="nc" id="L221">    }</span>
+
+    /**
+     * Transform a multi-nanopub input stream into Trusty Nanopubs, writing to the specified output stream,
+     * with an option to resolve cross-references.
+     *
+     * @param format           the RDF format of the input stream
+     * @param in               the input stream containing multiple nanopubs
+     * @param out              the output stream to write the transformed nanopubs
+     * @param resolveCrossRefs whether to resolve cross-nanopub references
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing the RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopub is malformed
+     */
+    public static void transformMultiNanopub(final RDFFormat format, InputStream in, final OutputStream out, boolean resolveCrossRefs) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+        final Map&lt;Resource, IRI&gt; tempRefMap;
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (resolveCrossRefs) {</span>
+<span class="nc" id="L239">            tempRefMap = new HashMap&lt;&gt;();</span>
+        } else {
+<span class="nc" id="L241">            tempRefMap = null;</span>
+        }
+<span class="nc" id="L243">        try (in; out) {</span>
+<span class="nc" id="L244">            MultiNanopubRdfHandler.process(format, in, np -&gt; {</span>
+                try {
+                    // TODO temporary URI ref resolution not yet supported here
+                    // TODO prefix-based cross-ref resolution also not yet supported
+<span class="nc" id="L248">                    writeAsTrustyNanopub(np, format, out, tempRefMap, null);</span>
+<span class="nc" id="L249">                } catch (RDFHandlerException | TrustyUriException ex) {</span>
+<span class="nc" id="L250">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L251">                }</span>
+<span class="nc" id="L252">            });</span>
+        }
+<span class="nc" id="L254">    }</span>
+
+    /**
+     * Write a Nanopub as a Trusty Nanopub to the specified output stream in the given RDF format.
+     *
+     * @param np            the Nanopub to write
+     * @param format        the RDF format for the output
+     * @param out           the output stream to write to
+     * @param tempRefMap    a map for temporary resource references, can be null
+     * @param tempPrefixMap a map for temporary prefixes, can be null
+     * @return the transformed Trusty Nanopub
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error writing the RDF data
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs
+     */
+    public static Nanopub writeAsTrustyNanopub(Nanopub np, RDFFormat format, OutputStream out, Map&lt;Resource, IRI&gt; tempRefMap, Map&lt;String, String&gt; tempPrefixMap) throws RDFHandlerException, TrustyUriException {
+<span class="nc" id="L269">        np = MakeTrustyNanopub.transform(np, tempRefMap, tempPrefixMap);</span>
+<span class="nc" id="L270">        RDFWriter w = Rio.createWriter(format, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="nc" id="L271">        NanopubUtils.propagateToHandler(np, w);</span>
+<span class="nc" id="L272">        return np;</span>
+    }
+
+    static void mergeTransformMaps(Map&lt;Resource, IRI&gt; mainMap, Map&lt;Resource, IRI&gt; mapToMerge) {
+<span class="nc bnc" id="L276" title="All 4 branches missed.">        if (mainMap == null || mapToMerge == null) return;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        for (Resource r : new HashSet&lt;&gt;(mainMap.keySet())) {</span>
+<span class="nc" id="L278">            IRI v = mainMap.get(r);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            if (mapToMerge.containsKey(v)) {</span>
+<span class="nc" id="L280">                mainMap.put(r, mapToMerge.get(v));</span>
+<span class="nc" id="L281">                mapToMerge.remove(v);</span>
+            }
+<span class="nc" id="L283">        }</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        for (Resource r : mapToMerge.keySet()) {</span>
+<span class="nc" id="L285">            mainMap.put(r, mapToMerge.get(r));</span>
+<span class="nc" id="L286">        }</span>
+<span class="nc" id="L287">    }</span>
+
+    static void mergePrefixTransformMaps(Map&lt;String, String&gt; mainPrefixMap, Map&lt;Resource, IRI&gt; mapToMerge) {
+<span class="nc bnc" id="L290" title="All 4 branches missed.">        if (mainPrefixMap == null || mapToMerge == null) return;</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        for (Resource r : mapToMerge.keySet()) {</span>
+<span class="nc bnc" id="L292" title="All 4 branches missed.">            if (r instanceof IRI &amp;&amp; TrustyUriUtils.isPotentialTrustyUri(mapToMerge.get(r).stringValue())) {</span>
+<span class="nc" id="L293">                mainPrefixMap.put(r.stringValue(), mapToMerge.get(r).stringValue());</span>
+            }
+<span class="nc" id="L295">        }</span>
+<span class="nc" id="L296">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

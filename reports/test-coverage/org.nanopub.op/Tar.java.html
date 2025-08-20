@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Tar.java</span></div><h1>Tar.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriUtils;
+import org.apache.commons.codec.Charsets;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Command-line utility to create a tar archive of nanopublications.
+ */
+<span class="nc" id="L25">public class Tar extends CliRunner {</span>
+
+<span class="nc" id="L27">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;, required = true)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    /**
+     * Main method to run the Tar utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L43">            Tar obj = CliRunner.initJc(new Tar(), args);</span>
+<span class="nc" id="L44">            obj.run();</span>
+<span class="nc" id="L45">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L46">            System.exit(1);</span>
+<span class="nc" id="L47">        } catch (Exception ex) {</span>
+<span class="nc" id="L48">            ex.printStackTrace();</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        }</span>
+<span class="nc" id="L51">    }</span>
+
+    private RDFFormat rdfInFormat;
+    private TarArchiveOutputStream outputStream;
+
+    private void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+
+<span class="nc" id="L59">        outputStream = new TarArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));</span>
+        try {
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">                if (inFormat != null) {</span>
+<span class="nc" id="L64">                    rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+                } else {
+<span class="nc" id="L66">                    rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+                }
+
+<span class="nc" id="L69">                MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                    try {
+<span class="nc" id="L71">                        process(np);</span>
+<span class="nc" id="L72">                    } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L73">                        throw new RuntimeException(ex);</span>
+<span class="nc" id="L74">                    }</span>
+<span class="nc" id="L75">                });</span>
+
+<span class="nc" id="L77">            }</span>
+<span class="nc" id="L78">            outputStream.finish();</span>
+<span class="nc" id="L79">            outputStream.flush();</span>
+        } finally {
+<span class="nc" id="L81">            outputStream.close();</span>
+        }
+<span class="nc" id="L83">    }</span>
+
+    private void process(Nanopub np) throws RDFHandlerException {
+        try {
+<span class="nc" id="L87">            String filename = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());</span>
+<span class="nc" id="L88">            filename = filename.replaceFirst(&quot;^(..)(..)(..)&quot;, &quot;$1/$2/$3/&quot;);</span>
+<span class="nc" id="L89">            TarArchiveEntry tarEntry = new TarArchiveEntry(filename);</span>
+<span class="nc" id="L90">            byte[] npBytes = NanopubUtils.writeToString(np, RDFFormat.TRIG).getBytes(Charsets.UTF_8);</span>
+<span class="nc" id="L91">            tarEntry.setSize(npBytes.length);</span>
+<span class="nc" id="L92">            outputStream.putArchiveEntry(tarEntry);</span>
+<span class="nc" id="L93">            outputStream.write(npBytes);</span>
+<span class="nc" id="L94">            outputStream.closeArchiveEntry();</span>
+<span class="nc" id="L95">        } catch (IOException ex) {</span>
+<span class="nc" id="L96">            ex.printStackTrace();</span>
+<span class="nc" id="L97">        }</span>
+<span class="nc" id="L98">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

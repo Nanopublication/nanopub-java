@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">NanopubImpl.java</span></div><h1>NanopubImpl.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.google.common.collect.ImmutableSet;
+import jakarta.activation.MimetypesFileTypeMap;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.query.*;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.rio.*;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NP;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+/**
+ * Implementation of the Nanopub interface.
+ *
+ * @author Tobias Kuhn
+ * @author Eelke van der Horst
+ */
+public class NanopubImpl implements NanopubWithNs, Serializable {
+
+    static {
+<span class="fc" id="L40">        tryToLoadParserFactory(&quot;org.eclipse.rdf4j.rio.trig.TriGParserFactory&quot;);</span>
+<span class="fc" id="L41">        RDFWriterRegistry.getInstance().add(new CustomTrigWriterFactory());</span>
+<span class="fc" id="L42">        tryToLoadParserFactory(&quot;org.eclipse.rdf4j.rio.nquads.NQuadsParserFactory&quot;);</span>
+<span class="fc" id="L43">        tryToLoadWriterFactory(&quot;org.eclipse.rdf4j.rio.nquads.NQuadsWriterFactory&quot;);</span>
+<span class="fc" id="L44">        tryToLoadParserFactory(&quot;org.eclipse.rdf4j.rio.trix.TriXParserFactory&quot;);</span>
+<span class="fc" id="L45">        tryToLoadWriterFactory(&quot;org.eclipse.rdf4j.rio.trix.TriXWriterFactory&quot;);</span>
+<span class="fc" id="L46">        tryToLoadParserFactory(&quot;org.eclipse.rdf4j.rio.jsonld.JSONLDParserFactory&quot;);</span>
+<span class="fc" id="L47">        tryToLoadWriterFactory(&quot;org.eclipse.rdf4j.rio.jsonld.JSONLDWriterFactory&quot;);</span>
+<span class="fc" id="L48">        tryToLoadParserFactory(&quot;org.eclipse.rdf4j.rio.turtle.TurtleParserFactory&quot;);</span>
+<span class="fc" id="L49">        tryToLoadWriterFactory(&quot;org.eclipse.rdf4j.rio.turtle.TurtleWriterFactory&quot;);</span>
+    }
+
+    private static void tryToLoadParserFactory(String className) {
+        try {
+<span class="fc" id="L54">            RDFParserFactory pf = (RDFParserFactory) Class.forName(className).getConstructor().newInstance();</span>
+<span class="fc" id="L55">            RDFParserRegistry.getInstance().add(pf);</span>
+<span class="nc" id="L56">        } catch (Exception ex) {</span>
+<span class="nc" id="L57">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">    }</span>
+
+    private static void tryToLoadWriterFactory(String className) {
+        try {
+<span class="fc" id="L63">            RDFWriterFactory wf = (RDFWriterFactory) Class.forName(className).getConstructor().newInstance();</span>
+<span class="fc" id="L64">            RDFWriterRegistry.getInstance().add(wf);</span>
+<span class="nc" id="L65">        } catch (Exception ex) {</span>
+<span class="nc" id="L66">            throw new RuntimeException(ex);</span>
+<span class="fc" id="L67">        }</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Just ensures the class to be loaded. Probably unnecessary.
+     */
+    public static void ensureLoaded() {
+        // ensure class is loaded; nothing left to be done
+<span class="nc" id="L75">    }</span>
+
+<span class="fc" id="L77">    private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();</span>
+
+    private IRI nanopubUri;
+    private IRI headUri, assertionUri, provenanceUri, pubinfoUri;
+    private Set&lt;IRI&gt; graphUris;
+    private Set&lt;Statement&gt; head, assertion, provenance, pubinfo;
+
+<span class="pc" id="L84">    private List&lt;Statement&gt; statements = new ArrayList&lt;&gt;();</span>
+<span class="pc" id="L85">    private List&lt;String&gt; nsPrefixes = new ArrayList&lt;&gt;();</span>
+<span class="pc" id="L86">    private Map&lt;String, String&gt; ns = new HashMap&lt;&gt;();</span>
+<span class="pc" id="L87">    private boolean unusedPrefixesRemoved = false;</span>
+
+    private int tripleCount;
+    private long byteCount;
+<span class="pc" id="L91">    private boolean isValidAndTrusty = false;</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given statements, namespaces, and namespace prefixes.
+     *
+     * @param statements the statements of the nanopublication
+     * @param nsPrefixes the namespace prefixes used in the nanopublication
+     * @param ns         the namespaces used in the nanopublication
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
+     */
+<span class="fc" id="L101">    public NanopubImpl(Collection&lt;Statement&gt; statements, List&lt;String&gt; nsPrefixes, Map&lt;String, String&gt; ns) throws MalformedNanopubException {</span>
+<span class="fc" id="L102">        this.statements.addAll(statements);</span>
+<span class="fc" id="L103">        this.nsPrefixes.addAll(nsPrefixes);</span>
+<span class="fc" id="L104">        this.ns.putAll(ns);</span>
+<span class="fc" id="L105">        init();</span>
+<span class="fc" id="L106">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given statements and namespaces.
+     *
+     * @param statements the statements of the nanopublication
+     * @param namespaces the namespaces used in the nanopublication, as pairs of prefixes and URI
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
+     */
+<span class="fc" id="L115">    public NanopubImpl(Collection&lt;Statement&gt; statements, List&lt;Pair&lt;String, String&gt;&gt; namespaces) throws MalformedNanopubException {</span>
+<span class="fc" id="L116">        this.statements.addAll(statements);</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        for (Pair&lt;String, String&gt; p : namespaces) {</span>
+<span class="fc" id="L118">            nsPrefixes.add(p.getLeft());</span>
+<span class="fc" id="L119">            ns.put(p.getLeft(), p.getRight());</span>
+<span class="fc" id="L120">        }</span>
+<span class="fc" id="L121">        init();</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given statements.
+     *
+     * @param statements the statements of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException if the nanopublication is malformed
+     */
+<span class="nc" id="L130">    public NanopubImpl(Collection&lt;Statement&gt; statements) throws MalformedNanopubException {</span>
+<span class="nc" id="L131">        this.statements.addAll(statements);</span>
+<span class="nc" id="L132">        init();</span>
+<span class="nc" id="L133">    }</span>
+
+    private static final String nanopubViaSPARQLQuery =
+            // TODO concat the query with the namespace prefixes and namespaces
+            &quot;prefix np: &lt;http://www.nanopub.org/nschema#&gt; &quot; +
+                    &quot;prefix rdfg: &lt;http://www.w3.org/2004/03/trix/rdfg-1/&gt; &quot; +
+                    &quot;prefix this: &lt;@&gt; &quot; +
+                    &quot;select ?G ?S ?P ?O where { &quot; +
+                    &quot;  { &quot; +
+                    &quot;    graph ?G { this: a np:Nanopublication } &quot; +
+                    &quot;  } union { &quot; +
+                    &quot;    graph ?H { this: a np:Nanopublication } . &quot; +
+                    &quot;    graph ?H { { this: np:hasAssertion ?G } union { this: np:hasProvenance ?G } &quot; +
+                    &quot;        union { this: np:hasPublicationInfo ?G } } &quot; +
+                    &quot;  } &quot; +
+                    &quot;  graph ?G { ?S ?P ?O } &quot; +
+                    &quot;}&quot;;
+
+    /**
+     * Creates a new NanopubImpl instance from the given repository and nanopublication URI.
+     *
+     * @param repo       the repository containing the nanopublication
+     * @param nanopubUri the URI of the nanopublication
+     * @param nsPrefixes the namespace prefixes used in the nanopublication
+     * @param ns         the namespaces used in the nanopublication
+     * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
+     */
+    public NanopubImpl(Repository repo, IRI nanopubUri, List&lt;String&gt; nsPrefixes, Map&lt;String, String&gt; ns)
+<span class="nc" id="L162">            throws MalformedNanopubException, RepositoryException {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (nsPrefixes != null) this.nsPrefixes.addAll(nsPrefixes);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        if (ns != null) this.ns.putAll(ns);</span>
+<span class="nc" id="L165">        try (RepositoryConnection connection = repo.getConnection()) {</span>
+<span class="nc" id="L166">            String q = nanopubViaSPARQLQuery.replaceAll(&quot;@&quot;, nanopubUri.toString());</span>
+<span class="nc" id="L167">            TupleQuery tupleQuery = connection.prepareTupleQuery(QueryLanguage.SPARQL, q);</span>
+<span class="nc" id="L168">            try (TupleQueryResult result = tupleQuery.evaluate()) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                while (result.hasNext()) {</span>
+<span class="nc" id="L170">                    BindingSet bs = result.next();</span>
+<span class="nc" id="L171">                    Resource g = (Resource) bs.getBinding(&quot;G&quot;).getValue();</span>
+<span class="nc" id="L172">                    Resource s = (Resource) bs.getBinding(&quot;S&quot;).getValue();</span>
+<span class="nc" id="L173">                    IRI p = (IRI) bs.getBinding(&quot;P&quot;).getValue();</span>
+<span class="nc" id="L174">                    Value o = bs.getBinding(&quot;O&quot;).getValue();</span>
+<span class="nc" id="L175">                    Statement st = SimpleValueFactory.getInstance().createStatement(s, p, o, g);</span>
+<span class="nc" id="L176">                    statements.add(st);</span>
+<span class="nc" id="L177">                }</span>
+            }
+<span class="nc" id="L179">        } catch (MalformedQueryException | QueryEvaluationException ex) {</span>
+<span class="nc" id="L180">            ex.printStackTrace();</span>
+<span class="nc" id="L181">        }</span>
+<span class="nc" id="L182">        init();</span>
+<span class="nc" id="L183">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given repository and nanopublication URI.
+     *
+     * @param repo       the repository containing the nanopublication
+     * @param nanopubUri the URI of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException            if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.repository.RepositoryException if there is an error accessing the repository
+     */
+    public NanopubImpl(Repository repo, IRI nanopubUri)
+            throws MalformedNanopubException, RepositoryException {
+<span class="nc" id="L195">        this(repo, nanopubUri, null, null);</span>
+<span class="nc" id="L196">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given file and RDF format.
+     *
+     * @param file   the file containing the nanopublication
+     * @param format the RDF format of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading the file
+     */
+    public NanopubImpl(File file, RDFFormat format)
+<span class="fc" id="L208">            throws MalformedNanopubException, RDF4JException, IOException {</span>
+<span class="fc" id="L209">        readStatements(new FileInputStream(file), format);</span>
+<span class="fc" id="L210">        init();</span>
+<span class="fc" id="L211">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given file.
+     *
+     * @param file the file containing the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading the file
+     */
+<span class="fc" id="L221">    public NanopubImpl(File file) throws MalformedNanopubException, RDF4JException, IOException {</span>
+<span class="fc" id="L222">        String n = file.getName();</span>
+<span class="fc" id="L223">        Optional&lt;RDFFormat&gt; format = Rio.getParserFormatForMIMEType(mimeMap.getContentType(n));</span>
+<span class="pc bpc" id="L224" title="3 of 4 branches missed.">        if (format.isEmpty() || !format.get().supportsContexts()) {</span>
+<span class="fc" id="L225">            format = Rio.getParserFormatForFileName(n);</span>
+        }
+<span class="fc" id="L227">        RDFFormat f = format.get();</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if (!f.supportsContexts()) {</span>
+<span class="nc" id="L229">            f = RDFFormat.TRIG;</span>
+        }
+<span class="fc" id="L231">        readStatements(new FileInputStream(file), f);</span>
+<span class="fc" id="L232">        init();</span>
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given URL and RDF format.
+     *
+     * @param url    the URL of the nanopublication
+     * @param format the RDF format of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the URL
+     */
+<span class="nc" id="L244">    public NanopubImpl(URL url, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {</span>
+<span class="nc" id="L245">        HttpResponse response = getNanopub(url);</span>
+<span class="nc" id="L246">        readStatements(response.getEntity().getContent(), format);</span>
+<span class="nc" id="L247">        init();</span>
+<span class="nc" id="L248">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given URL.
+     *
+     * @param url the URL of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the URL
+     */
+<span class="fc" id="L258">    public NanopubImpl(URL url) throws MalformedNanopubException, RDF4JException, IOException {</span>
+<span class="fc" id="L259">        HttpResponse response = getNanopub(url);</span>
+<span class="fc" id="L260">        Header contentTypeHeader = response.getFirstHeader(&quot;Content-Type&quot;);</span>
+<span class="fc" id="L261">        Optional&lt;RDFFormat&gt; format = null;</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">        if (contentTypeHeader != null) {</span>
+<span class="fc" id="L263">            format = Rio.getParserFormatForMIMEType(contentTypeHeader.getValue());</span>
+        }
+<span class="pc bpc" id="L265" title="3 of 6 branches missed.">        if (format == null || format.isEmpty() || !format.get().supportsContexts()) {</span>
+<span class="nc" id="L266">            format = Rio.getParserFormatForFileName(url.toString());</span>
+        }
+<span class="fc" id="L268">        RDFFormat f = format.get();</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        if (!f.supportsContexts()) {</span>
+<span class="nc" id="L270">            f = RDFFormat.TRIG;</span>
+        }
+<span class="fc" id="L272">        readStatements(response.getEntity().getContent(), f);</span>
+<span class="fc" id="L273">        init();</span>
+<span class="fc" id="L274">    }</span>
+
+    private HttpResponse getNanopub(URL url) throws IOException {
+<span class="fc" id="L277">        HttpGet get = null;</span>
+        try {
+<span class="fc" id="L279">            get = new HttpGet(url.toString());</span>
+<span class="nc" id="L280">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L281">            throw new IOException(&quot;invalid URL: &quot; + url);</span>
+<span class="fc" id="L282">        }</span>
+<span class="fc" id="L283">        get.setHeader(&quot;Accept&quot;, &quot;application/trig; q=1, application/x-trig; q=1, text/x-nquads; q=0.1, application/trix; q=0.1&quot;);</span>
+<span class="fc" id="L284">        HttpResponse response = NanopubUtils.getHttpClient().execute(get);</span>
+<span class="fc" id="L285">        int statusCode = response.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L286" title="2 of 4 branches missed.">        if (statusCode == 404 || statusCode == 410) {</span>
+<span class="nc" id="L287">            throw new FileNotFoundException(response.getStatusLine().getReasonPhrase());</span>
+        }
+<span class="pc bpc" id="L289" title="2 of 4 branches missed.">        if (statusCode &lt; 200 || statusCode &gt; 299) {</span>
+<span class="nc" id="L290">            throw new IOException(&quot;HTTP error &quot; + statusCode + &quot;: &quot; + response.getStatusLine().getReasonPhrase());</span>
+        }
+<span class="fc" id="L292">        return response;</span>
+    }
+
+    /**
+     * Creates a new NanopubImpl instance from the given input stream and RDF format.
+     *
+     * @param in     the input stream containing the nanopublication
+     * @param format the RDF format of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     * @throws java.io.IOException                               if there is an error reading from the input stream
+     */
+<span class="fc" id="L304">    public NanopubImpl(InputStream in, RDFFormat format) throws MalformedNanopubException, RDF4JException, IOException {</span>
+<span class="fc" id="L305">        readStatements(in, format);</span>
+<span class="fc" id="L306">        init();</span>
+<span class="fc" id="L307">    }</span>
+
+    /**
+     * Creates a new NanopubImpl instance from the given UTF-8 encoded string and RDF format.
+     *
+     * @param utf8   the UTF-8 encoded string containing the nanopublication
+     * @param format the RDF format of the nanopublication
+     * @throws org.nanopub.MalformedNanopubException             if the nanopublication is malformed
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error reading the RDF data
+     */
+<span class="nc" id="L317">    public NanopubImpl(String utf8, RDFFormat format) throws MalformedNanopubException, RDF4JException {</span>
+        try {
+<span class="nc" id="L319">            readStatements(new ByteArrayInputStream(utf8.getBytes(StandardCharsets.UTF_8)), format);</span>
+<span class="nc" id="L320">        } catch (IOException ex) {</span>
+            // We do not expect an IOException here (no file system IO taking place)
+<span class="nc" id="L322">            throw new RuntimeException(&quot;Unexpected IOException&quot;, ex);</span>
+<span class="nc" id="L323">        }</span>
+<span class="nc" id="L324">        init();</span>
+<span class="nc" id="L325">    }</span>
+
+    private void readStatements(InputStream in, RDFFormat format) throws RDF4JException, IOException {
+<span class="fc" id="L328">        try (in) {</span>
+<span class="fc" id="L329">            RDFParser p = NanopubUtils.getParser(format);</span>
+<span class="fc" id="L330">            p.setRDFHandler(new AbstractRDFHandler() {</span>
+
+                @Override
+                public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+<span class="fc" id="L334">                    nsPrefixes.add(prefix);</span>
+<span class="fc" id="L335">                    ns.put(prefix, uri);</span>
+<span class="fc" id="L336">                }</span>
+
+                @Override
+                public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="fc" id="L340">                    statements.add(st);</span>
+<span class="fc" id="L341">                }</span>
+
+            });
+<span class="fc" id="L344">            p.parse(new InputStreamReader(in, StandardCharsets.UTF_8));</span>
+        }
+<span class="fc" id="L346">    }</span>
+
+    private void init() throws MalformedNanopubException {
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">        if (statements.isEmpty()) {</span>
+<span class="nc" id="L350">            throw new MalformedNanopubException(&quot;No content received for nanopub&quot;);</span>
+        }
+<span class="fc" id="L352">        collectNanopubUri(statements);</span>
+<span class="pc bpc" id="L353" title="2 of 4 branches missed.">        if (nanopubUri == null || headUri == null) {</span>
+<span class="nc" id="L354">            throw new MalformedNanopubException(&quot;No nanopub URI found&quot;);</span>
+        }
+<span class="fc" id="L356">        collectGraphs(statements);</span>
+<span class="fc" id="L357">        collectStatements(statements);</span>
+<span class="fc" id="L358">        checkAssertion();</span>
+<span class="fc" id="L359">        checkProvenance();</span>
+<span class="fc" id="L360">        checkPubinfo();</span>
+<span class="fc" id="L361">        isValidAndTrusty = TrustyNanopubUtils.isValidTrustyNanopub(this);</span>
+<span class="fc" id="L362">    }</span>
+
+    private void collectNanopubUri(Collection&lt;Statement&gt; statements) throws MalformedNanopubException {
+<span class="fc bfc" id="L365" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">            if (st.getContext() == null) {</span>
+<span class="nc" id="L367">                throw new MalformedNanopubException(&quot;Null value for context URI found.&quot;);</span>
+            }
+<span class="fc bfc" id="L369" title="All 4 branches covered.">            if (st.getPredicate().equals(RDF.TYPE) &amp;&amp; st.getObject().equals(NP.NANOPUBLICATION)) {</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">                if (nanopubUri != null) {</span>
+<span class="nc" id="L371">                    throw new MalformedNanopubException(&quot;Two nanopub URIs found&quot;);</span>
+                }
+<span class="fc" id="L373">                nanopubUri = (IRI) st.getSubject();</span>
+<span class="fc" id="L374">                headUri = (IRI) st.getContext();</span>
+            }
+<span class="fc" id="L376">        }</span>
+<span class="fc" id="L377">    }</span>
+
+    private void collectGraphs(Collection&lt;Statement&gt; statements) throws MalformedNanopubException {
+<span class="fc bfc" id="L380" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">            if (st.getContext().equals(headUri)) {</span>
+<span class="fc" id="L382">                Resource s = st.getSubject();</span>
+<span class="fc" id="L383">                IRI p = st.getPredicate();</span>
+<span class="fc bfc" id="L384" title="All 4 branches covered.">                if (s.equals(nanopubUri) &amp;&amp; p.equals(NP.HAS_ASSERTION)) {</span>
+<span class="pc bpc" id="L385" title="1 of 2 branches missed.">                    if (assertionUri != null) {</span>
+<span class="nc" id="L386">                        throw new MalformedNanopubException(&quot;Two assertion URIs found: &quot; + assertionUri + &quot; and &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L388">                    assertionUri = (IRI) st.getObject();</span>
+<span class="fc bfc" id="L389" title="All 4 branches covered.">                } else if (s.equals(nanopubUri) &amp;&amp; p.equals(NP.HAS_PROVENANCE)) {</span>
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">                    if (provenanceUri != null) {</span>
+<span class="nc" id="L391">                        throw new MalformedNanopubException(&quot;Two provenance URIs found: &quot; + provenanceUri + &quot; and &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L393">                    provenanceUri = (IRI) st.getObject();</span>
+<span class="fc bfc" id="L394" title="All 4 branches covered.">                } else if (s.equals(nanopubUri) &amp;&amp; p.equals(NP.HAS_PUBINFO)) {</span>
+<span class="pc bpc" id="L395" title="1 of 2 branches missed.">                    if (pubinfoUri != null) {</span>
+<span class="nc" id="L396">                        throw new MalformedNanopubException(&quot;Two publication info URIs found: &quot; + pubinfoUri + &quot; and &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L398">                    pubinfoUri = (IRI) st.getObject();</span>
+                }
+            }
+<span class="fc" id="L401">        }</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">        if (assertionUri == null) {</span>
+<span class="fc" id="L403">            throw new MalformedNanopubException(&quot;No assertion URI found for &quot; + nanopubUri);</span>
+        }
+<span class="pc bpc" id="L405" title="1 of 2 branches missed.">        if (provenanceUri == null) {</span>
+<span class="nc" id="L406">            throw new MalformedNanopubException(&quot;No provenance URI found for &quot; + nanopubUri);</span>
+        }
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">        if (pubinfoUri == null) {</span>
+<span class="nc" id="L409">            throw new MalformedNanopubException(&quot;No publication info URI found for &quot; + nanopubUri);</span>
+        }
+<span class="fc" id="L411">        graphUris = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L412">        addGraphUri(headUri);</span>
+<span class="fc" id="L413">        addGraphUri(assertionUri);</span>
+<span class="fc" id="L414">        addGraphUri(provenanceUri);</span>
+<span class="fc" id="L415">        addGraphUri(pubinfoUri);</span>
+<span class="pc bpc" id="L416" title="1 of 2 branches missed.">        if (graphUris.contains(nanopubUri)) {</span>
+<span class="nc" id="L417">            throw new MalformedNanopubException(&quot;Nanopub URI cannot be identical to one of the graph URIs: &quot; + nanopubUri);</span>
+        }
+<span class="fc" id="L419">        this.graphUris = ImmutableSet.copyOf(graphUris);</span>
+<span class="fc" id="L420">    }</span>
+
+    private void addGraphUri(IRI uri) throws MalformedNanopubException {
+<span class="pc bpc" id="L423" title="1 of 2 branches missed.">        if (graphUris.contains(uri)) {</span>
+<span class="nc" id="L424">            throw new MalformedNanopubException(&quot;Each graph needs a unique URI: &quot; + uri);</span>
+        }
+<span class="fc" id="L426">        graphUris.add(uri);</span>
+<span class="fc" id="L427">    }</span>
+
+    private void collectStatements(Collection&lt;Statement&gt; statements) throws MalformedNanopubException {
+<span class="fc" id="L430">        tripleCount = 0;</span>
+<span class="fc" id="L431">        byteCount = 0;</span>
+<span class="fc" id="L432">        Set&lt;Statement&gt; head = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L433">        Set&lt;Statement&gt; assertion = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L434">        Set&lt;Statement&gt; provenance = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L435">        Set&lt;Statement&gt; pubinfo = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L436" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+<span class="fc" id="L437">            checkStatement(st);</span>
+<span class="fc" id="L438">            Resource g = st.getContext();</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">            if (g.equals(headUri)) {</span>
+<span class="fc" id="L440">                head.add(st);</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">            } else if (g.equals(assertionUri)) {</span>
+<span class="fc" id="L442">                assertion.add(st);</span>
+<span class="fc bfc" id="L443" title="All 2 branches covered.">            } else if (g.equals(provenanceUri)) {</span>
+<span class="fc" id="L444">                provenance.add(st);</span>
+<span class="fc bfc" id="L445" title="All 2 branches covered.">            } else if (g.equals(pubinfoUri)) {</span>
+<span class="fc" id="L446">                pubinfo.add(st);</span>
+            } else {
+<span class="fc" id="L448">                throw new MalformedNanopubException(&quot;Disconnected graph: &quot; + g);</span>
+            }
+<span class="fc" id="L450">            tripleCount++;</span>
+<span class="fc" id="L451">            byteCount += st.getContext().stringValue().length();</span>
+<span class="fc" id="L452">            byteCount += st.getSubject().stringValue().length();</span>
+<span class="fc" id="L453">            byteCount += st.getPredicate().stringValue().length();</span>
+<span class="fc" id="L454">            byteCount += st.getObject().stringValue().length();</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">            if (tripleCount &lt; 0) tripleCount = Integer.MAX_VALUE;</span>
+<span class="pc bpc" id="L456" title="1 of 2 branches missed.">            if (byteCount &lt; 0) byteCount = Long.MAX_VALUE;</span>
+<span class="fc" id="L457">        }</span>
+<span class="fc" id="L458">        this.head = ImmutableSet.copyOf(head);</span>
+<span class="fc" id="L459">        this.assertion = ImmutableSet.copyOf(assertion);</span>
+<span class="fc" id="L460">        this.provenance = ImmutableSet.copyOf(provenance);</span>
+<span class="fc" id="L461">        this.pubinfo = ImmutableSet.copyOf(pubinfo);</span>
+<span class="fc" id="L462">    }</span>
+
+    private void checkStatement(Statement st) throws MalformedNanopubException {
+<span class="fc" id="L465">        String uriString = null;</span>
+        try {
+            // Throw exceptions if not well-formed:
+<span class="fc" id="L468">            uriString = st.getContext().stringValue();</span>
+<span class="fc" id="L469">            new java.net.URI(uriString);</span>
+<span class="fc" id="L470">            uriString = st.getSubject().stringValue();</span>
+<span class="fc" id="L471">            new java.net.URI(uriString);</span>
+<span class="fc" id="L472">            uriString = st.getPredicate().stringValue();</span>
+<span class="fc" id="L473">            new java.net.URI(uriString);</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">            if (st.getObject() instanceof IRI) {</span>
+<span class="fc" id="L475">                uriString = st.getObject().stringValue();</span>
+<span class="fc" id="L476">                new java.net.URI(uriString);</span>
+            }
+<span class="nc" id="L478">        } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L479">            throw new MalformedNanopubException(&quot;Malformed URI: &quot; + uriString);</span>
+<span class="fc" id="L480">        }</span>
+<span class="fc" id="L481">    }</span>
+
+    private void checkAssertion() throws MalformedNanopubException {
+<span class="fc bfc" id="L484" title="All 2 branches covered.">        if (assertion.isEmpty()) {</span>
+<span class="fc" id="L485">            throw new MalformedNanopubException(&quot;Empty assertion graph: &quot; + assertionUri);</span>
+        }
+<span class="fc" id="L487">    }</span>
+
+    private void checkProvenance() throws MalformedNanopubException {
+<span class="fc bfc" id="L490" title="All 2 branches covered.">        if (provenance.isEmpty()) {</span>
+<span class="fc" id="L491">            throw new MalformedNanopubException(&quot;Empty provenance graph: &quot; + provenanceUri);</span>
+        }
+<span class="fc bfc" id="L493" title="All 2 branches covered.">        for (Statement st : provenance) {</span>
+<span class="fc bfc" id="L494" title="All 2 branches covered.">            if (assertionUri.equals(st.getSubject())) return;</span>
+<span class="pc bpc" id="L495" title="1 of 2 branches missed.">            if (assertionUri.equals(st.getObject())) return;</span>
+<span class="fc" id="L496">        }</span>
+<span class="fc" id="L497">        throw new MalformedNanopubException(&quot;Provenance does not refer to assertion: &quot; + provenanceUri);</span>
+    }
+
+    private void checkPubinfo() throws MalformedNanopubException {
+<span class="fc bfc" id="L501" title="All 2 branches covered.">        if (pubinfo.isEmpty()) {</span>
+<span class="fc" id="L502">            throw new MalformedNanopubException(&quot;Empty publication info graph: &quot; + pubinfoUri);</span>
+        }
+<span class="fc bfc" id="L504" title="All 2 branches covered.">        for (Statement st : pubinfo) {</span>
+<span class="fc bfc" id="L505" title="All 2 branches covered.">            if (nanopubUri.equals(st.getSubject())) return;</span>
+<span class="fc bfc" id="L506" title="All 2 branches covered.">            if (nanopubUri.equals(st.getObject())) return;</span>
+<span class="fc" id="L507">        }</span>
+<span class="fc" id="L508">        throw new MalformedNanopubException(&quot;Publication info does not refer to nanopublication URI: &quot; + pubinfoUri);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRI getUri() {
+<span class="fc" id="L516">        return nanopubUri;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRI getHeadUri() {
+<span class="fc" id="L524">        return headUri;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;Statement&gt; getHead() {
+<span class="fc" id="L532">        return head;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRI getAssertionUri() {
+<span class="fc" id="L540">        return assertionUri;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;Statement&gt; getAssertion() {
+<span class="fc" id="L548">        return assertion;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRI getProvenanceUri() {
+<span class="fc" id="L556">        return provenanceUri;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;Statement&gt; getProvenance() {
+<span class="fc" id="L564">        return provenance;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRI getPubinfoUri() {
+<span class="fc" id="L572">        return pubinfoUri;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;Statement&gt; getPubinfo() {
+<span class="fc" id="L580">        return pubinfo;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;IRI&gt; getGraphUris() {
+<span class="nc" id="L588">        return graphUris;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Calendar getCreationTime() {
+<span class="fc" id="L596">        return SimpleTimestampPattern.getCreationTime(this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;IRI&gt; getAuthors() {
+<span class="nc" id="L604">        return SimpleCreatorPattern.getAuthors(this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set&lt;IRI&gt; getCreators() {
+<span class="nc" id="L612">        return SimpleCreatorPattern.getCreators(this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List&lt;String&gt; getNsPrefixes() {
+<span class="fc" id="L620">        return new ArrayList&lt;&gt;(nsPrefixes);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNamespace(String prefix) {
+<span class="fc" id="L628">        return ns.get(prefix);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map&lt;String, String&gt; getNs() {
+<span class="fc" id="L636">        return new HashMap&lt;&gt;(ns);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeUnusedPrefixes() {
+<span class="pc bpc" id="L644" title="1 of 2 branches missed.">        if (unusedPrefixesRemoved) return;</span>
+<span class="fc" id="L645">        Set&lt;String&gt; usedPrefixes = NanopubUtils.getUsedPrefixes(this);</span>
+<span class="fc bfc" id="L646" title="All 2 branches covered.">        for (String prefix : new ArrayList&lt;&gt;(nsPrefixes)) {</span>
+<span class="fc bfc" id="L647" title="All 2 branches covered.">            if (!usedPrefixes.contains(prefix)) {</span>
+<span class="fc" id="L648">                nsPrefixes.remove(prefix);</span>
+<span class="fc" id="L649">                ns.remove(prefix);</span>
+            }
+<span class="fc" id="L651">        }</span>
+<span class="fc" id="L652">        unusedPrefixesRemoved = true;</span>
+<span class="fc" id="L653">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getTripleCount() {
+<span class="fc" id="L660">        return tripleCount;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getByteCount() {
+<span class="nc" id="L668">        return byteCount;</span>
+    }
+
+    /**
+     * Returns whether this nanopublication is valid and trustworthy.
+     *
+     * @return true if the nanopublication is valid and trustworthy, false otherwise
+     */
+    public boolean isValidAndTrusty() {
+<span class="fc" id="L677">        return isValidAndTrusty;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+<span class="fc bfc" id="L685" title="All 2 branches covered.">        if (this == o) {</span>
+<span class="fc" id="L686">            return true;</span>
+        }
+<span class="pc bpc" id="L688" title="1 of 2 branches missed.">        if (!(o instanceof NanopubImpl nanopub)) {</span>
+<span class="nc" id="L689">            return false;</span>
+        }
+<span class="fc bfc" id="L691" title="All 4 branches covered.">        if (isValidAndTrusty &amp;&amp; nanopub.isValidAndTrusty()) {</span>
+<span class="fc" id="L692">            return Objects.equals(nanopubUri, nanopub.nanopubUri);</span>
+        } else {
+<span class="pc bpc" id="L694" title="2 of 6 branches missed.">            return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved &amp;&amp;</span>
+                    tripleCount == nanopub.tripleCount &amp;&amp;
+                    byteCount == nanopub.byteCount &amp;&amp;
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">                    Objects.equals(nanopubUri, nanopub.nanopubUri) &amp;&amp;</span>
+<span class="pc bpc" id="L698" title="1 of 2 branches missed.">                    Objects.equals(headUri, nanopub.headUri) &amp;&amp;</span>
+<span class="pc bpc" id="L699" title="1 of 2 branches missed.">                    Objects.equals(assertionUri, nanopub.assertionUri) &amp;&amp;</span>
+<span class="pc bpc" id="L700" title="1 of 2 branches missed.">                    Objects.equals(provenanceUri, nanopub.provenanceUri) &amp;&amp;</span>
+<span class="pc bpc" id="L701" title="1 of 2 branches missed.">                    Objects.equals(pubinfoUri, nanopub.pubinfoUri) &amp;&amp;</span>
+<span class="pc bpc" id="L702" title="1 of 2 branches missed.">                    Objects.equals(graphUris, nanopub.graphUris) &amp;&amp;</span>
+<span class="pc bpc" id="L703" title="1 of 2 branches missed.">                    Objects.equals(head, nanopub.head) &amp;&amp;</span>
+<span class="pc bpc" id="L704" title="1 of 2 branches missed.">                    Objects.equals(assertion, nanopub.assertion) &amp;&amp;</span>
+<span class="pc bpc" id="L705" title="1 of 2 branches missed.">                    Objects.equals(provenance, nanopub.provenance) &amp;&amp;</span>
+<span class="pc bpc" id="L706" title="1 of 2 branches missed.">                    Objects.equals(pubinfo, nanopub.pubinfo) &amp;&amp;</span>
+<span class="pc bpc" id="L707" title="1 of 2 branches missed.">                    Objects.equals(statements, nanopub.statements) &amp;&amp;</span>
+<span class="pc bpc" id="L708" title="1 of 2 branches missed.">                    Objects.equals(nsPrefixes, nanopub.nsPrefixes) &amp;&amp;</span>
+<span class="pc bpc" id="L709" title="1 of 2 branches missed.">                    Objects.equals(ns, nanopub.ns);</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L718" title="All 2 branches missed.">        if (isValidAndTrusty) {</span>
+<span class="nc" id="L719">            return Objects.hash(nanopubUri);</span>
+        } else {
+<span class="nc" id="L721">            return Objects.hash(</span>
+<span class="nc" id="L722">                    unusedPrefixesRemoved,</span>
+<span class="nc" id="L723">                    tripleCount,</span>
+<span class="nc" id="L724">                    byteCount,</span>
+                    nanopubUri,
+                    headUri,
+                    assertionUri,
+                    provenanceUri,
+                    pubinfoUri,
+                    graphUris,
+                    head,
+                    assertion,
+                    provenance,
+                    pubinfo,
+                    statements,
+                    nsPrefixes,
+                    ns
+            );
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

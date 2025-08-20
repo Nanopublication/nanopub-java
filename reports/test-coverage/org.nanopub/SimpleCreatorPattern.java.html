@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimpleCreatorPattern.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">SimpleCreatorPattern.java</span></div><h1>SimpleCreatorPattern.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DC;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.vocabulary.PAV;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.*;
+
+/**
+ * A simple creator pattern.
+ */
+<span class="fc" id="L20">public class SimpleCreatorPattern implements NanopubPattern {</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns the name of the pattern.
+     */
+    @Override
+    public String getName() {
+<span class="nc" id="L29">        return &quot;Basic creator information&quot;;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns true if the pattern applies to the given nanopub.
+     */
+    @Override
+    public boolean appliesTo(Nanopub nanopub) {
+<span class="nc" id="L39">        return true;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Checks if the pattern is correctly used by the given nanopub.
+     */
+    @Override
+    public boolean isCorrectlyUsedBy(Nanopub nanopub) {
+<span class="nc bnc" id="L49" title="All 4 branches missed.">        return !getCreators(nanopub).isEmpty() || !getAuthors(nanopub).isEmpty();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns a description of the pattern for the given nanopub.
+     */
+    @Override
+    public String getDescriptionFor(Nanopub nanopub) {
+<span class="nc" id="L59">        Set&lt;IRI&gt; authors = getAuthors(nanopub);</span>
+<span class="nc" id="L60">        Set&lt;IRI&gt; creators = getCreators(nanopub);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        if (authors.isEmpty() &amp;&amp; creators.isEmpty()) {</span>
+<span class="nc" id="L62">            return &quot;No authors or creators found&quot;;</span>
+        } else {
+            String s;
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            if (authors.size() == 1) {</span>
+<span class="nc" id="L66">                s = &quot;1 author; &quot;;</span>
+            } else {
+<span class="nc" id="L68">                s = authors.size() + &quot; authors; &quot;;</span>
+            }
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (creators.size() == 1) {</span>
+<span class="nc" id="L71">                s += &quot;1 creator&quot;;</span>
+            } else {
+<span class="nc" id="L73">                s = creators.size() + &quot; creator&quot;;</span>
+            }
+<span class="nc" id="L75">            return s;</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns a URL to the pattern information.
+     */
+    @Override
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+<span class="nc" id="L86">        return new URI(&quot;https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleCreatorPattern.java&quot;).toURL();</span>
+    }
+
+    /**
+     * Returns a set of authors for the given nanopub.
+     *
+     * @param nanopub the nanopub to get authors from
+     * @return a set of authors for the given nanopub
+     */
+    public static Set&lt;IRI&gt; getAuthors(Nanopub nanopub) {
+<span class="nc" id="L96">        Set&lt;IRI&gt; authors = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L97">        IRI authorListId = null;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="nc bnc" id="L99" title="All 6 branches missed.">            if (st.getSubject().equals(nanopub.getUri()) &amp;&amp; isAuthorProperty(st.getPredicate()) &amp;&amp; (st.getObject() instanceof IRI)) {</span>
+<span class="nc" id="L100">                authors.add((IRI) st.getObject());</span>
+            }
+<span class="nc bnc" id="L102" title="All 6 branches missed.">            if (st.getSubject().equals(nanopub.getUri()) &amp;&amp; st.getPredicate().equals(BIBO_AUTHOR_LIST) &amp;&amp; (st.getObject() instanceof IRI)) {</span>
+<span class="nc" id="L103">                authorListId = (IRI) st.getObject();</span>
+            }
+<span class="nc" id="L105">        }</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (authorListId != null) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                if (!st.getSubject().equals(authorListId)) continue;</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (!st.getPredicate().stringValue().matches(RDF_ELEMENT_PROPERTY_REGEX)) continue;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (!(st.getObject() instanceof IRI)) continue;</span>
+<span class="nc" id="L111">                authors.add((IRI) st.getObject());</span>
+<span class="nc" id="L112">            }</span>
+        }
+<span class="nc" id="L114">        return authors;</span>
+    }
+
+    /**
+     * Returns a list of authors for the given nanopub.
+     *
+     * @param nanopub the nanopub to get authors from
+     * @return a list of authors for the given nanopub
+     */
+    public static List&lt;IRI&gt; getAuthorList(Nanopub nanopub) {
+<span class="nc" id="L124">        List&lt;IRI&gt; authorList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L125">        Set&lt;IRI&gt; authorSet = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L126">        Map&lt;Integer, IRI&gt; authorMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L127">        IRI authorListId = null;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="nc bnc" id="L129" title="All 6 branches missed.">            if (st.getSubject().equals(nanopub.getUri()) &amp;&amp; isAuthorProperty(st.getPredicate()) &amp;&amp; (st.getObject() instanceof IRI)) {</span>
+<span class="nc" id="L130">                authorSet.add((IRI) st.getObject());</span>
+            }
+<span class="nc bnc" id="L132" title="All 6 branches missed.">            if (st.getSubject().equals(nanopub.getUri()) &amp;&amp; st.getPredicate().equals(BIBO_AUTHOR_LIST) &amp;&amp; (st.getObject() instanceof IRI)) {</span>
+<span class="nc" id="L133">                authorListId = (IRI) st.getObject();</span>
+            }
+<span class="nc" id="L135">        }</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (authorListId != null) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                if (!st.getSubject().equals(authorListId)) continue;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                if (!st.getPredicate().stringValue().matches(RDF_ELEMENT_PROPERTY_REGEX)) continue;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                if (!(st.getObject() instanceof IRI)) continue;</span>
+<span class="nc" id="L141">                int i = Integer.parseInt(st.getPredicate().stringValue().replaceFirst(RDF_ELEMENT_PROPERTY_REGEX, &quot;$1&quot;));</span>
+<span class="nc" id="L142">                authorMap.put(i, (IRI) st.getObject());</span>
+<span class="nc" id="L143">            }</span>
+<span class="nc" id="L144">            int i = 1;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            while (authorMap.containsKey(i)) {</span>
+<span class="nc" id="L146">                authorList.add(authorMap.get(i));</span>
+<span class="nc" id="L147">                i = i + 1;</span>
+            }
+        }
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        for (IRI a : authorSet) {</span>
+            // TODO This is not efficient (but lists should be small...)
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (!authorList.contains(a)) authorList.add(a);</span>
+<span class="nc" id="L153">        }</span>
+
+<span class="nc" id="L155">        return authorList;</span>
+    }
+
+    /**
+     * Returns a set of creators for the given nanopub.
+     *
+     * @param nanopub the nanopub to get creators from
+     * @return a set of creators for the given nanopub
+     */
+    public static Set&lt;IRI&gt; getCreators(Nanopub nanopub) {
+<span class="nc" id="L165">        Set&lt;IRI&gt; creators = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">            if (!st.getSubject().equals(nanopub.getUri())) continue;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (!isCreatorProperty(st.getPredicate())) continue;</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (!(st.getObject() instanceof IRI)) continue;</span>
+<span class="nc" id="L170">            creators.add((IRI) st.getObject());</span>
+<span class="nc" id="L171">        }</span>
+<span class="nc" id="L172">        return creators;</span>
+    }
+
+    // TODO think about importing this from the PAV vocabulary
+    /**
+     * Constant &lt;code&gt;PAV_CREATEDBY_1&lt;/code&gt;
+     */
+<span class="fc" id="L179">    public static final IRI PAV_CREATEDBY_1 = SimpleValueFactory.getInstance().createIRI(&quot;http://swan.mindinformatics.org/ontologies/1.2/pav/createdBy&quot;);</span>
+
+    /**
+     * Constant &lt;code&gt;PAV_AUTHOREDBY_1&lt;/code&gt;
+     */
+<span class="fc" id="L184">    public static final IRI PAV_AUTHOREDBY_1 = SimpleValueFactory.getInstance().createIRI(&quot;http://swan.mindinformatics.org/ontologies/1.2/pav/authoredBy&quot;);</span>
+
+    /**
+     * Constant &lt;code&gt;BIBO_AUTHOR_LIST&lt;/code&gt;
+     */
+<span class="fc" id="L189">    public static final IRI BIBO_AUTHOR_LIST = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/ontology/bibo/authorList&quot;);</span>
+    /**
+     * Constant &lt;code&gt;RDF_ELEMENT_PROPERTY_REGEX&lt;/code&gt;
+     */
+    public static final String RDF_ELEMENT_PROPERTY_REGEX = &quot;http://www\\.w3\\.org/1999/02/22-rdf-syntax-ns#_([1-9][0-9]*)&quot;;
+
+    /**
+     * Checks if the given IRI is a creator property.
+     *
+     * @param uri the IRI to check
+     * @return true if the IRI is a creator property, false otherwise
+     */
+    public static boolean isCreatorProperty(IRI uri) {
+<span class="nc bnc" id="L202" title="All 12 branches missed.">        return uri.equals(PAV.CREATED_BY) || uri.equals(PAV_CREATEDBY_1) || uri.equals(PAV.CREATED_BY_V2) || uri.equals(DCTERMS.CREATOR) || uri.equals(DC.CREATOR) || uri.equals(PROV.WAS_ATTRIBUTED_TO);</span>
+    }
+
+    /**
+     * Checks if the given IRI is an author property.
+     *
+     * @param uri the IRI to check
+     * @return true if the IRI is an author property, false otherwise
+     */
+    public static boolean isAuthorProperty(IRI uri) {
+<span class="nc bnc" id="L212" title="All 6 branches missed.">        return uri.equals(PAV.AUTHORED_BY) || uri.equals(PAV_AUTHOREDBY_1) || uri.equals(PAV.AUTHORED_BY_V2);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

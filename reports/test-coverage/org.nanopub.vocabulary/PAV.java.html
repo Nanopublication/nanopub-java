@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PAV.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.vocabulary</a> &gt; <span class="el_source">PAV.java</span></div><h1>PAV.java</h1><pre class="source lang-java linenums">package org.nanopub.vocabulary;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+
+/**
+ * This class defines the PAV (Provenance, Authoring, and Versioning) vocabulary.
+ */
+<span class="nc" id="L9">public class PAV {</span>
+
+    public static final String NAMESPACE = &quot;http://purl.org/pav/&quot;;
+
+    public static final String PREFIX = &quot;pav&quot;;
+
+<span class="fc" id="L15">    public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);</span>
+
+<span class="fc" id="L17">    public static final IRI CREATED_BY = Utils.createIRI(NAMESPACE, &quot;createdBy&quot;);</span>
+
+<span class="fc" id="L19">    public static final IRI CREATED_ON = Utils.createIRI(NAMESPACE, &quot;createdOn&quot;);</span>
+
+<span class="fc" id="L21">    public static final IRI LAST_UPDATED_ON = Utils.createIRI(NAMESPACE, &quot;lastUpdatedOn&quot;);</span>
+
+<span class="fc" id="L23">    public static final IRI IMPORTED_ON = Utils.createIRI(NAMESPACE, &quot;importedOn&quot;);</span>
+
+<span class="fc" id="L25">    public static final IRI AUTHORED_BY = Utils.createIRI(NAMESPACE, &quot;authoredBy&quot;);</span>
+
+    public static final String NAMESPACE_V2 = &quot;http://purl.org/pav/2.0/&quot;;
+
+<span class="fc" id="L29">    public static final IRI CREATED_BY_V2 = Utils.createIRI(NAMESPACE_V2, &quot;createdBy&quot;);</span>
+
+<span class="fc" id="L31">    public static final IRI AUTHORED_BY_V2 = Utils.createIRI(NAMESPACE_V2, &quot;authoredBy&quot;);</span>
+
+<span class="fc" id="L33">    public static final IRI IMPORTED_ON_V2 = Utils.createIRI(NAMESPACE_V2, &quot;importedOn&quot;);</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

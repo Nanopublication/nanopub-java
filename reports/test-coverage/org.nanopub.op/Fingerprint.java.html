@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Fingerprint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op</a> &gt; <span class="el_source">Fingerprint.java</span></div><h1>Fingerprint.java</h1><pre class="source lang-java linenums">package org.nanopub.op;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.Nanopub;
+import org.nanopub.op.fingerprint.DefaultFingerprints;
+import org.nanopub.op.fingerprint.FingerprintHandler;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line utility to calculate fingerprints for nanopublications.
+ */
+public class Fingerprint extends CliRunner {
+
+<span class="nc" id="L26">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;)</span>
+    private List&lt;File&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;--in-format&quot;, description = &quot;Format of the input nanopubs: trig, nq, trix, trig.gz, ...&quot;)
+    private String inFormat;
+
+    @com.beust.jcommander.Parameter(names = &quot;--ignore-head&quot;, description = &quot;Ignore the head graph for fingerprint calculation&quot;)
+    private boolean ignoreHead;
+
+    @com.beust.jcommander.Parameter(names = &quot;--ignore-prov&quot;, description = &quot;Ignore the provenance graph for fingerprint calculation&quot;)
+    private boolean ignoreProv;
+
+    @com.beust.jcommander.Parameter(names = &quot;--ignore-pubinfo&quot;, description = &quot;Ignore the publication info graph for fingerprint calculation&quot;)
+    private boolean ignorePubinfo;
+
+    @com.beust.jcommander.Parameter(names = &quot;-h&quot;, description = &quot;Fingerprint handler class&quot;)
+    private String handlerClass;
+
+    /**
+     * Main method to run the Fingerprint utility.
+     *
+     * @param args Command-line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L54">            Fingerprint obj = CliRunner.initJc(new Fingerprint(), args);</span>
+<span class="nc" id="L55">            obj.init();</span>
+<span class="nc" id="L56">            obj.run();</span>
+<span class="nc" id="L57">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L58">            System.exit(1);</span>
+<span class="nc" id="L59">        } catch (Exception ex) {</span>
+<span class="nc" id="L60">            ex.printStackTrace();</span>
+<span class="nc" id="L61">            System.exit(1);</span>
+<span class="nc" id="L62">        }</span>
+<span class="nc" id="L63">    }</span>
+
+<span class="nc" id="L65">    private Fingerprint() {</span>
+<span class="nc" id="L66">    }</span>
+
+    /**
+     * Creates an instance of the Fingerprint utility with the given command-line arguments.
+     *
+     * @param args Command-line arguments
+     * @return An instance of Fingerprint
+     * @throws com.beust.jcommander.ParameterException if there is an error in the parameters
+     */
+    public static Fingerprint getInstance(String args) throws ParameterException {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (args == null) {</span>
+<span class="nc" id="L77">            args = &quot;&quot;;</span>
+        }
+<span class="nc" id="L79">        Fingerprint obj = CliRunner.initJc(new Fingerprint(), args.trim().split(&quot; &quot;));</span>
+<span class="nc" id="L80">        obj.init();</span>
+<span class="nc" id="L81">        return obj;</span>
+    }
+
+    private RDFFormat rdfInFormat;
+<span class="nc" id="L85">    private OutputStream outputStream = System.out;</span>
+    private BufferedWriter writer;
+    private FingerprintHandler fingerprintHandler;
+
+    private void init() {
+<span class="nc bnc" id="L90" title="All 4 branches missed.">        if (handlerClass != null &amp;&amp; !handlerClass.isEmpty()) {</span>
+<span class="nc" id="L91">            String detectorClassName = handlerClass;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (!handlerClass.contains(&quot;.&quot;)) {</span>
+<span class="nc" id="L93">                detectorClassName = &quot;org.nanopub.op.fingerprint.&quot; + handlerClass;</span>
+            }
+            try {
+<span class="nc" id="L96">                fingerprintHandler = (FingerprintHandler) Class.forName(detectorClassName).getConstructor().newInstance();</span>
+<span class="nc" id="L97">            } catch (ReflectiveOperationException ex) {</span>
+<span class="nc" id="L98">                throw new RuntimeException(ex);</span>
+<span class="nc" id="L99">            }</span>
+<span class="nc" id="L100">        } else {</span>
+<span class="nc" id="L101">            fingerprintHandler = new DefaultFingerprints(ignoreHead, ignoreProv, ignorePubinfo);</span>
+        }
+<span class="nc" id="L103">    }</span>
+
+    /**
+     * Runs the Fingerprint utility to calculate fingerprints for the given nanopublications.
+     *
+     * @throws java.io.IOException                       if there is an error reading or writing files
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   if there is an error parsing RDF data
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if a nanopublication is malformed
+     * @throws net.trustyuri.TrustyUriException          if there is an error with Trusty URIs
+     */
+    public void run() throws IOException, RDFParseException, RDFHandlerException,
+            MalformedNanopubException, TrustyUriException {
+<span class="nc bnc" id="L116" title="All 4 branches missed.">        if (inputNanopubs == null || inputNanopubs.isEmpty()) {</span>
+<span class="nc" id="L117">            throw new ParameterException(&quot;No input files given&quot;);</span>
+        }
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        for (File inputFile : inputNanopubs) {</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (inFormat != null) {</span>
+<span class="nc" id="L121">                rdfInFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + inFormat).orElse(null);</span>
+            } else {
+<span class="nc" id="L123">                rdfInFormat = Rio.getParserFormatForFileName(inputFile.toString()).orElse(null);</span>
+            }
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (outputFile != null) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L127">                    outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L129">                    outputStream = new FileOutputStream(outputFile);</span>
+                }
+            }
+
+<span class="nc" id="L133">            writer = new BufferedWriter(new OutputStreamWriter(outputStream));</span>
+
+<span class="nc" id="L135">            MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -&gt; {</span>
+                try {
+<span class="nc" id="L137">                    writer.write(np.getUri() + &quot; &quot; + getFingerprint(np) + &quot;\n&quot;);</span>
+<span class="nc" id="L138">                } catch (RDFHandlerException | IOException ex) {</span>
+<span class="nc" id="L139">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L140">                }</span>
+<span class="nc" id="L141">            });</span>
+
+<span class="nc" id="L143">            writer.flush();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (outputStream != System.out) {</span>
+<span class="nc" id="L145">                writer.close();</span>
+            }
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">    }</span>
+
+    /**
+     * Calculates the fingerprint for a given nanopublication.
+     *
+     * @param np the nanopublication for which to calculate the fingerprint
+     * @return the fingerprint as a string
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling RDF data
+     * @throws java.io.IOException                       if there is an error reading or writing files
+     */
+    public String getFingerprint(Nanopub np) throws RDFHandlerException, IOException {
+<span class="nc" id="L159">        return fingerprintHandler.getFingerprint(np);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

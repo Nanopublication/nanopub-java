@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FdoRecord.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.fdo</a> &gt; <span class="el_source">FdoRecord.java</span></div><h1>FdoRecord.java</h1><pre class="source lang-java linenums">package org.nanopub.fdo;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
+import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
+
+/**
+ * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
+ * a nanopub-based one, or of an FDO that is still being created. The record may be viewed as a set of
+ * RDF Statements (corresponding to  the assertion graph of an FDO nanopub). Internally it's represented as a
+ * Map of tuples (IRI, Value) where the IRI is the predicate and the Value is the object.
+ */
+public class FdoRecord implements Serializable {
+
+<span class="fc" id="L33">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+    final static String SCHEMA_ID = &quot;21.T11966/JsonSchema&quot;;
+
+<span class="fc" id="L36">    private IRI id = null;</span>
+<span class="fc" id="L37">    private final HashMap&lt;IRI, Value&gt; tuples = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L38">    private final Set&lt;IRI&gt; aggregates = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L39">    private final Set&lt;IRI&gt; derivesFrom = new HashSet&lt;&gt;();</span>
+
+    /**
+     * When the FdoRecord is created out of a Nanopub, we store the originalNanopub, so we can supersed it.
+     */
+<span class="fc" id="L44">    private Nanopub originalNanopub = null;</span>
+
+    /**
+     * Constructor for building an FDO Record
+     *
+     * @param profile required, use complete url not only id
+     * @param label   optional
+     * @param dataRef optional
+     */
+<span class="fc" id="L53">    public FdoRecord(IRI profile, String label, IRI dataRef) {</span>
+<span class="fc" id="L54">        this.setAttribute(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);</span>
+<span class="fc" id="L55">        this.setAttribute(FdoUtils.PROFILE_IRI, profile);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (label != null) {</span>
+<span class="fc" id="L57">            this.setAttribute(RDFS.LABEL, vf.createLiteral(label));</span>
+        }
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (dataRef != null) {</span>
+<span class="fc" id="L60">            this.setAttribute(DATA_REF_IRI, dataRef);</span>
+        }
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Constructor for building an FDO Record from a Nanopub.
+     *
+     * @param np the Nanopub to create the FdoRecord from
+     */
+<span class="fc" id="L69">    public FdoRecord(Nanopub np) {</span>
+<span class="fc" id="L70">        Statement anyAssertion = np.getAssertion().iterator().next();</span>
+<span class="fc" id="L71">        this.id = vf.createIRI(anyAssertion.getSubject().stringValue());</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for (Statement st : np.getAssertion()) {</span>
+<span class="fc" id="L73">            tuples.put(st.getPredicate(), st.getObject());</span>
+<span class="fc" id="L74">        }</span>
+<span class="fc" id="L75">        this.originalNanopub = np;</span>
+<span class="fc" id="L76">    }</span>
+
+    /**
+     * Build statements out of tuples.
+     *
+     * @return a Set of RDF Statements representing this FdoRecord
+     */
+    public Set&lt;Statement&gt; buildStatements() {
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (id == null) {</span>
+<span class="fc" id="L85">            throw new RuntimeException(&quot;FdoRecord id (fdoIri) must be set before building statements&quot;);</span>
+        }
+<span class="fc" id="L87">        Set&lt;Statement&gt; statements = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (var entry : tuples.entrySet()) {</span>
+<span class="fc" id="L89">            statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));</span>
+<span class="fc" id="L90">        }</span>
+<span class="fc bfc" id="L91" title="All 4 branches covered.">        if (tuples.containsKey(DATA_REF_IRI) &amp;&amp; !aggregates.isEmpty()) {</span>
+<span class="fc" id="L92">            throw new RuntimeException(&quot;Complex FDOs cannot have DATA_REF&quot;);</span>
+        }
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        for (IRI aggregate : aggregates) {</span>
+<span class="fc" id="L95">            statements.add(vf.createStatement(this.id, FdoUtils.FDO_HAS_PART, aggregate));</span>
+<span class="fc" id="L96">        }</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        for (IRI derive : derivesFrom) {</span>
+<span class="fc" id="L98">            statements.add(vf.createStatement(this.id, FdoUtils.FDO_DERIVES_FROM, derive));</span>
+<span class="fc" id="L99">        }</span>
+<span class="fc" id="L100">        return statements;</span>
+    }
+
+
+    /**
+     * Get the value of the attribute with the given IRI.
+     *
+     * @param iri the IRI of the attribute to get, must not be null
+     * @return the value of the attribute, or null
+     */
+    public Value getAttribute(IRI iri) {
+<span class="fc" id="L111">        return tuples.get(iri);</span>
+    }
+
+    /**
+     * Set the attribute. If the key (iri) was already there, the old value is removed.
+     *
+     * @param iri the IRI of the attribute to set, must not be null
+     * @param val the Value to set for the attribute, must not be null
+     * @return the FdoRecord for chaining
+     */
+    public FdoRecord setAttribute(IRI iri, Value val) {
+<span class="fc" id="L122">        tuples.put(iri, val);</span>
+<span class="fc" id="L123">        return this;</span>
+    }
+
+    /**
+     * Remove the attribute.
+     *
+     * @param iri the IRI of the attribute to remove
+     * @return the FdoRecord for chaining
+     */
+    public FdoRecord removeAttribute(IRI iri) {
+<span class="fc" id="L133">        tuples.remove(iri);</span>
+<span class="fc" id="L134">        return this;</span>
+    }
+
+    /**
+     * Get the profile IRI of this FDO.
+     *
+     * @return the profile IRI as a String
+     */
+    public String getProfile() {
+<span class="fc" id="L143">        String profile = tuples.get(FdoUtils.PROFILE_IRI).stringValue();</span>
+<span class="fc" id="L144">        return profile;</span>
+    }
+
+    /**
+     * Get the label of this FDO record.
+     *
+     * @return the label as a String, or null if not set
+     */
+    public String getLabel() {
+<span class="fc" id="L153">        Value label = tuples.get(RDFS.LABEL);</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (label != null) {</span>
+<span class="fc" id="L155">            return label.stringValue();</span>
+        }
+<span class="fc" id="L157">        return null;</span>
+    }
+
+    /**
+     * Get the URL of the schema for this FDO record.
+     *
+     * @return the schema URL as a String, or null if not set
+     */
+    public String getSchemaUrl() {
+<span class="fc" id="L166">        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + SCHEMA_ID));</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        if (schemaEntry != null) {</span>
+            // TODO check if the schemaEntry is a valid JSON Schema reference
+            // assume the entry looks like {&quot;$ref&quot;: &quot;https://the-url&quot;}
+<span class="fc" id="L170">            return schemaEntry.stringValue().substring(10, schemaEntry.stringValue().length() - 2);</span>
+        }
+<span class="fc" id="L172">        return null;</span>
+    }
+
+    /**
+     * Get the IRI of this FDO record.
+     *
+     * @return the IRI of this FDO record, or null if not set
+     */
+    public IRI getId() {
+<span class="fc" id="L181">        return id;</span>
+    }
+
+    /**
+     * Set the IRI of this FDO record.
+     *
+     * @param id the IRI to set, must not be null
+     */
+    public void setId(IRI id) {
+<span class="fc" id="L190">        this.id = id;</span>
+<span class="fc" id="L191">    }</span>
+
+    /**
+     * Set the data reference of this FDO record.
+     *
+     * @param dataRef the data reference IRI as a String, must not be null
+     */
+    public void setDataRef(String dataRef) {
+<span class="fc" id="L199">        tuples.put(FdoUtils.DATA_REF_IRI, vf.createIRI(dataRef));</span>
+<span class="fc" id="L200">    }</span>
+
+    /**
+     * Get the data reference Value of this FDO record.
+     *
+     * @return the data reference Value, or null if not set
+     */
+    public Value getDataRef() {
+<span class="fc" id="L208">        return tuples.get(FdoUtils.DATA_REF_IRI);</span>
+    }
+
+    /**
+     * Add an aggregated FDO by its URI or Handle to this FDO record.
+     *
+     * @param uriOrHandle the URI or Handle of the aggregated FDO, must not be null
+     */
+    public void addAggregatedFdo(String uriOrHandle) {
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (FdoUtils.looksLikeUrl(uriOrHandle)) {</span>
+<span class="fc" id="L218">            aggregates.add(vf.createIRI(uriOrHandle));</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        } else if (FdoUtils.looksLikeHandle(uriOrHandle)) {</span>
+<span class="fc" id="L220">            aggregates.add(FdoUtils.toIri(uriOrHandle));</span>
+        } else {
+<span class="fc" id="L222">            throw new RuntimeException(&quot;uriOrHandle is neither uri nor handle: &quot; + uriOrHandle);</span>
+        }
+<span class="fc" id="L224">    }</span>
+
+    /**
+     * Add derived from FDO by its URI to this FDO record.
+     *
+     * @param fdoUri the URI of the FDO that this record derives from, must not be null
+     */
+    public void addDerivedFromFdo(IRI fdoUri) {
+<span class="fc" id="L232">        derivesFrom.add(fdoUri);</span>
+<span class="fc" id="L233">    }</span>
+
+    /**
+     * Create a new NanopubCreator for this FdoRecord, which can be used to create a new Nanopub.
+     *
+     * @return a NanopubCreator for this FdoRecord
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     */
+    public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
+<span class="fc" id="L242">        return createUpdatedNanopub(TransformContext.makeDefault());</span>
+    }
+
+    /**
+     * Create a new NanopubCreator for this FdoRecord, which can be used to create a new Nanopub.
+     *
+     * @param tc the TransformContext to use for the Nanopub creation, must not be null
+     * @return a NanopubCreator for this FdoRecord
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     */
+    public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        if (originalNanopub == null) {</span>
+<span class="fc" id="L254">            throw new MalformedCryptoElementException(&quot;There is no original nanopub to update.&quot;);</span>
+        }
+<span class="fc" id="L256">        SignatureUtils.assertMatchingPubkeys(tc, originalNanopub);</span>
+<span class="fc" id="L257">        NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(this, this.getId());</span>
+<span class="fc" id="L258">        IRI assertionUri = creator.getAssertionUri();</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        for (Statement st : originalNanopub.getProvenance()) {</span>
+<span class="fc" id="L260">            creator.addProvenanceStatement(assertionUri, st.getPredicate(), st.getObject());</span>
+<span class="fc" id="L261">        }</span>
+<span class="fc" id="L262">        creator.addPubinfoStatement(NPX.SUPERSEDES, originalNanopub.getUri());</span>
+<span class="fc" id="L263">        return creator;</span>
+    }
+
+    /**
+     * If this FdoRecord was created by a Nanopub, we return that Nanopub.
+     * null otherwise.
+     *
+     * @return the original Nanopub, or null if this FdoRecord was not created from a Nanopub
+     */
+    public Nanopub getOriginalNanopub() {
+<span class="fc" id="L273">        return originalNanopub;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

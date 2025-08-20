@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Run.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">Run.java</span></div><h1>Run.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.nanopub.extra.index.MakeIndex;
+import org.nanopub.extra.security.MakeKeys;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.extra.server.GetServerInfo;
+import org.nanopub.extra.server.NanopubStatus;
+import org.nanopub.extra.server.PublishNanopub;
+import org.nanopub.extra.services.RunQuery;
+import org.nanopub.extra.setting.ShowSetting;
+import org.nanopub.fdo.ShaclValidator;
+import org.nanopub.trusty.FixTrustyNanopub;
+import org.nanopub.trusty.MakeTrustyNanopub;
+
+import java.io.IOException;
+import java.util.*;
+
+/**
+ * Main class for running various nanopub-related commands.
+ */
+public class Run {
+
+    private Run() {
+    }  // no instances allowed
+
+    /**
+     * Main method to run the nanopub commands.
+     *
+     * @param args the command line arguments, where the first argument is the command to run
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     */
+    public static void main(String[] args) throws IOException, RDF4JException {
+<span class="nc" id="L36">        System.setProperty(&quot;slf4j.internal.verbosity&quot;, &quot;WARN&quot;);</span>
+<span class="nc" id="L37">        NanopubImpl.ensureLoaded();</span>
+<span class="nc" id="L38">        run(args);</span>
+<span class="nc" id="L39">    }</span>
+
+<span class="nc" id="L41">    private static List&lt;Class&lt;?&gt;&gt; runnableClasses = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L42">    private static Map&lt;String, Class&lt;?&gt;&gt; runnableClassesByName = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L43">    private static Map&lt;String, Class&lt;?&gt;&gt; runnableClassesByShortcut = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L44">    private static Map&lt;Class&lt;?&gt;, String&gt; runnableClassNames = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L45">    private static Map&lt;Class&lt;?&gt;, String&gt; runnableClassShortcuts = new HashMap&lt;&gt;();</span>
+
+    private static void addRunnableClass(Class&lt;?&gt; c, String shortcut) {
+<span class="nc" id="L48">        runnableClasses.add(c);</span>
+<span class="nc" id="L49">        runnableClassesByName.put(c.getSimpleName(), c);</span>
+<span class="nc" id="L50">        runnableClassNames.put(c, c.getSimpleName());</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (shortcut != null) {</span>
+<span class="nc" id="L52">            runnableClassesByShortcut.put(shortcut, c);</span>
+<span class="nc" id="L53">            runnableClassShortcuts.put(c, shortcut);</span>
+        }
+<span class="nc" id="L55">    }</span>
+
+    static {
+<span class="nc" id="L58">        addRunnableClass(CheckNanopub.class, &quot;check&quot;);</span>
+<span class="nc" id="L59">        addRunnableClass(GetNanopub.class, &quot;get&quot;);</span>
+<span class="nc" id="L60">        addRunnableClass(PublishNanopub.class, &quot;publish&quot;);</span>
+<span class="nc" id="L61">        addRunnableClass(SignNanopub.class, &quot;sign&quot;);</span>
+<span class="nc" id="L62">        addRunnableClass(MakeTrustyNanopub.class, &quot;mktrusty&quot;);</span>
+<span class="nc" id="L63">        addRunnableClass(FixTrustyNanopub.class, &quot;fix&quot;);</span>
+<span class="nc" id="L64">        addRunnableClass(NanopubStatus.class, &quot;status&quot;);</span>
+<span class="nc" id="L65">        addRunnableClass(GetServerInfo.class, &quot;server&quot;);</span>
+<span class="nc" id="L66">        addRunnableClass(MakeIndex.class, &quot;mkindex&quot;);</span>
+<span class="nc" id="L67">        addRunnableClass(MakeKeys.class, &quot;mkkeys&quot;);</span>
+<span class="nc" id="L68">        addRunnableClass(Nanopub2Html.class, &quot;html&quot;);</span>
+<span class="nc" id="L69">        addRunnableClass(TimestampNow.class, &quot;now&quot;);</span>
+<span class="nc" id="L70">        addRunnableClass(org.nanopub.op.Run.class, &quot;op&quot;);</span>
+<span class="nc" id="L71">        addRunnableClass(ShowSetting.class, &quot;setting&quot;);</span>
+<span class="nc" id="L72">        addRunnableClass(RunQuery.class, &quot;query&quot;);</span>
+<span class="nc" id="L73">        addRunnableClass(TimestampUpdater.class, &quot;udtime&quot;);</span>
+<span class="nc" id="L74">        addRunnableClass(StripDown.class, &quot;strip&quot;);</span>
+<span class="nc" id="L75">        addRunnableClass(ShaclValidator.class, &quot;shacl&quot;);</span>
+<span class="nc" id="L76">        addRunnableClass(RoCrateImporter.class, &quot;rocrate&quot;);</span>
+<span class="nc" id="L77">        addRunnableClass(NanopubRetractorCli.class, &quot;retract&quot;);</span>
+<span class="nc" id="L78">    }</span>
+
+    /**
+     * Runs the specified command with the given arguments.
+     *
+     * @param command the command to run, where the first element is the command name
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     */
+    public static void run(String[] command) throws IOException, RDF4JException {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (command.length == 0) {</span>
+<span class="nc" id="L89">            System.err.println(&quot;ERROR: missing command&quot;);</span>
+<span class="nc" id="L90">            System.err.println(&quot;Use 'help' to show all available commands.&quot;);</span>
+<span class="nc" id="L91">            System.exit(1);</span>
+        }
+<span class="nc" id="L93">        String cmd = command[0];</span>
+<span class="nc" id="L94">        String[] cmdArgs = Arrays.copyOfRange(command, 1, command.length);</span>
+<span class="nc" id="L95">        Class&lt;?&gt; runClass = runnableClassesByName.get(cmd);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (runClass == null) {</span>
+<span class="nc" id="L97">            runClass = runnableClassesByShortcut.get(cmd);</span>
+        }
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (runClass != null) {</span>
+            try {
+<span class="nc" id="L101">                runClass.getMethod(&quot;main&quot;, String[].class).invoke(runClass, (Object) cmdArgs);</span>
+<span class="nc" id="L102">            } catch (Exception ex) {</span>
+<span class="nc" id="L103">                System.err.println(&quot;Internal error: &quot; + ex.getMessage());</span>
+<span class="nc" id="L104">                ex.printStackTrace();</span>
+<span class="nc" id="L105">                System.exit(1);</span>
+<span class="nc" id="L106">            }</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        } else if (cmd.equals(&quot;help&quot;)) {</span>
+<span class="nc" id="L108">            System.err.println(&quot;Available commands:&quot;);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            for (Class&lt;?&gt; c : runnableClasses) {</span>
+<span class="nc" id="L110">                String s = runnableClassShortcuts.get(c);</span>
+<span class="nc" id="L111">                String n = runnableClassNames.get(c);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (s == null) {</span>
+<span class="nc" id="L113">                    System.err.println(&quot;- &quot; + n);</span>
+                } else {
+<span class="nc" id="L115">                    System.err.println(&quot;- &quot; + s + &quot; / &quot; + n);</span>
+                }
+<span class="nc" id="L117">            }</span>
+<span class="nc" id="L118">            System.exit(0);</span>
+        } else {
+<span class="nc" id="L120">            System.err.println(&quot;ERROR. Unrecognized command: &quot; + cmd);</span>
+<span class="nc" id="L121">            System.err.println(&quot;Use 'help' to show all available commands.&quot;);</span>
+<span class="nc" id="L122">            System.exit(1);</span>
+        }
+<span class="nc" id="L124">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

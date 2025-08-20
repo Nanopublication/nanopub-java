@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubDb.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">NanopubDb.java</span></div><h1>NanopubDb.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import com.mongodb.*;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * A class to manage a Nanopublication database.
+ */
+// This code is partly copied from ch.tkuhn.nanopub.server.NanopubDb
+public class NanopubDb {
+
+    // Use trig internally to keep namespaces:
+<span class="nc" id="L19">    private static RDFFormat internalFormat = RDFFormat.TRIG;</span>
+
+<span class="nc" id="L21">    private Logger logger = LoggerFactory.getLogger(this.getClass());</span>
+
+    private MongoClient mongo;
+    private DB db;
+
+    /**
+     * Constructor to initialize the NanopubDb with MongoDB connection parameters.
+     *
+     * @param mongoDbHost     the host of the MongoDB server
+     * @param mongoDbPort     the port of the MongoDB server
+     * @param mongoDbName     the name of the MongoDB database
+     * @param mongoDbUsername the username for MongoDB authentication (can be null)
+     * @param mongoDbPw       the password for MongoDB authentication (can be null)
+     */
+<span class="nc" id="L35">    public NanopubDb(String mongoDbHost, int mongoDbPort, String mongoDbName, String mongoDbUsername, String mongoDbPw) {</span>
+<span class="nc" id="L36">        logger.info(&quot;Initialize new DB object&quot;);</span>
+<span class="nc" id="L37">        ServerAddress serverAddress = new ServerAddress(mongoDbHost, mongoDbPort);</span>
+
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (mongoDbUsername != null) {</span>
+<span class="nc" id="L40">            MongoCredential credential = MongoCredential.createCredential(</span>
+                    mongoDbUsername,
+                    mongoDbName,
+<span class="nc" id="L43">                    mongoDbPw.toCharArray());</span>
+<span class="nc" id="L44">            mongo = new MongoClient(serverAddress, credential, MongoClientOptions.builder().build());</span>
+<span class="nc" id="L45">        } else {</span>
+<span class="nc" id="L46">            mongo = new MongoClient(serverAddress);</span>
+        }
+<span class="nc" id="L48">        db = mongo.getDB(mongoDbName);</span>
+<span class="nc" id="L49">    }</span>
+
+
+    /**
+     * Returns the MongoDB client object.
+     *
+     * @return the MongoDB client object
+     */
+    public MongoClient getMongoClient() {
+<span class="nc" id="L58">        return mongo;</span>
+    }
+
+<span class="nc" id="L61">    private static DBObject pingCommand = new BasicDBObject(&quot;ping&quot;, &quot;1&quot;);</span>
+
+    /**
+     * Checks if the database is accessible.
+     * This method sends a ping command to the database and returns true if it succeeds.
+     * If the command fails, it returns false.
+     *
+     * @return true if the database is accessible, false otherwise
+     */
+    public boolean isAccessible() {
+        try {
+<span class="nc" id="L72">            db.command(pingCommand);</span>
+<span class="nc" id="L73">        } catch (MongoException ex) {</span>
+<span class="nc" id="L74">            return false;</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">        return true;</span>
+    }
+
+    private DBCollection getNanopubCollection() {
+<span class="nc" id="L80">        return db.getCollection(&quot;nanopubs&quot;);</span>
+    }
+
+    /**
+     * Returs a Nanopub object for the given artifact code.
+     *
+     * @param artifactCode the artifact code of the nanopub to retrieve
+     * @return the Nanopub object, or null if no nanopub with the given artifact code exists
+     */
+    public Nanopub getNanopub(String artifactCode) {
+<span class="nc" id="L90">        BasicDBObject query = new BasicDBObject(&quot;_id&quot;, artifactCode);</span>
+<span class="nc" id="L91">        DBCursor cursor = getNanopubCollection().find(query);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (!cursor.hasNext()) {</span>
+<span class="nc" id="L93">            return null;</span>
+        }
+<span class="nc" id="L95">        String nanopubString = cursor.next().get(&quot;nanopub&quot;).toString();</span>
+<span class="nc" id="L96">        Nanopub np = null;</span>
+        try {
+<span class="nc" id="L98">            np = new NanopubImpl(nanopubString, internalFormat);</span>
+<span class="nc" id="L99">        } catch (MalformedNanopubException ex) {</span>
+<span class="nc" id="L100">            throw new RuntimeException(&quot;Stored nanopub is not wellformed (this shouldn't happen)&quot;, ex);</span>
+<span class="nc" id="L101">        } catch (RDF4JException ex) {</span>
+<span class="nc" id="L102">            throw new RuntimeException(&quot;Stored nanopub is corrupted (this shouldn't happen)&quot;, ex);</span>
+<span class="nc" id="L103">        }</span>
+<span class="nc" id="L104">        return np;</span>
+    }
+
+    /**
+     * Checks if a nanopub with the given artifact code exists in the database.
+     *
+     * @param artifactCode the artifact code of the nanopub to check
+     * @return true if a nanopub with the given artifact code exists, false otherwise
+     */
+    public boolean hasNanopub(String artifactCode) {
+<span class="nc" id="L114">        BasicDBObject query = new BasicDBObject(&quot;_id&quot;, artifactCode);</span>
+<span class="nc" id="L115">        return getNanopubCollection().find(query).hasNext();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

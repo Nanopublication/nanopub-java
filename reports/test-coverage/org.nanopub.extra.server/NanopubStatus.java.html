@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubStatus.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">NanopubStatus.java</span></div><h1>NanopubStatus.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfModule;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.extra.index.IndexUtils;
+import org.nanopub.extra.index.NanopubIndex;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * Command line tool to check the status of a nanopub (or index nanopub) on all nanopub servers.
+ */
+public class NanopubStatus extends CliRunner {
+
+    @com.beust.jcommander.Parameter(description = &quot;nanopub-uri-or-artifact-code&quot;, required = true)
+    private List&lt;String&gt; nanopubIds;
+
+<span class="nc" id="L28">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+<span class="nc" id="L31">    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Recursive (check entire content of index)&quot;)</span>
+    private boolean recursive = false;
+
+<span class="nc" id="L34">    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;Check all servers (do not stop after the first successful one)&quot;)</span>
+    private boolean checkAllServers = false;
+
+    /**
+     * Main method to run the NanopubStatus command line tool.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L44">            NanopubStatus obj = CliRunner.initJc(new NanopubStatus(), args);</span>
+<span class="nc" id="L45">            obj.run();</span>
+<span class="nc" id="L46">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L47">            System.exit(1);</span>
+<span class="nc" id="L48">        } catch (Exception ex) {</span>
+<span class="nc" id="L49">            ex.printStackTrace();</span>
+<span class="nc" id="L50">            System.exit(1);</span>
+<span class="nc" id="L51">        }</span>
+<span class="nc" id="L52">    }</span>
+
+    private static String getArtifactCode(String uriOrArtifactCode) {
+<span class="nc" id="L55">        return extractArtifactCode(uriOrArtifactCode);</span>
+    }
+
+    static String extractArtifactCode(String uriOrArtifactCode) {
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (uriOrArtifactCode.indexOf(&quot;:&quot;) &gt; 0) {</span>
+<span class="fc" id="L60">            IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">            if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {</span>
+<span class="nc" id="L62">                throw new IllegalArgumentException(&quot;Not a well-formed trusty URI&quot;);</span>
+            }
+<span class="fc" id="L64">            return TrustyUriUtils.getArtifactCode(uri.toString());</span>
+        } else {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (!TrustyUriUtils.isPotentialArtifactCode(uriOrArtifactCode)) {</span>
+<span class="nc" id="L67">                throw new IllegalArgumentException(&quot;Not a well-formed artifact code&quot;);</span>
+            }
+<span class="nc" id="L69">            return uriOrArtifactCode;</span>
+        }
+    }
+
+    private int contentNpCount, indexNpCount;
+<span class="nc" id="L74">    private int minCount = -1;</span>
+
+    /**
+     * Default constructor for NanopubStatus.
+     * Initializes the command line parameters.
+     */
+<span class="nc" id="L80">    public NanopubStatus() {</span>
+<span class="nc" id="L81">    }</span>
+
+    private void run() throws IOException, RDFHandlerException {
+<span class="nc" id="L84">        checkNanopub(nanopubIds.getFirst(), recursive);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (recursive) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            System.out.print(indexNpCount + &quot; index nanopub&quot; + (indexNpCount != 1 ? &quot;s&quot; : &quot;&quot;) + &quot;; &quot;);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            System.out.println(contentNpCount + &quot; content nanopub&quot; + (contentNpCount != 1 ? &quot;s&quot; : &quot;&quot;));</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (checkAllServers) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                System.out.println(&quot;Each found on at least &quot; + minCount + &quot; nanopub server&quot; + (minCount != 1 ? &quot;s&quot; : &quot;&quot;) + &quot;.&quot;);</span>
+            }
+        }
+<span class="nc" id="L92">    }</span>
+
+    private void checkNanopub(String nanopubId, boolean checkIndexContent) {
+<span class="nc" id="L95">        String ac = getArtifactCode(nanopubId);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (!ac.startsWith(RdfModule.MODULE_ID)) {</span>
+<span class="nc" id="L97">            System.err.println(&quot;ERROR. Not a trusty URI of type RA: &quot; + nanopubId);</span>
+<span class="nc" id="L98">            System.exit(1);</span>
+        }
+<span class="nc" id="L100">        int count = 0;</span>
+<span class="nc" id="L101">        ServerIterator serverIterator = new ServerIterator();</span>
+<span class="nc" id="L102">        Nanopub nanopub = null;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        while (serverIterator.hasNext()) {</span>
+<span class="nc" id="L104">            RegistryInfo registryInfo = serverIterator.next();</span>
+            try {
+<span class="nc" id="L106">                Nanopub np = GetNanopub.get(ac, registryInfo);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if (np != null) {</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">                    if (checkIndexContent &amp;&amp; !IndexUtils.isIndex(np)) {</span>
+<span class="nc" id="L109">                        System.err.println(&quot;ERROR. Not an index: &quot; + nanopubId);</span>
+<span class="nc" id="L110">                        System.exit(1);</span>
+                    }
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                    if (nanopub == null) nanopub = np;</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">                    if (!recursive || verbose) {</span>
+<span class="nc" id="L114">                        System.out.println(&quot;URL: &quot; + registryInfo.getCollectionUrl() + ac);</span>
+                    }
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                    if (checkAllServers) {</span>
+<span class="nc" id="L117">                        count++;</span>
+                    } else {
+<span class="nc" id="L119">                        break;</span>
+                    }
+                }
+<span class="nc" id="L122">            } catch (FileNotFoundException ex) {</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">                if (verbose &amp;&amp; !recursive) {</span>
+<span class="nc" id="L124">                    System.out.println(&quot;NOT FOUND ON: &quot; + registryInfo);</span>
+                }
+<span class="nc" id="L126">            } catch (IOException ex) {</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">                if (verbose &amp;&amp; !recursive) {</span>
+<span class="nc" id="L128">                    System.out.println(&quot;CONNECTION ERROR: &quot; + registryInfo);</span>
+                }
+<span class="nc" id="L130">            } catch (RDF4JException | MalformedNanopubException ex) {</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">                if (verbose &amp;&amp; !recursive) {</span>
+<span class="nc" id="L132">                    System.out.println(&quot;VALIDATION ERROR: &quot; + registryInfo);</span>
+                }
+<span class="nc" id="L134">            }</span>
+<span class="nc" id="L135">        }</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (checkAllServers) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            String text = &quot;Found on &quot; + count + &quot; nanopub server&quot; + (count != 1 ? &quot;s&quot; : &quot;&quot;);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (!recursive) {</span>
+<span class="nc" id="L139">                System.out.println(text + &quot;.&quot;);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            } else if (verbose) {</span>
+<span class="nc" id="L141">                System.out.println(text + &quot;: &quot; + ac);</span>
+            }
+<span class="nc bnc" id="L143" title="All 4 branches missed.">            if (minCount &lt; 0 || minCount &gt; count) {</span>
+<span class="nc" id="L144">                minCount = count;</span>
+            }
+        }
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (nanopub != null) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            if (checkIndexContent) {</span>
+<span class="nc" id="L149">                indexNpCount++;</span>
+<span class="nc" id="L150">                NanopubIndex npi = null;</span>
+                try {
+<span class="nc" id="L152">                    npi = IndexUtils.castToIndex(nanopub);</span>
+<span class="nc" id="L153">                } catch (MalformedNanopubException ex) {</span>
+<span class="nc" id="L154">                    ex.printStackTrace();</span>
+<span class="nc" id="L155">                    System.exit(1);</span>
+<span class="nc" id="L156">                }</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                for (IRI elementUri : npi.getElements()) {</span>
+<span class="nc" id="L158">                    checkNanopub(elementUri.toString(), false);</span>
+<span class="nc" id="L159">                }</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                for (IRI subIndexUri : npi.getSubIndexes()) {</span>
+<span class="nc" id="L161">                    checkNanopub(subIndexUri.toString(), true);</span>
+<span class="nc" id="L162">                }</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                if (npi.getAppendedIndex() != null) {</span>
+<span class="nc" id="L164">                    checkNanopub(npi.getAppendedIndex().toString(), true);</span>
+                }
+<span class="nc" id="L166">            } else {</span>
+<span class="nc" id="L167">                contentNpCount++;</span>
+            }
+        }
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if ((indexNpCount + contentNpCount) % 100 == 0) {</span>
+<span class="nc" id="L171">            System.err.print((indexNpCount + contentNpCount) + &quot; nanopubs...\r&quot;);</span>
+        }
+<span class="nc" id="L173">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

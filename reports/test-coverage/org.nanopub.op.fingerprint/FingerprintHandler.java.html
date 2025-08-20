@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FingerprintHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.op.fingerprint</a> &gt; <span class="el_source">FingerprintHandler.java</span></div><h1>FingerprintHandler.java</h1><pre class="source lang-java linenums">package org.nanopub.op.fingerprint;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.nanopub.Nanopub;
+
+/**
+ * Interface that represents a fingerprint handler for Nanopubs.
+ */
+public interface FingerprintHandler {
+
+    /**
+     * IRI placeholder for the nanopub URI.
+     */
+<span class="nc" id="L15">    public static final IRI nanopubUriPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/nanopuburi&quot;);</span>
+
+    /**
+     * IRI placeholder for the nanopub head URI.
+     */
+<span class="nc" id="L20">    public static final IRI headUriPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/head&quot;);</span>
+
+    /**
+     * IRI placeholder for the nanopub assertion URI.
+     */
+<span class="nc" id="L25">    public static final IRI assertionUriPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/assertion&quot;);</span>
+
+    /**
+     * IRI placeholder for the nanopub provenance URI.
+     */
+<span class="nc" id="L30">    public static final IRI provUriPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/provenance&quot;);</span>
+
+    /**
+     * IRI placeholder for the nanopub pubinfo URI.
+     */
+<span class="nc" id="L35">    public static final IRI pubinfoUriPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/pubinfo&quot;);</span>
+
+    /**
+     * IRI placeholder for nanopub timestamp.
+     */
+<span class="nc" id="L40">    public static final IRI timestampPlaceholder = SimpleValueFactory.getInstance().createIRI(&quot;http://purl.org/nanopub/placeholders/timestamp&quot;);</span>
+
+    /**
+     * Returns a fingerprint for the given Nanopub.
+     *
+     * @param np the Nanopub for which to generate a fingerprint
+     * @return a fingerprint string for the Nanopub
+     */
+    public String getFingerprint(Nanopub np);
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

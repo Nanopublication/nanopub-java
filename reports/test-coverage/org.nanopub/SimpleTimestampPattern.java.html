@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimpleTimestampPattern.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">SimpleTimestampPattern.java</span></div><h1>SimpleTimestampPattern.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import jakarta.xml.bind.DatatypeConverter;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.vocabulary.PAV;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.util.Calendar;
+
+/**
+ * A simple timestamp pattern.
+ */
+<span class="fc" id="L22">public class SimpleTimestampPattern implements NanopubPattern {</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Returns the name of the pattern
+     */
+    @Override
+    public String getName() {
+<span class="nc" id="L31">        return &quot;Basic timestamp information&quot;;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean appliesTo(Nanopub nanopub) {
+<span class="nc" id="L39">        return true;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCorrectlyUsedBy(Nanopub nanopub) {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        return getCreationTime(nanopub) != null;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescriptionFor(Nanopub nanopub) {
+<span class="nc" id="L55">        Calendar timestamp = getCreationTime(nanopub);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (timestamp == null) {</span>
+<span class="nc" id="L57">            return &quot;No timestamp found&quot;;</span>
+        } else {
+<span class="nc" id="L59">            return &quot;Timestamp: &quot; + DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(timestamp.getTime());</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
+<span class="nc" id="L68">        return new URI(&quot;https://github.com/Nanopublication/nanopub-java/blob/master/src/main/java/org/nanopub/SimpleTimestampPattern.java&quot;).toURL();</span>
+    }
+
+    /**
+     * Returns the creation time of the nanopublication, if available.
+     *
+     * @param nanopub the nanopublication to check
+     * @return the creation time as a Calendar object, or null if not found
+     */
+    public static Calendar getCreationTime(Nanopub nanopub) {
+<span class="fc" id="L78">        String s = null;</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">            if (!st.getSubject().equals(nanopub.getUri())) continue;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (!isCreationTimeProperty(st.getPredicate())) continue;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (!(st.getObject() instanceof Literal l)) continue;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">            if (!l.getDatatype().equals(XSD_DATETIME)) continue;</span>
+<span class="fc" id="L84">            s = l.stringValue();</span>
+<span class="fc" id="L85">            break;</span>
+        }
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (s == null) return null;</span>
+<span class="fc" id="L88">        return DatatypeConverter.parseDateTime(s);</span>
+    }
+
+    /**
+     * Constant &lt;code&gt;XSD_DATETIME&lt;/code&gt;
+     */
+<span class="fc" id="L94">    public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI(&quot;http://www.w3.org/2001/XMLSchema#dateTime&quot;);</span>
+
+    /**
+     * Checks if the given IRI is a property that indicates the creation time of a nanopublication.
+     *
+     * @param uri the IRI to check
+     * @return true if the IRI is a creation time property, false otherwise
+     */
+    public static boolean isCreationTimeProperty(IRI uri) {
+<span class="pc bpc" id="L103" title="1 of 6 branches missed.">        return uri.equals(DCTERMS.CREATED) || uri.equals(PROV.GENERATED_AT_TIME) || uri.equals(PAV.CREATED_ON);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

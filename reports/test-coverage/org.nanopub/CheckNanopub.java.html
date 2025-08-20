@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CheckNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">CheckNanopub.java</span></div><h1>CheckNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+import org.nanopub.extra.security.LegacySignatureUtils;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.NanopubSignatureElement;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.trusty.TrustyNanopubUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Command line tool to check nanopubs for validity and trustiness.
+ */
+public class CheckNanopub extends CliRunner {
+
+<span class="pc" id="L28">    @com.beust.jcommander.Parameter(description = &quot;input-nanopubs&quot;, required = true)</span>
+    private List&lt;String&gt; inputNanopubs = new ArrayList&lt;&gt;();
+
+<span class="pc" id="L31">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Load nanopubs from given SPARQL endpoint&quot;)
+    private String sparqlEndpointUrl;
+
+    /**
+     * Main method to run the CheckNanopub tool from the command line.
+     *
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L44">            CheckNanopub obj = CliRunner.initJc(new CheckNanopub(), args);</span>
+<span class="nc" id="L45">            obj.setLogPrintStream(System.out);</span>
+<span class="nc" id="L46">            Report report = obj.check();</span>
+<span class="nc" id="L47">            System.out.println(&quot;Summary: &quot; + report.getSummary());</span>
+<span class="nc" id="L48">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        } catch (Exception ex) {</span>
+<span class="nc" id="L51">            ex.printStackTrace();</span>
+<span class="nc" id="L52">            System.exit(1);</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">    }</span>
+
+    private Report report;
+    private int count;
+    private SPARQLRepository sparqlRepo;
+    private PrintStream logOut;
+
+    /**
+     * Default constructor for CheckNanopub.
+     * Initializes the CliRunner with the command line parameters.
+     */
+<span class="fc" id="L65">    public CheckNanopub() {</span>
+<span class="fc" id="L66">    }</span>
+
+    /**
+     * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+     *
+     * @param inputNanopubFiles a list of nanopub files to check
+     */
+<span class="nc" id="L73">    public CheckNanopub(List&lt;String&gt; inputNanopubFiles) {</span>
+<span class="nc" id="L74">        this.inputNanopubs = inputNanopubFiles;</span>
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+     *
+     * @param sparqlEndpointUrl the SPARQL endpoint URL to use for checking nanopubs
+     * @param inputNanopubIds   a list of nanopub IDs to check
+     */
+    public CheckNanopub(String sparqlEndpointUrl, List&lt;String&gt; inputNanopubIds) {
+<span class="nc" id="L84">        super();</span>
+<span class="nc" id="L85">        this.inputNanopubs = inputNanopubIds;</span>
+<span class="nc" id="L86">        this.sparqlEndpointUrl = sparqlEndpointUrl;</span>
+<span class="nc" id="L87">    }</span>
+
+    /**
+     * Checks the nanopubs provided.
+     *
+     * @return a Report object containing the results of the checks
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public Report check() throws IOException {
+<span class="fc" id="L96">        report = new Report();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        for (String s : inputNanopubs) {</span>
+<span class="fc" id="L98">            count = 0;</span>
+            try {
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                if (sparqlEndpointUrl != null) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                    if (sparqlRepo == null) {</span>
+<span class="nc" id="L102">                        sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);</span>
+<span class="nc" id="L103">                        sparqlRepo.init();</span>
+                    }
+<span class="nc" id="L105">                    Nanopub np = new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s));</span>
+<span class="nc" id="L106">                    check(np);</span>
+<span class="nc" id="L107">                } else {</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L109">                        log(&quot;Reading file: &quot; + s + &quot;\n&quot;);</span>
+                    }
+<span class="fc" id="L111">                    MultiNanopubRdfHandler.process(new File(s), np -&gt; {</span>
+<span class="fc" id="L112">                        count++;</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">                        if (count % 100 == 0) {</span>
+<span class="nc" id="L114">                            log(count + &quot; nanopubs...\r&quot;);</span>
+                        }
+<span class="fc" id="L116">                        check(np);</span>
+<span class="fc" id="L117">                    });</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                    if (count == 0) {</span>
+<span class="nc" id="L119">                        log(&quot;NO NANOPUB FOUND: &quot; + s + &quot;\n&quot;);</span>
+<span class="nc" id="L120">                        report.countError();</span>
+                    }
+                }
+<span class="nc" id="L123">            } catch (RDF4JException ex) {</span>
+<span class="nc" id="L124">                log(&quot;RDF ERROR: &quot; + s + &quot;\n&quot;);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                if (logOut != null) ex.printStackTrace(logOut);</span>
+<span class="nc" id="L126">                report.countError();</span>
+<span class="fc" id="L127">            } catch (MalformedNanopubException ex) {</span>
+<span class="fc" id="L128">                log(&quot;INVALID NANOPUB: &quot; + s + &quot;\n&quot;);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">                if (logOut != null) ex.printStackTrace(logOut);</span>
+<span class="fc" id="L130">                report.countInvalid();</span>
+<span class="pc" id="L131">            }</span>
+<span class="fc" id="L132">        }</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (sparqlRepo != null) {</span>
+            try {
+<span class="nc" id="L135">                sparqlRepo.shutDown();</span>
+<span class="nc" id="L136">            } catch (RepositoryException ex) {</span>
+<span class="nc" id="L137">                ex.printStackTrace();</span>
+<span class="nc" id="L138">            }</span>
+        }
+<span class="fc" id="L140">        return report;</span>
+    }
+
+    private void check(Nanopub np) {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {</span>
+<span class="fc" id="L145">            NanopubSignatureElement se = null;</span>
+<span class="fc" id="L146">            NanopubSignatureElement legacySe = null;</span>
+            try {
+<span class="fc" id="L148">                se = SignatureUtils.getSignatureElement(np);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (se == null) legacySe = LegacySignatureUtils.getSignatureElement(np);</span>
+<span class="nc" id="L150">            } catch (MalformedCryptoElementException ex) {</span>
+<span class="nc" id="L151">                System.out.println(&quot;SIGNATURE IS NOT WELL-FORMED (&quot; + ex.getMessage() + &quot;): &quot; + np.getUri());</span>
+<span class="nc" id="L152">                report.countInvalidSignature();</span>
+<span class="nc" id="L153">                return;</span>
+<span class="fc" id="L154">            }</span>
+<span class="pc bpc" id="L155" title="1 of 4 branches missed.">            if (se == null &amp;&amp; legacySe == null) {</span>
+                // no signature
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">                if (verbose) {</span>
+<span class="nc" id="L158">                    System.out.println(&quot;Trusty (without signature): &quot; + np.getUri());</span>
+                }
+<span class="fc" id="L160">                report.countTrusty();</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">            } else if (se != null) {</span>
+                // new signature
+<span class="fc" id="L163">                boolean valid = false;</span>
+                try {
+<span class="fc" id="L165">                    valid = SignatureUtils.hasValidSignature(se);</span>
+<span class="nc" id="L166">                } catch (GeneralSecurityException ex) {</span>
+<span class="nc" id="L167">                    System.out.println(&quot;FAILED TO CHECK SIGNATURE: &quot; + np.getUri() + &quot; (&quot; + ex.getMessage() + &quot;)&quot;);</span>
+<span class="nc" id="L168">                    report.countError();</span>
+<span class="nc" id="L169">                    return;</span>
+<span class="fc" id="L170">                }</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                if (valid) {</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L173">                        System.out.println(&quot;Signed and trusty: &quot; + np.getUri());</span>
+                    }
+<span class="fc" id="L175">                    report.countSigned();</span>
+                } else {
+<span class="fc" id="L177">                    System.out.println(&quot;INVALID SIGNATURE: &quot; + np.getUri());</span>
+<span class="fc" id="L178">                    report.countInvalidSignature();</span>
+                }
+<span class="fc" id="L180">            } else {</span>
+                // legacy signature
+<span class="nc" id="L182">                boolean valid = false;</span>
+                try {
+<span class="nc" id="L184">                    valid = LegacySignatureUtils.hasValidSignature(legacySe);</span>
+<span class="nc" id="L185">                } catch (GeneralSecurityException ex) {</span>
+<span class="nc" id="L186">                    System.out.println(&quot;FAILED TO CHECK LEGACY SIGNATURE: &quot; + np.getUri() + &quot; (&quot; + ex.getMessage() + &quot;)&quot;);</span>
+<span class="nc" id="L187">                    report.countError();</span>
+<span class="nc" id="L188">                    return;</span>
+<span class="nc" id="L189">                }</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                if (valid) {</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L192">                        System.out.println(&quot;Trusty with legacy signature: &quot; + np.getUri());</span>
+                    }
+<span class="nc" id="L194">                    report.countLegacySigned();</span>
+                } else {
+<span class="nc" id="L196">                    System.out.println(&quot;INVALID LEGACY SIGNATURE: &quot; + np.getUri());</span>
+<span class="nc" id="L197">                    report.countInvalidSignature();</span>
+                }
+            }
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        } else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {</span>
+<span class="fc" id="L201">            System.out.println(&quot;Looks like a trusty nanopub BUT VERIFICATION FAILED: &quot; + np.getUri());</span>
+<span class="fc" id="L202">            report.countNotTrusty();</span>
+        } else {
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            if (verbose) {</span>
+<span class="nc" id="L205">                System.out.println(&quot;Valid (but not trusty): &quot; + np.getUri());</span>
+            }
+<span class="fc" id="L207">            report.countNotTrusty();</span>
+        }
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        if (verbose) {</span>
+<span class="nc" id="L210">            System.out.println(&quot;LABEL: &quot; + NanopubUtils.getLabel(np));</span>
+<span class="nc" id="L211">            System.out.println(&quot;TYPES:&quot;);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            for (IRI typeIri : NanopubUtils.getTypes(np)) {</span>
+<span class="nc" id="L213">                System.out.println(&quot;- &quot; + typeIri);</span>
+<span class="nc" id="L214">            }</span>
+<span class="nc" id="L215">            System.out.println(&quot;DESCRIPTION:\n&quot; + NanopubUtils.getDescription(np));</span>
+<span class="nc" id="L216">            System.out.println(&quot;AUTHORS:&quot;);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">            for (IRI authorIri : SimpleCreatorPattern.getAuthors(np)) {</span>
+<span class="nc" id="L218">                System.out.println(&quot;- &quot; + authorIri);</span>
+<span class="nc" id="L219">            }</span>
+<span class="nc" id="L220">            System.out.println(&quot;AUTHOR LIST:&quot;);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">            for (IRI authorIri : SimpleCreatorPattern.getAuthorList(np)) {</span>
+<span class="nc" id="L222">                System.out.println(&quot;- &quot; + authorIri);</span>
+<span class="nc" id="L223">            }</span>
+<span class="nc" id="L224">            System.out.println(&quot;CREATORS:&quot;);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            for (IRI creatorIri : SimpleCreatorPattern.getCreators(np)) {</span>
+<span class="nc" id="L226">                System.out.println(&quot;- &quot; + creatorIri);</span>
+<span class="nc" id="L227">            }</span>
+        }
+<span class="fc" id="L229">    }</span>
+
+    /**
+     * Sets the PrintStream for logging output.
+     *
+     * @param logOut the PrintStream to use for logging
+     */
+    public void setLogPrintStream(PrintStream logOut) {
+<span class="nc" id="L237">        this.logOut = logOut;</span>
+<span class="nc" id="L238">    }</span>
+
+    /**
+     * Sets whether the tool should run in verbose mode.
+     *
+     * @param verbose true if verbose output is desired, false otherwise
+     */
+    public void setVerbose(boolean verbose) {
+<span class="nc" id="L246">        this.verbose = verbose;</span>
+<span class="nc" id="L247">    }</span>
+
+
+    private void log(String message) {
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if (logOut != null) {</span>
+<span class="nc" id="L252">            logOut.print(message);</span>
+        }
+<span class="fc" id="L254">    }</span>
+
+    /**
+     * Report class to hold the results of the nanopub checks.
+     */
+    public class Report {
+
+        private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error;
+
+<span class="fc" id="L263">        private Report() {</span>
+<span class="fc" id="L264">        }</span>
+
+        private void countSigned() {
+<span class="fc" id="L267">            signed++;</span>
+<span class="fc" id="L268">        }</span>
+
+        /**
+         * Returns the count of nanopubs that are signed.
+         *
+         * @return the number of signed nanopubs
+         */
+        public int getSignedCount() {
+<span class="nc" id="L276">            return signed;</span>
+        }
+
+        private void countLegacySigned() {
+<span class="nc" id="L280">            legacySigned++;</span>
+<span class="nc" id="L281">        }</span>
+
+        /**
+         * Returns the count of nanopubs that are signed with a legacy signature.
+         *
+         * @return the number of legacy signed nanopubs
+         */
+        public int getLegacySignedCount() {
+<span class="nc" id="L289">            return legacySigned;</span>
+        }
+
+        private void countTrusty() {
+<span class="fc" id="L293">            trusty++;</span>
+<span class="fc" id="L294">        }</span>
+
+        /**
+         * Returns the count of nanopubs that are considered trusty.
+         *
+         * @return the number of trusty nanopubs
+         */
+        public int getTrustyCount() {
+<span class="nc" id="L302">            return trusty;</span>
+        }
+
+        private void countNotTrusty() {
+<span class="fc" id="L306">            notTrusty++;</span>
+<span class="fc" id="L307">        }</span>
+
+        /**
+         * Returns the count of nanopubs that are valid but not considered trusty.
+         *
+         * @return the number of valid but not trusty nanopubs
+         */
+        public int getNotTrustyCount() {
+<span class="nc" id="L315">            return notTrusty;</span>
+        }
+
+        private void countInvalidSignature() {
+<span class="fc" id="L319">            invalidSignature++;</span>
+<span class="fc" id="L320">        }</span>
+
+        /**
+         * Returns the count of nanopubs that have an invalid signature.
+         *
+         * @return the number of nanopubs with an invalid signature
+         */
+        public int getInvalidSignatureCount() {
+<span class="nc" id="L328">            return invalidSignature;</span>
+        }
+
+        private void countInvalid() {
+<span class="fc" id="L332">            invalid++;</span>
+<span class="fc" id="L333">        }</span>
+
+        /**
+         * Returns the count of nanopubs that are invalid (not well-formed).
+         *
+         * @return the number of invalid nanopubs
+         */
+        public int getInvalidCount() {
+<span class="nc" id="L341">            return invalid;</span>
+        }
+
+        private void countError() {
+<span class="nc" id="L345">            error++;</span>
+<span class="nc" id="L346">        }</span>
+
+        /**
+         * Returns the count of nanopubs that encountered an error during processing.
+         *
+         * @return the number of nanopubs with errors
+         */
+        public int getErrorCount() {
+<span class="nc" id="L354">            return error;</span>
+        }
+
+        /**
+         * Returns the total count of all valid nanopubs (signed, legacy signed, trusty, and not trusty).
+         *
+         * @return the total count of valid nanopubs
+         */
+        public int getAllValidCount() {
+<span class="fc" id="L363">            return signed + legacySigned + trusty + notTrusty;</span>
+        }
+
+        /**
+         * Returns the total count of all invalid nanopubs (invalid signature, invalid, and error).
+         *
+         * @return the total count of invalid nanopubs
+         */
+        public int getAllInvalidCount() {
+<span class="fc" id="L372">            return invalidSignature + invalid + error;</span>
+        }
+
+        /**
+         * Returns the total count of all nanopubs processed (both valid and invalid).
+         *
+         * @return the total count of all nanopubs
+         */
+        public int getAllCount() {
+<span class="fc" id="L381">            return getAllValidCount() + getAllInvalidCount();</span>
+        }
+
+        /**
+         * Returns the total count of all nanopubs processed (both valid and invalid).
+         *
+         * @return the total count of all nanopubs
+         */
+        public boolean areAllValid() {
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            return getAllInvalidCount() == 0;</span>
+        }
+
+        /**
+         * Returns whether all nanopubs are considered trusty (including those with legacy signatures).
+         *
+         * @return true if all nanopubs are trusty, false otherwise
+         */
+        public boolean areAllTrusty() {
+<span class="fc bfc" id="L399" title="All 2 branches covered.">            return trusty + signed + legacySigned == getAllCount();</span>
+        }
+
+        /**
+         * Returns whether all nanopubs are signed (including those with legacy signatures).
+         *
+         * @return true if all nanopubs are signed, false otherwise
+         */
+        public boolean areAllSigned() {
+<span class="fc bfc" id="L408" title="All 2 branches covered.">            return signed + legacySigned == getAllCount();</span>
+        }
+
+        /**
+         * Returns a summary of the counts of nanopubs processed.
+         *
+         * @return a string summarizing the counts of nanopubs
+         */
+        public String getSummary() {
+<span class="fc" id="L417">            String s = &quot;&quot;;</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">            if (signed &gt; 0) s += &quot; &quot; + signed + &quot; trusty with signature;&quot;;</span>
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">            if (legacySigned &gt; 0) s += &quot; &quot; + legacySigned + &quot; trusty with legacy signature;&quot;;</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">            if (trusty &gt; 0) s += &quot; &quot; + trusty + &quot; trusty (without signature);&quot;;</span>
+<span class="fc bfc" id="L421" title="All 2 branches covered.">            if (notTrusty &gt; 0) s += &quot; &quot; + notTrusty + &quot; valid (not trusty);&quot;;</span>
+<span class="fc bfc" id="L422" title="All 2 branches covered.">            if (invalidSignature &gt; 0) s += &quot; &quot; + invalidSignature + &quot; invalid signature;&quot;;</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">            if (invalid &gt; 0) s += &quot; &quot; + invalid + &quot; invalid nanopubs;&quot;;</span>
+<span class="pc bpc" id="L424" title="1 of 2 branches missed.">            if (error &gt; 0) s += &quot; &quot; + error + &quot; errors;&quot;;</span>
+<span class="fc" id="L425">            s = s.replaceFirst(&quot;^ &quot;, &quot;&quot;);</span>
+<span class="fc" id="L426">            return s;</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

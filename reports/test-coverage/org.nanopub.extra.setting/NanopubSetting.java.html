@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubSetting.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.setting</a> &gt; <span class="el_source">NanopubSetting.java</span></div><h1>NanopubSetting.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.setting;
+
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+/**
+ * This class represents a nanopub setting, which includes various configurations.
+ */
+public class NanopubSetting implements Serializable {
+
+<span class="fc" id="L28">    private static ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Retrieves the default local nanopub setting.
+     *
+     * @return the NanopubSetting object for the default setting.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
+     */
+    public static NanopubSetting getLocalSetting() throws RDF4JException, MalformedNanopubException, IOException {
+<span class="fc" id="L39">        return getLocalSetting(null);</span>
+    }
+
+    /**
+     * Retrieves the local nanopub setting by name.
+     *
+     * @param name the name of the setting, or &quot;default&quot; if null is provided.
+     * @return the NanopubSetting object corresponding to the specified name.
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
+     */
+    public static NanopubSetting getLocalSetting(String name) throws RDF4JException, MalformedNanopubException, IOException {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (name == null) name = &quot;default&quot;;</span>
+<span class="fc" id="L53">        NanopubSetting setting = null;</span>
+<span class="fc" id="L54">        try (InputStream in = NanopubSetting.class.getResourceAsStream(&quot;/settings/&quot; + name + &quot;.trig&quot;)) {</span>
+<span class="fc" id="L55">            setting = new NanopubSetting(new NanopubImpl(in, RDFFormat.TRIG));</span>
+        }
+<span class="fc" id="L57">        return setting;</span>
+    }
+
+    private Nanopub nanopub;
+    private IRI settingIri;
+    private String name;
+    private IRI agentIntroCollection;
+    private IRI serviceIntroCollection;
+<span class="fc" id="L65">    private Set&lt;IRI&gt; bootstrapServices = new HashSet&lt;&gt;();</span>
+    private IRI trustRangeAlgorithm;
+    private IRI updateStrategy;
+
+    /**
+     * Constructs a NanopubSetting from a Nanopub object.
+     *
+     * @param nanopub the Nanopub object to create the setting from.
+     */
+<span class="fc" id="L74">    public NanopubSetting(Nanopub nanopub) {</span>
+<span class="fc" id="L75">        this.nanopub = nanopub;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for (Statement st : nanopub.getAssertion()) {</span>
+<span class="fc bfc" id="L77" title="All 4 branches covered.">            if (st.getPredicate().equals(RDF.TYPE) &amp;&amp; st.getObject() instanceof IRI) {</span>
+<span class="fc" id="L78">                settingIri = (IRI) st.getSubject();</span>
+<span class="fc" id="L79">                break;</span>
+            }
+<span class="fc" id="L81">        }</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (settingIri == null) {</span>
+<span class="fc" id="L83">            throw new RuntimeException(&quot;No setting IRI found: &quot; + nanopub.getUri());</span>
+        }
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (Statement st : nanopub.getAssertion()) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (!st.getSubject().equals(settingIri)) continue;</span>
+<span class="fc" id="L87">            IRI pred = st.getPredicate();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (pred.equals(RDFS.LABEL)) {</span>
+<span class="fc" id="L89">                name = st.getObject().stringValue();</span>
+<span class="fc" id="L90">                continue;</span>
+            }
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (!(st.getObject() instanceof IRI obj)) continue;</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (pred.equals(NPX.HAS_AGENTS)) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                if (agentIntroCollection != null)</span>
+<span class="fc" id="L95">                    throw new RuntimeException(&quot;Two agent intro collections found: &quot; + nanopub.getUri());</span>
+<span class="fc" id="L96">                agentIntroCollection = obj;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            } else if (pred.equals(NPX.HAS_SERVICES)) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                if (serviceIntroCollection != null)</span>
+<span class="fc" id="L99">                    throw new RuntimeException(&quot;Two service intro collections found: &quot; + nanopub.getUri());</span>
+<span class="fc" id="L100">                serviceIntroCollection = obj;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            } else if (pred.equals(NPX.HAS_BOOTSTRAP_SERVICE)) {</span>
+<span class="fc" id="L102">                bootstrapServices.add(obj);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            } else if (pred.equals(NPX.HAS_TRUST_RANGE_ALGORITHM)) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                if (trustRangeAlgorithm != null)</span>
+<span class="fc" id="L105">                    throw new RuntimeException(&quot;Two trust range algorithms found: &quot; + nanopub.getUri());</span>
+<span class="fc" id="L106">                trustRangeAlgorithm = obj;</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            } else if (pred.equals(NPX.HAS_UPDATE_STRATEGY)) {</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                if (updateStrategy != null)</span>
+<span class="fc" id="L109">                    throw new RuntimeException(&quot;Two update strategies found: &quot; + nanopub.getUri());</span>
+<span class="fc" id="L110">                updateStrategy = obj;</span>
+            }
+<span class="fc" id="L112">        }</span>
+<span class="fc" id="L113">    }</span>
+
+    /**
+     * Returns the Nanopub object associated with this setting.
+     *
+     * @return the Nanopub object representing the setting.
+     */
+    public Nanopub getNanopub() {
+<span class="fc" id="L121">        return nanopub;</span>
+    }
+
+    /**
+     * Returns the name of the setting.
+     *
+     * @return the name of the setting, or null if not set.
+     */
+    public String getName() {
+<span class="fc" id="L130">        return name;</span>
+    }
+
+    /**
+     * Returns the IRI of the agent intro collection.
+     *
+     * @return the IRI of the agent intro collection, or null if not set.
+     */
+    public IRI getAgentIntroCollection() {
+<span class="fc" id="L139">        return agentIntroCollection;</span>
+    }
+
+    /**
+     * Returns the IRI of the service intro collection.
+     *
+     * @return the IRI of the service intro collection, or null if not set.
+     */
+    public IRI getServiceIntroCollection() {
+<span class="fc" id="L148">        return serviceIntroCollection;</span>
+    }
+
+    /**
+     * Returns a set of IRIs representing the bootstrap services.
+     *
+     * @return a set of IRIs for bootstrap services, which may be empty if none are defined.
+     */
+    public Set&lt;IRI&gt; getBootstrapServices() {
+<span class="fc" id="L157">        return bootstrapServices;</span>
+    }
+
+    /**
+     * Returns the IRI of the trust range algorithm.
+     *
+     * @return the IRI of the trust range algorithm, or null if not set.
+     */
+    public IRI getTrustRangeAlgorithm() {
+<span class="fc" id="L166">        return trustRangeAlgorithm;</span>
+    }
+
+    /**
+     * Returns the IRI of the update strategy.
+     *
+     * @return the IRI of the update strategy, or null if not set.
+     */
+    public IRI getUpdateStrategy() {
+<span class="fc" id="L175">        return updateStrategy;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">        if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L184">            return false;</span>
+        }
+<span class="fc" id="L186">        NanopubSetting that = (NanopubSetting) o;</span>
+<span class="fc" id="L187">        return Objects.equals(nanopub, that.nanopub);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+<span class="nc" id="L195">        return Objects.hash(nanopub);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

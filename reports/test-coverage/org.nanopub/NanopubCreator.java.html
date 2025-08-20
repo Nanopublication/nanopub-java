@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubCreator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">NanopubCreator.java</span></div><h1>NanopubCreator.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.nanopub.trusty.MakeTrustyNanopub;
+import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.PAV;
+
+import java.util.*;
+
+/**
+ * This class allows for the programmatic creation of nanopubs in a step-wise fashion.
+ *
+ * @author Tobias Kuhn
+ */
+public class NanopubCreator {
+
+<span class="fc" id="L21">    private boolean finalized = false;</span>
+
+    private IRI nanopubUri;
+    private IRI headUri, assertionUri, provenanceUri, pubinfoUri;
+    private boolean nanopubUriFixed, assertionUriFixed;
+    private List&lt;Statement&gt; assertion, provenance, pubinfo;
+
+    private List&lt;Statement&gt; statements;
+    private List&lt;String&gt; nsPrefixes;
+    private Map&lt;String, String&gt; ns;
+    private Nanopub nanopub;
+<span class="fc" id="L32">    private boolean removeUnusedPrefixesEnabled = false;</span>
+
+<span class="fc" id="L34">    private ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    private static final String headSuffix = &quot;Head&quot;;
+    private static final String assertionSuffix = &quot;assertion&quot;;
+    private static final String provenanceSuffix = &quot;provenance&quot;;
+    private static final String pubinfoSuffix = &quot;pubinfo&quot;;
+
+    /**
+     * Creates a new NanopubCreator with an empty nanopub URI.
+     */
+<span class="fc" id="L44">    public NanopubCreator() {</span>
+<span class="fc" id="L45">        init();</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Creates a new NanopubCreator with an empty nanopub URI.
+     *
+     * @param initWithTempNanopubIris if true, initializes the nanopub with temporary IRIs.
+     */
+    public NanopubCreator(boolean initWithTempNanopubIris) {
+<span class="fc" id="L54">        this();</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (initWithTempNanopubIris) {</span>
+<span class="fc" id="L56">            setNanopubUri(NanopubUtils.createTempNanopubIri());</span>
+        }
+<span class="fc" id="L58">    }</span>
+
+    /**
+     * Creates a new NanopubCreator with a specified nanopub URI.
+     *
+     * @param nanopubUri the nanopublication URI
+     */
+    public NanopubCreator(IRI nanopubUri) {
+<span class="fc" id="L66">        this();</span>
+<span class="fc" id="L67">        setNanopubUri(nanopubUri);</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Creates a new NanopubCreator with a specified nanopub URI.
+     *
+     * @param nanopubUri the nanopublication URI as a string
+     */
+    public NanopubCreator(String nanopubUri) {
+<span class="fc" id="L76">        this();</span>
+<span class="fc" id="L77">        setNanopubUri(nanopubUri);</span>
+<span class="fc" id="L78">    }</span>
+
+    private void init() {
+<span class="fc" id="L81">        assertion = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L82">        provenance = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L83">        pubinfo = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L85">        nsPrefixes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L86">        ns = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L87">    }</span>
+
+    /**
+     * Sets the nanopublication URI.
+     *
+     * @param nanopubUri the nanopublication URI
+     */
+    public void setNanopubUri(IRI nanopubUri) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        if (nanopubUriFixed) {</span>
+<span class="nc" id="L97">            throw new RuntimeException(&quot;Cannot change nanopublication URI anymore: has already been used&quot;);</span>
+        }
+<span class="fc" id="L99">        this.nanopubUri = nanopubUri;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (headUri == null) headUri = vf.createIRI(nanopubUri + headSuffix);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (assertionUri == null) assertionUri = vf.createIRI(nanopubUri + assertionSuffix);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (provenanceUri == null) provenanceUri = vf.createIRI(nanopubUri + provenanceSuffix);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (pubinfoUri == null) pubinfoUri = vf.createIRI(nanopubUri + pubinfoSuffix);</span>
+<span class="fc" id="L104">    }</span>
+
+    /**
+     * Sets the nanopublication URI.
+     *
+     * @param nanopubUri the nanopublication URI as a string
+     */
+    public void setNanopubUri(String nanopubUri) {
+<span class="fc" id="L112">        setNanopubUri(vf.createIRI(nanopubUri));</span>
+<span class="fc" id="L113">    }</span>
+
+    /**
+     * Returns the nanopublication URI.
+     *
+     * @return the nanopublication URI
+     */
+    public IRI getNanopubUri() {
+<span class="fc" id="L121">        return nanopubUri;</span>
+    }
+
+    /**
+     * Sets the assertion URI of the nanopublication.
+     *
+     * @param assertionUri the assertion URI
+     */
+    public void setAssertionUri(IRI assertionUri) {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (assertionUriFixed) {</span>
+<span class="nc" id="L132">            throw new RuntimeException(&quot;Cannot change assertion URI anymore: has already been used&quot;);</span>
+        }
+<span class="nc" id="L134">        this.assertionUri = assertionUri;</span>
+<span class="nc" id="L135">    }</span>
+
+    /**
+     * Sets the assertion URI of the nanopublication.
+     *
+     * @param assertionUri the assertion URI as a string
+     */
+    public void setAssertionUri(String assertionUri) {
+<span class="nc" id="L143">        setAssertionUri(vf.createIRI(assertionUri));</span>
+<span class="nc" id="L144">    }</span>
+
+    /**
+     * Returns the assertion URI of the nanopublication.
+     *
+     * @return the assertion URI
+     */
+    public IRI getAssertionUri() {
+<span class="fc" id="L152">        return assertionUri;</span>
+    }
+
+    /**
+     * Sets the provenance URI of the nanopublication.
+     *
+     * @param provenanceUri the head URI
+     */
+    public void setProvenanceUri(IRI provenanceUri) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc" id="L162">        this.provenanceUri = provenanceUri;</span>
+<span class="nc" id="L163">    }</span>
+
+    /**
+     * Sets the provenance URI of the nanopublication.
+     *
+     * @param provenanceUri the head URI as a string
+     */
+    public void setProvenanceUri(String provenanceUri) {
+<span class="nc" id="L171">        setProvenanceUri(vf.createIRI(provenanceUri));</span>
+<span class="nc" id="L172">    }</span>
+
+    /**
+     * Returns the provenance URI of the nanopublication.
+     *
+     * @return the provenance URI
+     */
+    public IRI getProvenanceUri() {
+<span class="fc" id="L180">        return provenanceUri;</span>
+    }
+
+    /**
+     * Sets the pubinfo URI of the nanopublication.
+     *
+     * @param pubinfoUri the pubinfo URI
+     */
+    public void setPubinfoUri(IRI pubinfoUri) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc" id="L190">        this.pubinfoUri = pubinfoUri;</span>
+<span class="nc" id="L191">    }</span>
+
+    /**
+     * Sets the pubinfo URI of the nanopublication.
+     *
+     * @param pubinfoUri the pubinfo URI as a string
+     */
+    public void setPubinfoUri(String pubinfoUri) {
+<span class="nc" id="L199">        setPubinfoUri(vf.createIRI(pubinfoUri));</span>
+<span class="nc" id="L200">    }</span>
+
+    /**
+     * Returns the pubinfo URI of the nanopublication.
+     *
+     * @return the pubinfo URI
+     */
+    public IRI getPubinfoUri() {
+<span class="fc" id="L208">        return pubinfoUri;</span>
+    }
+
+    /**
+     * Adds statements to the assertion part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addAssertionStatements(Statement... statements) {
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L218">        assertion.addAll(Arrays.asList(statements));</span>
+<span class="fc" id="L219">    }</span>
+
+    /**
+     * Adds statements to the assertion part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addAssertionStatements(Iterable&lt;Statement&gt; statements) {
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+<span class="fc" id="L229">            assertion.add(st);</span>
+<span class="fc" id="L230">        }</span>
+<span class="fc" id="L231">    }</span>
+
+    /**
+     * Adds a statement to the assertion part of the nanopublication.
+     *
+     * @param subj the subject of the statement
+     * @param pred the predicate of the statement
+     * @param obj  the object of the statement
+     */
+    public void addAssertionStatement(Resource subj, IRI pred, Value obj) {
+<span class="fc" id="L241">        addAssertionStatements(vf.createStatement(subj, pred, obj));</span>
+<span class="fc" id="L242">    }</span>
+
+    /**
+     * Adds a statement to the assertion part of the nanopublication.
+     *
+     * @param statement the predicate of the statement
+     */
+    public void addAssertionStatement(Statement statement) {
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L251">        assertion.add(statement);</span>
+<span class="fc" id="L252">    }</span>
+
+    /**
+     * Adds statements to the provenance part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addProvenanceStatements(Statement... statements) {
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L261">        provenance.addAll(Arrays.asList(statements));</span>
+<span class="fc" id="L262">    }</span>
+
+    /**
+     * Adds statements to the provenance part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addProvenanceStatements(Iterable&lt;Statement&gt; statements) {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc" id="L272">            provenance.add(st);</span>
+<span class="nc" id="L273">        }</span>
+<span class="nc" id="L274">    }</span>
+
+    /**
+     * Adds a statement to the provenance part of the nanopublication.
+     *
+     * @param subj the subject of the statement
+     * @param pred the predicate of the statement
+     * @param obj  the object of the statement
+     */
+    public void addProvenanceStatement(Resource subj, IRI pred, Value obj) {
+<span class="fc" id="L284">        addProvenanceStatements(vf.createStatement(subj, pred, obj));</span>
+<span class="fc" id="L285">    }</span>
+
+    /**
+     * Adds a statement to the provenance part of the nanopublication.
+     *
+     * @param pred the predicate of the statement
+     * @param obj  the object of the statement
+     */
+    public void addProvenanceStatement(IRI pred, Value obj) {
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (assertionUri == null) throw new RuntimeException(&quot;Assertion URI not yet set&quot;);</span>
+<span class="fc" id="L295">        addProvenanceStatement(assertionUri, pred, obj);</span>
+<span class="fc" id="L296">        assertionUriFixed = true;</span>
+<span class="fc" id="L297">    }</span>
+
+    /**
+     * Adds a statement to the provenance part of the nanopublication.
+     *
+     * @param statement the statement to add
+     */
+    public void addProvenanceStatement(Statement statement) {
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc" id="L306">        provenance.add(statement);</span>
+<span class="nc" id="L307">    }</span>
+
+    /**
+     * Adds statements to the pubinfo part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addPubinfoStatements(Statement... statements) {
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L316">        pubinfo.addAll(Arrays.asList(statements));</span>
+<span class="fc" id="L317">    }</span>
+
+    /**
+     * Adds statements to the pubinfo part of the nanopublication.
+     *
+     * @param statements the statements to add
+     */
+    public void addPubinfoStatements(Iterable&lt;Statement&gt; statements) {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">        for (Statement st : statements) {</span>
+<span class="nc" id="L327">            pubinfo.add(st);</span>
+<span class="nc" id="L328">        }</span>
+<span class="nc" id="L329">    }</span>
+
+    /**
+     * Adds a statement to the pubinfo part of the nanopublication.
+     *
+     * @param subj the subject of the statement
+     * @param pred the predicate of the statement
+     * @param obj  the object of the statement
+     */
+    public void addPubinfoStatement(Resource subj, IRI pred, Value obj) {
+<span class="fc" id="L339">        addPubinfoStatements(vf.createStatement(subj, pred, obj));</span>
+<span class="fc" id="L340">    }</span>
+
+    /**
+     * Adds a statement to the pubinfo part of the nanopublication.
+     *
+     * @param pred the predicate of the statement
+     * @param obj  the object of the statement
+     */
+    public void addPubinfoStatement(IRI pred, Value obj) {
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">        if (nanopubUri == null) throw new RuntimeException(&quot;Nanopublication URI not yet set&quot;);</span>
+<span class="fc" id="L350">        addPubinfoStatement(nanopubUri, pred, obj);</span>
+<span class="fc" id="L351">        nanopubUriFixed = true;</span>
+<span class="fc" id="L352">    }</span>
+
+    /**
+     * Adds a statement to the pubinfo part of the nanopublication.
+     *
+     * @param statement the statement to add
+     */
+    public void addPubinfoStatement(Statement statement) {
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L361">        pubinfo.add(statement);</span>
+<span class="fc" id="L362">    }</span>
+
+    /**
+     * Adds a timestamp to the pubinfo part of the nanopublication.
+     *
+     * @param date the date to add
+     */
+    public void addTimestamp(Date date) {
+<span class="fc" id="L370">        addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral(date));</span>
+<span class="fc" id="L371">    }</span>
+
+    /**
+     * Adds a timestamp to the pubinfo part of the nanopublication using the current time.
+     */
+    public void addTimestampNow() {
+<span class="nc" id="L377">        addPubinfoStatement(DCTERMS.CREATED, TimestampNow.getTimestamp());</span>
+<span class="nc" id="L378">    }</span>
+
+    /**
+     * Adds a creator to the pubinfo part of the nanopublication.
+     *
+     * @param creator the creator IRI
+     */
+    public void addCreator(IRI creator) {
+<span class="nc" id="L386">        addPubinfoStatement(DCTERMS.CREATOR, creator);</span>
+<span class="nc" id="L387">    }</span>
+
+    /**
+     * Adds a creator to the pubinfo part of the nanopublication.
+     *
+     * @param orcidIdentifier the ORCID identifier of the creator
+     */
+    public void addCreator(String orcidIdentifier) {
+<span class="nc" id="L395">        addCreator(getOrcidUri(orcidIdentifier));</span>
+<span class="nc" id="L396">    }</span>
+
+    /**
+     * Adds an author to the pubinfo part of the nanopublication.
+     *
+     * @param author the author IRI
+     */
+    public void addAuthor(IRI author) {
+<span class="nc" id="L404">        addPubinfoStatement(PAV.AUTHORED_BY, author);</span>
+<span class="nc" id="L405">    }</span>
+
+    /**
+     * Adds an author to the pubinfo part of the nanopublication.
+     *
+     * @param orcidIdentifier the ORCID identifier of the author
+     */
+    public void addAuthor(String orcidIdentifier) {
+<span class="nc" id="L413">        addAuthor(getOrcidUri(orcidIdentifier));</span>
+<span class="nc" id="L414">    }</span>
+
+    private IRI getOrcidUri(String orcid) {
+<span class="nc bnc" id="L417" title="All 2 branches missed.">        if (!orcid.startsWith(&quot;http://orcid.org/&quot;)) {</span>
+<span class="nc" id="L418">            orcid = &quot;http://orcid.org/&quot; + orcid;</span>
+        }
+<span class="nc" id="L420">        return vf.createIRI(orcid);</span>
+
+    }
+
+    /**
+     * Adds a namespace to the nanopub.
+     *
+     * @param prefix    the prefix of the namespace
+     * @param namespace the namespace URI
+     */
+    public void addNamespace(String prefix, String namespace) {
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="fc" id="L432">        nsPrefixes.add(prefix);</span>
+<span class="fc" id="L433">        ns.put(prefix, namespace);</span>
+<span class="fc" id="L434">    }</span>
+
+    /**
+     * Adds a namespace to the nanopub.
+     *
+     * @param prefix    the prefix of the namespace
+     * @param namespace the namespace URI
+     */
+    public void addNamespace(String prefix, IRI namespace) {
+<span class="fc" id="L443">        addNamespace(prefix, namespace.toString());</span>
+<span class="fc" id="L444">    }</span>
+
+    /**
+     * Adds a namespace to the nanopub.
+     *
+     * @param namespace the namespace to add
+     */
+    public void addNamespace(Namespace namespace) {
+<span class="nc" id="L452">        addNamespace(namespace.getPrefix(), namespace.getName());</span>
+<span class="nc" id="L453">    }</span>
+
+    /**
+     * Adds multiple namespaces to the nanopub.
+     *
+     * @param namespaces the namespaces to add
+     */
+    public void addNamespaces(Namespace... namespaces) {
+<span class="nc bnc" id="L461" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">        for (Namespace namespace : namespaces) {</span>
+<span class="nc" id="L463">            nsPrefixes.add(namespace.getPrefix());</span>
+<span class="nc" id="L464">            ns.put(namespace.getPrefix(), namespace.getName());</span>
+        }
+<span class="nc" id="L466">    }</span>
+
+    /**
+     * Adds multiple namespaces to the nanopub.
+     *
+     * @param namespaces the namespaces to add
+     */
+    public void addNamespaces(Iterable&lt;Namespace&gt; namespaces) {
+<span class="nc bnc" id="L474" title="All 2 branches missed.">        if (finalized) throw new RuntimeException(&quot;Already finalized&quot;);</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">        for (Namespace namespace : namespaces) {</span>
+<span class="nc" id="L476">            nsPrefixes.add(namespace.getPrefix());</span>
+<span class="nc" id="L477">            ns.put(namespace.getPrefix(), namespace.getName());</span>
+<span class="nc" id="L478">        }</span>
+<span class="nc" id="L479">    }</span>
+
+    /**
+     * Adds the default namespaces to the nanopub.
+     * &lt;p&gt;
+     * The default namespaces are defined in {@link org.nanopub.NanopubUtils#getDefaultNamespaces()}.
+     */
+    public void addDefaultNamespaces() {
+<span class="fc" id="L487">        addNamespace(&quot;this&quot;, nanopubUri);</span>
+<span class="fc bfc" id="L488" title="All 2 branches covered.">        for (Pair&lt;String, String&gt; p : NanopubUtils.getDefaultNamespaces()) {</span>
+<span class="fc" id="L489">            addNamespace(p.getLeft(), p.getRight());</span>
+<span class="fc" id="L490">        }</span>
+<span class="fc" id="L491">    }</span>
+
+    /**
+     * Removes unused prefixes from the nanopub.
+     *
+     * @param removeUnusedPrefixesEnabled whether to remove unused prefixes
+     */
+    public void setRemoveUnusedPrefixesEnabled(boolean removeUnusedPrefixesEnabled) {
+<span class="nc" id="L499">        this.removeUnusedPrefixesEnabled = removeUnusedPrefixesEnabled;</span>
+<span class="nc" id="L500">    }</span>
+
+    /**
+     * Finalizes the nanopub and returns it.
+     * &lt;p&gt;
+     * This method does not add a timestamp to the nanopub.
+     *
+     * @return the finalized nanopub
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     */
+    public Nanopub finalizeNanopub() throws MalformedNanopubException {
+<span class="fc" id="L511">        return finalizeNanopub(false);</span>
+    }
+
+    /**
+     * Finalizes the nanopub and returns it.
+     * &lt;p&gt;
+     * This method adds a timestamp to the nanopub if {@code addTimestamp} is true.
+     *
+     * @param addTimestamp whether to add a timestamp to the nanopub
+     * @return the finalized nanopub
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     */
+    public Nanopub finalizeNanopub(boolean addTimestamp) throws MalformedNanopubException {
+<span class="fc bfc" id="L524" title="All 2 branches covered.">        if (finalized) {</span>
+<span class="fc" id="L525">            return nanopub;</span>
+        }
+<span class="fc bfc" id="L527" title="All 2 branches covered.">        if (nanopubUri == null) throw new MalformedNanopubException(&quot;No nanopub URI specified&quot;);</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">        if (addTimestamp) {</span>
+<span class="fc" id="L529">            addTimestamp(new Date());</span>
+        }
+<span class="fc" id="L531">        collectStatements();</span>
+<span class="fc" id="L532">        nanopub = new NanopubImpl(statements, nsPrefixes, ns);</span>
+<span class="pc bpc" id="L533" title="1 of 2 branches missed.">        if (removeUnusedPrefixesEnabled) {</span>
+<span class="nc" id="L534">            ((NanopubWithNs) nanopub).removeUnusedPrefixes();</span>
+        }
+<span class="fc" id="L536">        finalized = true;</span>
+<span class="fc" id="L537">        return nanopub;</span>
+    }
+
+    /**
+     * Finalizes the nanopub and gives it a trusty URI. S&lt;a href=&quot;ee&quot;&gt;http://arxiv.org/abs/1401.5&lt;/a&gt;775 and
+     * &lt;a href=&quot;https://github.com/trustyuri/trustyuri-java&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+     * uncomment the entry in the pom file.
+     *
+     * @return the finalized nanopub with a trusty URI
+     * @throws java.lang.Exception if an error occurs during the transformation
+     */
+    public Nanopub finalizeTrustyNanopub() throws Exception {
+<span class="nc" id="L551">        return finalizeTrustyNanopub(false);</span>
+    }
+
+    /**
+     * Finalizes the nanopub and gives it a trusty URI. S&lt;a href=&quot;ee&quot;&gt;http://arxiv.org/abs/1401.5&lt;/a&gt;775 and
+     * &lt;a href=&quot;https://github.com/trustyuri/trustyuri-java&quot;&gt;...&lt;/a&gt;
+     * &lt;p&gt;
+     * This method dynamically loads the TrustURI classes. Make sure you have the jar installed or
+     * uncomment the entry in the pom file.
+     *
+     * @param addTimestamp whether to add a timestamp to the nanopub
+     * @return the finalized nanopub with a trusty URI
+     * @throws java.lang.Exception if an error occurs during the transformation
+     */
+    public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
+<span class="nc" id="L566">        Nanopub preNanopub = finalizeNanopub(addTimestamp);</span>
+<span class="nc" id="L567">        return MakeTrustyNanopub.transform(preNanopub);</span>
+    }
+
+    private void collectStatements() {
+<span class="fc" id="L571">        statements = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L572">        addStatement(nanopubUri, RDF.TYPE, NP.NANOPUBLICATION, headUri);</span>
+<span class="fc" id="L573">        addStatement(nanopubUri, NP.HAS_ASSERTION, assertionUri, headUri);</span>
+<span class="fc" id="L574">        addStatement(nanopubUri, NP.HAS_PROVENANCE, provenanceUri, headUri);</span>
+<span class="fc" id="L575">        addStatement(nanopubUri, NP.HAS_PUBINFO, pubinfoUri, headUri);</span>
+<span class="fc bfc" id="L576" title="All 2 branches covered.">        for (Statement st : assertion) {</span>
+<span class="fc" id="L577">            addStatement(st.getSubject(), st.getPredicate(), st.getObject(), assertionUri);</span>
+<span class="fc" id="L578">        }</span>
+<span class="fc bfc" id="L579" title="All 2 branches covered.">        for (Statement st : provenance) {</span>
+<span class="fc" id="L580">            addStatement(st.getSubject(), st.getPredicate(), st.getObject(), provenanceUri);</span>
+<span class="fc" id="L581">        }</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">        for (Statement st : pubinfo) {</span>
+<span class="fc" id="L583">            addStatement(st.getSubject(), st.getPredicate(), st.getObject(), pubinfoUri);</span>
+<span class="fc" id="L584">        }</span>
+<span class="fc" id="L585">    }</span>
+
+    private void addStatement(Resource subj, IRI pred, Value obj, Resource context) {
+<span class="fc" id="L588">        statements.add(vf.createStatement(subj, pred, obj, context));</span>
+<span class="fc" id="L589">    }</span>
+
+    /**
+     * Returns the current assertion statements of the nanopublication.
+     *
+     * @return a list of current assertion statements
+     */
+    public List&lt;Statement&gt; getCurrentAssertionStatements() {
+<span class="fc" id="L597">        return new ArrayList&lt;&gt;(assertion);</span>
+    }
+
+    /**
+     * Returns the current provenance statements of the nanopublication.
+     *
+     * @return a list of current provenance statements
+     */
+    public List&lt;Statement&gt; getCurrentProvenanceStatements() {
+<span class="fc" id="L606">        return new ArrayList&lt;&gt;(provenance);</span>
+    }
+
+    /**
+     * Returns the current pubinfo statements of the nanopublication.
+     *
+     * @return a list of current pubinfo statements
+     */
+    public List&lt;Statement&gt; getCurrentPubinfoStatements() {
+<span class="fc" id="L615">        return new ArrayList&lt;&gt;(pubinfo);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

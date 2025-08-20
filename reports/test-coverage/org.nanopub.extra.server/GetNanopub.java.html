@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">GetNanopub.java</span></div><h1>GetNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.rdf.RdfModule;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.*;
+import org.nanopub.trusty.TrustyNanopubUtils;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
+
+/**
+ * Command line tool to retrieve nanopubs from the server.
+ */
+public class GetNanopub extends CliRunner {
+
+    @com.beust.jcommander.Parameter(description = &quot;nanopub-uris-or-artifact-codes&quot;, required = true)
+    private List&lt;String&gt; nanopubIds;
+
+    @com.beust.jcommander.Parameter(names = &quot;-f&quot;, description = &quot;Format of the nanopub: trig, nq, trix, trig.gz, ...&quot;)
+    private String format;
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File outputFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-e&quot;, description = &quot;Write error messages from fetching nanopubs into this file (ignored otherwise)&quot;)
+    private File errorFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-i&quot;, description = &quot;Retrieve the index for the given index nanopub&quot;)
+    private boolean getIndex;
+
+    @com.beust.jcommander.Parameter(names = &quot;-c&quot;, description = &quot;Retrieve the content of the given index&quot;)
+    private boolean getIndexContent;
+
+    @com.beust.jcommander.Parameter(names = &quot;--mongodb-host&quot;, description = &quot;Directly contact single MongoDB instance instead of the network (e.g. 'localhost')&quot;)
+    private String mongoDbHost;
+
+<span class="fc" id="L49">    @com.beust.jcommander.Parameter(names = &quot;--mongodb-port&quot;, description = &quot;MongoDB port&quot;)</span>
+    private int mongoDbPort = 27017;
+
+<span class="fc" id="L52">    @com.beust.jcommander.Parameter(names = &quot;--mongodb-dbname&quot;, description = &quot;MongoDB database name&quot;)</span>
+    private String mongoDbName = &quot;nanopub-server&quot;;
+
+    @com.beust.jcommander.Parameter(names = &quot;--mongodb-user&quot;, description = &quot;MongoDB user name&quot;)
+    private String mongoDbUsername;
+
+    @com.beust.jcommander.Parameter(names = &quot;--mongodb-pw&quot;, description = &quot;MongoDB password&quot;)
+    private String mongoDbPassword;
+
+    @com.beust.jcommander.Parameter(names = &quot;-r&quot;, description = &quot;Show a report in the end&quot;)
+    private boolean showReport;
+
+    @com.beust.jcommander.Parameter(names = &quot;-l&quot;, description = &quot;Use a local server, e.g. http://localhost:7880/&quot;)
+    private String localServer;
+
+    @com.beust.jcommander.Parameter(names = &quot;--simulate-unreliable-connection&quot;,
+            description = &quot;Simulate an unreliable connection for testing purposes&quot;)
+    private boolean simUnrelConn;
+
+    /**
+     * Main method to run the GetNanopub command line tool.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L78">            GetNanopub obj = CliRunner.initJc(new GetNanopub(), args);</span>
+<span class="nc" id="L79">            simulateUnreliableConnection = obj.simUnrelConn;</span>
+<span class="nc" id="L80">            obj.run();</span>
+<span class="nc" id="L81">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L82">            System.exit(1);</span>
+<span class="nc" id="L83">        } catch (Exception ex) {</span>
+<span class="nc" id="L84">            ex.printStackTrace();</span>
+<span class="nc" id="L85">            System.exit(1);</span>
+<span class="nc" id="L86">        }</span>
+<span class="nc" id="L87">    }</span>
+
+<span class="fc" id="L89">    private static boolean simulateUnreliableConnection = false;</span>
+
+    /**
+     * Get a nanopub from the server using its URI or artifact code.
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @return the Nanopub object, or null if not found
+     */
+    public static Nanopub get(String uriOrArtifactCode) {
+<span class="fc" id="L98">        return get(uriOrArtifactCode, NanopubUtils.getHttpClient());</span>
+    }
+
+    /**
+     * Get a nanopub from the server using its URI or artifact code with a specified HttpClient.
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @param httpClient        the HttpClient to use for the request
+     * @return the Nanopub object, or null if not found
+     */
+    public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
+<span class="fc" id="L109">        ServerIterator serverIterator = new ServerIterator();</span>
+<span class="fc" id="L110">        String ac = getArtifactCode(uriOrArtifactCode);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (!ac.startsWith(RdfModule.MODULE_ID)) {</span>
+<span class="nc" id="L112">            throw new IllegalArgumentException(&quot;Not a trusty URI of type RA&quot;);</span>
+        }
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        while (serverIterator.hasNext()) {</span>
+<span class="fc" id="L115">            RegistryInfo registryInfo = serverIterator.next();</span>
+            try {
+<span class="fc" id="L117">                Nanopub np = get(ac, registryInfo, httpClient);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                if (np != null) {</span>
+<span class="fc" id="L119">                    return np;</span>
+                }
+<span class="nc" id="L121">            } catch (IOException | MalformedNanopubException | RDF4JException ex) {</span>
+                // ignore
+<span class="nc" id="L123">            }</span>
+<span class="nc" id="L124">        }</span>
+<span class="nc" id="L125">        return null;</span>
+    }
+
+    /**
+     * Get a nanopub from the database using its URI or artifact code.
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @param db                the NanopubDb instance to use
+     * @return the Nanopub object, or null if not found
+     */
+    public static Nanopub get(String uriOrArtifactCode, NanopubDb db) {
+<span class="nc" id="L136">        String ac = getArtifactCode(uriOrArtifactCode);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        if (!ac.startsWith(RdfModule.MODULE_ID)) {</span>
+<span class="nc" id="L138">            throw new IllegalArgumentException(&quot;Not a trusty URI of type RA&quot;);</span>
+        }
+<span class="nc" id="L140">        return db.getNanopub(ac);</span>
+    }
+
+    /**
+     * Get a nanopub from the server using its artifact code and registry information.
+     *
+     * @param artifactCode the artifact code of the nanopub
+     * @param registryInfo the RegistryInfo object containing server details
+     * @return the Nanopub object
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
+     */
+    public static Nanopub get(String artifactCode, RegistryInfo registryInfo)
+            throws IOException, RDF4JException, MalformedNanopubException {
+<span class="fc" id="L155">        return get(artifactCode, registryInfo, NanopubUtils.getHttpClient());</span>
+    }
+
+    /**
+     * Get a nanopub from the server using its artifact code and registry information with a specified HttpClient.
+     *
+     * @param artifactCode the artifact code of the nanopub
+     * @param registryInfo the RegistryInfo object containing server details
+     * @param httpClient   the HttpClient to use for the request
+     * @return the Nanopub object
+     * @throws java.io.IOException                               if an I/O error occurs
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
+     */
+    public static Nanopub get(String artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
+            throws IOException, RDF4JException, MalformedNanopubException {
+<span class="fc" id="L171">        HttpGet get = null;</span>
+        try {
+<span class="fc" id="L173">            get = new HttpGet(registryInfo.getCollectionUrl() + artifactCode);</span>
+<span class="nc" id="L174">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L175">            throw new IOException(&quot;invalid URL: &quot; + registryInfo.getCollectionUrl() + artifactCode);</span>
+<span class="fc" id="L176">        }</span>
+<span class="fc" id="L177">        get.setHeader(&quot;Accept&quot;, &quot;application/trig&quot;);</span>
+<span class="fc" id="L178">        InputStream in = null;</span>
+        try {
+<span class="fc" id="L180">            HttpResponse resp = httpClient.execute(get);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if (!wasSuccessful(resp)) {</span>
+<span class="nc" id="L182">                EntityUtils.consumeQuietly(resp.getEntity());</span>
+<span class="nc" id="L183">                throw new IOException(resp.getStatusLine().toString());</span>
+            }
+<span class="fc" id="L185">            in = resp.getEntity().getContent();</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if (simulateUnreliableConnection) {</span>
+<span class="nc" id="L187">                in = new UnreliableInputStream(in);</span>
+            }
+<span class="fc" id="L189">            Nanopub nanopub = new NanopubImpl(in, RDFFormat.TRIG);</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">            if (!TrustyNanopubUtils.isValidTrustyNanopub(nanopub)) {</span>
+<span class="nc" id="L191">                throw new MalformedNanopubException(&quot;Nanopub is not trusty&quot;);</span>
+            }
+<span class="fc" id="L193">            return nanopub;</span>
+        } finally {
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            if (in != null) in.close();</span>
+        }
+    }
+
+    /**
+     * Extract the artifact code from a URI or artifact code string.
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @return the artifact code
+     */
+    public static String getArtifactCode(String uriOrArtifactCode) {
+<span class="fc" id="L206">        return extractArtifactCode(uriOrArtifactCode);</span>
+    }
+
+<span class="fc" id="L209">    private OutputStream outputStream = System.out;</span>
+<span class="fc" id="L210">    private PrintStream errorStream = null;</span>
+    private int count;
+    private List&lt;Exception&gt; exceptions;
+<span class="fc" id="L213">    private NanopubDb db = null;</span>
+
+    private RDFFormat rdfFormat;
+
+    /**
+     * Default constructor for GetNanopub.
+     * Initializes the command line parameters and prepares for execution.
+     */
+<span class="fc" id="L221">    public GetNanopub() {</span>
+<span class="fc" id="L222">    }</span>
+
+    /**
+     * Runs the GetNanopub command line tool.
+     *
+     * @throws java.io.IOException                       if an I/O error occurs
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if an error occurs while handling RDF data
+     * @throws org.nanopub.MalformedNanopubException     if the nanopub is malformed
+     */
+    protected void run() throws IOException, RDFHandlerException, MalformedNanopubException {
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if (showReport) {</span>
+<span class="nc" id="L233">            exceptions = new ArrayList&lt;&gt;();</span>
+        }
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (outputFile == null) {</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">            if (format == null) {</span>
+<span class="nc" id="L237">                format = &quot;trig&quot;;</span>
+            }
+<span class="nc" id="L239">            rdfFormat = Rio.getParserFormatForFileName(&quot;file.&quot; + format).orElse(RDFFormat.TRIG);</span>
+        } else {
+<span class="fc" id="L241">            rdfFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(RDFFormat.TRIG);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L243">                outputStream = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+            } else {
+<span class="fc" id="L245">                outputStream = new FileOutputStream(outputFile);</span>
+            }
+        }
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (errorFile != null) {</span>
+<span class="nc" id="L249">            errorStream = new PrintStream(errorFile);</span>
+        }
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if (mongoDbHost != null) {</span>
+<span class="nc" id="L252">            db = new NanopubDb(mongoDbHost, mongoDbPort, mongoDbName, mongoDbUsername, mongoDbPassword);</span>
+        }
+<span class="fc" id="L254">        FetchIndex fetchIndex = null;</span>
+        try {
+<span class="fc bfc" id="L256" title="All 2 branches covered.">            for (String nanopubId : nanopubIds) {</span>
+<span class="fc bfc" id="L257" title="All 4 branches covered.">                if (getIndex || getIndexContent) {</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">                    if (db == null) {</span>
+<span class="fc" id="L259">                        fetchIndex = new FetchIndex(nanopubId, outputStream, rdfFormat, getIndex, getIndexContent, localServer);</span>
+                    } else {
+<span class="nc" id="L261">                        fetchIndex = new FetchIndexFromDb(nanopubId, db, outputStream, rdfFormat, getIndex, getIndexContent);</span>
+                    }
+<span class="fc" id="L263">                    fetchIndex.setProgressListener(new FetchIndex.Listener() {</span>
+
+                        @Override
+                        public void progress(int count) {
+<span class="fc" id="L267">                            System.err.print(count + &quot; nanopubs...\r&quot;);</span>
+<span class="fc" id="L268">                        }</span>
+
+                        @Override
+                        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode) {
+<span class="nc bnc" id="L272" title="All 2 branches missed.">                            if (showReport) {</span>
+<span class="nc" id="L273">                                exceptions.add(ex);</span>
+                            }
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                            if (errorStream != null) {</span>
+<span class="nc" id="L276">                                String exString = ex.toString().replaceAll(&quot;\\n&quot;, &quot;\\\\n&quot;);</span>
+<span class="nc" id="L277">                                errorStream.println(r + &quot; &quot; + artifactCode + &quot; &quot; + exString);</span>
+                            }
+<span class="nc" id="L279">                        }</span>
+
+                    });
+<span class="fc" id="L282">                    fetchIndex.run();</span>
+<span class="fc" id="L283">                    count = fetchIndex.getNanopubCount();</span>
+                } else {
+                    Nanopub np;
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">                    if (db == null) {</span>
+<span class="fc" id="L287">                        np = get(nanopubId);</span>
+                    } else {
+<span class="nc" id="L289">                        np = get(nanopubId, db);</span>
+                    }
+<span class="fc" id="L291">                    outputNanopub(nanopubId, np);</span>
+                }
+<span class="fc" id="L293">            }</span>
+<span class="pc bpc" id="L294" title="2 of 4 branches missed.">            if (outputStream != null &amp;&amp; outputStream != System.out) {</span>
+<span class="fc" id="L295">                System.err.println(count + &quot; nanopubs retrieved and saved in &quot; + outputFile);</span>
+            }
+        } finally {
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (outputStream != System.out) outputStream.close();</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">            if (errorStream != null) errorStream.close();</span>
+        }
+<span class="pc bpc" id="L301" title="3 of 4 branches missed.">        if (showReport &amp;&amp; fetchIndex != null) {</span>
+<span class="nc" id="L302">            System.err.println(&quot;Number of retries: &quot; + exceptions.size());</span>
+<span class="nc" id="L303">            System.err.println(&quot;Used servers:&quot;);</span>
+<span class="nc" id="L304">            List&lt;RegistryInfo&gt; usedServers = fetchIndex.getRegistries();</span>
+<span class="nc" id="L305">            final FetchIndex fi = fetchIndex;</span>
+<span class="nc" id="L306">            usedServers.sort((o1, o2) -&gt; fi.getServerUsage(o2) - fi.getServerUsage(o1));</span>
+<span class="nc" id="L307">            int usedServerCount = 0;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            for (RegistryInfo si : usedServers) {</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">                if (fetchIndex.getServerUsage(si) &gt; 0) usedServerCount++;</span>
+<span class="nc" id="L310">                System.err.format(&quot;%8d %s%n&quot;, fetchIndex.getServerUsage(si), si.getUrl());</span>
+<span class="nc" id="L311">            }</span>
+<span class="nc" id="L312">            System.err.format(&quot;Number of servers used: &quot; + usedServerCount);</span>
+        }
+<span class="fc" id="L314">    }</span>
+
+    private void outputNanopub(String nanopubId, Nanopub np) throws RDFHandlerException {
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">        if (np == null) {</span>
+<span class="nc" id="L318">            System.err.println(&quot;NOT FOUND: &quot; + nanopubId);</span>
+<span class="nc" id="L319">            return;</span>
+        }
+<span class="fc" id="L321">        count++;</span>
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        if (outputStream == System.out) {</span>
+<span class="nc" id="L323">            NanopubUtils.writeToStream(np, System.out, rdfFormat);</span>
+<span class="nc" id="L324">            System.out.print(&quot;\n\n&quot;);</span>
+        } else {
+<span class="fc" id="L326">            NanopubUtils.writeToStream(np, outputStream, rdfFormat);</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">            if (count % 100 == 0) {</span>
+<span class="nc" id="L328">                System.err.print(count + &quot; nanopubs...\r&quot;);</span>
+            }
+        }
+<span class="fc" id="L331">    }</span>
+
+    private static boolean wasSuccessful(HttpResponse resp) {
+<span class="fc" id="L334">        int c = resp.getStatusLine().getStatusCode();</span>
+<span class="pc bpc" id="L335" title="2 of 4 branches missed.">        return c &gt;= 200 &amp;&amp; c &lt; 300;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

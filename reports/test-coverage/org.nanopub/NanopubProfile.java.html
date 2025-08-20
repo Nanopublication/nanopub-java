@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubProfile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">NanopubProfile.java</span></div><h1>NanopubProfile.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * A class to read the nanopub profile file, which is a YAML file.
+ */
+public class NanopubProfile {
+    // For writing profile file see:
+    // https://stackoverflow.com/questions/24949505/how-do-i-write-to-a-yaml-file-using-snakeyaml
+
+    /**
+     * The default name of the profile file.
+     */
+<span class="fc" id="L22">    public final static String IMPLICIT_PROFILE_FILE_NAME = System.getProperty(&quot;user.home&quot;) + &quot;/.nanopub/profile.yaml&quot;;</span>
+
+    private Map&lt;String, Object&gt; map;
+
+    /**
+     * Constructor that reads the profile file from the default location.
+     *
+     * @param profileFileName the name of the profile file to read.
+     */
+<span class="fc" id="L31">    public NanopubProfile(String profileFileName) {</span>
+<span class="fc" id="L32">        File profileFile = new File(profileFileName);</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (profileFile.exists()) {</span>
+<span class="fc" id="L34">            Yaml yaml = new Yaml();</span>
+<span class="fc" id="L35">            try (InputStream inputStream = new FileInputStream(profileFile)) {</span>
+<span class="fc" id="L36">                map = yaml.load(inputStream);</span>
+<span class="nc" id="L37">            } catch (IOException e) {</span>
+<span class="nc" id="L38">                throw new RuntimeException(e);</span>
+<span class="fc" id="L39">            }</span>
+<span class="fc" id="L40">        } else {</span>
+<span class="fc" id="L41">            map = new HashMap&lt;&gt;();</span>
+        }
+<span class="fc" id="L43">    }</span>
+
+    /**
+     * Returns the value of the private key in the profile.yaml file.
+     *
+     * @return the value of private_key in the profile.yaml, iff the file is there and the value is defined.
+     * null otherwise.
+     */
+    public String getPrivateKeyPath() {
+<span class="fc" id="L52">        return (String) map.get(&quot;private_key&quot;);</span>
+    }
+
+    /**
+     * Returns the value of the orcid_id in the profile.yaml file.
+     *
+     * @return the value of orcid_id in the profile.yaml, iff the file is there and the value is defined.
+     * null otherwise.
+     */
+    public String getOrcidId() {
+<span class="fc" id="L62">        return (String) map.get(&quot;orcid_id&quot;);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

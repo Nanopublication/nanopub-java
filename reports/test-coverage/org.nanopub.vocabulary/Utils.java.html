@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Utils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.vocabulary</a> &gt; <span class="el_source">Utils.java</span></div><h1>Utils.java</h1><pre class="source lang-java linenums">package org.nanopub.vocabulary;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.base.AbstractNamespace;
+import org.eclipse.rdf4j.model.base.InternedIRI;
+
+/**
+ * Utility class for creating RDF4J namespaces and IRIs.
+ * This class provides methods to create namespaces and IRIs used within the vocabulary.
+ */
+public class Utils {
+
+    private Utils() {
+    }
+
+    static Namespace createNamespace(String prefix, String namespace) {
+<span class="fc" id="L18">        return new VocabularyNamespace(prefix, namespace);</span>
+    }
+
+    static IRI createIRI(String namespace, String localName) {
+<span class="fc" id="L22">        checkParameter(namespace, &quot;Namespace&quot;);</span>
+<span class="fc" id="L23">        checkParameter(localName, &quot;Local Name&quot;);</span>
+<span class="fc" id="L24">        return new InternedIRI(namespace, localName);</span>
+    }
+
+    private static class VocabularyNamespace extends AbstractNamespace {
+
+        private final String prefix;
+        private final String namespace;
+
+        /**
+         * Constructs a new VocabularyNamespace with the given prefix and namespace.
+         *
+         * @param prefix    the prefix of the namespace
+         * @param namespace the full namespace URI
+         */
+<span class="fc" id="L38">        public VocabularyNamespace(String prefix, String namespace) {</span>
+<span class="fc" id="L39">            checkParameter(prefix, &quot;Prefix&quot;);</span>
+<span class="fc" id="L40">            checkParameter(namespace, &quot;Namespace&quot;);</span>
+<span class="fc" id="L41">            this.prefix = prefix;</span>
+<span class="fc" id="L42">            this.namespace = namespace;</span>
+<span class="fc" id="L43">        }</span>
+
+        /**
+         * &lt;@inheritDoc&gt;
+         */
+        @Override
+        public String getPrefix() {
+<span class="fc" id="L50">            return this.prefix;</span>
+        }
+
+        /**
+         * &lt;@inheritDoc&gt;
+         */
+        @Override
+        public String getName() {
+<span class="fc" id="L58">            return this.namespace;</span>
+        }
+
+    }
+
+    static void checkParameter(String parameter, String parameterName) {
+<span class="fc bfc" id="L64" title="All 4 branches covered.">        if (parameter == null || parameter.isEmpty()) {</span>
+<span class="fc" id="L65">            throw new IllegalArgumentException(parameterName + &quot; cannot be null or empty&quot;);</span>
+        }
+<span class="fc" id="L67">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

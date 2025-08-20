@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PublishNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.server</a> &gt; <span class="el_source">PublishNanopub.java</span></div><h1>PublishNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.server;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Command line tool to publish nanopublications to a nanopub server.
+ */
+public class PublishNanopub extends CliRunner {
+
+<span class="nc" id="L27">    @com.beust.jcommander.Parameter(description = &quot;nanopubs&quot;, required = true)</span>
+    private List&lt;String&gt; nanopubs = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L30">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+    @com.beust.jcommander.Parameter(names = &quot;-u&quot;, description = &quot;Use the given nanopub server URLs&quot;)
+    private List&lt;String&gt; serverUrls;
+
+    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Get nanopubs to be published from given SPARQL endpoint&quot;)
+    private String sparqlEndpointUrl;
+
+    /**
+     * Main method to run the PublishNanopub command line tool.
+     *
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L46">            PublishNanopub obj = CliRunner.initJc(new PublishNanopub(), args);</span>
+<span class="nc" id="L47">            obj.run();</span>
+<span class="nc" id="L48">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L49">            System.exit(1);</span>
+<span class="nc" id="L50">        } catch (Exception ex) {</span>
+<span class="nc" id="L51">            ex.printStackTrace();</span>
+<span class="nc" id="L52">            System.exit(1);</span>
+<span class="nc" id="L53">        }</span>
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Publish a nanopublication to the default nanopub server.
+     *
+     * @param nanopub the nanopublication to publish
+     * @return the URL of the published nanopublication
+     * @throws java.io.IOException if an error occurs during publishing
+     */
+    public static String publish(Nanopub nanopub) throws IOException {
+<span class="nc" id="L64">        return new PublishNanopub().publishNanopub(nanopub);</span>
+    }
+
+    /**
+     * Publish a nanopublication to a specified nanopub server.
+     *
+     * @param nanopub   the nanopublication to publish
+     * @param serverUrl the URL of the nanopub server
+     * @return the URL of the published nanopublication
+     * @throws java.io.IOException if an error occurs during publishing
+     */
+    public static String publish(Nanopub nanopub, String serverUrl) throws IOException {
+<span class="nc" id="L76">        return new PublishNanopub().publishNanopub(nanopub, serverUrl);</span>
+    }
+
+    /**
+     * Test server URL for publishing nanopublications.
+     */
+    // TODO Make this dynamic/configureable:
+    public static final String TEST_SERVER_URL = &quot;https://test.registry.knowledgepixels.com/&quot;;
+
+    /**
+     * Publish a nanopublication to the test server.
+     *
+     * @param nanopub the nanopublication to publish
+     * @return the URL of the published nanopublication
+     * @throws java.io.IOException if an error occurs during publishing
+     */
+    public static String publishToTestServer(Nanopub nanopub) throws IOException {
+<span class="nc" id="L93">        return new PublishNanopub().publishNanopub(nanopub, TEST_SERVER_URL);</span>
+    }
+
+<span class="nc" id="L96">    private ServerIterator serverIterator = null;</span>
+<span class="nc" id="L97">    private RegistryInfo registryInfo = null;</span>
+<span class="nc" id="L98">    private Map&lt;String, Integer&gt; usedServers = new HashMap&lt;&gt;();</span>
+    private int count;
+    private boolean failed;
+    private SPARQLRepository sparqlRepo;
+    private String artifactCode;
+
+    /**
+     * Default constructor for PublishNanopub.
+     * Initializes the command line tool with no parameters.
+     */
+    public PublishNanopub() {
+<span class="nc" id="L109">        super();</span>
+<span class="nc" id="L110">    }</span>
+
+    private void run() throws IOException {
+<span class="nc" id="L113">        failed = false;</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (String s : nanopubs) {</span>
+<span class="nc" id="L115">            count = 0;</span>
+            try {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                if (sparqlEndpointUrl != null) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                    if (sparqlRepo == null) {</span>
+<span class="nc" id="L119">                        sparqlRepo = new SPARQLRepository(sparqlEndpointUrl);</span>
+<span class="nc" id="L120">                        sparqlRepo.init();</span>
+                    }
+<span class="nc" id="L122">                    processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));</span>
+                } else {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L125">                        System.out.println(&quot;Reading file: &quot; + s);</span>
+                    }
+<span class="nc" id="L127">                    MultiNanopubRdfHandler.process(new File(s), np -&gt; {</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                        if (failed) return;</span>
+<span class="nc" id="L129">                        processNanopub(np);</span>
+<span class="nc" id="L130">                    });</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                    if (count == 0) {</span>
+<span class="nc" id="L132">                        System.out.println(&quot;NO NANOPUB FOUND: &quot; + s);</span>
+<span class="nc" id="L133">                        break;</span>
+                    }
+                }
+<span class="nc" id="L136">            } catch (RDF4JException ex) {</span>
+<span class="nc" id="L137">                System.out.println(&quot;RDF ERROR: &quot; + s);</span>
+<span class="nc" id="L138">                ex.printStackTrace(System.err);</span>
+<span class="nc" id="L139">                break;</span>
+<span class="nc" id="L140">            } catch (MalformedNanopubException ex) {</span>
+<span class="nc" id="L141">                System.out.println(&quot;INVALID NANOPUB: &quot; + s);</span>
+<span class="nc" id="L142">                ex.printStackTrace(System.err);</span>
+<span class="nc" id="L143">                break;</span>
+<span class="nc" id="L144">            }</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (failed) {</span>
+<span class="nc" id="L146">                System.out.println(&quot;FAILED TO PUBLISH NANOPUBS&quot;);</span>
+<span class="nc" id="L147">                break;</span>
+            }
+<span class="nc" id="L149">        }</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        for (String s : usedServers.keySet()) {</span>
+<span class="nc" id="L151">            int c = usedServers.get(s);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            System.out.println(c + &quot; nanopub&quot; + (c == 1 ? &quot;&quot; : &quot;s&quot;) + &quot; published at &quot; + s);</span>
+<span class="nc" id="L153">        }</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (sparqlRepo != null) {</span>
+            try {
+<span class="nc" id="L156">                sparqlRepo.shutDown();</span>
+<span class="nc" id="L157">            } catch (RepositoryException ex) {</span>
+<span class="nc" id="L158">                ex.printStackTrace();</span>
+<span class="nc" id="L159">            }</span>
+        }
+<span class="nc" id="L161">    }</span>
+
+    private void processNanopub(Nanopub nanopub) {
+<span class="nc" id="L164">        count++;</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (count % 100 == 0) {</span>
+<span class="nc" id="L166">            System.err.print(count + &quot; nanopubs...\r&quot;);</span>
+        }
+        try {
+<span class="nc" id="L169">            publishNanopub(nanopub);</span>
+<span class="nc" id="L170">        } catch (IOException ex) {</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (verbose) {</span>
+<span class="nc" id="L172">                System.err.println(ex.getClass().getName() + &quot;: &quot; + ex.getMessage());</span>
+<span class="nc" id="L173">                System.err.println(&quot;---&quot;);</span>
+            }
+<span class="nc" id="L175">            failed = true;</span>
+<span class="nc" id="L176">        }</span>
+<span class="nc" id="L177">    }</span>
+
+    /**
+     * Publish a nanopublication to the default nanopub server.
+     *
+     * @param nanopub the nanopublication to publish
+     * @return the URL of the published nanopublication
+     * @throws java.io.IOException if an error occurs during publishing
+     */
+    public String publishNanopub(Nanopub nanopub) throws IOException {
+<span class="nc" id="L187">        return publishNanopub(nanopub, null);</span>
+    }
+
+    /**
+     * Publish a nanopublication to a specified nanopub server.
+     *
+     * @param nanopub   the nanopublication to publish
+     * @param serverUrl the URL of the nanopub server
+     * @return the URL of the published nanopublication
+     * @throws java.io.IOException if an error occurs during publishing
+     */
+    public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (registryInfo == null) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (serverUrl != null) {</span>
+<span class="nc" id="L201">                serverIterator = new ServerIterator(serverUrl);</span>
+<span class="nc bnc" id="L202" title="All 4 branches missed.">            } else if (serverUrls == null || serverUrls.isEmpty()) {</span>
+<span class="nc" id="L203">                serverIterator = new ServerIterator();</span>
+            } else {
+<span class="nc" id="L205">                serverIterator = new ServerIterator(serverUrls);</span>
+            }
+<span class="nc" id="L207">            registryInfo = serverIterator.next();</span>
+        }
+<span class="nc" id="L209">        artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (verbose) {</span>
+<span class="nc" id="L211">            System.out.println(&quot;---&quot;);</span>
+<span class="nc" id="L212">            System.out.println(&quot;Trying to publish nanopub: &quot; + artifactCode);</span>
+        }
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        if (NanopubServerUtils.isProtectedNanopub(nanopub)) {</span>
+<span class="nc" id="L215">            throw new RuntimeException(&quot;Can't publish protected nanopublication: &quot; + artifactCode);</span>
+        }
+<span class="nc bnc" id="L217" title="All 2 branches missed.">        while (registryInfo != null) {</span>
+<span class="nc" id="L218">            String url = registryInfo.getUrl();</span>
+
+            // TODO Check here whether nanopub type is covered at given registry.
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">            if (verbose) {</span>
+<span class="nc" id="L223">                System.out.println(&quot;Trying server: &quot; + url);</span>
+            }
+            try {
+<span class="nc" id="L226">                HttpPost post = new HttpPost(registryInfo.getUrl());</span>
+<span class="nc" id="L227">                String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);</span>
+<span class="nc" id="L228">                post.setEntity(new StringEntity(nanopubString, &quot;UTF-8&quot;));</span>
+<span class="nc" id="L229">                post.setHeader(&quot;Content-Type&quot;, RDFFormat.TRIG.getDefaultMIMEType());</span>
+<span class="nc" id="L230">                HttpResponse response = NanopubUtils.getHttpClient().execute(post);</span>
+<span class="nc" id="L231">                int code = response.getStatusLine().getStatusCode();</span>
+<span class="nc bnc" id="L232" title="All 4 branches missed.">                if (code &gt;= 200 &amp;&amp; code &lt; 300) {</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">                    if (usedServers.containsKey(url)) {</span>
+<span class="nc" id="L234">                        usedServers.put(url, usedServers.get(url) + 1);</span>
+                    } else {
+<span class="nc" id="L236">                        usedServers.put(url, 1);</span>
+                    }
+<span class="nc" id="L238">                    String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L240">                        System.out.println(&quot;Published: &quot; + nanopubUrl);</span>
+                    }
+<span class="nc" id="L242">                    return nanopubUrl;</span>
+                } else {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                    if (verbose) {</span>
+<span class="nc" id="L245">                        System.out.println(&quot;Response: &quot; + code + &quot; &quot; + response.getStatusLine().getReasonPhrase());</span>
+                    }
+                }
+<span class="nc" id="L248">            } catch (IOException | RDF4JException ex) {</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                if (verbose) {</span>
+<span class="nc" id="L250">                    System.out.println(ex.getClass().getName() + &quot;: &quot; + ex.getMessage());</span>
+                }
+<span class="nc" id="L252">            }</span>
+<span class="nc" id="L253">            registryInfo = serverIterator.next();</span>
+<span class="nc" id="L254">        }</span>
+<span class="nc" id="L255">        registryInfo = null;</span>
+<span class="nc" id="L256">        throw new RuntimeException(&quot;Failed to publish the nanopub&quot;);</span>
+    }
+
+    /**
+     * Get the registry information of the server used for publishing.
+     *
+     * @return the registry information
+     */
+    public RegistryInfo getUsedServer() {
+<span class="nc" id="L265">        return registryInfo;</span>
+    }
+
+    /**
+     * Get the URL of the published nanopublication.
+     *
+     * @return the URL of the published nanopublication, or null if not available
+     */
+    public String getPublishedNanopubUrl() {
+<span class="nc bnc" id="L274" title="All 4 branches missed.">        if (registryInfo == null || artifactCode == null) {</span>
+<span class="nc" id="L275">            return null;</span>
+        }
+<span class="nc" id="L277">        return registryInfo.getCollectionUrl() + artifactCode;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

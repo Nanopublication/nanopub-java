@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShaclValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.fdo</a> &gt; <span class="el_source">ShaclValidator.java</span></div><h1>ShaclValidator.java</h1><pre class="source lang-java linenums">package org.nanopub.fdo;
+
+import com.beust.jcommander.ParameterException;
+import org.eclipse.rdf4j.common.exception.ValidationException;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.RDF4J;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.WriterConfig;
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.eclipse.rdf4j.sail.shacl.ShaclSail;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+
+/**
+ * Using Shacl to validate a Nanopub against a Shape.
+ */
+<span class="fc" id="L30">public class ShaclValidator extends CliRunner {</span>
+
+    @com.beust.jcommander.Parameter(names = &quot;-n&quot;, description = &quot;nanopub-to-be-validated&quot;, required = true)
+    private File nanopubFile;
+
+    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;SHACL shape file&quot;, required = true)
+    private File shapeFile;
+
+    /**
+     * Main method to run the ShaclValidator.
+     *
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L45">            ShaclValidator obj = CliRunner.initJc(new ShaclValidator(), args);</span>
+<span class="nc" id="L46">            obj.run();</span>
+<span class="nc" id="L47">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L48">            System.exit(1);</span>
+<span class="nc" id="L49">        } catch (Exception ex) {</span>
+<span class="nc" id="L50">            ex.printStackTrace();</span>
+<span class="nc" id="L51">            System.exit(1);</span>
+<span class="nc" id="L52">        }</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Logs constraints validation to System.out
+     *
+     * @param shape the SHACL shape to validate against
+     * @param data  the data to be validated
+     * @return true, iff the data respects the specification of the shape.
+     */
+    public static ValidationResult validateShacl(Set&lt;Statement&gt; shape, Set&lt;Statement&gt; data) {
+
+//        // Debug info
+//        System.out.println(&quot;Validating Data &quot;);
+//        printStatements(data);
+//        System.out.println(&quot;Against Schema &quot;);
+//        printStatements(shape);
+
+<span class="fc" id="L70">        ShaclSail shaclSail = new ShaclSail(new MemoryStore());</span>
+<span class="fc" id="L71">        Repository repo = new SailRepository(shaclSail);</span>
+
+<span class="fc" id="L73">        RepositoryConnection connection = repo.getConnection();</span>
+
+        // add shape
+<span class="fc" id="L76">        connection.begin();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (Statement st : shape) {</span>
+<span class="fc" id="L78">            connection.add(st, RDF4J.SHACL_SHAPE_GRAPH);</span>
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">        connection.commit();</span>
+
+<span class="fc" id="L82">        connection.begin();</span>
+        // add data to be validated
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (Statement st : data) {</span>
+<span class="fc" id="L85">            connection.add(st);</span>
+<span class="fc" id="L86">        }</span>
+        try {
+<span class="fc" id="L88">            connection.commit();</span>
+<span class="fc" id="L89">            return new ValidationResult();</span>
+<span class="fc" id="L90">        } catch (RepositoryException exception) {</span>
+<span class="fc" id="L91">            Throwable cause = exception.getCause();</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            if (cause instanceof ValidationException) {</span>
+<span class="fc" id="L93">                Model validationReportModel = ((ValidationException) cause).validationReportAsModel();</span>
+
+<span class="fc" id="L95">                WriterConfig writerConfig = new WriterConfig().set(BasicWriterSettings.INLINE_BLANK_NODES, true).set(BasicWriterSettings.XSD_STRING_TO_PLAIN_LITERAL, true).set(BasicWriterSettings.PRETTY_PRINT, true);</span>
+
+<span class="fc" id="L97">                Rio.write(validationReportModel, System.out, RDFFormat.TURTLE, writerConfig);</span>
+<span class="fc" id="L98">                ValidationResult failure = new ValidationResult();</span>
+<span class="fc" id="L99">                failure.setShacleValidationException(exception);</span>
+<span class="fc" id="L100">                return failure;</span>
+            }
+<span class="nc" id="L102">            throw new RuntimeException(cause);</span>
+        }
+    }
+
+    /**
+     * Logs constraints validation to System.out
+     *
+     * @param shape the SHACL shape to validate against
+     * @param data  the Nanopub containing the data to be validated
+     * @return true, iff the data respects the specification of the shape.
+     */
+    public static ValidationResult validateShacl(Nanopub shape, Nanopub data) {
+<span class="fc" id="L114">        return validateShacl(shape.getAssertion(), data.getAssertion());</span>
+    }
+
+    /**
+     * Runs the Shacl validation process.
+     *
+     * @throws org.nanopub.MalformedNanopubException if the Nanopub is malformed
+     * @throws java.io.IOException                   if there is an error reading the files
+     */
+    public void run() throws MalformedNanopubException, IOException {
+<span class="fc" id="L124">        Nanopub shape = new NanopubImpl(shapeFile);</span>
+<span class="fc" id="L125">        Nanopub data = new NanopubImpl(nanopubFile);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (validateShacl(shape, data).isValid()) {</span>
+<span class="fc" id="L127">            System.out.println(&quot;Validation successful.&quot;);</span>
+        } else {
+<span class="fc" id="L129">            System.out.println(&quot;Validation not successful.&quot;);</span>
+        }
+<span class="fc" id="L131">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

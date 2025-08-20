@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultiNanopubRdfHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">MultiNanopubRdfHandler.java</span></div><h1>MultiNanopubRdfHandler.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.rio.*;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
+
+/**
+ * Handles files or streams with a sequence of nanopubs.
+ *
+ * @author Tobias Kuhn
+ */
+public class MultiNanopubRdfHandler extends AbstractRDFHandler {
+
+    /**
+     * Processes a stream of nanopubs in the specified format.
+     *
+     * @param format    The RDF format of the nanopubs.
+     * @param in        The input stream containing the nanopubs.
+     * @param npHandler The handler to process each nanopub.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
+     */
+    public static void process(RDFFormat format, InputStream in, NanopubHandler npHandler)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="nc" id="L33">        process(format, in, null, npHandler);</span>
+<span class="nc" id="L34">    }</span>
+
+    /**
+     * Processes a file containing a sequence of nanopubs.
+     *
+     * @param format    The RDF format of the nanopubs.
+     * @param file      The file containing the nanopubs.
+     * @param npHandler The handler to process each nanopub.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
+     */
+    public static void process(RDFFormat format, File file, NanopubHandler npHandler)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+        InputStream in;
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (file.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L51">            in = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)));</span>
+        } else {
+<span class="fc" id="L53">            in = new BufferedInputStream(new FileInputStream(file));</span>
+        }
+<span class="fc" id="L55">        process(format, in, file, npHandler);</span>
+<span class="fc" id="L56">    }</span>
+
+    /**
+     * Processes a file containing a sequence of nanopubs, automatically detecting the format.
+     *
+     * @param file      The file containing the nanopubs.
+     * @param npHandler The handler to process each nanopub.
+     * @throws java.io.IOException                       If an I/O error occurs.
+     * @throws org.eclipse.rdf4j.rio.RDFParseException   If an error occurs while parsing the RDF data.
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     * @throws org.nanopub.MalformedNanopubException     If a nanopub is malformed.
+     */
+    public static void process(File file, NanopubHandler npHandler)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="fc" id="L70">        RDFFormat format = Rio.getParserFormatForFileName(file.getName()).orElse(RDFFormat.TRIG);</span>
+<span class="fc" id="L71">        process(format, file, npHandler);</span>
+<span class="fc" id="L72">    }</span>
+
+    private static void process(RDFFormat format, InputStream in, File file, NanopubHandler npHandler)
+            throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+<span class="fc" id="L76">        RDFParser p = NanopubUtils.getParser(format);</span>
+<span class="fc" id="L77">        p.setRDFHandler(new MultiNanopubRdfHandler(npHandler));</span>
+<span class="fc" id="L78">        try (InputStreamReader is = new InputStreamReader(in, StandardCharsets.UTF_8)) {</span>
+<span class="fc" id="L79">            p.parse(is, &quot;&quot;);</span>
+<span class="fc" id="L80">        } catch (RuntimeException ex) {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (&quot;wrapped MalformedNanopubException&quot;.equals(ex.getMessage()) &amp;&amp;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                    ex.getCause() instanceof MalformedNanopubException) {</span>
+<span class="fc" id="L83">                throw (MalformedNanopubException) ex.getCause();</span>
+            } else {
+<span class="nc" id="L85">                throw ex;</span>
+            }
+<span class="fc" id="L87">        }</span>
+<span class="fc" id="L88">    }</span>
+
+    private NanopubHandler npHandler;
+
+<span class="fc" id="L92">    private Map&lt;IRI, Boolean&gt; graphs = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L93">    private Map&lt;IRI, Map&lt;IRI, Boolean&gt;&gt; members = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L94">    private Set&lt;Statement&gt; statements = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L95">    private List&lt;String&gt; nsPrefixes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L96">    private Map&lt;String, String&gt; ns = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L98">    private List&lt;String&gt; newNsPrefixes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L99">    private List&lt;String&gt; newNs = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Constructs a new MultiNanopubRdfHandler with the specified nanopub handler.
+     *
+     * @param npHandler The handler to process each nanopub.
+     */
+<span class="fc" id="L106">    public MultiNanopubRdfHandler(NanopubHandler npHandler) {</span>
+<span class="fc" id="L107">        this.npHandler = npHandler;</span>
+<span class="fc" id="L108">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles the statement to be added to the current nanopub.
+     */
+    @Override
+    public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (!graphs.containsKey(st.getContext())) {</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (graphs.size() == 4) {</span>
+<span class="fc" id="L119">                finishAndReset();</span>
+<span class="fc" id="L120">                handleStatement(st);</span>
+<span class="fc" id="L121">                return;</span>
+            }
+<span class="fc" id="L123">            graphs.put((IRI) st.getContext(), true);</span>
+        }
+<span class="fc" id="L125">        addNamespaces();</span>
+<span class="fc" id="L126">        statements.add(st);</span>
+<span class="fc" id="L127">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles the namespace declaration in the RDF data.
+     */
+    @Override
+    public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+<span class="fc" id="L136">        newNs.add(uri);</span>
+<span class="fc" id="L137">        newNsPrefixes.add(prefix);</span>
+<span class="fc" id="L138">    }</span>
+
+    /**
+     * Adds the namespaces.
+     *
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException If an error occurs while handling the RDF data.
+     */
+    public void addNamespaces() throws RDFHandlerException {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for (int i = 0; i &lt; newNs.size(); i++) {</span>
+<span class="fc" id="L147">            String prefix = newNsPrefixes.get(i);</span>
+<span class="fc" id="L148">            String nsUri = newNs.get(i);</span>
+<span class="fc" id="L149">            nsPrefixes.remove(prefix);</span>
+<span class="fc" id="L150">            nsPrefixes.add(prefix);</span>
+<span class="fc" id="L151">            ns.put(prefix, nsUri);</span>
+        }
+<span class="fc" id="L153">        newNs.clear();</span>
+<span class="fc" id="L154">        newNsPrefixes.clear();</span>
+<span class="fc" id="L155">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles the end of the RDF data.
+     */
+    @Override
+    public void endRDF() throws RDFHandlerException {
+<span class="fc" id="L164">        finishAndReset();</span>
+<span class="fc" id="L165">    }</span>
+
+    private void finishAndReset() {
+        try {
+<span class="fc" id="L169">            npHandler.handleNanopub(new NanopubImpl(statements, nsPrefixes, ns));</span>
+<span class="fc" id="L170">        } catch (MalformedNanopubException ex) {</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (ex.getMessage().equals(&quot;No content received for nanopub&quot;)) { // TODO: Improve this check!</span>
+                // ignore (a stream of zero nanopubs is also a valid nanopub stream)
+            } else {
+<span class="nc" id="L174">                throwMalformed(ex);</span>
+            }
+<span class="fc" id="L176">        }</span>
+<span class="fc" id="L177">        clearAll();</span>
+<span class="fc" id="L178">    }</span>
+
+    private void clearAll() {
+<span class="fc" id="L181">        graphs.clear();</span>
+<span class="fc" id="L182">        members.clear();</span>
+<span class="fc" id="L183">        statements.clear();</span>
+<span class="fc" id="L184">    }</span>
+
+    private void throwMalformed(MalformedNanopubException ex) {
+<span class="fc" id="L187">        throw new RuntimeException(&quot;wrapped MalformedNanopubException&quot;, ex);</span>
+    }
+
+
+    /**
+     * Interface for handling nanopubs.
+     */
+    public interface NanopubHandler {
+
+        /**
+         * Handles a nanopub.
+         *
+         * @param np The nanopub to handle.
+         */
+        public void handleNanopub(Nanopub np);
+
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

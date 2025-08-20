@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QueryAccess.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.services</a> &gt; <span class="el_source">QueryAccess.java</span></div><h1>QueryAccess.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.services;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.HttpResponse;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Second-generation query API access
+ */
+<span class="fc" id="L22">public abstract class QueryAccess {</span>
+
+    /**
+     * Process the header.
+     *
+     * @param line the header line from the CSV response
+     */
+    protected abstract void processHeader(String[] line);
+
+    /**
+     * Process a line of data from the CSV response.
+     *
+     * @param line the line of data from the CSV response
+     */
+    protected abstract void processLine(String[] line);
+
+    /**
+     * Call a query with the given queryId and parameters.
+     *
+     * @param queryId the ID of the query to call
+     * @param params  the parameters to pass to the query
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     */
+    public void call(String queryId, Map&lt;String, String&gt; params) throws FailedApiCallException {
+<span class="fc" id="L46">        HttpResponse resp = QueryCall.run(queryId, params);</span>
+<span class="fc" id="L47">        try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {</span>
+<span class="fc" id="L48">            String[] line = null;</span>
+<span class="fc" id="L49">            int n = 0;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            while ((line = csvReader.readNext()) != null) {</span>
+<span class="fc" id="L51">                n++;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                if (n == 1) {</span>
+<span class="fc" id="L53">                    processHeader(line);</span>
+                } else {
+<span class="fc" id="L55">                    processLine(line);</span>
+                }
+            }
+<span class="nc" id="L58">        } catch (IOException | CsvValidationException ex) {</span>
+<span class="nc" id="L59">            throw new FailedApiCallException(ex);</span>
+<span class="fc" id="L60">        }</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Print the response of a query in CSV format to the given writer.
+     *
+     * @param queryId the ID of the query to call
+     * @param params  the parameters to pass to the query
+     * @param writer  the writer to print the CSV response to
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     */
+    public static void printCvsResponse(String queryId, Map&lt;String, String&gt; params, Writer writer) throws FailedApiCallException {
+<span class="nc" id="L72">        ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();</span>
+<span class="nc" id="L73">        QueryAccess a = new QueryAccess() {</span>
+
+            @Override
+            protected void processHeader(String[] line) {
+<span class="nc" id="L77">                icsvWriter.writeNext(line);</span>
+<span class="nc" id="L78">            }</span>
+
+            @Override
+            protected void processLine(String[] line) {
+<span class="nc" id="L82">                icsvWriter.writeNext(line);</span>
+<span class="nc" id="L83">            }</span>
+
+        };
+<span class="nc" id="L86">        a.call(queryId, params);</span>
+<span class="nc" id="L87">        icsvWriter.flushQuietly();</span>
+<span class="nc" id="L88">    }</span>
+
+    /**
+     * Get the response of a query as an ApiResponse object.
+     *
+     * @param queryId the ID of the query to call
+     * @param params  the parameters to pass to the query
+     * @return an ApiResponse object containing the response data
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     */
+    public static ApiResponse get(String queryId, Map&lt;String, String&gt; params) throws FailedApiCallException {
+<span class="fc" id="L99">        final ApiResponse response = new ApiResponse();</span>
+<span class="fc" id="L100">        QueryAccess a = new QueryAccess() {</span>
+
+            @Override
+            protected void processHeader(String[] line) {
+<span class="fc" id="L104">                response.setHeader(line);</span>
+<span class="fc" id="L105">            }</span>
+
+            @Override
+            protected void processLine(String[] line) {
+<span class="fc" id="L109">                response.add(line);</span>
+<span class="fc" id="L110">            }</span>
+
+        };
+<span class="fc" id="L113">        a.call(queryId, params);</span>
+<span class="fc" id="L114">        return response;</span>
+    }
+
+<span class="fc" id="L117">    private static Map&lt;String, Pair&lt;Long, String&gt;&gt; latestVersionMap = new HashMap&lt;&gt;();</span>
+    // TODO Make a better query for this, where superseded and rejected are excluded from the start:
+    private static final String GET_NEWER_VERSIONS = &quot;RA3qSfVzcnAeMOODdpgCg4e-bX6KjZYZ2JQXDsSwluMaI/get-newer-versions-of-np&quot;;
+
+    /**
+     * Get the latest version ID of a nanopublication.
+     * If the latest version is not cached or is older than 1 hour, it will re-fetch it.
+     *
+     * @param nanopubId the ID of the nanopublication
+     * @return the latest version ID of the nanopublication
+     */
+    // TODO Is this method used anywhere, Nanodash has a copy of this.
+    public static String getLatestVersionId(String nanopubId) {
+<span class="nc" id="L130">        long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">        if (!latestVersionMap.containsKey(nanopubId) || currentTime - latestVersionMap.get(nanopubId).getLeft() &gt; 1000 * 60 * 60) {</span>
+            // Re-fetch if existing value is older than 1 hour
+<span class="nc" id="L133">            Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L134">            params.put(&quot;np&quot;, nanopubId);</span>
+            try {
+<span class="nc" id="L136">                ApiResponse r = QueryAccess.get(GET_NEWER_VERSIONS, params);</span>
+<span class="nc" id="L137">                List&lt;String&gt; latestList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                for (ApiResponseEntry e : r.getData()) {</span>
+<span class="nc bnc" id="L139" title="All 4 branches missed.">                    if (e.get(&quot;retractedBy&quot;).isEmpty() &amp;&amp; e.get(&quot;supersededBy&quot;).isEmpty()) {</span>
+<span class="nc" id="L140">                        latestList.add(e.get(&quot;newerVersion&quot;));</span>
+                    }
+<span class="nc" id="L142">                }</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                if (latestList.size() == 1) {</span>
+<span class="nc" id="L144">                    String latest = latestList.getFirst();</span>
+<span class="nc" id="L145">                    latestVersionMap.put(nanopubId, Pair.of(currentTime, latest));</span>
+<span class="nc" id="L146">                    return latest;</span>
+                } else {
+<span class="nc" id="L148">                    return nanopubId;</span>
+                }
+<span class="nc" id="L150">            } catch (Exception ex) {</span>
+<span class="nc" id="L151">                ex.printStackTrace();</span>
+<span class="nc" id="L152">                return nanopubId;</span>
+            }
+        }
+<span class="nc" id="L155">        return latestVersionMap.get(nanopubId).getRight();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

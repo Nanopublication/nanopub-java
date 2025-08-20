@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimestampUpdater.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">TimestampUpdater.java</span></div><h1>TimestampUpdater.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriResource;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.Rio;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Update the timestamp of (unsigned) Nanopublications.
+ */
+<span class="fc" id="L25">public class TimestampUpdater extends CliRunner {</span>
+
+<span class="fc" id="L27">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-files&quot;, required = true)</span>
+    private List&lt;File&gt; inputNanopubFiles = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)
+    private File singleOutputFile; // only possible if there is only one inputFile
+
+<span class="fc" id="L33">    @com.beust.jcommander.Parameter(names = &quot;-v&quot;, description = &quot;Verbose&quot;)</span>
+    private boolean verbose = false;
+
+<span class="fc" id="L36">    private ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Main method to run the TimestampUpdater.
+     *
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L45">            TimestampUpdater obj = CliRunner.initJc(new TimestampUpdater(), args);</span>
+<span class="nc" id="L46">            obj.run();</span>
+<span class="nc" id="L47">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L48">            System.exit(1);</span>
+<span class="nc" id="L49">        } catch (Exception ex) {</span>
+<span class="nc" id="L50">            ex.printStackTrace();</span>
+<span class="nc" id="L51">            System.exit(1);</span>
+<span class="nc" id="L52">        }</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Runs the TimestampUpdater to update the timestamps of the provided Nanopublications.
+     *
+     * @throws org.nanopub.MalformedNanopubException if a Nanopublication is malformed.
+     * @throws java.io.IOException                   if an I/O error occurs.
+     */
+    public void run() throws MalformedNanopubException, IOException {
+
+        final OutputStream singleOut;
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (singleOutputFile != null) {</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (singleOutputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L66">                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));</span>
+            } else {
+<span class="fc" id="L68">                singleOut = new FileOutputStream(singleOutputFile);</span>
+            }
+        } else {
+<span class="nc" id="L71">            singleOut = null;</span>
+        }
+
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (File inputFile : inputNanopubFiles) {</span>
+            File outputFile;
+            final OutputStream out;
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">            if (singleOutputFile == null) {</span>
+<span class="nc" id="L78">                outputFile = new File(inputFile.getParent(), &quot;updated.&quot; + inputFile.getName());</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (inputFile.getName().matches(&quot;.*\\.(gz|gzip)&quot;)) {</span>
+<span class="nc" id="L80">                    out = new GZIPOutputStream(new FileOutputStream(outputFile));</span>
+                } else {
+<span class="nc" id="L82">                    out = new FileOutputStream(outputFile);</span>
+                }
+            } else {
+<span class="fc" id="L85">                outputFile = singleOutputFile;</span>
+<span class="fc" id="L86">                out = singleOut;</span>
+            }
+<span class="fc" id="L88">            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L89">            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);</span>
+<span class="fc" id="L90">            try (out) {</span>
+<span class="fc" id="L91">                MultiNanopubRdfHandler.process(inFormat, inputFile, np -&gt; {</span>
+                    try {
+<span class="fc" id="L93">                        List&lt;Statement&gt; newStatements = removeCreationTime(np);</span>
+<span class="fc" id="L94">                        newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, vf.createLiteral(new Date()), np.getPubinfoUri()));</span>
+                        Nanopub updatedNp;
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">                        if (np instanceof NanopubImpl) {</span>
+<span class="fc" id="L97">                            updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());</span>
+                        } else {
+<span class="nc" id="L99">                            updatedNp = new NanopubImpl(newStatements);</span>
+                        }
+
+<span class="fc" id="L102">                        RDFWriter w = Rio.createWriter(outFormat, new OutputStreamWriter(out, StandardCharsets.UTF_8));</span>
+<span class="fc" id="L103">                        NanopubUtils.propagateToHandler(updatedNp, w);</span>
+
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                        if (verbose) {</span>
+<span class="nc" id="L106">                            System.out.println(&quot;Nanopub URI: &quot; + np.getUri());</span>
+                        }
+<span class="nc" id="L108">                    } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L109">                        ex.printStackTrace();</span>
+<span class="nc" id="L110">                        throw new RuntimeException(ex);</span>
+<span class="nc" id="L111">                    } catch (MalformedNanopubException e) {</span>
+<span class="nc" id="L112">                        throw new RuntimeException(e);</span>
+<span class="fc" id="L113">                    }</span>
+<span class="fc" id="L114">                });</span>
+            }
+<span class="fc" id="L116">        }</span>
+<span class="fc" id="L117">    }</span>
+
+    private List&lt;Statement&gt; removeCreationTime(Nanopub np) {
+<span class="fc" id="L120">        List&lt;Statement&gt; statements = NanopubUtils.getStatements(np);</span>
+<span class="fc" id="L121">        List&lt;Statement&gt; statementsToRemove = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        for (Statement st : statements) {</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (!st.getContext().equals(np.getPubinfoUri())) continue;</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            if (!st.getSubject().equals(np.getUri())) continue;</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            if (!SimpleTimestampPattern.isCreationTimeProperty(st.getPredicate())) continue;</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">            if (!(st.getObject() instanceof Literal l)) continue;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            if (!l.getDatatype().equals(SimpleTimestampPattern.XSD_DATETIME)) continue;</span>
+<span class="fc" id="L128">            statementsToRemove.add(st);</span>
+<span class="fc" id="L129">        }</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        for (Statement st : statementsToRemove) {</span>
+<span class="fc" id="L131">            statements.remove(st);</span>
+<span class="fc" id="L132">        }</span>
+<span class="fc" id="L133">        return statements;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

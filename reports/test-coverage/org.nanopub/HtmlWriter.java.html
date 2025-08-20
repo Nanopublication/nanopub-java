@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HtmlWriter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">HtmlWriter.java</span></div><h1>HtmlWriter.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
+import org.eclipse.rdf4j.model.util.Literals;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings;
+import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
+import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+
+import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+
+// Contains copied code from TurtleWriter, TrigWriter, and CustomTrigWriter
+
+/**
+ * An RDF writer that outputs RDF in HTML format, suitable for displaying.
+ */
+public class HtmlWriter extends TurtleWriter {
+
+    private boolean inActiveContext;
+    private Resource currentContext;
+    private String openPart;
+    private Set&lt;String&gt; usedPrefixes;
+<span class="nc" id="L33">    private boolean indentContexts = true;</span>
+
+    /**
+     * Creates a new HTML writer that will write to the specified output stream.
+     *
+     * @param out            the output stream to write to
+     * @param indentContexts if true, contexts will be indented in the output
+     */
+    public HtmlWriter(OutputStream out, boolean indentContexts) {
+<span class="nc" id="L42">        super(out);</span>
+<span class="nc" id="L43">        this.indentContexts = indentContexts;</span>
+<span class="nc" id="L44">    }</span>
+
+    /**
+     * Creates a new HTML writer that will write to the specified output stream.
+     *
+     * @param out the output stream to write to
+     */
+    public HtmlWriter(OutputStream out) {
+<span class="nc" id="L52">        super(out);</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Creates a new HTML writer that will write to the specified writer.
+     *
+     * @param writer         the writer to write to
+     * @param indentContexts if true, contexts will be indented in the output
+     */
+    public HtmlWriter(Writer writer, boolean indentContexts) {
+<span class="nc" id="L62">        super(writer);</span>
+<span class="nc" id="L63">        this.indentContexts = indentContexts;</span>
+<span class="nc" id="L64">    }</span>
+
+    /**
+     * Creates a new HTML writer that will write to the specified writer.
+     *
+     * @param writer the writer to write to
+     */
+    public HtmlWriter(Writer writer) {
+<span class="nc" id="L72">        super(writer);</span>
+<span class="nc" id="L73">    }</span>
+
+    /**
+     * The RDF format for HTML output.
+     */
+<span class="nc" id="L78">    public static RDFFormat HTML_FORMAT = new RDFFormat(&quot;TriG HTML&quot;, &quot;text/html&quot;, StandardCharsets.UTF_8, &quot;html&quot;, true, true, false);</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Gets the RDF format that this writer supports.
+     */
+    @Override
+    public RDFFormat getRDFFormat() {
+<span class="nc" id="L87">        return HTML_FORMAT;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Starts the RDF document writing process.
+     */
+    @Override
+    public void startRDF()
+            throws RDFHandlerException {
+<span class="nc" id="L98">        super.startRDF();</span>
+<span class="nc" id="L99">        writer.setIndentationString(&quot;&amp;nbsp;&amp;nbsp;&quot;);</span>
+
+<span class="nc" id="L101">        inActiveContext = false;</span>
+<span class="nc" id="L102">        currentContext = null;</span>
+<span class="nc" id="L103">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Ends the RDF document writing process.
+     */
+    @Override
+    public void endRDF()
+            throws RDFHandlerException {
+<span class="nc" id="L113">        super.endRDF();</span>
+
+        try {
+<span class="nc" id="L116">            closeActiveContext();</span>
+<span class="nc" id="L117">            writer.flush();</span>
+<span class="nc" id="L118">        } catch (IOException e) {</span>
+<span class="nc" id="L119">            throw new RDFHandlerException(e);</span>
+<span class="nc" id="L120">        }</span>
+<span class="nc" id="L121">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles a statement by writing it to the output in HTML format.
+     */
+    @Override
+    public void handleStatement(Statement st)
+            throws RDFHandlerException {
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (!isWritingStarted()) {</span>
+<span class="nc" id="L132">            throw new RuntimeException(&quot;Document writing has not yet been started&quot;);</span>
+        }
+
+        try {
+<span class="nc" id="L136">            Resource context = st.getContext();</span>
+
+<span class="nc bnc" id="L138" title="All 4 branches missed.">            if (inActiveContext &amp;&amp; !contextsEquals(context, currentContext)) {</span>
+<span class="nc" id="L139">                closePreviousStatement();</span>
+<span class="nc" id="L140">                closeActiveContext();</span>
+            }
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (!inActiveContext) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (openPart != null) {</span>
+<span class="nc" id="L145">                    writer.write(openPart);</span>
+<span class="nc" id="L146">                    writer.writeEOL();</span>
+<span class="nc" id="L147">                    openPart = null;</span>
+                }
+
+<span class="nc" id="L150">                writer.write(&quot;&lt;span class=\&quot;nanopub-context-switch\&quot;&gt;&quot;);</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                if (context != null) {</span>
+<span class="nc" id="L153">                    writeResource(context, false);</span>
+<span class="nc" id="L154">                    writer.write(&quot; &quot;);</span>
+                }
+
+<span class="nc" id="L157">                writer.write(&quot;{&lt;br/&gt;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L158">                writer.writeEOL();</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">                if (indentContexts) writer.increaseIndentation();</span>
+
+<span class="nc" id="L161">                currentContext = context;</span>
+<span class="nc" id="L162">                inActiveContext = true;</span>
+            }
+<span class="nc" id="L164">        } catch (IOException e) {</span>
+<span class="nc" id="L165">            throw new RDFHandlerException(e);</span>
+<span class="nc" id="L166">        }</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (!isWritingStarted()) {</span>
+<span class="nc" id="L169">            throw new RuntimeException(&quot;Document writing has not yet been started&quot;);</span>
+        }
+
+<span class="nc" id="L172">        Resource subj = st.getSubject();</span>
+<span class="nc" id="L173">        IRI pred = st.getPredicate();</span>
+<span class="nc" id="L174">        Value obj = st.getObject();</span>
+
+        try {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (subj.equals(lastWrittenSubject)) {</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                if (pred.equals(lastWrittenPredicate)) {</span>
+                    // Identical subject and predicate
+<span class="nc" id="L180">                    writer.write(&quot; , &quot;);</span>
+                } else {
+                    // Identical subject, new predicate
+<span class="nc" id="L183">                    writer.write(&quot; ;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L184">                    writer.writeEOL();</span>
+
+                    // Write new predicate
+<span class="nc" id="L187">                    writePredicate(pred);</span>
+<span class="nc" id="L188">                    writer.write(&quot; &quot;);</span>
+<span class="nc" id="L189">                    lastWrittenPredicate = pred;</span>
+                }
+            } else {
+                // New subject
+<span class="nc" id="L193">                closePreviousStatement();</span>
+
+                // Write new subject:
+<span class="nc" id="L196">                writeResource(subj, false);</span>
+<span class="nc" id="L197">                writer.write(&quot; &quot;);</span>
+<span class="nc" id="L198">                lastWrittenSubject = subj;</span>
+
+                // Write new predicate
+<span class="nc" id="L201">                writePredicate(pred);</span>
+<span class="nc" id="L202">                writer.write(&quot; &quot;);</span>
+<span class="nc" id="L203">                lastWrittenPredicate = pred;</span>
+
+<span class="nc" id="L205">                statementClosed = false;</span>
+<span class="nc" id="L206">                writer.increaseIndentation();</span>
+            }
+
+<span class="nc" id="L209">            writeValue(obj, false);</span>
+
+            // Don't close the line just yet. Maybe the next
+            // statement has the same subject and/or predicate.
+<span class="nc" id="L213">        } catch (IOException e) {</span>
+<span class="nc" id="L214">            throw new RDFHandlerException(e);</span>
+<span class="nc" id="L215">        }</span>
+<span class="nc" id="L216">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void writeCommentLine(String line)
+            throws IOException {
+<span class="nc" id="L224">        closeActiveContext();</span>
+        // We ignore comments:
+        //super.writeCommentLine(line);
+<span class="nc" id="L227">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void writeNamespace(String prefix, String name)
+            throws IOException {
+<span class="nc" id="L235">        closeActiveContext();</span>
+
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (openPart != null) {</span>
+<span class="nc" id="L238">            writer.write(openPart);</span>
+<span class="nc" id="L239">            writer.writeEOL();</span>
+<span class="nc" id="L240">            openPart = null;</span>
+        }
+
+<span class="nc" id="L243">        writer.write(&quot;@prefix &quot;);</span>
+<span class="nc" id="L244">        writer.write(prefix);</span>
+<span class="nc" id="L245">        writer.write(&quot;: &amp;lt;&quot;);</span>
+<span class="nc" id="L246">        String uriString = escapeHtml4(encodeURIString(name));</span>
+<span class="nc" id="L247">        writer.write(&quot;&lt;a href=\&quot;&quot; + uriString + &quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L248">        writer.write(uriString);</span>
+<span class="nc" id="L249">        writer.write(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L250">        writer.write(&quot;&amp;gt; .&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L251">        writer.writeEOL();</span>
+<span class="nc" id="L252">    }</span>
+
+    private static String encodeURIString(String s) {
+<span class="nc" id="L255">        return s.replace(&quot;\\&quot;, &quot;\\u005C&quot;)</span>
+<span class="nc" id="L256">                .replace(&quot;\t&quot;, &quot;\\u0009&quot;)</span>
+<span class="nc" id="L257">                .replace(&quot;\n&quot;, &quot;\\u000A&quot;)</span>
+<span class="nc" id="L258">                .replace(&quot;\r&quot;, &quot;\\u000D&quot;)</span>
+<span class="nc" id="L259">                .replace(&quot;\&quot;&quot;, &quot;\\u0022&quot;)</span>
+<span class="nc" id="L260">                .replace(&quot;`&quot;, &quot;\\u0060&quot;)</span>
+<span class="nc" id="L261">                .replace(&quot;^&quot;, &quot;\\u005E&quot;)</span>
+<span class="nc" id="L262">                .replace(&quot;|&quot;, &quot;\\u007C&quot;)</span>
+<span class="nc" id="L263">                .replace(&quot;&lt;&quot;, &quot;\\u003C&quot;)</span>
+<span class="nc" id="L264">                .replace(&quot;&gt;&quot;, &quot;\\u003E&quot;)</span>
+<span class="nc" id="L265">                .replace(&quot; &quot;, &quot;\\u0020&quot;);</span>
+    }
+
+    /**
+     * Closes the currently active context, if any.
+     *
+     * @throws java.io.IOException if an I/O error occurs while closing the context
+     */
+    protected void closeActiveContext()
+            throws IOException {
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        if (inActiveContext) {</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">            if (indentContexts) writer.decreaseIndentation();</span>
+<span class="nc" id="L277">            writer.write(&quot;&lt;span class=\&quot;nanopub-context-switch\&quot;&gt;}&lt;br/&gt;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L278">            writer.writeEOL();</span>
+
+<span class="nc" id="L280">            inActiveContext = false;</span>
+<span class="nc" id="L281">            currentContext = null;</span>
+        }
+<span class="nc" id="L283">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void writePredicate(IRI predicate)
+            throws IOException {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (predicate.equals(RDF.TYPE)) {</span>
+<span class="nc" id="L291">            writer.write(&quot;&lt;a href=\&quot;&quot; + RDF.TYPE + &quot;\&quot;&gt;a&lt;/a&gt;&quot;);</span>
+        } else {
+<span class="nc" id="L293">            writeURI(predicate);</span>
+        }
+<span class="nc" id="L295">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void writeURI(IRI uri)
+            throws IOException {
+<span class="nc" id="L302">        String uriString = uri.toString();</span>
+
+<span class="nc" id="L304">        String prefix = namespaceTable.get(uriString);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        if (prefix != null) {</span>
+            // Exact match: no suffix required
+<span class="nc" id="L307">            writer.write(&quot;&lt;a href=\&quot;&quot; + escapeHtml4(uriString) + &quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L308">            writer.write(prefix);</span>
+<span class="nc" id="L309">            writer.write(&quot;:&quot;);</span>
+<span class="nc" id="L310">            writer.write(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">            if (usedPrefixes != null) {</span>
+<span class="nc" id="L312">                usedPrefixes.add(prefix);</span>
+            }
+<span class="nc" id="L314">            return;</span>
+        }
+
+<span class="nc" id="L317">        prefix = null;</span>
+
+<span class="nc" id="L319">        int splitIdx = TurtleUtil.findURISplitIndex(uriString);</span>
+
+        // Sesame bug for URIs that end with a period.
+        // Port fix from https://bitbucket.org/openrdf/sesame/pull-request/301/ses-2086-fix-turtlewriter-writing/diff
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        if (!TurtleUtil.isNameEndChar(uriString.charAt(uriString.length() - 1))) {</span>
+<span class="nc" id="L324">            splitIdx = -1;</span>
+        }
+
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (splitIdx &gt; 0) {</span>
+<span class="nc" id="L328">            String namespace = uriString.substring(0, splitIdx);</span>
+<span class="nc" id="L329">            prefix = namespaceTable.get(namespace);</span>
+        }
+
+        // Do also split at dots:
+<span class="nc" id="L333">        int splitIdxDot = uriString.lastIndexOf(&quot;.&quot;) + 1;</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">        if (uriString.length() == splitIdxDot) splitIdxDot = -1;</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">        if (splitIdx &gt; 0 &amp;&amp; splitIdxDot &gt; splitIdx) {</span>
+<span class="nc" id="L336">            String namespace = uriString.substring(0, splitIdxDot);</span>
+<span class="nc" id="L337">            String p = namespaceTable.get(namespace);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if (p != null) {</span>
+<span class="nc" id="L339">                splitIdx = splitIdxDot;</span>
+<span class="nc" id="L340">                prefix = p;</span>
+            }
+        }
+
+        // ... and colons:
+<span class="nc" id="L345">        int splitIdxColon = uriString.lastIndexOf(&quot;:&quot;) + 1;</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">        if (uriString.length() == splitIdxColon) splitIdxColon = -1;</span>
+<span class="nc bnc" id="L347" title="All 4 branches missed.">        if (splitIdx &gt; 0 &amp;&amp; splitIdxColon &gt; splitIdx) {</span>
+<span class="nc" id="L348">            String namespace = uriString.substring(0, splitIdxColon);</span>
+<span class="nc" id="L349">            String p = namespaceTable.get(namespace);</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">            if (p != null) {</span>
+<span class="nc" id="L351">                splitIdx = splitIdxColon;</span>
+<span class="nc" id="L352">                prefix = p;</span>
+            }
+        }
+
+        // ... and underscores:
+<span class="nc" id="L357">        int splitIdxUnderscore = uriString.lastIndexOf(&quot;_&quot;) + 1;</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">        if (uriString.length() == splitIdxUnderscore) splitIdxUnderscore = -1;</span>
+<span class="nc bnc" id="L359" title="All 4 branches missed.">        if (splitIdx &gt; 0 &amp;&amp; splitIdxUnderscore &gt; splitIdx) {</span>
+<span class="nc" id="L360">            String namespace = uriString.substring(0, splitIdxUnderscore);</span>
+<span class="nc" id="L361">            String p = namespaceTable.get(namespace);</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">            if (p != null) {</span>
+<span class="nc" id="L363">                splitIdx = splitIdxUnderscore;</span>
+<span class="nc" id="L364">                prefix = p;</span>
+            }
+        }
+
+<span class="nc bnc" id="L368" title="All 2 branches missed.">        if (uriString.endsWith(&quot;.&quot;)) {</span>
+<span class="nc" id="L369">            prefix = null;</span>
+        }
+
+<span class="nc bnc" id="L372" title="All 2 branches missed.">        if (prefix != null) {</span>
+            // Namespace is mapped to a prefix; write abbreviated URI
+<span class="nc" id="L374">            writer.write(&quot;&lt;a href=\&quot;&quot; + escapeHtml4(uriString) + &quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L375">            writer.write(prefix);</span>
+<span class="nc" id="L376">            writer.write(&quot;:&quot;);</span>
+<span class="nc" id="L377">            writer.write(escapeHtml4(uriString.substring(splitIdx)));</span>
+<span class="nc" id="L378">            writer.write(&quot;&lt;/a&gt;&quot;);</span>
+        } else {
+            // Write full URI
+<span class="nc" id="L381">            writer.write(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L382">            writer.write(&quot;&lt;a href=\&quot;&quot; + escapeHtml4(uriString) + &quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L383">            writer.write(escapeHtml4(encodeURIString(uriString)));</span>
+<span class="nc" id="L384">            writer.write(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L385">            writer.write(&quot;&amp;gt;&quot;);</span>
+        }
+<span class="nc" id="L387">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void writeBNode(BNode bNode)
+            throws IOException {
+<span class="nc" id="L394">        throw new RuntimeException(&quot;Unexpected blank node&quot;);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void writeLiteral(Literal lit)
+            throws IOException {
+<span class="nc" id="L402">        String label = lit.getLabel();</span>
+<span class="nc" id="L403">        IRI datatype = lit.getDatatype();</span>
+
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {</span>
+<span class="nc bnc" id="L406" title="All 4 branches missed.">            if (XSD.INTEGER.equals(datatype) || XSD.DECIMAL.equals(datatype)</span>
+<span class="nc bnc" id="L407" title="All 4 branches missed.">                    || XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype)) {</span>
+                try {
+<span class="nc" id="L409">                    writer.write(escapeHtml4(XMLDatatypeUtil.normalize(label, datatype)));</span>
+<span class="nc" id="L410">                    return; // done</span>
+<span class="nc" id="L411">                } catch (IllegalArgumentException e) {</span>
+                    // not a valid numeric typed literal. ignore error and write as
+                    // quoted string instead.
+                }
+            }
+        }
+
+<span class="nc bnc" id="L418" title="All 6 branches missed.">        if (label.indexOf('\n') != -1 || label.indexOf('\r') != -1 || label.indexOf('\t') != -1) {</span>
+            // Write label as long string
+<span class="nc" id="L420">            writer.write(&quot;\&quot;\&quot;\&quot;&quot;);</span>
+<span class="nc" id="L421">            writer.write(escapeHtml4(TurtleUtil.encodeLongString(label)).replace(&quot;  &quot;, &quot;&amp;nbsp; &quot;).replace(&quot;  &quot;, &quot; &amp;nbsp;&quot;).replace(&quot;\t&quot;, &quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp&quot;).replace(&quot;\n&quot;, &quot;&lt;br/&gt;&quot;));</span>
+<span class="nc" id="L422">            writer.write(&quot;\&quot;\&quot;\&quot;&quot;);</span>
+        } else {
+            // Write label as normal string
+<span class="nc" id="L425">            writer.write(&quot;\&quot;&quot;);</span>
+<span class="nc" id="L426">            writer.write(escapeHtml4(TurtleUtil.encodeString(label)).replace(&quot;  &quot;, &quot;&amp;nbsp; &quot;).replace(&quot;  &quot;, &quot; &amp;nbsp;&quot;));</span>
+<span class="nc" id="L427">            writer.write(&quot;\&quot;&quot;);</span>
+        }
+
+<span class="nc bnc" id="L430" title="All 2 branches missed.">        if (Literals.isLanguageLiteral(lit)) {</span>
+            // Append the literal's language
+<span class="nc" id="L432">            writer.write(&quot;@&quot;);</span>
+<span class="nc" id="L433">            writer.write(lit.getLanguage().get());</span>
+<span class="nc bnc" id="L434" title="All 4 branches missed.">        } else if (!XSD.STRING.equals(datatype) || !xsdStringToPlainLiteral()) {</span>
+            // Append the literal's datatype (possibly written as an abbreviated
+            // URI)
+<span class="nc" id="L437">            writer.write(&quot;^^&quot;);</span>
+<span class="nc" id="L438">            writeURI(datatype);</span>
+        }
+<span class="nc" id="L440">    }</span>
+
+    /**
+     * &lt;p&gt;closePreviousStatement.&lt;/p&gt;
+     *
+     * @throws java.io.IOException if any.
+     */
+    protected void closePreviousStatement()
+            throws IOException {
+<span class="nc bnc" id="L449" title="All 2 branches missed.">        if (!statementClosed) {</span>
+            // The previous statement still needs to be closed:
+<span class="nc" id="L451">            writer.write(&quot; . &lt;br/&gt;&quot;);</span>
+<span class="nc" id="L452">            writer.writeEOL();</span>
+<span class="nc" id="L453">            writer.decreaseIndentation();</span>
+
+<span class="nc" id="L455">            statementClosed = true;</span>
+<span class="nc" id="L456">            lastWrittenSubject = null;</span>
+<span class="nc" id="L457">            lastWrittenPredicate = null;</span>
+        }
+<span class="nc" id="L459">    }</span>
+
+    /**
+     * Starts a new part in the HTML output.
+     *
+     * @param partName the name of the part to start
+     * @throws java.io.IOException if an I/O error occurs while starting the part
+     */
+    public void startPart(String partName)
+            throws IOException {
+<span class="nc" id="L469">        closePreviousStatement();</span>
+<span class="nc" id="L470">        closeActiveContext();</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">        if (openPart != null) {</span>
+<span class="nc" id="L472">            openPart += &quot;\n&lt;div class=\&quot;&quot; + partName + &quot;\&quot;&gt;&quot;;</span>
+        } else {
+<span class="nc" id="L474">            openPart = &quot;&lt;div class=\&quot;&quot; + partName + &quot;\&quot;&gt;&quot;;</span>
+        }
+<span class="nc" id="L476">    }</span>
+
+    /**
+     * Ends the current part in the HTML output.
+     *
+     * @throws java.io.IOException if an I/O error occurs while ending the part
+     */
+    public void endPart()
+            throws IOException {
+<span class="nc" id="L485">        closePreviousStatement();</span>
+<span class="nc" id="L486">        closeActiveContext();</span>
+<span class="nc" id="L487">        writer.write(&quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L488">        writer.writeEOL();</span>
+<span class="nc" id="L489">    }</span>
+
+    /**
+     * Writes the start of an HTML document, including the necessary HTML tags and styles.
+     *
+     * @throws java.io.IOException if an I/O error occurs while writing the HTML start
+     */
+    public void writeHtmlStart()
+            throws IOException {
+<span class="nc" id="L498">        writenl(&quot;&lt;!DOCTYPE html&gt;&quot;);</span>
+<span class="nc" id="L499">        writenl(&quot;&lt;html lang=\&quot;en\&quot;&gt;&quot;);</span>
+<span class="nc" id="L500">        writenl(&quot;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L501">        writenl(&quot;&lt;meta charset=\&quot;utf-8\&quot;&gt;&quot;);</span>
+<span class="nc" id="L502">        writenl(&quot;&lt;title&gt;Nanopublications&lt;/title&gt;&quot;);</span>
+<span class="nc" id="L503">        writenl(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L504">        writenl(&quot;body { margin: 20px; font-family: monaco,monospace; font-size: 11pt; color: #444; overflow-wrap: break-word; }&quot;);</span>
+<span class="nc" id="L505">        writenl(&quot;a { color: #000; text-decoration: none; }&quot;);</span>
+<span class="nc" id="L506">        writenl(&quot;a:hover { color: #666; }&quot;);</span>
+<span class="nc" id="L507">        writenl(&quot;.nanopub { margin: 0 0 30px 0; padding: 0px 10px 10px 10px; border-radius: 10px; border: solid; border-width: 1px; }&quot;);</span>
+<span class="nc" id="L508">        writenl(&quot;.nanopub-prefixes { margin-top: 10px; }&quot;);</span>
+<span class="nc" id="L509">        writenl(&quot;.nanopub-head { background: #e8e8e8; padding: 10px; margin-top: 10px; border-radius: 10px; }&quot;);</span>
+<span class="nc" id="L510">        writenl(&quot;.nanopub-assertion { background: #99ccff; padding: 10px; margin-top: 10px; border-radius: 10px; }&quot;);</span>
+<span class="nc" id="L511">        writenl(&quot;.nanopub-provenance { background: #f3a08c; padding: 10px; margin-top: 10px; border-radius: 10px; }&quot;);</span>
+<span class="nc" id="L512">        writenl(&quot;.nanopub-pubinfo { background: #ffff66; padding: 10px; margin-top: 10px; border-radius: 10px; }&quot;);</span>
+<span class="nc" id="L513">        writenl(&quot;&lt;/style&gt;&quot;);</span>
+<span class="nc" id="L514">        writenl(&quot;&lt;/head&gt;&quot;);</span>
+<span class="nc" id="L515">        writenl(&quot;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L516">    }</span>
+
+    /**
+     * Writes the end of an HTML document, closing all open tags.
+     *
+     * @throws java.io.IOException if an I/O error occurs while writing the HTML end
+     */
+    public void writeHtmlEnd()
+            throws IOException {
+<span class="nc" id="L525">        writenl(&quot;&lt;/body&gt;&quot;);</span>
+<span class="nc" id="L526">        writenl(&quot;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L527">    }</span>
+
+    private void writenl(String s)
+            throws IOException {
+<span class="nc" id="L531">        writer.write(s);</span>
+<span class="nc" id="L532">        writer.writeEOL();</span>
+<span class="nc" id="L533">    }</span>
+
+    private boolean xsdStringToPlainLiteral() {
+<span class="nc" id="L536">        return getWriterConfig().get(BasicWriterSettings.XSD_STRING_TO_PLAIN_LITERAL);</span>
+    }
+
+    private static final boolean contextsEquals(Resource context1, Resource context2) {
+<span class="nc bnc" id="L540" title="All 2 branches missed.">        if (context1 == null) {</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">            return context2 == null;</span>
+        } else {
+<span class="nc" id="L543">            return context1.equals(context2);</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

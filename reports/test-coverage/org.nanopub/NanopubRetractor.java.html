@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NanopubRetractor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">NanopubRetractor.java</span></div><h1>NanopubRetractor.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.NPX;
+
+import java.security.GeneralSecurityException;
+
+/**
+ * &lt;p&gt;
+ * Handles Retracting of Nanopublications
+ * &lt;/p&gt;
+ * The retraction is a separate np, which must be signed with the same key as the original np.
+ */
+<span class="nc" id="L21">public class NanopubRetractor {</span>
+
+<span class="nc" id="L23">    private static final ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Create a retraction np out of the original np and a transformation context
+     *
+     * @param originalNp The Nanopublication to be retracted
+     * @param tc         The transfomation context with the public key
+     * @return the retraction np, which can be published afterward
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the public key in the context is malformed
+     * @throws org.nanopub.MalformedNanopubException                      if the original nanopub is malformed
+     * @throws net.trustyuri.TrustyUriException                           if the original nanopub's URI is not a valid Trusty URI
+     * @throws java.security.GeneralSecurityException                     if there is a security issue with signing the retraction
+     */
+    public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException {
+<span class="nc" id="L37">        SignatureUtils.assertMatchingPubkeys(tc, originalNp);</span>
+<span class="nc" id="L38">        NanopubCreator c = new NanopubCreator(true);</span>
+<span class="nc" id="L39">        c.addAssertionStatement(tc.getSigner(), NPX.RETRACTS, originalNp.getUri());</span>
+<span class="nc" id="L40">        c.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, tc.getSigner());</span>
+<span class="nc" id="L41">        c.addPubinfoStatement(DCTERMS.CREATOR, tc.getSigner());</span>
+
+<span class="nc" id="L43">        Nanopub retractionNp = c.finalizeNanopub(true);</span>
+<span class="nc" id="L44">        return SignatureUtils.createSignedNanopub(retractionNp, tc);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

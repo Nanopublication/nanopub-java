@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignatureUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.security</a> &gt; <span class="el_source">SignatureUtils.java</span></div><h1>SignatureUtils.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.security;
+
+import jakarta.xml.bind.DatatypeConverter;
+import net.trustyuri.TrustyUriException;
+import net.trustyuri.TrustyUriUtils;
+import net.trustyuri.rdf.RdfFileContent;
+import net.trustyuri.rdf.RdfHasher;
+import net.trustyuri.rdf.RdfPreprocessor;
+import net.trustyuri.rdf.TransformRdf;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.*;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.NPX;
+
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Utility class for handling nanopub signatures.
+ */
+public class SignatureUtils {
+
+<span class="fc" id="L35">    private static ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    private SignatureUtils() {
+    }  // no instances allowed
+
+    /**
+     * Extracts the signature element from a nanopub.
+     *
+     * @param nanopub the nanopub to extract the signature element from
+     * @return the signature element, or null if no signature element is found
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the signature element is malformed
+     */
+    public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
+<span class="fc" id="L48">        IRI signatureUri = getSignatureElementUri(nanopub);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (signatureUri == null) return null;</span>
+<span class="fc" id="L50">        NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (Statement st : nanopub.getHead()) se.addTargetStatement(st);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (Statement st : nanopub.getAssertion()) se.addTargetStatement(st);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (Statement st : nanopub.getProvenance()) se.addTargetStatement(st);</span>
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (!st.getSubject().equals(signatureUri)) {</span>
+<span class="fc" id="L58">                se.addTargetStatement(st);</span>
+<span class="fc" id="L59">                continue;</span>
+            }
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) {</span>
+                // This statement is the only one that is *not* added as a target statement
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">                if (!(st.getObject() instanceof Literal)) {</span>
+<span class="nc" id="L64">                    throw new MalformedCryptoElementException(&quot;Literal expected as signature: &quot; + st.getObject());</span>
+                }
+<span class="fc" id="L66">                se.setSignatureLiteral((Literal) st.getObject());</span>
+            } else {
+<span class="fc" id="L68">                se.addTargetStatement(st);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                    if (!(st.getObject() instanceof Literal)) {</span>
+<span class="nc" id="L71">                        throw new MalformedCryptoElementException(&quot;Literal expected as public key: &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L73">                    se.setPublicKeyLiteral((Literal) st.getObject());</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                } else if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) {</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                    if (!(st.getObject() instanceof Literal)) {</span>
+<span class="nc" id="L76">                        throw new MalformedCryptoElementException(&quot;Literal expected as algorithm: &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L78">                    se.setAlgorithm((Literal) st.getObject());</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                } else if (st.getPredicate().equals(NPX.SIGNED_BY)) {</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">                    if (!(st.getObject() instanceof IRI)) {</span>
+<span class="nc" id="L81">                        throw new MalformedCryptoElementException(&quot;URI expected as signer: &quot; + st.getObject());</span>
+                    }
+<span class="fc" id="L83">                    se.addSigner((IRI) st.getObject());</span>
+                }
+                // We ignore other type of information at this point, but can consider it in the future.
+            }
+<span class="fc" id="L87">        }</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (se.getSignature() == null) {</span>
+<span class="nc" id="L89">            throw new MalformedCryptoElementException(&quot;Signature element without signature&quot;);</span>
+        }
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (se.getAlgorithm() == null) {</span>
+<span class="nc" id="L92">            throw new MalformedCryptoElementException(&quot;Signature element without algorithm&quot;);</span>
+        }
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (se.getPublicKeyString() == null) {</span>
+            // We require a full public key for now, but plan to support public key fingerprints as an alternative.
+<span class="nc" id="L96">            throw new MalformedCryptoElementException(&quot;Signature element without public key&quot;);</span>
+        }
+<span class="fc" id="L98">        return se;</span>
+    }
+
+    /**
+     * Checks if the given signature element has a valid signature.
+     *
+     * @param se the signature element to check
+     * @return true if the signature is valid, false otherwise
+     * @throws java.security.GeneralSecurityException if there is an error in the cryptographic operations
+     */
+    public static boolean hasValidSignature(NanopubSignatureElement se) throws GeneralSecurityException {
+<span class="fc" id="L109">        String artifactCode = TrustyUriUtils.getArtifactCode(se.getTargetNanopubUri().toString());</span>
+<span class="fc" id="L110">        List&lt;Statement&gt; statements = RdfPreprocessor.run(se.getTargetStatements(), artifactCode);</span>
+<span class="fc" id="L111">        Signature signature = Signature.getInstance(&quot;SHA256with&quot; + se.getAlgorithm().name());</span>
+<span class="fc" id="L112">        KeySpec publicSpec = new X509EncodedKeySpec(DatatypeConverter.parseBase64Binary(se.getPublicKeyString()));</span>
+<span class="fc" id="L113">        PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().name()).generatePublic(publicSpec);</span>
+<span class="fc" id="L114">        signature.initVerify(publicKey);</span>
+
+//		System.err.println(&quot;SIGNATURE INPUT: ---&quot;);
+//		System.err.print(RdfHasher.getDigestString(statements));
+//		System.err.println(&quot;---&quot;);
+
+<span class="fc" id="L120">        signature.update(RdfHasher.getDigestString(statements).getBytes());</span>
+<span class="fc" id="L121">        return signature.verify(se.getSignature());</span>
+    }
+
+    /**
+     * Creates a signed nanopub from a pre-nanopub.
+     *
+     * @param preNanopub the pre-nanopub to sign
+     * @param c          the transform context containing the key and signature algorithm
+     * @return the signed nanopub
+     * @throws java.security.GeneralSecurityException    if there is an error in the cryptographic operations
+     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error in handling RDF data
+     * @throws net.trustyuri.TrustyUriException          if there is an error in handling Trusty URIs
+     * @throws org.nanopub.MalformedNanopubException     if the pre-nanopub is malformed
+     */
+    public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
+            throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
+
+<span class="fc" id="L138">        String u = preNanopub.getUri().stringValue();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                !preNanopub.getAssertionUri().stringValue().startsWith(u) ||</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">                !preNanopub.getProvenanceUri().stringValue().startsWith(u) ||</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">                !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {</span>
+<span class="nc" id="L143">            throw new TrustyUriException(&quot;Graph URIs need have the nanopub URI as prefix: &quot; + u + &quot;...&quot;);</span>
+        }
+
+<span class="fc" id="L146">        RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);</span>
+        IRI npUri;
+<span class="fc" id="L148">        Map&lt;Resource, IRI&gt; tempUriReplacerMap = null;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (TempUriReplacer.hasTempUri(preNanopub)) {</span>
+<span class="fc" id="L150">            npUri = vf.createIRI(TempUriReplacer.normUri);</span>
+<span class="fc" id="L151">            tempUriReplacerMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L152">            NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, tempUriReplacerMap));</span>
+        } else {
+<span class="fc" id="L154">            npUri = preNanopub.getUri();</span>
+<span class="fc" id="L155">            NanopubUtils.propagateToHandler(preNanopub, r);</span>
+        }
+<span class="fc" id="L157">        r = c.resolveCrossRefs(r);</span>
+<span class="fc" id="L158">        preNanopub = new NanopubImpl(r.getStatements(), r.getNamespaces());</span>
+<span class="fc" id="L159">        c.mergeTransformMap(tempUriReplacerMap);</span>
+
+<span class="fc" id="L161">        Signature signature = Signature.getInstance(&quot;SHA256with&quot; + c.getSignatureAlgorithm().name());</span>
+<span class="fc" id="L162">        signature.initSign(c.getKey().getPrivate());</span>
+
+<span class="fc" id="L164">        List&lt;Statement&gt; preStatements = NanopubUtils.getStatements(preNanopub);</span>
+<span class="fc" id="L165">        IRI piUri = preNanopub.getPubinfoUri();</span>
+<span class="fc" id="L166">        Map&lt;String, String&gt; nsMap = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (preNanopub instanceof NanopubWithNs preNanopubNs) {</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            for (String prefix : preNanopubNs.getNsPrefixes()) {</span>
+<span class="fc" id="L169">                nsMap.put(prefix, preNanopubNs.getNamespace(prefix));</span>
+<span class="fc" id="L170">            }</span>
+        }
+
+        // Removing trusty URI if one is already present:
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (TrustyNanopubUtils.isValidTrustyNanopub(preNanopub)) {</span>
+<span class="nc" id="L175">            String ac = TrustyUriUtils.getArtifactCode(preNanopub.getUri().toString());</span>
+<span class="nc" id="L176">            preStatements = removeArtifactCode(preStatements, ac);</span>
+<span class="nc" id="L177">            npUri = (IRI) removeArtifactCode(npUri, ac);</span>
+<span class="nc" id="L178">            piUri = (IRI) removeArtifactCode(piUri, ac);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for (String prefix : nsMap.keySet()) {</span>
+<span class="nc" id="L180">                nsMap.put(prefix, removeArtifactCode(nsMap.get(prefix), ac));</span>
+<span class="nc" id="L181">            }</span>
+        }
+
+        // Adding signature element:
+<span class="fc" id="L185">        IRI signatureElUri = vf.createIRI(npUri + &quot;sig&quot;);</span>
+<span class="fc" id="L186">        String publicKeyString = encodePublicKey(c.getKey().getPublic());</span>
+<span class="fc" id="L187">        Literal publicKeyLiteral = vf.createLiteral(publicKeyString);</span>
+<span class="fc" id="L188">        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE_TARGET, npUri, piUri));</span>
+<span class="fc" id="L189">        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));</span>
+<span class="fc" id="L190">        Literal algorithmLiteral = vf.createLiteral(c.getSignatureAlgorithm().name());</span>
+<span class="fc" id="L191">        preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_ALGORITHM, algorithmLiteral, piUri));</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (c.getSigner() != null) {</span>
+<span class="fc" id="L193">            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, c.getSigner(), piUri));</span>
+        }
+
+        // Preprocess statements that are covered by signature:
+<span class="fc" id="L197">        RdfFileContent preContent = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="fc" id="L198">        preContent.startRDF();</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        for (Statement st : preStatements) preContent.handleStatement(st);</span>
+<span class="fc" id="L200">        preContent.endRDF();</span>
+<span class="fc" id="L201">        RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="fc" id="L202">        RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri, TrustyNanopubUtils.transformRdfSetting);</span>
+
+        // TODO Why do we do this?
+        try {
+<span class="fc" id="L206">            preContent.propagate(rp);</span>
+<span class="nc" id="L207">        } catch (RDFHandlerException ex) {</span>
+<span class="nc" id="L208">            throw new TrustyUriException(ex);</span>
+<span class="fc" id="L209">        }</span>
+
+        // Create signature:
+<span class="fc" id="L212">        signature.update(RdfHasher.getDigestString(preprocessedContent.getStatements()).getBytes());</span>
+<span class="fc" id="L213">        byte[] signatureBytes = signature.sign();</span>
+<span class="fc" id="L214">        Literal signatureLiteral = vf.createLiteral(DatatypeConverter.printBase64Binary(signatureBytes));</span>
+
+        // Preprocess signature statement:
+<span class="fc" id="L217">        List&lt;Statement&gt; sigStatementList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L218">        sigStatementList.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE, signatureLiteral, piUri));</span>
+<span class="fc" id="L219">        Statement preprocessedSigStatement = RdfPreprocessor.run(sigStatementList, npUri, TrustyNanopubUtils.transformRdfSetting).getFirst();</span>
+
+        // Combine all statements:
+<span class="fc" id="L222">        RdfFileContent signedContent = new RdfFileContent(RDFFormat.TRIG);</span>
+<span class="fc" id="L223">        signedContent.startRDF();</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        for (String prefix : nsMap.keySet()) {</span>
+<span class="fc" id="L225">            signedContent.handleNamespace(prefix, nsMap.get(prefix));</span>
+<span class="fc" id="L226">        }</span>
+<span class="fc" id="L227">        signedContent.handleNamespace(NPX.PREFIX, NPX.NAMESPACE);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        for (Statement st : preprocessedContent.getStatements()) {</span>
+<span class="fc" id="L229">            signedContent.handleStatement(st);</span>
+<span class="fc" id="L230">        }</span>
+<span class="fc" id="L231">        signedContent.handleStatement(preprocessedSigStatement);</span>
+<span class="fc" id="L232">        signedContent.endRDF();</span>
+
+        // Create nanopub object:
+<span class="fc" id="L235">        NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();</span>
+<span class="fc" id="L236">        IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler, TrustyNanopubUtils.transformRdfSetting);</span>
+<span class="fc" id="L237">        Map&lt;Resource, IRI&gt; transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));</span>
+<span class="fc" id="L238">        c.mergeTransformMap(transformMap);</span>
+<span class="fc" id="L239">        return nanopubHandler.getNanopub();</span>
+    }
+
+    /**
+     * Encodes a public key to a base64 string.
+     *
+     * @param publicKey the public key to encode
+     * @return the base64 encoded public key string
+     */
+    public static String encodePublicKey(PublicKey publicKey) {
+<span class="fc" id="L249">        return DatatypeConverter.printBase64Binary(publicKey.getEncoded()).replaceAll(&quot;\\s&quot;, &quot;&quot;);</span>
+    }
+
+    // ----------
+    // TODO: Move this into separate class?
+
+    private static List&lt;Statement&gt; removeArtifactCode(List&lt;Statement&gt; in, String ac) {
+<span class="nc" id="L256">        List&lt;Statement&gt; out = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        for (Statement st : in) {</span>
+<span class="nc" id="L258">            out.add(removeArtifactCode(st, ac));</span>
+<span class="nc" id="L259">        }</span>
+<span class="nc" id="L260">        return out;</span>
+    }
+
+    private static Statement removeArtifactCode(Statement st, String ac) {
+<span class="nc" id="L264">        return vf.createStatement((Resource) removeArtifactCode(st.getSubject(), ac), (IRI) removeArtifactCode(st.getPredicate(), ac),</span>
+<span class="nc" id="L265">                removeArtifactCode(st.getObject(), ac), (Resource) removeArtifactCode(st.getContext(), ac));</span>
+    }
+
+    private static Value removeArtifactCode(Value v, String ac) {
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        if (v instanceof IRI) {</span>
+<span class="nc" id="L270">            return vf.createIRI(removeArtifactCode(v.stringValue(), ac));</span>
+        } else {
+<span class="nc" id="L272">            return v;</span>
+        }
+    }
+
+    private static String removeArtifactCode(String s, String ac) {
+<span class="nc" id="L277">        return s.replaceAll(ac + &quot;[#/]?&quot;, &quot;&quot;);</span>
+    }
+
+    // ----------
+
+    private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
+<span class="fc" id="L283">        IRI signatureElementUri = null;</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">            if (!st.getObject().equals(nanopub.getUri())) continue;</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">            if (!(st.getSubject() instanceof IRI)) {</span>
+<span class="nc" id="L288">                throw new MalformedCryptoElementException(&quot;Signature element must be identified by URI&quot;);</span>
+            }
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">            if (signatureElementUri != null) {</span>
+<span class="nc" id="L291">                throw new MalformedCryptoElementException(&quot;Multiple signature elements found&quot;);</span>
+            }
+<span class="fc" id="L293">            signatureElementUri = (IRI) st.getSubject();</span>
+<span class="fc" id="L294">        }</span>
+<span class="fc" id="L295">        return signatureElementUri;</span>
+    }
+
+    /**
+     * This includes legacy signatures. Might include false positives.
+     *
+     * @param nanopub the nanopub to check
+     * @return true if the nanopub seems to have a signature, false otherwise
+     */
+    public static boolean seemsToHaveSignature(Nanopub nanopub) {
+<span class="fc bfc" id="L305" title="All 2 branches covered.">        for (Statement st : nanopub.getPubinfo()) {</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) return true;</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) return true;</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) return true;</span>
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) return true;</span>
+<span class="fc" id="L310">        }</span>
+<span class="fc" id="L311">        return false;</span>
+    }
+
+    /**
+     * Returns the full file path for a given filename.
+     *
+     * @param filename the filename to process
+     * @return the full file path, replacing a leading '~' with the user's home directory
+     */
+    public static String getFullFilePath(String filename) {
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        if (filename.startsWith(&quot;~&quot;)) {</span>
+<span class="fc" id="L322">            return System.getProperty(&quot;user.home&quot;) + &quot;/&quot; + filename.substring(1);</span>
+        }
+<span class="fc" id="L324">        return filename;</span>
+    }
+
+    /**
+     * Compare the public key from the tc and the signedNp.
+     *
+     * @param tc       the TransformContext containing the key
+     * @param signedNp the signed nanopub to check
+     * @throws org.nanopub.extra.security.MalformedCryptoElementException if not both contain the same public key
+     */
+    public static void assertMatchingPubkeys(TransformContext tc, Nanopub signedNp) throws MalformedCryptoElementException {
+<span class="nc" id="L335">        String oldPubKey = SignatureUtils.getSignatureElement(signedNp).getPublicKeyString();</span>
+<span class="nc" id="L336">        String newPubKey = SignatureUtils.encodePublicKey(tc.getKey().getPublic());</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if (!oldPubKey.equals(newPubKey)) {</span>
+<span class="nc" id="L338">            throw new MalformedCryptoElementException(&quot;The old public key does not match the new public key&quot;);</span>
+        }
+<span class="nc" id="L340">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IntroNanopub.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.setting</a> &gt; <span class="el_source">IntroNanopub.java</span></div><h1>IntroNanopub.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.setting;
+
+import net.trustyuri.TrustyUriUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.FOAF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
+import org.eclipse.rdf4j.rio.turtle.TurtleParser;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubUtils;
+import org.nanopub.extra.security.KeyDeclaration;
+import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.vocabulary.NPX;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * This class represents an Intro Nanopub, which is a nanopublication that contains the introduction of a user.
+ */
+public class IntroNanopub implements Serializable {
+
+    /**
+     * Get the IntroNanopub for a userId.
+     *
+     * @param userId the userId to get the IntroNanopub for
+     * @return the IntroNanopub for the userId, or null if not found
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
+     */
+    public static IntroNanopub get(String userId) throws IOException, RDF4JException {
+<span class="nc" id="L48">        return get(userId, (HttpClient) null);</span>
+    }
+
+    /**
+     * Get the IntroNanopub for a userId using a specific HttpClient.
+     *
+     * @param userId     the userId to get the IntroNanopub for
+     * @param httpClient the HttpClient to use for fetching the IntroNanopub
+     * @return the IntroNanopub for the userId, or null if not found
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
+     */
+    public static IntroNanopub get(String userId, HttpClient httpClient) throws IOException, RDF4JException {
+<span class="nc" id="L61">        IntroExtractor ie = extract(userId, httpClient);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (ie != null) {</span>
+<span class="nc" id="L63">            return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));</span>
+        }
+<span class="nc" id="L65">        return null;</span>
+    }
+
+    /**
+     * Get the IntroNanopub for a userId using an IntroExtractor.
+     *
+     * @param userId the userId to get the IntroNanopub for
+     * @param ie     the IntroExtractor that has already extracted the IntroNanopub
+     * @return the IntroNanopub for the userId, or null if not found
+     */
+    public static IntroNanopub get(String userId, IntroExtractor ie) {
+<span class="nc" id="L76">        return new IntroNanopub(ie.getIntroNanopub(), SimpleValueFactory.getInstance().createIRI(userId));</span>
+    }
+
+    /**
+     * Extract the IntroNanopub for a userId.
+     *
+     * @param userId     the userId to extract the IntroNanopub for
+     * @param httpClient the HttpClient to use for fetching the IntroNanopub
+     * @return the IntroExtractor containing the extracted data
+     * @throws java.io.IOException                               if there is an error fetching the IntroNanopub
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error parsing the RDF data
+     */
+    public static IntroExtractor extract(String userId, HttpClient httpClient) throws IOException, RDF4JException {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (httpClient == null) httpClient = NanopubUtils.getHttpClient();</span>
+<span class="nc" id="L90">        HttpGet get = null;</span>
+        try {
+<span class="nc" id="L92">            get = new HttpGet(userId);</span>
+<span class="nc" id="L93">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L94">            throw new IOException(&quot;invalid URL: &quot; + userId);</span>
+<span class="nc" id="L95">        }</span>
+<span class="nc" id="L96">        get.setHeader(&quot;Accept&quot;, &quot;text/turtle&quot;);</span>
+<span class="nc" id="L97">        InputStream in = null;</span>
+        try {
+<span class="nc" id="L99">            HttpResponse resp = httpClient.execute(get);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (!wasSuccessful(resp)) {</span>
+<span class="nc" id="L101">                EntityUtils.consumeQuietly(resp.getEntity());</span>
+<span class="nc" id="L102">                throw new IOException(resp.getStatusLine().toString());</span>
+            }
+<span class="nc" id="L104">            in = resp.getEntity().getContent();</span>
+<span class="nc" id="L105">            IntroExtractor ie = new IntroExtractor(userId);</span>
+<span class="nc" id="L106">            TurtleParser parser = new TurtleParser();</span>
+<span class="nc" id="L107">            parser.setRDFHandler(ie);</span>
+<span class="nc" id="L108">            parser.parse(in, userId);</span>
+<span class="nc" id="L109">            return ie;</span>
+        } finally {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (in != null) in.close();</span>
+        }
+    }
+
+    private Nanopub nanopub;
+    private IRI user;
+    private String name;
+<span class="fc" id="L118">    private Map&lt;IRI, KeyDeclaration&gt; keyDeclarations = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Constructor for IntroNanopub.
+     *
+     * @param nanopub the Nanopub that contains the introduction
+     */
+    public IntroNanopub(Nanopub nanopub) {
+<span class="nc" id="L126">        this(nanopub, null);</span>
+<span class="nc" id="L127">    }</span>
+
+    /**
+     * Constructor for IntroNanopub with user.
+     *
+     * @param nanopub the Nanopub that contains the introduction
+     * @param user    the IRI of the user
+     */
+<span class="fc" id="L135">    public IntroNanopub(Nanopub nanopub, IRI user) {</span>
+<span class="fc" id="L136">        this.nanopub = nanopub;</span>
+<span class="fc" id="L137">        this.user = user;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (Statement st : nanopub.getAssertion()) {</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (!(st.getObject() instanceof IRI obj)) continue;</span>
+<span class="fc" id="L140">            IRI subj = (IRI) st.getSubject();</span>
+<span class="fc" id="L141">            IRI pred = st.getPredicate();</span>
+<span class="pc bpc" id="L142" title="2 of 4 branches missed.">            if (pred.equals(NPX.DECLARED_BY) || pred.equals(NPX.HAS_KEY_LOCATION)) {</span>
+                KeyDeclaration d;
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (keyDeclarations.containsKey(subj)) {</span>
+<span class="nc" id="L145">                    d = keyDeclarations.get(subj);</span>
+                } else {
+<span class="nc" id="L147">                    d = new KeyDeclaration(subj);</span>
+<span class="nc" id="L148">                    keyDeclarations.put(subj, d);</span>
+                }
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                if (pred.equals(NPX.DECLARED_BY)) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                    if (this.user == null) this.user = obj;</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (!this.user.equals(obj)) continue;</span>
+<span class="nc" id="L153">                    d.addDeclarer(this.user);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                } else if (pred.equals(NPX.HAS_KEY_LOCATION)) {</span>
+<span class="nc" id="L155">                    d.setKeyLocation(obj);</span>
+                }
+            }
+<span class="fc" id="L158">        }</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (Statement st : nanopub.getAssertion()) {</span>
+<span class="fc" id="L160">            IRI subj = (IRI) st.getSubject();</span>
+<span class="pc bpc" id="L161" title="1 of 4 branches missed.">            if (subj.equals(this.user) &amp;&amp; st.getPredicate().equals(FOAF.NAME)) {</span>
+<span class="fc" id="L162">                this.name = st.getObject().stringValue();</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">            } else if (keyDeclarations.containsKey(subj)) {</span>
+<span class="nc" id="L164">                KeyDeclaration d = keyDeclarations.get(subj);</span>
+<span class="nc" id="L165">                IRI pred = st.getPredicate();</span>
+<span class="nc" id="L166">                Value obj = st.getObject();</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">                if (pred.equals(NPX.HAS_ALGORITHM) &amp;&amp; obj instanceof Literal) {</span>
+                    try {
+<span class="nc" id="L169">                        d.setAlgorithm((Literal) obj);</span>
+<span class="nc" id="L170">                    } catch (MalformedCryptoElementException ex) {</span>
+                        //ex.printStackTrace();
+<span class="nc" id="L172">                    }</span>
+<span class="nc bnc" id="L173" title="All 4 branches missed.">                } else if (pred.equals(NPX.HAS_PUBLIC_KEY) &amp;&amp; obj instanceof Literal) {</span>
+                    try {
+<span class="nc" id="L175">                        d.setPublicKeyLiteral((Literal) obj);</span>
+<span class="nc" id="L176">                    } catch (MalformedCryptoElementException ex) {</span>
+                        //ex.printStackTrace();
+<span class="nc" id="L178">                    }</span>
+                }
+            }
+<span class="fc" id="L181">        }</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">        for (IRI kdi : new ArrayList&lt;&gt;(keyDeclarations.keySet())) {</span>
+<span class="nc" id="L183">            KeyDeclaration kd = keyDeclarations.get(kdi);</span>
+<span class="nc bnc" id="L184" title="All 6 branches missed.">            if (kd.getPublicKeyString() == null || kd.getPublicKeyString().isEmpty() || kd.getDeclarers().isEmpty()) {</span>
+<span class="nc" id="L185">                keyDeclarations.remove(kdi);</span>
+            }
+<span class="nc" id="L187">        }</span>
+<span class="fc" id="L188">    }</span>
+
+    /**
+     * Get the Nanopub that contains the introduction.
+     *
+     * @return the Nanopub
+     */
+    public Nanopub getNanopub() {
+<span class="fc" id="L196">        return nanopub;</span>
+    }
+
+    /**
+     * Get the IRI of the user.
+     *
+     * @return the IRI of the user
+     */
+    public IRI getUser() {
+<span class="fc" id="L205">        return user;</span>
+    }
+
+    /**
+     * Get the name of the user.
+     *
+     * @return the name of the user, or null if not set
+     */
+    public String getName() {
+<span class="fc" id="L214">        return name;</span>
+    }
+
+    /**
+     * Get the key declarations associated with this IntroNanopub.
+     *
+     * @return a list of KeyDeclaration objects
+     */
+    public List&lt;KeyDeclaration&gt; getKeyDeclarations() {
+<span class="nc" id="L223">        return new ArrayList&lt;&gt;(keyDeclarations.values());</span>
+    }
+
+
+    /**
+     * This class is used to extract the introduction Nanopub.
+     */
+    public static class IntroExtractor extends AbstractRDFHandler implements Serializable {
+
+        private String userId;
+        private Nanopub introNanopub;
+        private String name;
+
+        /**
+         * Constructor for IntroExtractor.
+         *
+         * @param userId the userId to extract the introduction for
+         */
+<span class="fc" id="L241">        public IntroExtractor(String userId) {</span>
+<span class="fc" id="L242">            this.userId = userId;</span>
+<span class="fc" id="L243">        }</span>
+
+        /**
+         * Handle a statement in the RDF data.
+         *
+         * @param st the statement to handle
+         * @throws RDFHandlerException if there is an error handling the statement
+         */
+        public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">            if (introNanopub != null) return;</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">            if (!st.getSubject().stringValue().equals(userId)) return;</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">            if (st.getPredicate().stringValue().equals(FOAF.PAGE.stringValue())) {</span>
+<span class="fc" id="L255">                String o = st.getObject().stringValue();</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">                if (TrustyUriUtils.isPotentialTrustyUri(o)) {</span>
+<span class="fc" id="L257">                    introNanopub = GetNanopub.get(o);</span>
+                }
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">            } else if (st.getPredicate().stringValue().equals(RDFS.LABEL.stringValue())) {</span>
+<span class="fc" id="L260">                name = st.getObject().stringValue();</span>
+            }
+<span class="fc" id="L262">        }</span>
+
+        /**
+         * Returns the extracted Nanopub that contains the introduction.
+         *
+         * @return the Nanopub that contains the introduction
+         * @throws RDFHandlerException if there is an error handling the end of the data
+         */
+        public Nanopub getIntroNanopub() {
+<span class="fc" id="L271">            return introNanopub;</span>
+        }
+
+        /**
+         * Returns the name of the user.
+         *
+         * @return the name of the user, or null if not set
+         */
+        public String getName() {
+<span class="fc" id="L280">            return name;</span>
+        }
+
+    }
+
+    private static boolean wasSuccessful(HttpResponse resp) {
+<span class="nc" id="L286">        int c = resp.getStatusLine().getStatusCode();</span>
+<span class="nc bnc" id="L287" title="All 4 branches missed.">        return c &gt;= 200 &amp;&amp; c &lt; 300;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

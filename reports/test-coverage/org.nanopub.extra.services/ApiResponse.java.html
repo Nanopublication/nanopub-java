@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.services</a> &gt; <span class="el_source">ApiResponse.java</span></div><h1>ApiResponse.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.services;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Represents a response from an API service, containing a header and a list of entries.
+ */
+public class ApiResponse implements Serializable {
+
+    private String[] header;
+<span class="fc" id="L14">    private List&lt;ApiResponseEntry&gt; data = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Default constructor for ApiResponse.
+     * Initializes an empty response with no header and no data entries.
+     */
+<span class="fc" id="L20">    public ApiResponse() {</span>
+<span class="fc" id="L21">    }</span>
+
+    /**
+     * Constructs an ApiResponse with specified entries to initialize the response.
+     *
+     * @param entries a collection of ApiResponseEntry objects to initialize the response with.
+     */
+<span class="fc" id="L28">    public ApiResponse(Collection&lt;ApiResponseEntry&gt; entries) {</span>
+<span class="fc" id="L29">        data.addAll(entries);</span>
+<span class="fc" id="L30">    }</span>
+
+    /**
+     * Sets the header for the API response.
+     *
+     * @param header an array of strings representing the header of the response.
+     */
+    public void setHeader(String[] header) {
+<span class="fc" id="L38">        this.header = header;</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Adds a single ApiResponseEntry to the data list of the API response.
+     *
+     * @param entry the ApiResponseEntry to be added to the response.
+     */
+    public void add(ApiResponseEntry entry) {
+<span class="fc" id="L47">        data.add(entry);</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Adds a new entry to the API response using an array of strings.
+     *
+     * @param line an array of strings representing a single entry in the response.
+     */
+    public void add(String[] line) {
+<span class="fc" id="L56">        ApiResponseEntry entry = new ApiResponseEntry();</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (int i = 0; i &lt; line.length; i++) {</span>
+<span class="fc" id="L58">            entry.add(header[i], line[i]);</span>
+        }
+<span class="fc" id="L60">        data.add(entry);</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Returns the header of the API response.
+     *
+     * @return an array of strings representing the header of the response.
+     */
+    public String[] getHeader() {
+<span class="fc" id="L69">        return header;</span>
+    }
+
+    /**
+     * Returns the list of data entries in the API response.
+     *
+     * @return a list of ApiResponseEntry objects representing the data in the response.
+     */
+    public List&lt;ApiResponseEntry&gt; getData() {
+<span class="fc" id="L78">        return data;</span>
+    }
+
+    /**
+     * Returns the number of entries in the API response.
+     *
+     * @return the size of the data list, representing the number of entries in the response.
+     */
+    public int size() {
+<span class="fc" id="L87">        return data.size();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

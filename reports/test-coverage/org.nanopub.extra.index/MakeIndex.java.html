@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MakeIndex.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.extra.index</a> &gt; <span class="el_source">MakeIndex.java</span></div><h1>MakeIndex.java</h1><pre class="source lang-java linenums">package org.nanopub.extra.index;
+
+import com.beust.jcommander.ParameterException;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
+import org.nanopub.NanopubUtils;
+import org.nanopub.trusty.TempUriReplacer;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ * Command-line tool to create an index nanopublication from a set of input nanopublications.
+ */
+<span class="nc" id="L22">public class MakeIndex extends CliRunner {</span>
+
+<span class="nc" id="L24">    @com.beust.jcommander.Parameter(description = &quot;input-nanopub-files&quot;)</span>
+    private List&lt;File&gt; inputFiles = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L27">    @com.beust.jcommander.Parameter(names = &quot;-fs&quot;, description = &quot;Add index nanopubs from input files &quot; +</span>
+            &quot;as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs&quot;)
+    private boolean useSubindexes = false;
+
+<span class="nc" id="L31">    @com.beust.jcommander.Parameter(names = &quot;-e&quot;, description = &quot;Add given URIs as elements &quot; +</span>
+            &quot;(in addition to the ones from the input files)&quot;)
+    private List&lt;String&gt; elements = new ArrayList&lt;&gt;();
+
+<span class="nc" id="L35">    @com.beust.jcommander.Parameter(names = &quot;-s&quot;, description = &quot;Add given URIs as sub-indexes &quot; +</span>
+            &quot;(in addition to the ones from the input files, if given)&quot;)
+    private List&lt;String&gt; subindexes = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-x&quot;, description = &quot;Set given URI as superseded index&quot;)
+    private String supersededIndex;
+
+<span class="nc" id="L42">    @com.beust.jcommander.Parameter(names = &quot;-o&quot;, description = &quot;Output file&quot;)</span>
+    private File outputFile = new File(&quot;index.trig&quot;);
+
+<span class="nc" id="L45">    @com.beust.jcommander.Parameter(names = &quot;-u&quot;, description = &quot;Base URI for index nanopubs&quot;)</span>
+    private String baseUri = TempUriReplacer.tempUri + &quot;index/&quot;;
+
+    @com.beust.jcommander.Parameter(names = &quot;-t&quot;, description = &quot;Title of index&quot;)
+    private String iTitle;
+
+    @com.beust.jcommander.Parameter(names = &quot;-d&quot;, description = &quot;Description of index&quot;)
+    private String iDesc;
+
+<span class="nc" id="L54">    @com.beust.jcommander.Parameter(names = &quot;-c&quot;, description = &quot;Creator of index&quot;)</span>
+    private List&lt;String&gt; iCreators = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-l&quot;, description = &quot;License URI&quot;)
+    private String licenseUri;
+
+<span class="nc" id="L60">    @com.beust.jcommander.Parameter(names = &quot;-a&quot;, description = &quot;'See also' resources&quot;)</span>
+    private List&lt;String&gt; seeAlso = new ArrayList&lt;&gt;();
+
+    @com.beust.jcommander.Parameter(names = &quot;-p&quot;, description = &quot;Make plain (non-trusty) index nanopublications&quot;)
+    private boolean plainNanopub;
+
+//	@com.beust.jcommander.Parameter(names = &quot;--sig&quot;, description = &quot;Path and file name of key files&quot;)
+//	private boolean useSignature;
+//
+//	@com.beust.jcommander.Parameter(names = &quot;--sig-key-file&quot;, description = &quot;Path and file name of key files&quot;)
+//	private String keyFilename;
+//
+//	@com.beust.jcommander.Parameter(names = &quot;--sig-algorithm&quot;, description = &quot;Signature algorithm: either RSA or DSA&quot;)
+//	private SignatureAlgorithm algorithm;
+
+    /**
+     * Main method to run the MakeIndex tool.
+     *
+     * @param args command-line arguments
+     * @throws java.io.IOException if an I/O error occurs
+     */
+    public static void main(String[] args) throws IOException {
+        try {
+<span class="nc" id="L83">            MakeIndex obj = CliRunner.initJc(new MakeIndex(), args);</span>
+<span class="nc bnc" id="L84" title="All 8 branches missed.">            if (obj.inputFiles.isEmpty() &amp;&amp; obj.elements.isEmpty() &amp;&amp; obj.subindexes.isEmpty() &amp;&amp; obj.supersededIndex == null) {</span>
+<span class="nc" id="L85">                obj.getJc().usage();</span>
+            }
+<span class="nc" id="L87">            obj.run();</span>
+<span class="nc" id="L88">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L89">            System.exit(1);</span>
+<span class="nc" id="L90">        } catch (Exception ex) {</span>
+<span class="nc" id="L91">            ex.printStackTrace();</span>
+<span class="nc" id="L92">            System.exit(1);</span>
+<span class="nc" id="L93">        }</span>
+<span class="nc" id="L94">    }</span>
+
+    private SimpleIndexCreator indexCreator;
+    private OutputStreamWriter writer;
+    private RDFFormat outFormat;
+    private int count;
+//	private KeyPair key;
+
+    private void init() throws IOException {
+<span class="nc" id="L103">        count = 0;</span>
+<span class="nc" id="L104">        outFormat = Rio.getParserFormatForFileName(outputFile.getName()).orElse(RDFFormat.TRIG);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (outputFile.getName().endsWith(&quot;.gz&quot;)) {</span>
+<span class="nc" id="L106">            writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outputFile)), StandardCharsets.UTF_8);</span>
+        } else {
+<span class="nc" id="L108">            writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8);</span>
+        }
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        indexCreator = new SimpleIndexCreator(!plainNanopub) {</span>
+
+            @Override
+            public void handleIncompleteIndex(NanopubIndex npi) {
+                try {
+<span class="nc" id="L116">                    writer.write(NanopubUtils.writeToString(npi, outFormat) + &quot;\n\n&quot;);</span>
+<span class="nc" id="L117">                } catch (Exception ex) {</span>
+<span class="nc" id="L118">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L119">                }</span>
+<span class="nc" id="L120">            }</span>
+
+            @Override
+            public void handleCompleteIndex(NanopubIndex npi) {
+<span class="nc" id="L124">                System.out.println(&quot;Index URI: &quot; + npi.getUri());</span>
+                try {
+<span class="nc" id="L126">                    writer.write(NanopubUtils.writeToString(npi, outFormat) + &quot;\n\n&quot;);</span>
+<span class="nc" id="L127">                } catch (Exception ex) {</span>
+<span class="nc" id="L128">                    throw new RuntimeException(ex);</span>
+<span class="nc" id="L129">                }</span>
+<span class="nc" id="L130">            }</span>
+
+        };
+
+<span class="nc" id="L134">        indexCreator.setBaseUri(baseUri);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (iTitle != null) {</span>
+<span class="nc" id="L136">            indexCreator.setTitle(iTitle);</span>
+        }
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (iDesc != null) {</span>
+<span class="nc" id="L139">            indexCreator.setDescription(iDesc);</span>
+        }
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        for (String creator : iCreators) {</span>
+<span class="nc" id="L142">            indexCreator.addCreator(creator);</span>
+<span class="nc" id="L143">        }</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (licenseUri != null) {</span>
+<span class="nc" id="L145">            indexCreator.setLicense(SimpleValueFactory.getInstance().createIRI(licenseUri));</span>
+        }
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        for (String sa : seeAlso) {</span>
+<span class="nc" id="L148">            indexCreator.addSeeAlsoUri(SimpleValueFactory.getInstance().createIRI(sa));</span>
+<span class="nc" id="L149">        }</span>
+<span class="nc" id="L150">    }</span>
+
+    private void run() throws Exception {
+<span class="nc" id="L153">        init();</span>
+
+//		if (useSignature) {
+//			if (algorithm == null) {
+//				if (keyFilename == null) {
+//					keyFilename = &quot;~/.nanopub/id_rsa&quot;;
+//					algorithm = SignatureAlgorithm.RSA;
+//				} else if (keyFilename.endsWith(&quot;_rsa&quot;)) {
+//					algorithm = SignatureAlgorithm.RSA;
+//				} else if (keyFilename.endsWith(&quot;_dsa&quot;)) {
+//					algorithm = SignatureAlgorithm.DSA;
+//				} else {
+//					// Assuming RSA if not other information is available
+//					algorithm = SignatureAlgorithm.RSA;
+//				}
+//			} else if (keyFilename == null) {
+//				keyFilename = &quot;~/.nanopub/id_&quot; + algorithm.name().toLowerCase();
+//			}
+//			key = SignNanopub.loadKey(keyFilename, algorithm);
+//		}
+
+        try {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            for (File f : inputFiles) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (f.getName().endsWith(&quot;.txt&quot;)) {</span>
+<span class="nc" id="L177">                    try (BufferedReader br = new BufferedReader(new FileReader(f))) {</span>
+                        String line;
+<span class="nc bnc" id="L179" title="All 2 branches missed.">                        while ((line = br.readLine()) != null) {</span>
+<span class="nc" id="L180">                            line = line.trim();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">                            if (line.isEmpty()) continue;</span>
+                            // To allow for other content in the file, ignore everything after the first blank space:
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                            if (line.contains(&quot; &quot;)) line = line.substring(0, line.indexOf(&quot; &quot;));</span>
+<span class="nc" id="L184">                            indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(line));</span>
+                        }
+                    }
+                } else {
+<span class="nc" id="L188">                    RDFFormat format = Rio.getParserFormatForFileName(f.getName()).orElse(RDFFormat.TRIG);</span>
+<span class="nc" id="L189">                    MultiNanopubRdfHandler.process(format, f, np -&gt; {</span>
+<span class="nc bnc" id="L190" title="All 4 branches missed.">                        if (useSubindexes &amp;&amp; IndexUtils.isIndex(np)) {</span>
+                            try {
+<span class="nc" id="L192">                                indexCreator.addSubIndex(IndexUtils.castToIndex(np));</span>
+<span class="nc" id="L193">                            } catch (MalformedNanopubException ex) {</span>
+<span class="nc" id="L194">                                throw new RuntimeException(ex);</span>
+<span class="nc" id="L195">                            }</span>
+                        } else {
+<span class="nc" id="L197">                            indexCreator.addElement(np);</span>
+                        }
+<span class="nc" id="L199">                        count++;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                        if (count % 100 == 0) {</span>
+<span class="nc" id="L201">                            System.err.print(count + &quot; nanopubs...\r&quot;);</span>
+                        }
+<span class="nc" id="L203">                    });</span>
+                }
+<span class="nc" id="L205">            }</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">            for (String e : elements) {</span>
+<span class="nc" id="L207">                indexCreator.addElement(SimpleValueFactory.getInstance().createIRI(e));</span>
+<span class="nc" id="L208">            }</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">            for (String s : subindexes) {</span>
+<span class="nc" id="L210">                indexCreator.addSubIndex(SimpleValueFactory.getInstance().createIRI(s));</span>
+<span class="nc" id="L211">            }</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            if (supersededIndex != null) {</span>
+<span class="nc" id="L213">                indexCreator.setSupersededIndex(SimpleValueFactory.getInstance().createIRI(supersededIndex));</span>
+            }
+<span class="nc" id="L215">            indexCreator.finalizeNanopub();</span>
+        } finally {
+<span class="nc" id="L217">            writer.close();</span>
+        }
+<span class="nc" id="L219">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TempUriReplacer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.trusty</a> &gt; <span class="el_source">TempUriReplacer.java</span></div><h1>TempUriReplacer.java</h1><pre class="source lang-java linenums">package org.nanopub.trusty;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFHandler;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.Nanopub;
+
+import java.util.Map;
+
+/**
+ * You can use temporary URIs for your nanopublications that start with &lt;a href=&quot;http://purl.org/nanopub/temp/&quot;&gt;http://purl.org/nanopub/temp/&lt;/a&gt;. These then become
+ * &lt;a href=&quot;https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/&quot;&gt;https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/&lt;/a&gt; before being transformed to
+ * trusty nanopublications, and as final trusty nanopublications have the actual artifact code instead of the placeholder.
+ *
+ * @author Tobias Kuhn
+ */
+public class TempUriReplacer implements RDFHandler {
+
+    /**
+     * The temporary URI prefix for nanopublications.
+     */
+    public static final String tempUri = &quot;http://purl.org/nanopub/temp/&quot;;
+
+    /**
+     * The normalized URI prefix for nanopublications.
+     */
+    public static final String normUri = &quot;https://w3id.org/np/ARTIFACTCODE-PLACEHOLDER/&quot;;
+
+    private String uriPrefix;
+    private RDFHandler nestedHandler;
+    private Map&lt;Resource, IRI&gt; transformMap;
+
+    /**
+     * Creates a new temporary URI replacer.
+     *
+     * @param np            The nanopublication to be transformed.
+     * @param nestedHandler The nested RDF handler that will receive the transformed statements.
+     * @param transformMap  A map to store the transformation of temporary URIs to their final form.
+     */
+<span class="fc" id="L44">    public TempUriReplacer(Nanopub np, RDFHandler nestedHandler, Map&lt;Resource, IRI&gt; transformMap) {</span>
+<span class="fc" id="L45">        this.uriPrefix = np.getUri().stringValue();</span>
+<span class="fc" id="L46">        this.nestedHandler = nestedHandler;</span>
+<span class="fc" id="L47">        this.transformMap = transformMap;</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Checks whether the given nanopublication has a temporary URI.
+     *
+     * @param np The nanopublication to check.
+     * @return True if the nanopublication has a temporary URI, false otherwise.
+     */
+    public static boolean hasTempUri(Nanopub np) {
+<span class="fc" id="L57">        return np.getUri().stringValue().startsWith(tempUri);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles a statement by replacing temporary URIs with the normalized URI prefix.
+     */
+    @Override
+    public void handleStatement(Statement st) throws RDFHandlerException {
+<span class="fc" id="L67">        nestedHandler.handleStatement(SimpleValueFactory.getInstance().createStatement((Resource) replace(st.getSubject()), (IRI) replace(st.getPredicate()), replace(st.getObject()), (Resource) replace(st.getContext())));</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles a namespace by replacing the temporary URI prefix with the normalized URI prefix.
+     */
+    @Override
+    public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (uri.startsWith(uriPrefix)) {</span>
+<span class="fc" id="L78">            uri = uri.replace(uriPrefix, normUri);</span>
+        }
+<span class="fc" id="L80">        nestedHandler.handleNamespace(prefix, uri);</span>
+<span class="fc" id="L81">    }</span>
+
+    private Value replace(Value v) {
+<span class="fc bfc" id="L84" title="All 4 branches covered.">        if (v instanceof IRI &amp;&amp; v.stringValue().startsWith(uriPrefix)) {</span>
+<span class="fc" id="L85">            IRI i = SimpleValueFactory.getInstance().createIRI(v.stringValue().replace(uriPrefix, normUri));</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if (transformMap != null) transformMap.put((IRI) v, i);</span>
+<span class="fc" id="L87">            return i;</span>
+        } else {
+<span class="fc" id="L89">            return v;</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Starts the RDF processing by calling the startRDF method of the nested handler.
+     */
+    @Override
+    public void startRDF() throws RDFHandlerException {
+<span class="fc" id="L100">        nestedHandler.startRDF();</span>
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Ends the RDF processing by calling the endRDF method of the nested handler.
+     */
+    @Override
+    public void endRDF() throws RDFHandlerException {
+<span class="fc" id="L110">        nestedHandler.endRDF();</span>
+<span class="fc" id="L111">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Handles a comment by passing it to the nested handler.
+     */
+    @Override
+    public void handleComment(String comment) throws RDFHandlerException {
+<span class="nc" id="L120">        nestedHandler.handleComment(comment);</span>
+<span class="nc" id="L121">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

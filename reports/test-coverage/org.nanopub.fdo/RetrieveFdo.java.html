@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RetrieveFdo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.fdo</a> &gt; <span class="el_source">RetrieveFdo.java</span></div><h1>RetrieveFdo.java</h1><pre class="source lang-java linenums">package org.nanopub.fdo;
+
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.util.Values;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.ApiResponseEntry;
+import org.nanopub.extra.services.FailedApiCallException;
+import org.nanopub.extra.services.QueryAccess;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Retrieve FDOs (FDO Records) from the nanopub network or handle system.
+ */
+// TODO class that provides the Op.Retrieve operations.
+//      See https://fdo-connect.gitlab.io/ap1/architecture-documentation/main/operation-specification/
+public class RetrieveFdo {
+
+    /**
+     * The query ID for retrieving FDOs by their ID from the nanopub network.
+     */
+    public final static String GET_FDO_QUERY_ID = &quot;RAs0HI_KRAds4w_OOEMl-_ed0nZHFWdfePPXsDHf4kQkU/get-fdo-by-id&quot;;
+
+    private RetrieveFdo() {
+    }  // no instances allowed
+
+    /**
+     * Retrieve the NP/FdoRecord from the nanopub network or handle system, always check the nanopub network first.
+     *
+     * @param iriOrHandle the IRI or handle of the FDO to resolve
+     * @return the FdoRecord corresponding to the IRI or handle
+     * @throws org.nanopub.fdo.FdoNotFoundException if the FDO is not found in either the nanopub network or handle system
+     */
+    public static FdoRecord resolveId(String iriOrHandle) throws FdoNotFoundException {
+        try {
+<span class="fc" id="L48">            Nanopub np = resolveInNanopubNetwork(iriOrHandle);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (np != null) {</span>
+<span class="fc" id="L50">                return new FdoRecord(np);</span>
+            }
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (FdoUtils.looksLikeHandle(iriOrHandle)) {</span>
+<span class="fc" id="L53">                return resolveInHandleSystem(iriOrHandle);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            } else if (FdoUtils.isHandleIri(Values.iri(iriOrHandle))) {</span>
+<span class="fc" id="L55">                return resolveInHandleSystem(FdoUtils.extractHandle(Values.iri(iriOrHandle)));</span>
+            }
+<span class="fc" id="L57">        } catch (Exception e) {</span>
+<span class="fc" id="L58">            throw new FdoNotFoundException(e);</span>
+<span class="nc" id="L59">        }</span>
+<span class="nc" id="L60">        throw new FdoNotFoundException(&quot;Could not find fdo: &quot; + iriOrHandle);</span>
+    }
+
+    /**
+     * Retrieve the newest corresponding Nanopub from the Nanopub network.
+     *
+     * @param iriOrHandle the IRI or handle of the FDO to resolve
+     * @return the Nanopub corresponding to the IRI or handle, or null if not found
+     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     */
+    public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
+<span class="fc" id="L71">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L72">        params.put(&quot;fdoid&quot;, iriOrHandle);</span>
+<span class="fc" id="L73">        ApiResponse apiResponse = QueryAccess.get(GET_FDO_QUERY_ID, params);</span>
+<span class="fc" id="L74">        List&lt;ApiResponseEntry&gt; data = apiResponse.getData();</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (data.isEmpty()) {</span>
+<span class="fc" id="L76">            return null;</span>
+        }
+<span class="fc" id="L78">        String npRef = data.getFirst().get(&quot;np&quot;);</span>
+<span class="fc" id="L79">        return GetNanopub.get(npRef);</span>
+    }
+
+    /**
+     * Retrieve the data from the handle system.
+     *
+     * @param handle the handle of the FDO to resolve
+     * @return the FdoRecord corresponding to the handle
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     * @throws java.net.URISyntaxException           if the URI is malformed
+     * @throws java.io.IOException                   if an I/O error occurs
+     * @throws java.lang.InterruptedException        if the operation is interrupted
+     */
+    public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+<span class="fc" id="L93">        Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);</span>
+<span class="fc" id="L94">        return new FdoRecord(np);</span>
+    }
+
+    /**
+     * Retrieve the NP/FdoRecord Content (DataRef) from the nanopub network or handle system, always check the nanopub network first.
+     *
+     * @param iriOrHandle the IRI or handle of the FDO to resolve
+     * @return an InputStream containing the content of the FDO
+     * @throws java.net.URISyntaxException          if the URI is malformed
+     * @throws java.io.IOException                  if an I/O error occurs
+     * @throws java.lang.InterruptedException       if the operation is interrupted
+     * @throws org.nanopub.fdo.FdoNotFoundException if the FDO is not found
+     */
+    public static InputStream retrieveContentFromId(String iriOrHandle) throws URISyntaxException, IOException, InterruptedException, FdoNotFoundException {
+<span class="fc" id="L108">        FdoRecord fdo = resolveId(iriOrHandle);</span>
+
+<span class="fc" id="L110">        Value contentUrl = fdo.getDataRef();</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (contentUrl == null) {</span>
+<span class="nc" id="L112">            throw new FdoNotFoundException(&quot;FDO has no file / DataRef.&quot;);</span>
+        }
+<span class="fc" id="L114">        HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(contentUrl.stringValue())).build();</span>
+<span class="fc" id="L115">        HttpResponse&lt;InputStream&gt; httpResponse = HttpClient.newHttpClient().send(req, responseInfo -&gt; HttpResponse.BodySubscribers.ofInputStream());</span>
+<span class="fc" id="L116">        return httpResponse.body();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

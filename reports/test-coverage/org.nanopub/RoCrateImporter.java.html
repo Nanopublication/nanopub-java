@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoCrateImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub</a> &gt; <span class="el_source">RoCrateImporter.java</span></div><h1>RoCrateImporter.java</h1><pre class="source lang-java linenums">package org.nanopub;
+
+import com.beust.jcommander.ParameterException;
+import net.trustyuri.TrustyUriException;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.PublishNanopub;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
+
+/**
+ * Create and publish nanopub out of a RoCrate metadata file.
+ */
+<span class="fc" id="L22">public class RoCrateImporter extends CliRunner {</span>
+
+    // The complete url of the ro-crate-metadata.json, including the filename.
+    @com.beust.jcommander.Parameter(description = &quot;Url of RoCrate metadata&quot;, required = true)
+    private String metadataUrl;
+
+    @com.beust.jcommander.Parameter(names = &quot;-l&quot;, description = &quot;write to std.out, no publishing&quot;)
+    private boolean createLocally;
+
+    @com.beust.jcommander.Parameter(names = &quot;-f&quot;, description = &quot;Use this local file for a ro-crate-metadata.json, &quot; +
+            &quot;instead of downloading from metadataUrl.&quot;)
+    private String localFileName;
+
+
+<span class="fc" id="L36">    private ValueFactory vf = SimpleValueFactory.getInstance();</span>
+
+    /**
+     * Main method to run the RoCrateImporter.
+     *
+     * @param args command line arguments, expects the RoCrate metadata URL
+     */
+    public static void main(String[] args) {
+        try {
+<span class="nc" id="L45">            RoCrateImporter obj = CliRunner.initJc(new RoCrateImporter(), args);</span>
+<span class="nc" id="L46">            obj.run();</span>
+<span class="nc" id="L47">        } catch (ParameterException ex) {</span>
+<span class="nc" id="L48">            System.exit(1);</span>
+<span class="nc" id="L49">        } catch (Exception ex) {</span>
+<span class="nc" id="L50">            ex.printStackTrace();</span>
+<span class="nc" id="L51">            System.exit(1);</span>
+<span class="nc" id="L52">        }</span>
+<span class="nc" id="L53">    }</span>
+
+    /**
+     * Runs the RoCrateImporter to parse the RoCrate metadata and either create a local nanopub or publish it.
+     *
+     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     * @throws java.io.IOException                   if there is an I/O error
+     * @throws java.net.URISyntaxException           if the metadata URL is malformed
+     * @throws java.lang.InterruptedException        if the thread is interrupted
+     * @throws net.trustyuri.TrustyUriException      if there is an issue with Trusty URI
+     * @throws java.security.SignatureException      if there is an issue with signing the nanopub
+     * @throws java.security.InvalidKeyException     if the signing key is invalid
+     */
+    public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException {
+
+<span class="fc" id="L68">        InputStream roCreateMetadata = null;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (localFileName != null) {</span>
+<span class="fc" id="L70">            roCreateMetadata = new FileInputStream(localFileName);</span>
+        } else {
+<span class="fc" id="L72">            roCreateMetadata = RoCrateParser.downloadRoCreateMetadataFile(metadataUrl);</span>
+        }
+<span class="fc" id="L74">        String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));</span>
+
+<span class="fc" id="L76">        RoCrateParser parser = new RoCrateParser();</span>
+<span class="fc" id="L77">        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata);</span>
+
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        if (createLocally) {</span>
+<span class="fc" id="L80">            NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);</span>
+        } else {
+<span class="nc" id="L82">            Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());</span>
+<span class="nc" id="L83">            PublishNanopub.publish(signedNp);</span>
+        }
+<span class="fc" id="L85">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

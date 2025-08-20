@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JellyUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">nanopub</a> &gt; <a href="index.source.html" class="el_package">org.nanopub.jelly</a> &gt; <span class="el_source">JellyUtils.java</span></div><h1>JellyUtils.java</h1><pre class="source lang-java linenums">package org.nanopub.jelly;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import eu.neverblink.jelly.convert.rdf4j.Rdf4jConverterFactory;
+import eu.neverblink.jelly.convert.rdf4j.Rdf4jDatatype;
+import eu.neverblink.jelly.core.JellyOptions;
+import eu.neverblink.jelly.core.ProtoDecoder;
+import eu.neverblink.jelly.core.RdfHandler;
+import eu.neverblink.jelly.core.proto.v1.LogicalStreamType;
+import eu.neverblink.jelly.core.proto.v1.PhysicalStreamType;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamFrame;
+import eu.neverblink.jelly.core.proto.v1.RdfStreamOptions;
+import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.stream.Stream;
+
+/**
+ * Utility functions for working with Jelly RDF data.
+ */
+<span class="nc" id="L29">public class JellyUtils {</span>
+
+    /**
+     * Options for Jelly RDF streams that are written to the database.
+     */
+<span class="fc" id="L34">    public static final RdfStreamOptions jellyOptionsForDB = JellyOptions.SMALL_STRICT</span>
+<span class="fc" id="L35">            .clone()</span>
+<span class="fc" id="L36">            .setPhysicalType(PhysicalStreamType.QUADS)</span>
+<span class="fc" id="L37">            .setLogicalType(LogicalStreamType.DATASETS);</span>
+
+    /**
+     * Options for Jelly RDF streams that are transmitted between services.
+     */
+<span class="fc" id="L42">    public static final RdfStreamOptions jellyOptionsForTransmission = JellyOptions.BIG_STRICT</span>
+<span class="fc" id="L43">            .clone()</span>
+<span class="fc" id="L44">            .setPhysicalType(PhysicalStreamType.QUADS)</span>
+<span class="fc" id="L45">            .setLogicalType(LogicalStreamType.DATASETS);</span>
+
+    /**
+     * Write a Nanopub to bytes in the Jelly format to be stored in the database.
+     *
+     * @param np Nanopub
+     * @return Jelly RDF bytes (non-delimited)
+     */
+    public static byte[] writeNanopubForDB(Nanopub np) {
+<span class="nc" id="L54">        JellyWriterRDFHandler handler = new JellyWriterRDFHandler(jellyOptionsForDB);</span>
+<span class="nc" id="L55">        NanopubUtils.propagateToHandler(np, handler);</span>
+<span class="nc" id="L56">        RdfStreamFrame frame = handler.getFrame();</span>
+<span class="nc" id="L57">        return frame.toByteArray();</span>
+    }
+
+    /**
+     * Read a Nanopub from bytes in the Jelly format stored in the database.
+     * &lt;p&gt;
+     * This specialized implementation should be a bit faster than going through RDF4J Rio,
+     * because we are dealing with a special (simpler) case here.
+     *
+     * @param jellyBytes Jelly RDF bytes (non-delimited)
+     * @return Nanopub
+     * @throws org.nanopub.MalformedNanopubException if this is not a valid Nanopub
+     */
+    public static Nanopub readFromDB(byte[] jellyBytes) throws MalformedNanopubException {
+        try {
+<span class="nc" id="L72">            RdfStreamFrame frame = RdfStreamFrame.parseFrom(jellyBytes);</span>
+<span class="nc" id="L73">            return readFromFrame(frame);</span>
+<span class="nc" id="L74">        } catch (InvalidProtocolBufferException e) {</span>
+<span class="nc" id="L75">            throw new MalformedNanopubException(&quot;Failed to parse Jelly RDF bytes as a Nanopub: &quot; + e.getMessage());</span>
+        }
+    }
+
+    /**
+     * Read one Nanopub from an input byte stream in the Jelly format. This can be used on HTTP responses.
+     *
+     * @param is Jelly RDF data (delimited, one frame (!!!))
+     * @return Nanopub
+     * @throws org.nanopub.MalformedNanopubException if this is not a valid Nanopub
+     */
+    public static Nanopub readFromInputStream(InputStream is) throws MalformedNanopubException {
+        try {
+<span class="nc" id="L88">            RdfStreamFrame frame = RdfStreamFrame.parseDelimitedFrom(is);</span>
+<span class="nc" id="L89">            return readFromFrame(frame);</span>
+<span class="nc" id="L90">        } catch (IOException e) {</span>
+<span class="nc" id="L91">            throw new MalformedNanopubException(&quot;Failed to read Jelly RDF from InputStream: &quot; + e.getMessage());</span>
+        }
+    }
+
+    static Nanopub readFromFrame(RdfStreamFrame frame) throws MalformedNanopubException {
+<span class="nc" id="L96">        final ArrayList&lt;Statement&gt; statements = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L97">        final ArrayList&lt;Pair&lt;String, String&gt;&gt; namespaces = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L99">        final var decoder = getDecoder(statements, namespaces);</span>
+<span class="nc" id="L100">        frame.getRows().forEach(decoder::ingestRow);</span>
+
+<span class="nc" id="L102">        return new NanopubImpl(statements, namespaces);</span>
+    }
+
+    static Stream&lt;MaybeNanopub&gt; readFromFrameStream(Stream&lt;RdfStreamFrame&gt; frameStream) {
+<span class="nc" id="L106">        final ArrayList&lt;Statement&gt; statements = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">        final ArrayList&lt;Pair&lt;String, String&gt;&gt; namespaces = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L108">        final var decoder = getDecoder(statements, namespaces);</span>
+
+<span class="nc" id="L110">        return frameStream.map(frame -&gt; {</span>
+            try {
+<span class="nc" id="L112">                statements.clear();</span>
+<span class="nc" id="L113">                namespaces.clear();</span>
+
+<span class="nc" id="L115">                frame.getRows().forEach(decoder::ingestRow);</span>
+<span class="nc" id="L116">                return new MaybeNanopub(</span>
+                        new NanopubImpl(statements, namespaces),
+                        // Extract the counter metadata from the frame
+<span class="nc" id="L119">                        JellyMetadataUtil.tryGetCounterFromMetadata(frame.getMetadata())</span>
+                );
+<span class="nc" id="L121">            } catch (MalformedNanopubException e) {</span>
+<span class="nc" id="L122">                return new MaybeNanopub(e);</span>
+            }
+        });
+    }
+
+    private static ProtoDecoder&lt;Value, Rdf4jDatatype&gt; getDecoder(
+            ArrayList&lt;Statement&gt; statements,
+            ArrayList&lt;Pair&lt;String, String&gt;&gt; namespaces
+    ) {
+<span class="nc" id="L131">        final var quadMaker = Rdf4jConverterFactory.getInstance().decoderConverter();</span>
+<span class="nc" id="L132">        final var handler = new RdfHandler.QuadHandler&lt;Value&gt;() {</span>
+            @Override
+            public void handleNamespace(String prefix, Value namespace) {
+<span class="nc" id="L135">                namespaces.add(Pair.of(prefix, namespace.stringValue()));</span>
+<span class="nc" id="L136">            }</span>
+
+            @Override
+            public void handleQuad(Value subject, Value predicate, Value object, Value graph) {
+<span class="nc" id="L140">                statements.add(quadMaker.makeQuad(subject, predicate, object, graph));</span>
+<span class="nc" id="L141">            }</span>
+        };
+
+<span class="nc" id="L144">        return Rdf4jConverterFactory.getInstance().quadsDecoder(handler, JellyOptions.DEFAULT_SUPPORTED_OPTIONS);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
