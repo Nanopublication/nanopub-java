@@ -1,0 +1,742 @@
+{
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    "https://w3id.org/ro/terms/earth-science#",
+    "https://w3id.org/ro/terms/workflow-run#",
+    "https://w3id.org/ro/terms/test#",
+    {
+      "citeAs": "https://www.w3.org/ns/iana/link-relations/relation#cite-as",
+      "community": "http://w3id.org/ro-id/rohub/model#community",
+      "cdesc": "https://reliance.expertcustomers.ai/vocabulary/cdesc/",
+      "creation_mode": "http://w3id.org/ro-id/rohub/model#creation_mode",
+      "prov": "http://www.w3.org/ns/prov#",
+      "archivedAtTime": "http://purl.org/wf4ever/roevo#archivedAtTime",
+      "archivedBy": "http://purl.org/wf4ever/roevo#archivedBy",
+      "hasArchive": "http://purl.org/wf4ever/roevo#hasArchive",
+      "hasSnapshot": "http://purl.org/wf4ever/roevo#hasSnapshot",
+      "isArchiveOf": "http://purl.org/wf4ever/roevo#isArchiveOf",
+      "isFinalized": "http://purl.org/wf4ever/roevo#isFinalized",
+      "isSnapshotOf": "http://purl.org/wf4ever/roevo#isSnapshotOf",
+      "snapshotedAtTime": "http://purl.org/wf4ever/roevo#snapshotedAtTime",
+      "snapshotedBy": "http://purl.org/wf4ever/roevo#snapshotedBy",
+      "forkedAtTime": "http://purl.org/wf4ever/roevo#forkedAtTime",
+      "forkedBy": "http://purl.org/wf4ever/roevo#forkedBy",
+      "hasFork": "http://purl.org/wf4ever/roevo#hasFork",
+      "asWKT": "http://www.opengis.net/ont/geosparql#asWKT",
+      "hasGeometry": "http://www.opengis.net/ont/geosparql#hasGeometry",
+      "Concept": "https://w3id.org/ro/terms/earth-science#Concept",
+      "FieldOfResearch": "https://w3id.org/ro/terms/earth-science#FieldOfResearch",
+      "IPTC": "https://w3id.org/ro/terms/earth-science#IPTC",
+      "Lemma": "https://w3id.org/ro/terms/earth-science#Lemma",
+      "NASA": "https://w3id.org/ro/terms/earth-science#NASA",
+      "Person1": "https://w3id.org/contentdesc#Person",
+      "Phrase": "https://w3id.org/ro/terms/earth-science#Phrase",
+      "Sentence": "https://w3id.org/ro/terms/earth-science#Sentence",
+      "TimeReference": "https://w3id.org/ro/terms/earth-science#TimeReference",
+      "Domain": "https://w3id.org/contentdesc#Domain",
+      "Organization1": "https://w3id.org/contentdesc#Organization",
+      "Place": "https://w3id.org/contentdesc#Place",
+      "normScore": "https://w3id.org/ro/terms/earth-science#normScore",
+      "path": "https://w3id.org/ro/terms/earth-science#path",
+      "score": "https://w3id.org/ro/terms/earth-science#score",
+      "wikidata": "https://w3id.org/ro/terms/earth-science#wikidata",
+      "doi": "http://purl.org/ontology/bibo/doi",
+      "orcid": "https://w3id.org/dingo#orcid",
+      "template": "https://w3id.org/ro/terms/earth-science#template",
+      "dataType": "https://w3id.org/ro/terms/earth-science#dataType",
+      "datasetManager": "https://w3id.org/ro/terms/earth-science#datasetManager",
+      "minValue": "https://w3id.org/ro/terms/earth-science#minValue",
+      "maxValue": "https://w3id.org/ro/terms/earth-science#maxValue",
+      "status": "https://w3id.org/ro/terms/earth-science#status",
+      "DataCubeCollection": "https://w3id.org/ro/terms/earth-science#DataCubeCollection",
+      "DataCubeProduct": "https://w3id.org/ro/terms/earth-science#DataCubeProduct"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "#4a9c340c-3f55-4473-8ebc-9798b38b791a",
+      "@type": "s:Place",
+      "geo": {
+        "@id": "#c31df009-cac3-4389-9ee6-fc85383fc397"
+      },
+      "identifier": "4a9c340c-3f55-4473-8ebc-9798b38b791a",
+      "name": "POINT (7.0017099363030875 49.229107487031975)"
+    },
+    {
+      "@id": "#c31df009-cac3-4389-9ee6-fc85383fc397",
+      "@type": "GeoCoordinates",
+      "latitude": "7.0017099363030875",
+      "longitude": "49.229107487031975",
+      "name": "POINT (7.0017099363030875 49.229107487031975)"
+    },
+    {
+      "@id": "./",
+      "@type": [
+        "Dataset",
+        "http://purl.org/wf4ever/ro#ResearchObject",
+        "http://purl.org/wf4ever/roevo#LiveRO",
+        "http://purl.org/wf4ever/roevo#ForkedRO"
+      ],
+      "forkedAtTime": "2025-05-28 12:08:14.740275+00:00",
+      "forkedBy": "https://orcid.org/0000-0002-1784-2920",
+      "about": {
+        "@id": "http://eurovoc.europa.eu/3949"
+      },
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentLocation": {
+        "@id": "#4a9c340c-3f55-4473-8ebc-9798b38b791a"
+      },
+      "contentSize": 0,
+      "contentUrl": "https://api.rohub.org/api/ros/588ada8d-a185-402e-8b60-3c17435110ee/crate/download/",
+      "contributor": {
+        "@id": "mailto:elifsu@simula.no"
+      },
+      "copyrightHolder": {
+        "@id": "https://ror.org/00vn06n10"
+      },
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-17 17:15:18.830605+00:00",
+      "dateModified": "2025-05-28 12:41:54.042079+00:00",
+      "datePublished": "2025-05-17 17:15:18.830605+00:00",
+      "description": "## Flooding in Saarland\n\nWe showcase the usage of JupyterGIS for creating geographical maps showing the HQ 100 flooding zones in Saarland along with images from Wikimedia Commons.\n\nThese notebooks showcase how to use JupyterGIS.\n\nWe use JupyterGIS on the UseGalaxy.eu. The tool can be launched from [JupyterGIS in Galaxy Europe](https://usegalaxy.eu/root?tool_id=interactive_tool_jupytergis_notebook). Please prior to use it, register to [usegalaxy.eu](https://usegalaxy.eu/login/start) and authenticate yourself before starting it.\n\nTo help new users get started, there are two tutorials available:\n- [Intro to JupyterGIS](https://jupytergis.readthedocs.io/en/latest/user_guide/tutorials/01-intro/index.html) a step-by-step guide for new users.\n- [Collaborative Features Tutorial](https://training.galaxyproject.org/training-material/topics/climate/tutorials/jupytergis_collaboration/tutorial.html) \u2014 a guide for exploring real-time editing and shared annotations. \n\n\n![Hamburg Urban Data Poral for flood analysis](https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/static/saarland_map_output.png)",
+      "encodingFormat": "application/ld+json",
+      "funder": {
+        "@id": "http://w3id.org/ro-id/rohub/model#funder/92fc96c5-54eb-4780-a390-e8b5515c76ac"
+      },
+      "funding": {
+        "@id": "https://ror.org/00k4n6c32::101188256"
+      },
+      "hasPart": [
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/67c0cbcb-4067-4ad1-ad2c-06e98aff714b"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/6070fc7c-fb39-4834-bf01-46bca1f56201"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/28c35687-b990-4137-bbdf-a1a2bc7f8920"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/e4b83969-de3c-477a-9859-64fa5611645f"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/43b70064-85b8-452a-ba63-7ab11c065e62"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/476d48c6-2114-4dfa-997d-a99e7b9c4839"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/6ee33c6a-6049-483f-84a0-e337c9c9e4d2"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/8f18d6ab-38e3-45af-bc36-2935a5b33eca"
+        },
+        {
+          "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/38bc1561-4eac-4e09-8bb3-b87a9502f889"
+        }
+      ],
+      "identifier": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee",
+      "keywords": [
+        "flooding",
+        "saarland"
+      ],
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
+      },
+      "name": [
+        "Flooding in Saarland (Germany) with JupyterGIS",
+        "Flooding in Saarland (Germany) with JupyterGIS - fork"
+      ],
+      "publisher": {
+        "@id": "https://ror.org/00vn06n10"
+      },
+      "creation_mode": "MANUAL",
+      "hasGeometry": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/24ad51f6-d7b4-4695-b93c-6de4f9a7aabe",
+      "wasDerivedFrom": "https://w3id.org/ro-id/15e54fde-611f-49cc-8951-e15c650f0cb2",
+      "Domain": "https://w3id.org/ro-id/12fea67b-4679-4543-9d57-44440a7620c6",
+      "Place": [
+        "https://w3id.org/ro-id/d26768e8-b368-4ad2-9d32-dca81dce9e2b",
+        "https://w3id.org/ro-id/f1474448-73d6-4d7e-919e-0134246ed966"
+      ],
+      "Concept": [
+        "https://w3id.org/ro-id/fbd83c19-edd6-4933-a434-2c5bf9aaea6d",
+        "https://w3id.org/ro-id/2e473be3-ac4f-4804-a05f-395a06f0c30f",
+        "https://w3id.org/ro-id/3d07f69d-a2cb-4a97-8b2f-24c1f5946691",
+        "https://w3id.org/ro-id/246eb18d-bf7f-4521-b47f-b88e24ece2d7",
+        "https://w3id.org/ro-id/0540cebe-9b10-45af-9db4-604e7a64ed60",
+        "https://w3id.org/ro-id/67a0f1a1-ee4c-4c41-b064-6fa4355a9792",
+        "https://w3id.org/ro-id/c84eae9f-3b68-453e-8301-a561c19ae1c9",
+        "https://w3id.org/ro-id/1d1be42a-f453-4705-82e3-e10d610807d5",
+        "https://w3id.org/ro-id/a5af6ff5-a513-4ceb-9c10-942d1c6b6b38",
+        "https://w3id.org/ro-id/7ec7d31a-cfc7-412e-9e5a-1e6145094ab3",
+        "https://w3id.org/ro-id/0567f806-00e3-4120-9e01-229e58a87f26",
+        "https://w3id.org/ro-id/b8426843-c9aa-40de-bf19-934feb77f475",
+        "https://w3id.org/ro-id/b172b4b1-fafb-4774-82bd-06d1b46dc290"
+      ],
+      "FieldOfResearch": [
+        "https://w3id.org/ro-id/c32fb828-0fb1-4761-a71e-b79058f885d1",
+        "https://w3id.org/ro-id/e80f74dd-9268-4215-85d5-210bf3b4eaad"
+      ],
+      "Lemma": [
+        "https://w3id.org/ro-id/76ca8190-4c71-4c02-b5d9-51aabcfcf912",
+        "https://w3id.org/ro-id/a246196d-8e26-4342-b638-15f1663bfb07",
+        "https://w3id.org/ro-id/1d39b6ad-25f6-4b03-8aca-fc77c1ed5330",
+        "https://w3id.org/ro-id/35deaca0-ec97-468c-8c2c-4dab85ee0fd8",
+        "https://w3id.org/ro-id/4186caba-311c-4fe7-b9a5-7bedfaa9333d",
+        "https://w3id.org/ro-id/637a6d26-e7ec-4001-90f6-aa42a4f6a943",
+        "https://w3id.org/ro-id/941022ff-01b0-4e3a-83d0-054f39ad6bc2"
+      ],
+      "NASA": [
+        "https://w3id.org/ro-id/2dc852b1-ee72-4e32-8770-baeddd6ee513",
+        "https://w3id.org/ro-id/8c2959e5-d5d3-4ffa-954f-db48cc009558"
+      ],
+      "Phrase": [
+        "https://w3id.org/ro-id/47e46601-34db-4ed2-a16c-c7e63e3ff817",
+        "https://w3id.org/ro-id/4baa42ad-b336-483a-bc75-9c2cf6ed7640",
+        "https://w3id.org/ro-id/d825b7f9-7b4c-4086-9946-a9230dbb2155",
+        "https://w3id.org/ro-id/572c411e-83d9-4fd8-b581-9724b2674243",
+        "https://w3id.org/ro-id/3b2b42dd-d686-49fa-bd25-a3e8ec0bbd82"
+      ],
+      "Sentence": [
+        "https://w3id.org/ro-id/51f2e644-1083-4bc8-8184-ee7a7fe0a1e6",
+        "https://w3id.org/ro-id/500e0dba-c679-42fe-8afe-b8f8e1349831",
+        "https://w3id.org/ro-id/de2ddebf-664e-4694-bd50-106d0429f112"
+      ],
+      "cite-as": "Fouilloux, Anne, and EL\u0130FSU F\u0130L\u0130Z. \"Flooding in Saarland (Germany) with JupyterGIS.\" ROHub. May 17 ,2025. https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee."
+    },
+    {
+      "@id": "http://eurovoc.europa.eu/3949",
+      "@type": "s:DefinedTerm",
+      "description": "",
+      "name": "Applied sciences"
+    },
+    {
+      "@id": "http://w3id.org/ro-id/rohub/model#funder/92fc96c5-54eb-4780-a390-e8b5515c76ac",
+      "@type": "Organization",
+      "doi": "00k4n6c32",
+      "name": "European Commission"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-1784-2920",
+      "@type": "foaf:Agent",
+      "affiliation": "Simula Research Laboratory",
+      "email": "annef@simula.no",
+      "name": "Anne Fouilloux",
+      "orcid": "0000-0002-1784-2920"
+    },
+    {
+      "@id": "https://ror.org/00k4n6c32::101188256",
+      "@type": "Grant",
+      "funder": {
+        "@id": "http://w3id.org/ro-id/rohub/model#funder/92fc96c5-54eb-4780-a390-e8b5515c76ac"
+      },
+      "identifier": "00k4n6c32::101188256",
+      "name": "FAIR to Adapt to Climate Change",
+      "title": "FAIR to Adapt to Climate Change"
+    },
+    {
+      "@id": "https://ror.org/00vn06n10",
+      "@type": [
+        "s:Organization",
+        "foaf:Agent"
+      ],
+      "email": "post@simula.no",
+      "identifier": "00vn06n10",
+      "name": "Simula Research Laboratory"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/0540cebe-9b10-45af-9db4-604e7a64ed60",
+      "@type": "Concept",
+      "name": "Germany",
+      "normScore": "4.342273307790549",
+      "score": "3.4"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/0567f806-00e3-4120-9e01-229e58a87f26",
+      "@type": "Concept",
+      "name": "edit",
+      "normScore": "7.407407407407407",
+      "score": "5.8"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/12fea67b-4679-4543-9d57-44440a7620c6",
+      "@type": "Domain",
+      "name": "publishing",
+      "normScore": "100.0",
+      "score": "0.8"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/15e54fde-611f-49cc-8951-e15c650f0cb2",
+      "@type": "http://purl.org/wf4ever/ro#ResearchObject"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/1d1be42a-f453-4705-82e3-e10d610807d5",
+      "@type": "Concept",
+      "name": "drug addict",
+      "normScore": "4.597701149425288",
+      "score": "3.6"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/1d39b6ad-25f6-4b03-8aca-fc77c1ed5330",
+      "@type": "Lemma",
+      "name": "http",
+      "normScore": "20.777027027027025",
+      "score": "12.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/246eb18d-bf7f-4521-b47f-b88e24ece2d7",
+      "@type": "Concept",
+      "name": "notebook",
+      "normScore": "8.045977011494253",
+      "score": "6.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/2dc852b1-ee72-4e32-8770-baeddd6ee513",
+      "@type": "NASA",
+      "name": "earth resources and remote sensing",
+      "normScore": "100.0",
+      "score": "0.9689354300498962"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/2e473be3-ac4f-4804-a05f-395a06f0c30f",
+      "@type": "Concept",
+      "name": "tutorial",
+      "normScore": "12.132822477650064",
+      "score": "9.5"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/35deaca0-ec97-468c-8c2c-4dab85ee0fd8",
+      "@type": "Lemma",
+      "name": "map",
+      "normScore": "8.277027027027028",
+      "score": "4.9"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/3b2b42dd-d686-49fa-bd25-a3e8ec0bbd82",
+      "@type": "Phrase",
+      "name": "zones in Saarland",
+      "normScore": "12.794612794612794",
+      "score": "7.6"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/3d07f69d-a2cb-4a97-8b2f-24c1f5946691",
+      "@type": "Concept",
+      "name": "zone",
+      "normScore": "5.874840357598978",
+      "score": "4.6"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/4186caba-311c-4fe7-b9a5-7bedfaa9333d",
+      "@type": "Lemma",
+      "name": "editing",
+      "normScore": "8.783783783783784",
+      "score": "5.2"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/47e46601-34db-4ed2-a16c-c7e63e3ff817",
+      "@type": "Phrase",
+      "name": "real-time editing",
+      "normScore": "23.737373737373737",
+      "score": "14.1"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/4baa42ad-b336-483a-bc75-9c2cf6ed7640",
+      "@type": "Phrase",
+      "name": "JupyterGIS in Galaxy Europe",
+      "normScore": "25.084175084175083",
+      "score": "14.9"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/500e0dba-c679-42fe-8afe-b8f8e1349831",
+      "@type": "Sentence",
+      "name": "We showcase the usage of JupyterGIS for creating geographical maps showing the HQ 100 flooding zones in Saarland along with images from Wikimedia Commons.",
+      "normScore": "29.9618320610687",
+      "score": "15.7"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/51f2e644-1083-4bc8-8184-ee7a7fe0a1e6",
+      "@type": "Sentence",
+      "name": "We use JupyterGIS on the UseGalaxy.eu. The tool can be launched from [JupyterGIS in Galaxy Europe](https://usegalaxy.eu/root?tool_id=interactive_tool_jupytergis_notebook). Please prior to use it, register to [usegalaxy.eu](https://usegalaxy.eu/login/start) and authenticate yourself before starting it.",
+      "normScore": "36.83206106870229",
+      "score": "19.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/572c411e-83d9-4fd8-b581-9724b2674243",
+      "@type": "Phrase",
+      "name": "usage of JupyterGIS",
+      "normScore": "21.043771043771045",
+      "score": "12.5"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/24ad51f6-d7b4-4695-b93c-6de4f9a7aabe",
+      "@type": [
+        "http://www.opengis.net/ont/sf#Point",
+        "http://www.opengis.net/ont/geosparql#Geometry"
+      ],
+      "asWKT": "POINT (7.0017099363030875 49.229107487031975)"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/28c35687-b990-4137-bbdf-a1a2bc7f8920",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "SoftwareDocumentation"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://fair2adapt.github.io/saarland-flooding/",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-17 17:25:04.424197+00:00",
+      "dateModified": "2025-05-28 12:08:08.625385+00:00",
+      "description": "Jupyter Book (HTML rendered version) to showcase JupyterGiS in action using flooding event data from Saarland, Germany, available via the Urban Data Portal.",
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
+      },
+      "name": "Saarland flooding Jupyter Book (rendered HTML)",
+      "sdDatePublished": "2025-05-17 17:25:04.424197+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/38bc1561-4eac-4e09-8bb3-b87a9502f889",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "http://purl.org/wf4ever/wf4ever#Script"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/environment.yml",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-28 06:22:48.754139+00:00",
+      "dateModified": "2025-05-28 12:08:06.376487+00:00",
+      "description": "environment.yml (Conda environment for Python JupyterGIS)",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "environment.yml (JupyterGIS environment)",
+      "sdDatePublished": "2025-05-28 06:22:48.754139+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/43b70064-85b8-452a-ba63-7ab11c065e62",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "http://purl.org/wf4ever/wf4ever#Script"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/environment.lock.yml",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-28 06:07:06.113808+00:00",
+      "dateModified": "2025-05-28 12:08:09.102494+00:00",
+      "description": "Python environment for executing the associated Jupyter notebook.",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "environment.lock.yml (conda environment)",
+      "sdDatePublished": "2025-05-28 06:07:06.113808+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/476d48c6-2114-4dfa-997d-a99e7b9c4839",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "https://w3id.org/ro/terms/earth-science#JupyterNotebook"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/Flood_protection_line_Saarland.ipynb",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-28 06:08:36.012998+00:00",
+      "dateModified": "2025-05-28 12:08:06.812992+00:00",
+      "description": "Flood_protection_line_Saarland.ipynb is a Jupyter Notebook .",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "Flood_protection_line_Saarland.ipynb (Jupyter Notebook)",
+      "sdDatePublished": "2025-05-28 06:08:36.012998+00:00",
+      "https://schema.org/softwareRequirements": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/85ba47e2-3608-40f7-ade8-bfd40a8fc19d"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/6070fc7c-fb39-4834-bf01-46bca1f56201",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "https://w3id.org/ro/terms/earth-science#SWDocumentation"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://github.com/FAIR2Adapt/saarland-flooding.git",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-17 17:23:09.941511+00:00",
+      "dateModified": "2025-05-28 12:08:09.818748+00:00",
+      "description": "This Github repository contains the latest version of the jupyter notebooks showcasing JupyterGIS.",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "Saarland-flooding (Github repository)",
+      "sdDatePublished": "2025-05-17 17:23:09.941511+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/67c0cbcb-4067-4ad1-ad2c-06e98aff714b",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "http://purl.org/wf4ever/roterms#Sketch"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentSize": 2788165,
+      "contentUrl": "https://api.rohub.org/api/resources/67c0cbcb-4067-4ad1-ad2c-06e98aff714b/download/",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-17 17:20:36.705228+00:00",
+      "dateModified": "2025-05-28 12:08:08.186162+00:00",
+      "description": "Flood in Saarland with JupyterGIS.",
+      "encodingFormat": "image/png",
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
+      },
+      "name": "flood_in_saarland_with_jqgis.png",
+      "sdDatePublished": "2025-05-17 17:20:36.705228+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/6ee33c6a-6049-483f-84a0-e337c9c9e4d2",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "https://w3id.org/ro/terms/earth-science#JupyterNotebook"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/get_typename_from_WFS.ipynb",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-28 06:10:42.644758+00:00",
+      "dateModified": "2025-05-28 12:08:04.665895+00:00",
+      "description": "## Get data layer names from WFS service URL\n\n**Learn how to get the typename (e.g. data layers) which are requested for querying WFS services**",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "get_typename_from_WFS.ipynb (Jupyter Notebook)",
+      "sdDatePublished": "2025-05-28 06:10:42.644758+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/8f18d6ab-38e3-45af-bc36-2935a5b33eca",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "https://w3id.org/ro/terms/earth-science#JupyterNotebook"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/Hamburg_urban_data_portal_WFS.ipynb",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-28 06:12:02.439269+00:00",
+      "dateModified": "2025-05-28 12:08:14.693939+00:00",
+      "description": "## Get data from the Hamburg Urban Data Portal using WFS\n\n**Learn how to access vector data from the Hamburg Urban Data Portal with WFS**",
+      "license": {
+        "@id": "https://opensource.org/licenses/MIT"
+      },
+      "name": "Hamburg_urban_data_portal_WFS.ipynb (Jupyter Notebook)",
+      "sdDatePublished": "2025-05-28 06:12:02.439269+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/resources/e4b83969-de3c-477a-9859-64fa5611645f",
+      "@type": [
+        "File",
+        "http://purl.org/wf4ever/wf4ever#Resource",
+        "http://purl.org/wf4ever/ro#ResearchObject"
+      ],
+      "author": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "contentUrl": "https://doi.org/10.5281/zenodo.15470110",
+      "contributor": [],
+      "creator": {
+        "@id": "https://orcid.org/0000-0002-1784-2920"
+      },
+      "dateCreated": "2025-05-20 08:44:57.687928+00:00",
+      "dateModified": "2025-05-28 12:08:07.043396+00:00",
+      "description": "Saarland flooding (Galaxy History) with outputs and executed notebooks.",
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/legalcode"
+      },
+      "name": "Saarland flooding (Galaxy History)",
+      "sdDatePublished": "2025-05-20 08:44:57.687928+00:00"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/637a6d26-e7ec-4001-90f6-aa42a4f6a943",
+      "@type": "Lemma",
+      "name": "tutorial",
+      "normScore": "14.020270270270272",
+      "score": "8.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/67a0f1a1-ee4c-4c41-b064-6fa4355a9792",
+      "@type": "Concept",
+      "name": "annotation",
+      "normScore": "5.874840357598978",
+      "score": "4.6"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/76ca8190-4c71-4c02-b5d9-51aabcfcf912",
+      "@type": "Lemma",
+      "name": "notebook",
+      "normScore": "9.628378378378377",
+      "score": "5.7"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/7ec7d31a-cfc7-412e-9e5a-1e6145094ab3",
+      "@type": "Concept",
+      "name": "real time",
+      "normScore": "4.725415070242657",
+      "score": "3.7"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/8c2959e5-d5d3-4ffa-954f-db48cc009558",
+      "@type": "NASA",
+      "name": "geosciences",
+      "normScore": "100.0",
+      "score": "0.9689354300498962"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/941022ff-01b0-4e3a-83d0-054f39ad6bc2",
+      "@type": "Lemma",
+      "name": "JupyterGIS",
+      "normScore": "24.155405405405403",
+      "score": "14.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/a246196d-8e26-4342-b638-15f1663bfb07",
+      "@type": "Lemma",
+      "name": "Saarland",
+      "normScore": "14.358108108108107",
+      "score": "8.5"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/a5af6ff5-a513-4ceb-9c10-942d1c6b6b38",
+      "@type": "Concept",
+      "name": "headquarters",
+      "normScore": "4.725415070242657",
+      "score": "3.7"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/b172b4b1-fafb-4774-82bd-06d1b46dc290",
+      "@type": "Concept",
+      "name": "usage",
+      "normScore": "6.257982120051087",
+      "score": "4.9"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/b8426843-c9aa-40de-bf19-934feb77f475",
+      "@type": "Concept",
+      "name": "map",
+      "normScore": "7.0242656449553005",
+      "score": "5.5"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/c32fb828-0fb1-4761-a71e-b79058f885d1",
+      "@type": "FieldOfResearch",
+      "name": "atmospheric sciences",
+      "normScore": "100.0",
+      "score": "0.571331262588501"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/c84eae9f-3b68-453e-8301-a561c19ae1c9",
+      "@type": "Concept",
+      "name": "http",
+      "normScore": "17.11366538952746",
+      "score": "13.4"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/d26768e8-b368-4ad2-9d32-dca81dce9e2b",
+      "@type": "Place",
+      "name": "Germany",
+      "wikidata": "https://www.wikidata.org/wiki/Q183"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/d825b7f9-7b4c-4086-9946-a9230dbb2155",
+      "@type": "Phrase",
+      "name": "features tutorial",
+      "normScore": "17.34006734006734",
+      "score": "10.3"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/de2ddebf-664e-4694-bd50-106d0429f112",
+      "@type": "Sentence",
+      "name": "Flooding in Saarland (Germany) with JupyterGIS.",
+      "normScore": "33.20610687022901",
+      "score": "17.4"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/e80f74dd-9268-4215-85d5-210bf3b4eaad",
+      "@type": "FieldOfResearch",
+      "name": "earth sciences",
+      "normScore": "100.0",
+      "score": "0.571331262588501"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/f1474448-73d6-4d7e-919e-0134246ed966",
+      "@type": "Place",
+      "name": "Saarland",
+      "wikidata": "https://www.wikidata.org/wiki/Q1201"
+    },
+    {
+      "@id": "https://w3id.org/ro-id/fbd83c19-edd6-4933-a434-2c5bf9aaea6d",
+      "@type": "Concept",
+      "name": "Saarland",
+      "normScore": "11.877394636015328",
+      "score": "9.3"
+    },
+    {
+      "@id": "mailto:elifsu@simula.no",
+      "@type": "foaf:Agent",
+      "email": "elifsu@simula.no",
+      "name": "EL\u0130FSU F\u0130L\u0130Z"
+    },
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      },
+      "about": {
+        "@id": "./"
+      }
+    }
+  ]
+}
