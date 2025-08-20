@@ -126,10 +126,7 @@ and not the jar file).
 
 ## Test Coverage
 
-Latest reports:
-
-- [org.nanopub.fdo](reports/test-coverage/org.nanopub.fdo/index.html)
-- [entire package](reports/test-coverage/index.html)
+You can find the static pages of the last test coverage report in [reports/test-coverage/](reports/test-coverage/).
 
 Create the file target/jacoco.exec which includes the test coverage information in a binary format.
 ```bash
