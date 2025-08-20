@@ -15,6 +15,8 @@ source code documentation.
 
 The FDO-specific classes are documented [here](https://javadoc.io/doc/org.nanopub/nanopub/latest/org/nanopub/fdo/package-summary.html).
 
+[Here](https://nanopublication.github.io/nanopub-java/) you can find more documentation.
+
 
 ## Usage as Java Library
 
@@ -62,14 +64,6 @@ And then nanopublications can be created and published programmatically like thi
 ```
 
 For the complete code checkout ``UsageExamples.java``. 
-
-
-## Documentation
-
-See the [JavaDocs](https://javadoc.io/doc/org.nanopub/nanopub/latest/index.html) for the API and
-source code documentation.
-
-[Here](https://nanopublication.github.io/nanopub-java/) you can find more documentation.
 
 
 ## Usage of Unix Command-Line
