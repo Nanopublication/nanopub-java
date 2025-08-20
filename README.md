@@ -125,6 +125,12 @@ same commands as for the `np` script above, but using the locally compiled code
 and not the jar file).
 
 ## Test Coverage
+
+Latest reports:
+
+- [org.nanopub.fdo](reports/test-coverage/org.nanopub.fdo/index.html)
+- [entire package](reports/test-coverage/index.html)
+
 Create the file target/jacoco.exec which includes the test coverage information in a binary format.
 ```bash
 mvn clean verify
@@ -132,6 +138,10 @@ mvn clean verify
 To create a HTML report out of jacoco.exec (target/site/jacoco/index.html) use:
 ```bash
 mvn jacoco:report
+```
+Overwrite report in `reports` with latest report:
+```bash
+cp -r target/site/jacoco reports/test-coverage
 ```
 
 
