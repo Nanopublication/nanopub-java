@@ -138,6 +138,7 @@ mvn jacoco:report
 ```
 Overwrite report in `reports` with latest report:
 ```bash
+rm -r reports/test-coverage
 cp -r target/site/jacoco reports/test-coverage
 ```
 Make plain-text versions of overview tables:
