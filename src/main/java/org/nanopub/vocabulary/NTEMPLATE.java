@@ -159,7 +159,12 @@ public class NTEMPLATE {
     /**
      * Predicate indicating the language attribute for a literal placeholder.
      */
-    public static final IRI HAS_LANGUATE_ATTRIBUTE = Utils.createIRI(NAMESPACE, "hasLanguageAttribute");
+    public static final IRI HAS_LANGUAGE_TAG = Utils.createIRI(NAMESPACE, "hasLanguageTag");
+
+    /**
+     * Predicate indicating the language attribute for a literal placeholder.
+     */
+    public static final IRI HAS_LANGUAGE_ATTRIBUTE = Utils.createIRI(NAMESPACE, "hasLanguageAttribute");
 
     /**
      * Predicate indicating a prefix.

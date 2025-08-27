@@ -10,9 +10,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class SCHEMA {
 
-    public static final String PREFIX = "schema";
-
     public static final String NAMESPACE = "http://schema.org/";
+
+    public static final String PREFIX = "schema";
 
     public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);
 
