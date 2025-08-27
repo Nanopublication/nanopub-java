@@ -18,4 +18,8 @@ public class FDOF {
 
     public static final IRI IS_MATERIALIZED_BY = Utils.createIRI(NAMESPACE, "isMaterializedBy");
 
+    public static final IRI HAS_ENCODING_FORMAT = Utils.createIRI(NAMESPACE, "hasEncodingFormat");
+
+    public static final IRI HAS_METADATA = Utils.createIRI(NAMESPACE, "hasMetadata");
+
 }
