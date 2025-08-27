@@ -23,7 +23,9 @@ import org.nanopub.fdo.FdoRecord;
 import org.nanopub.fdo.FdoUtils;
 import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.fdo.rest.HandleResolver;
+import org.nanopub.vocabulary.FDOC;
 import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.NTEMPLATE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -146,10 +148,10 @@ public class GeneralIntegrationTestsIT {
         Set<Statement> shaclShape = createShaclValidationShapeFromJson(httpResponse, shapeIri);
         creator.addAssertionStatements(shaclShape);
 
-        creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.PROFILE_CLASS_IRI);
-        creator.addAssertionStatement(fdoIri, FdoUtils.SHAPE_LINK_IRI, Values.iri(shapeIri + "nodeShape"));
+        creator.addAssertionStatement(fdoIri, RDF.TYPE, FDOC.FDO_PROFILE);
+        creator.addAssertionStatement(fdoIri, FDOC.HAS_SHAPE, Values.iri(shapeIri + "nodeShape"));
 
-        creator.addPubinfoStatement(NPX.HAS_NANOPUB_TYPE, Values.iri("https://w3id.org/np/o/ntemplate/AssertionTemplate"));
+        creator.addPubinfoStatement(NPX.HAS_NANOPUB_TYPE, NTEMPLATE.ASSERTION_TEMPLATE);
         creator.addNamespace(SHACL.PREFIX, SHACL.NAMESPACE);
         Nanopub np = creator.finalizeNanopub(true);
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());

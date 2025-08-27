@@ -13,6 +13,8 @@ import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.fdo.rest.gson.Value;
 import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
@@ -67,8 +69,8 @@ public class FdoNanopubCreator {
         fdoRecord.setId(fdoIri);
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
-        creator.addNamespace("fdof", "https://w3id.org/fdof/ontology#");
-        creator.addAssertionStatement(fdoIri, RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
+        creator.addNamespace(FDOF.PREFIX, FDOF.NAMESPACE);
+        creator.addAssertionStatement(fdoIri, RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
         creator.addPubinfoStatement(npIri, NPX.INTRODUCES, fdoIri);
         creator.addAssertionStatements(fdoRecord.buildStatements().toArray(new Statement[0]));
 
@@ -109,11 +111,11 @@ public class FdoNanopubCreator {
 
         for (Value v : response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
-                record.setAttribute(DATA_REF_IRI, vf.createIRI(String.valueOf(v.data.value)));
+                record.setAttribute(FDOF.IS_MATERIALIZED_BY, vf.createIRI(String.valueOf(v.data.value)));
                 continue;
             }
             if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
-                    !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
+                !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
                 // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
                 String dataValue = String.valueOf(v.data.value);
                 String dataValueToImport;
@@ -124,7 +126,7 @@ public class FdoNanopubCreator {
                 }
                 IRI fdoHandleIri;
                 if (v.type.contains("/")) {
-                    fdoHandleIri = vf.createIRI(FDO_URI_PREFIX + v.type);
+                    fdoHandleIri = vf.createIRI(HDL.NAMESPACE + v.type);
                 } else {
                     fdoHandleIri = vf.createIRI(FDO_TYPE_PREFIX + v.type);
                 }

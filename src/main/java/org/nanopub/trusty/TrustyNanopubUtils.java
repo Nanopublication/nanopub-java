@@ -13,6 +13,8 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.PAV;
+import org.nanopub.vocabulary.RDFG;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -59,12 +61,12 @@ public class TrustyNanopubUtils {
             }
             writer.handleNamespace(RDF.PREFIX, RDF.NAMESPACE);
             writer.handleNamespace(RDFS.PREFIX, RDFS.NAMESPACE);
-            writer.handleNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
+            writer.handleNamespace(RDFG.PREFIX, RDFG.NAMESPACE);
             writer.handleNamespace(XSD.PREFIX, XSD.NAMESPACE);
             writer.handleNamespace(OWL.PREFIX, OWL.NAMESPACE);
             writer.handleNamespace("dct", DCTERMS.NAMESPACE);
             writer.handleNamespace("dce", DC.NAMESPACE);
-            writer.handleNamespace("pav", "http://purl.org/pav/");
+            writer.handleNamespace(PAV.PREFIX, PAV.NAMESPACE);
             writer.handleNamespace(NP.PREFIX, NP.NAMESPACE);
             for (Statement st : NanopubUtils.getStatements(nanopub)) {
                 writer.handleStatement(st);

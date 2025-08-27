@@ -7,6 +7,8 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.Nanopub;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 
 /**
  * Utility class for handling FAIR Digital Objects (FDOs).
@@ -14,36 +16,6 @@ import org.nanopub.Nanopub;
 public final class FdoUtils {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    /**
-     * The prefix for FDOs.
-     */
-    public static final String FDO_URI_PREFIX = "https://hdl.handle.net/";
-
-    /**
-     * The IRI for the RDF type of a FAIR Digital Object (FDO).
-     */
-    public static final IRI RDF_TYPE_FDO = vf.createIRI("https://w3id.org/fdof/ontology#FAIRDigitalObject");
-
-    /**
-     * The IRI for the FDO has part relation.
-     */
-    public static final IRI FDO_HAS_PART = vf.createIRI("https://purl.org/dc/terms/hasPart");
-
-    /**
-     * The IRI for the FDO derived from relation.
-     */
-    public static final IRI FDO_DERIVES_FROM = vf.createIRI("https://www.w3.org/ns/prov#wasDerivedFrom");
-
-    /**
-     * The IRI for the FDO profile.
-     */
-    public static final IRI PROFILE_CLASS_IRI = vf.createIRI("https://w3id.org/fdoc/o/terms/FdoProfile");
-
-    /**
-     * The IRI for the FDO profile conformsTo relation.
-     */
-    public static final IRI PROFILE_IRI = vf.createIRI("http://purl.org/dc/terms/conformsTo");
 
     /**
      * The handle for the FDO profile.
@@ -61,16 +33,6 @@ public final class FdoUtils {
     public static final String PROFILE_HANDLE = "21.T11966/FdoProfile";
 
     /**
-     * The IRI for the FDO shape link relation.
-     */
-    public static final IRI SHAPE_LINK_IRI = vf.createIRI("https://w3id.org/fdoc/o/terms/hasShape");
-
-    /**
-     * The IRI for the FDO data reference relation.
-     */
-    public static final IRI DATA_REF_IRI = vf.createIRI("https://w3id.org/fdof/ontology#isMaterializedBy");
-
-    /**
      * The handle for the FDO data reference.
      */
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";
@@ -86,7 +48,7 @@ public final class FdoUtils {
      * @return the IRI of the FDO
      */
     public static IRI toIri(String fdoHandle) {
-        return vf.createIRI(FDO_URI_PREFIX + fdoHandle);
+        return vf.createIRI(HDL.NAMESPACE + fdoHandle);
     }
 
     /**
@@ -98,8 +60,8 @@ public final class FdoUtils {
      */
     public static String extractHandle(Resource iri) {
         String iriString = iri.toString();
-        if (iriString.startsWith(FDO_URI_PREFIX)) {
-            return iriString.substring(FDO_URI_PREFIX.length());
+        if (iriString.startsWith(HDL.NAMESPACE)) {
+            return iriString.substring(HDL.NAMESPACE.length());
         }
         return iriString;
     }
@@ -145,7 +107,7 @@ public final class FdoUtils {
      */
     public static IRI createIri(String handleOrUrl) {
         if (looksLikeHandle(handleOrUrl)) {
-            return vf.createIRI(FDO_URI_PREFIX + handleOrUrl);
+            return vf.createIRI(HDL.NAMESPACE + handleOrUrl);
         } else if (looksLikeUrl(handleOrUrl)) {
             return vf.createIRI(handleOrUrl);
         }
@@ -160,7 +122,7 @@ public final class FdoUtils {
      */
     public static boolean isFdoNanopub(Nanopub np) {
         for (Statement st : np.getAssertion()) {
-            if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(RDF_TYPE_FDO)) {
+            if (st.getPredicate().equals(RDF.TYPE) && st.getObject().equals(FDOF.FAIR_DIGITAL_OBJECT)) {
                 return true;
             }
         }

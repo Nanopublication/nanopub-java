@@ -8,11 +8,11 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
-import static org.nanopub.fdo.FdoUtils.RDF_TYPE_FDO;
 
 class FdoUtilsTest {
 
@@ -21,7 +21,7 @@ class FdoUtilsTest {
     @Test
     void extractHandleWithValidHandleIri() {
         String suffix = VALID_HANDLE;
-        Resource iri = iri(FDO_URI_PREFIX + suffix);
+        Resource iri = iri(HDL.NAMESPACE + suffix);
         String result = FdoUtils.extractHandle(iri);
         assertEquals(suffix, result);
     }
@@ -48,7 +48,7 @@ class FdoUtilsTest {
 
     @Test
     void looksLikeUrlWithValidUrl() {
-        String url = FDO_URI_PREFIX + VALID_HANDLE;
+        String url = HDL.NAMESPACE + VALID_HANDLE;
         boolean result = FdoUtils.looksLikeUrl(url);
         assertTrue(result);
     }
@@ -62,7 +62,7 @@ class FdoUtilsTest {
 
     @Test
     void isHandleIriWithValidHandleIri() {
-        Resource iri = iri(FDO_URI_PREFIX + VALID_HANDLE);
+        Resource iri = iri(HDL.NAMESPACE + VALID_HANDLE);
         boolean result = FdoUtils.isHandleIri(iri);
         assertTrue(result);
     }
@@ -78,14 +78,14 @@ class FdoUtilsTest {
     void createIriWithHandle() {
         String handle = VALID_HANDLE;
         IRI result = FdoUtils.createIri(handle);
-        assertEquals(FDO_URI_PREFIX + handle, result.stringValue());
+        assertEquals(HDL.NAMESPACE + handle, result.stringValue());
     }
 
     @Test
     void createIriWithUrl() {
-        String url = FDO_URI_PREFIX + VALID_HANDLE;
+        String url = HDL.NAMESPACE + VALID_HANDLE;
         IRI result = FdoUtils.createIri(url);
-        assertEquals(FDO_URI_PREFIX + VALID_HANDLE, result.stringValue());
+        assertEquals(HDL.NAMESPACE + VALID_HANDLE, result.stringValue());
     }
 
     @Test
@@ -98,13 +98,13 @@ class FdoUtilsTest {
     void toIriWithHandle() {
         String handle = VALID_HANDLE;
         IRI result = FdoUtils.toIri(handle);
-        assertEquals(iri(FDO_URI_PREFIX + handle), result);
+        assertEquals(iri(HDL.NAMESPACE + handle), result);
     }
 
     @Test
     void isFdoNanopubWithValidFdoNanopub() throws MalformedNanopubException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
-        creator.addAssertionStatement(TestUtils.anyIri, RDF.TYPE, RDF_TYPE_FDO);
+        creator.addAssertionStatement(TestUtils.anyIri, RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
         creator.addProvenanceStatement(TestUtils.anyIri, TestUtils.anyIri);
         creator.addPubinfoStatement(TestUtils.anyIri, TestUtils.anyIri);
 

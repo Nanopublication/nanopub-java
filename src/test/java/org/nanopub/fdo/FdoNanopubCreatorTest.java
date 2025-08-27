@@ -22,6 +22,8 @@ import org.nanopub.fdo.rest.ResponsePrinter;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
@@ -47,7 +49,7 @@ public class FdoNanopubCreatorTest {
 
     @Test
     void prepareNanopubCreator() {
-        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "ExampleFdoToUpdate";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
 
@@ -59,20 +61,20 @@ public class FdoNanopubCreatorTest {
 
         assertTrue(fdoNanopubCreator.getCurrentAssertionStatements().stream()
                 .anyMatch(statement -> statement.getSubject().equals(fdoIri)
-                        && statement.getPredicate().equals(RDF.TYPE)
-                        && statement.getObject().equals(FdoUtils.RDF_TYPE_FDO))
+                                       && statement.getPredicate().equals(RDF.TYPE)
+                                       && statement.getObject().equals(FDOF.FAIR_DIGITAL_OBJECT))
         );
 
         assertTrue(fdoNanopubCreator.getCurrentPubinfoStatements().stream().anyMatch(statement ->
                 statement.getSubject().equals(npIri)
-                        && statement.getPredicate().equals(NPX.INTRODUCES)
-                        && statement.getObject().equals(fdoIri))
+                && statement.getPredicate().equals(NPX.INTRODUCES)
+                && statement.getObject().equals(fdoIri))
         );
     }
 
     public void createWithFdoIri() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
@@ -88,7 +90,7 @@ public class FdoNanopubCreatorTest {
     @Test
     public void createWithFdoSuffix() throws MalformedNanopubException {
         String fdoSuffix = "abc-table";
-        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "abc-table-fdo";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, fdoSuffix);
@@ -104,7 +106,7 @@ public class FdoNanopubCreatorTest {
     @Test
     void testFdoNanopubCreation() throws MalformedNanopubException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
-        IRI fdoProfile = iri("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoIri(record, FdoUtils.createIri(fdoHandle));
@@ -192,8 +194,8 @@ public class FdoNanopubCreatorTest {
     void testLooksLikeUrl() {
         assertTrue(FdoUtils.looksLikeUrl("https://this_may_be_an_url.com"));
         assertTrue(FdoUtils.looksLikeUrl("https://www.knowledgepixesl.com"));
-        assertTrue(FdoUtils.looksLikeUrl("https://hdl.handle.net/api/handles/4263537/4000"));
-        assertTrue(FdoUtils.looksLikeUrl("https://hdl.handle.net"));
+        assertTrue(FdoUtils.looksLikeUrl(HDL.NAMESPACE + "api/handles/4263537/4000"));
+        assertTrue(FdoUtils.looksLikeUrl(HDL.NAMESPACE));
 
         assertFalse(FdoUtils.looksLikeUrl("https://this_is_no_url"));
         assertFalse(FdoUtils.looksLikeUrl("this is not a valid url"));

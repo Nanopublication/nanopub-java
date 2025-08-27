@@ -5,6 +5,8 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
@@ -12,15 +14,14 @@ import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.nanopub.fdo.FdoUtils.DATA_REF_IRI;
-import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 
 /**
  * This class stores a changeable record of an FDO. It can come from an existing Handle-based FDO,
@@ -51,13 +52,13 @@ public class FdoRecord implements Serializable {
      * @param dataRef optional
      */
     public FdoRecord(IRI profile, String label, IRI dataRef) {
-        this.setAttribute(RDF.TYPE, FdoUtils.RDF_TYPE_FDO);
-        this.setAttribute(FdoUtils.PROFILE_IRI, profile);
+        this.setAttribute(RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
+        this.setAttribute(DCTERMS.CONFORMS_TO, profile);
         if (label != null) {
             this.setAttribute(RDFS.LABEL, vf.createLiteral(label));
         }
         if (dataRef != null) {
-            this.setAttribute(DATA_REF_IRI, dataRef);
+            this.setAttribute(FDOF.IS_MATERIALIZED_BY, dataRef);
         }
     }
 
@@ -88,14 +89,14 @@ public class FdoRecord implements Serializable {
         for (var entry : tuples.entrySet()) {
             statements.add(vf.createStatement(this.id, entry.getKey(), entry.getValue()));
         }
-        if (tuples.containsKey(DATA_REF_IRI) && !aggregates.isEmpty()) {
+        if (tuples.containsKey(FDOF.IS_MATERIALIZED_BY) && !aggregates.isEmpty()) {
             throw new RuntimeException("Complex FDOs cannot have DATA_REF");
         }
         for (IRI aggregate : aggregates) {
-            statements.add(vf.createStatement(this.id, FdoUtils.FDO_HAS_PART, aggregate));
+            statements.add(vf.createStatement(this.id, DCTERMS.HAS_PART, aggregate));
         }
         for (IRI derive : derivesFrom) {
-            statements.add(vf.createStatement(this.id, FdoUtils.FDO_DERIVES_FROM, derive));
+            statements.add(vf.createStatement(this.id, PROV.WAS_DERIVED_FROM, derive));
         }
         return statements;
     }
@@ -140,8 +141,7 @@ public class FdoRecord implements Serializable {
      * @return the profile IRI as a String
      */
     public String getProfile() {
-        String profile = tuples.get(FdoUtils.PROFILE_IRI).stringValue();
-        return profile;
+        return tuples.get(DCTERMS.CONFORMS_TO).stringValue();
     }
 
     /**
@@ -163,7 +163,7 @@ public class FdoRecord implements Serializable {
      * @return the schema URL as a String, or null if not set
      */
     public String getSchemaUrl() {
-        Value schemaEntry = tuples.get(vf.createIRI(FDO_URI_PREFIX + SCHEMA_ID));
+        Value schemaEntry = tuples.get(vf.createIRI(HDL.NAMESPACE + SCHEMA_ID));
         if (schemaEntry != null) {
             // TODO check if the schemaEntry is a valid JSON Schema reference
             // assume the entry looks like {"$ref": "https://the-url"}
@@ -196,7 +196,7 @@ public class FdoRecord implements Serializable {
      * @param dataRef the data reference IRI as a String, must not be null
      */
     public void setDataRef(String dataRef) {
-        tuples.put(FdoUtils.DATA_REF_IRI, vf.createIRI(dataRef));
+        tuples.put(FDOF.IS_MATERIALIZED_BY, vf.createIRI(dataRef));
     }
 
     /**
@@ -205,7 +205,7 @@ public class FdoRecord implements Serializable {
      * @return the data reference Value, or null if not set
      */
     public Value getDataRef() {
-        return tuples.get(FdoUtils.DATA_REF_IRI);
+        return tuples.get(FDOF.IS_MATERIALIZED_BY);
     }
 
     /**

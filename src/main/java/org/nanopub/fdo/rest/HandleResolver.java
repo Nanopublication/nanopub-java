@@ -2,6 +2,7 @@ package org.nanopub.fdo.rest;
 
 import com.google.gson.Gson;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
+import org.nanopub.vocabulary.HDL;
 
 import java.io.IOException;
 import java.net.URI;
@@ -18,7 +19,7 @@ public class HandleResolver {
     /**
      * The base URI for the Handle.
      */
-    public final static String BASE_URI = "https://hdl.handle.net/api/handles/";
+    public final static String BASE_URI = HDL.NAMESPACE + "api/handles/";
 
     private HttpClient client = HttpClient.newHttpClient();
 

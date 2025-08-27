@@ -18,6 +18,7 @@ import org.nanopub.extra.services.FailedApiCallException;
 import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
+import org.nanopub.vocabulary.HDL;
 
 import java.io.File;
 import java.io.IOException;
@@ -117,7 +118,7 @@ class RetrieveFdoTest {
     @Test
     void resolveIdWithValidHandleIriFromSystem() throws FdoNotFoundException, MalformedNanopubException, IOException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        String handleIri = FdoUtils.FDO_URI_PREFIX + handle;
+        String handleIri = HDL.NAMESPACE + handle;
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
         FdoRecord fdoRecord = new FdoRecord(nanopub);
 
@@ -150,7 +151,7 @@ class RetrieveFdoTest {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
             assertThrows(FdoNotFoundException.class, () -> RetrieveFdo.retrieveContentFromId(handle));
-            }
+        }
     }
 
     @Test

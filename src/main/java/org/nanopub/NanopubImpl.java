@@ -21,6 +21,7 @@ import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NP;
+import org.nanopub.vocabulary.RDFG;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -133,20 +134,20 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
     }
 
     private static final String nanopubViaSPARQLQuery =
-            // TODO concat the query with the namespace prefixes and namespaces
-            "prefix np: <http://www.nanopub.org/nschema#> " +
-                    "prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> " +
-                    "prefix this: <@> " +
-                    "select ?G ?S ?P ?O where { " +
-                    "  { " +
-                    "    graph ?G { this: a np:Nanopublication } " +
-                    "  } union { " +
-                    "    graph ?H { this: a np:Nanopublication } . " +
-                    "    graph ?H { { this: np:hasAssertion ?G } union { this: np:hasProvenance ?G } " +
-                    "        union { this: np:hasPublicationInfo ?G } } " +
-                    "  } " +
-                    "  graph ?G { ?S ?P ?O } " +
-                    "}";
+            "prefix " + NP.PREFIX + ": <" + NP.NAMESPACE + "> " +
+            "prefix " + RDFG.PREFIX + ": <" + RDFG.NAMESPACE + "> " +
+            "prefix this: <@> " +
+            "select ?G ?S ?P ?O where { " +
+            "  { " +
+            "    graph ?G { this: a " + NP.PREFIX + ":" + NP.NAMESPACE + " } " +
+            "  } union { " +
+            "    graph ?H { this: a " + NP.PREFIX + ":" + NP.NAMESPACE + " } . " +
+            "    graph ?H { { this: " + NP.PREFIX + ":" + NP.HAS_ASSERTION + "?G }" +
+            "       union { this: " + NP.PREFIX + ":" + NP.HAS_PROVENANCE + " ?G } " +
+            "       union { this: " + NP.PREFIX + ":" + NP.HAS_PUBINFO + " ?G } } " +
+            "  } " +
+            "  graph ?G { ?S ?P ?O } " +
+            "}";
 
     /**
      * Creates a new NanopubImpl instance from the given repository and nanopublication URI.
@@ -692,21 +693,21 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
             return Objects.equals(nanopubUri, nanopub.nanopubUri);
         } else {
             return unusedPrefixesRemoved == nanopub.unusedPrefixesRemoved &&
-                    tripleCount == nanopub.tripleCount &&
-                    byteCount == nanopub.byteCount &&
-                    Objects.equals(nanopubUri, nanopub.nanopubUri) &&
-                    Objects.equals(headUri, nanopub.headUri) &&
-                    Objects.equals(assertionUri, nanopub.assertionUri) &&
-                    Objects.equals(provenanceUri, nanopub.provenanceUri) &&
-                    Objects.equals(pubinfoUri, nanopub.pubinfoUri) &&
-                    Objects.equals(graphUris, nanopub.graphUris) &&
-                    Objects.equals(head, nanopub.head) &&
-                    Objects.equals(assertion, nanopub.assertion) &&
-                    Objects.equals(provenance, nanopub.provenance) &&
-                    Objects.equals(pubinfo, nanopub.pubinfo) &&
-                    Objects.equals(statements, nanopub.statements) &&
-                    Objects.equals(nsPrefixes, nanopub.nsPrefixes) &&
-                    Objects.equals(ns, nanopub.ns);
+                   tripleCount == nanopub.tripleCount &&
+                   byteCount == nanopub.byteCount &&
+                   Objects.equals(nanopubUri, nanopub.nanopubUri) &&
+                   Objects.equals(headUri, nanopub.headUri) &&
+                   Objects.equals(assertionUri, nanopub.assertionUri) &&
+                   Objects.equals(provenanceUri, nanopub.provenanceUri) &&
+                   Objects.equals(pubinfoUri, nanopub.pubinfoUri) &&
+                   Objects.equals(graphUris, nanopub.graphUris) &&
+                   Objects.equals(head, nanopub.head) &&
+                   Objects.equals(assertion, nanopub.assertion) &&
+                   Objects.equals(provenance, nanopub.provenance) &&
+                   Objects.equals(pubinfo, nanopub.pubinfo) &&
+                   Objects.equals(statements, nanopub.statements) &&
+                   Objects.equals(nsPrefixes, nanopub.nsPrefixes) &&
+                   Objects.equals(ns, nanopub.ns);
         }
     }
 

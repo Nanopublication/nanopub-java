@@ -5,9 +5,12 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.nanopub.fdo.rest.gson.ParsedSchemaResponse;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 
 import java.io.IOException;
 import java.net.URI;
@@ -68,7 +71,7 @@ public class ValidateFdo {
     private static Set<Statement> addTypeStatement(FdoRecord fdoRecord) {
         Set<Statement> data = fdoRecord.buildStatements();
         Statement first = data.toArray(new Statement[0])[0];
-        data.add(vf.createStatement(first.getSubject(), RDF.TYPE, RDF_TYPE_FDO));
+        data.add(vf.createStatement(first.getSubject(), RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT));
         return data;
     }
 
@@ -111,13 +114,13 @@ public class ValidateFdo {
                 shaclShape.add(vf.createStatement(propertyShape, SHACL.MIN_COUNT, vf.createLiteral(1)));
             }
             if (s.equals(PROFILE_HANDLE) || s.equals(PROFILE_HANDLE_1) || s.equals(PROFILE_HANDLE_2)) {
-                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, PROFILE_IRI));
+                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, DCTERMS.CONFORMS_TO));
             } else {
-                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, vf.createIRI(FDO_URI_PREFIX + s)));
+                shaclShape.add(vf.createStatement(propertyShape, SHACL.PATH, vf.createIRI(HDL.NAMESPACE + s)));
             }
             shaclShape.add(vf.createStatement(nodeShape, SHACL.PROPERTY, propertyShape));
         }
-        shaclShape.add(vf.createStatement(nodeShape, SHACL.TARGET_CLASS, RDF_TYPE_FDO));
+        shaclShape.add(vf.createStatement(nodeShape, SHACL.TARGET_CLASS, FDOF.FAIR_DIGITAL_OBJECT));
         shaclShape.add(vf.createStatement(nodeShape, RDF.TYPE, SHACL.NODE_SHAPE));
 
         return shaclShape;

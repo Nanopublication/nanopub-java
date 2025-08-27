@@ -4,6 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterAll;
@@ -19,6 +21,8 @@ import org.nanopub.extra.security.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
+import org.nanopub.vocabulary.FDOF;
+import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
@@ -35,7 +39,6 @@ import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
 import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
 import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
-import static org.nanopub.fdo.FdoUtils.FDO_URI_PREFIX;
 import static org.nanopub.utils.TestUtils.vf;
 
 @ExtendWith(MockFileServiceExtension.class)
@@ -80,10 +83,10 @@ class FdoRecordTest {
         FdoRecord record = new FdoRecord(fdoProfile, label, null);
 
         assertNotNull(record);
-        assertEquals(FdoUtils.RDF_TYPE_FDO, record.getAttribute(RDF.TYPE));
-        assertEquals(record.getAttribute(FdoUtils.PROFILE_IRI), fdoProfile);
+        assertEquals(FDOF.FAIR_DIGITAL_OBJECT, record.getAttribute(RDF.TYPE));
+        assertEquals(record.getAttribute(DCTERMS.CONFORMS_TO), fdoProfile);
         assertEquals(label, record.getAttribute(RDFS.LABEL).stringValue());
-        assertNull(record.getAttribute(FdoUtils.DATA_REF_IRI));
+        assertNull(record.getAttribute(FDOF.IS_MATERIALIZED_BY));
         assertNull(record.getId());
         assertNull(record.getOriginalNanopub());
     }
@@ -97,10 +100,10 @@ class FdoRecordTest {
         FdoRecord record = new FdoRecord(fdoProfile, label, Values.iri(dataRef));
 
         assertNotNull(record);
-        assertEquals(FdoUtils.RDF_TYPE_FDO, record.getAttribute(RDF.TYPE));
-        assertEquals(record.getAttribute(FdoUtils.PROFILE_IRI), fdoProfile);
+        assertEquals(FDOF.FAIR_DIGITAL_OBJECT, record.getAttribute(RDF.TYPE));
+        assertEquals(record.getAttribute(DCTERMS.CONFORMS_TO), fdoProfile);
         assertEquals(label, record.getAttribute(RDFS.LABEL).stringValue());
-        assertEquals(record.getAttribute(FdoUtils.DATA_REF_IRI), Values.iri(dataRef));
+        assertEquals(record.getAttribute(FDOF.IS_MATERIALIZED_BY), Values.iri(dataRef));
         assertNull(record.getId());
         assertNull(record.getOriginalNanopub());
     }
@@ -113,10 +116,10 @@ class FdoRecordTest {
         FdoRecord record = new FdoRecord(fdoProfile, null, Values.iri(dataRef));
 
         assertNotNull(record);
-        assertEquals(FdoUtils.RDF_TYPE_FDO, record.getAttribute(RDF.TYPE));
-        assertEquals(record.getAttribute(FdoUtils.PROFILE_IRI), fdoProfile);
+        assertEquals(FDOF.FAIR_DIGITAL_OBJECT, record.getAttribute(RDF.TYPE));
+        assertEquals(record.getAttribute(DCTERMS.CONFORMS_TO), fdoProfile);
         assertNull(record.getAttribute(RDFS.LABEL));
-        assertEquals(record.getAttribute(FdoUtils.DATA_REF_IRI), Values.iri(dataRef));
+        assertEquals(record.getAttribute(FDOF.IS_MATERIALIZED_BY), Values.iri(dataRef));
         assertNull(record.getId());
         assertNull(record.getOriginalNanopub());
     }
@@ -200,8 +203,8 @@ class FdoRecordTest {
         FdoRecord record = new FdoRecord(fdoProfile, label, null);
 
         assertEquals(label, record.getAttribute(RDFS.LABEL).stringValue());
-        assertEquals(fdoProfile, record.getAttribute(FdoUtils.PROFILE_IRI));
-        assertNull(record.getAttribute(FdoUtils.DATA_REF_IRI));
+        assertEquals(fdoProfile, record.getAttribute(DCTERMS.CONFORMS_TO));
+        assertNull(record.getAttribute(FDOF.IS_MATERIALIZED_BY));
     }
 
     @Test
@@ -222,7 +225,7 @@ class FdoRecordTest {
         String schemaUrl = "https://example.org/schema.json";
         FdoRecord record = new FdoRecord(fdoProfile, null, Values.iri(schemaUrl));
 
-        record.setAttribute(Values.iri(FDO_URI_PREFIX + SCHEMA_ID),
+        record.setAttribute(Values.iri(HDL.NAMESPACE + SCHEMA_ID),
                 literal("{\"$ref\": \"" + schemaUrl + "\"}"));
 
         assertEquals(schemaUrl, record.getSchemaUrl());
@@ -284,20 +287,20 @@ class FdoRecordTest {
         Set<Statement> statements = record.buildStatements();
         assertTrue(statements.contains(vf.createStatement(
                 record.getId(),
-                FdoUtils.FDO_HAS_PART,
+                DCTERMS.HAS_PART,
                 Values.iri(aggregate1)
         )));
 
         assertTrue(statements.contains(vf.createStatement(
                 record.getId(),
-                FdoUtils.FDO_HAS_PART,
+                DCTERMS.HAS_PART,
                 Values.iri(aggregate2)
         )));
 
         assertTrue(statements.contains(vf.createStatement(
                 record.getId(),
-                FdoUtils.FDO_HAS_PART,
-                Values.iri(FDO_URI_PREFIX + aggregate3)
+                DCTERMS.HAS_PART,
+                Values.iri(HDL.NAMESPACE + aggregate3)
         )));
     }
 
@@ -317,13 +320,13 @@ class FdoRecordTest {
         Set<Statement> statements = record.buildStatements();
         assertTrue(statements.contains(vf.createStatement(
                 record.getId(),
-                FdoUtils.FDO_DERIVES_FROM,
+                PROV.WAS_DERIVED_FROM,
                 derives1
         )));
 
         assertTrue(statements.contains(vf.createStatement(
                 record.getId(),
-                FdoUtils.FDO_DERIVES_FROM,
+                PROV.WAS_DERIVED_FROM,
                 derives2
         )));
     }
@@ -359,7 +362,7 @@ class FdoRecordTest {
             Nanopub np = fdoRecord.getOriginalNanopub();
             assertTrue(creator.getCurrentPubinfoStatements().stream().anyMatch(st ->
                     NPX.SUPERSEDES.equals(st.getPredicate()) &&
-                            np.getUri().equals(st.getObject())
+                    np.getUri().equals(st.getObject())
             ));
             assertEquals(np.getProvenance().size(), creator.getCurrentProvenanceStatements().size());
         }

@@ -13,6 +13,7 @@ import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.PAV;
+import org.nanopub.vocabulary.RDFG;
 import org.nanopub.vocabulary.SCHEMA;
 
 import java.io.*;
@@ -248,7 +249,7 @@ public class Import extends CliRunner {
             npCreator.addNamespace("", npIriString);
             npCreator.addNamespace(RDF.NS);
             npCreator.addNamespace(RDFS.NS);
-            npCreator.addNamespace("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/");
+            npCreator.addNamespace(RDFG.PREFIX, RDFG.NAMESPACE);
             npCreator.addNamespace(XSD.NS);
             npCreator.addNamespace(OWL.NS);
             npCreator.addNamespace("dct", DCTERMS.NAMESPACE);

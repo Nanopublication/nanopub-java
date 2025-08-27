@@ -18,6 +18,7 @@ import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.fdo.FdoNanopubCreator;
 import org.nanopub.fdo.FdoRecord;
+import org.nanopub.vocabulary.HDL;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -38,7 +39,7 @@ public class MySandboxIT {
 
     //     @Test
     public void exampleCreateWithFdoIri() throws MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, IOException {
-        IRI fdoProfile = vf.createIRI("https://hdl.handle.net/21.T11966/365ff9576c26ca6053db");
+        IRI fdoProfile = vf.createIRI(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "ExampleFdoToUpdate";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
         NanopubCreator creator = FdoNanopubCreator.createWithFdoSuffix(record, "FdoExample");

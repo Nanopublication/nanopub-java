@@ -17,6 +17,7 @@ import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
+import org.nanopub.vocabulary.RDFG;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ public class NanopubUtils {
     static {
         defaultNamespaces.add(Pair.of(RDF.PREFIX, RDF.NAMESPACE));
         defaultNamespaces.add(Pair.of(RDFS.PREFIX, RDFS.NAMESPACE));
-        defaultNamespaces.add(Pair.of("rdfg", "http://www.w3.org/2004/03/trix/rdfg-1/"));
+        defaultNamespaces.add(Pair.of(RDFG.PREFIX, RDFG.NAMESPACE));
         defaultNamespaces.add(Pair.of(XSD.PREFIX, XSD.NAMESPACE));
         defaultNamespaces.add(Pair.of(OWL.PREFIX, OWL.NAMESPACE));
         defaultNamespaces.add(Pair.of("dct", DCTERMS.NAMESPACE));
