@@ -22,7 +22,7 @@ public class NPA {
     /**
      * Prefix for the hash values stored in the admin graph.
      */
-    public static final IRI HASH_PREFIX = Utils.createIRI(NAMESPACE, "hash");
+    public static final IRI HASH = Utils.createIRI(NAMESPACE, "hash");
 
     /**
      * IRI for the repo init ID.
