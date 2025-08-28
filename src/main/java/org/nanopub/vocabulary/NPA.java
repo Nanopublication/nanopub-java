@@ -67,7 +67,7 @@ public class NPA {
     /**
      * IRI for the nanopub repository ID.
      */
-    public static final IRI THIS_REPO_ID = Utils.createIRI(NAMESPACE, "thisRepo");
+    public static final IRI THIS_REPO = Utils.createIRI(NAMESPACE, "thisRepo");
 
     /**
      * IRI for the nanopub coverage item.
@@ -132,17 +132,17 @@ public class NPA {
     /**
      * IRI for the has artifact code relation.
      */
-    public static final IRI HAS_ARTIFACT_CODE = Utils.createIRI(NAMESPACE, "artifactCode");
+    public static final IRI ARTIFACT_CODE = Utils.createIRI(NAMESPACE, "artifactCode");
 
     /**
      * IRI for the is introduction of relation.
      */
-    public static final IRI IS_INTRO_OF = Utils.createIRI(NAMESPACE, "isIntroductionOf");
+    public static final IRI IS_INTRODUCTION_OF = Utils.createIRI(NAMESPACE, "isIntroductionOf");
 
     /**
      * IRI for the declares pubkey relation.
      */
-    public static final IRI DECLARES_KEY = Utils.createIRI(NAMESPACE, "declaresPubkey");
+    public static final IRI DECLARES_PUBKEY = Utils.createIRI(NAMESPACE, "declaresPubkey");
 
     /**
      * IRI for the has filter literal relation.
