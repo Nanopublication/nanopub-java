@@ -35,7 +35,7 @@ public class QueryCall {
             apiCall.run();
             while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(200);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
