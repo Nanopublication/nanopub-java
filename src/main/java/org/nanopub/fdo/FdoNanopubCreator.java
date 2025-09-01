@@ -8,6 +8,7 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
@@ -44,7 +45,7 @@ public class FdoNanopubCreator {
      * @param fdoIri    the IRI of the FDO record
      * @return a NanopubCreator instance ready to create a Nanopub
      */
-    public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) {
+    public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) throws NanopubAlreadyFinalizedException {
         IRI npIri = vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
@@ -56,7 +57,7 @@ public class FdoNanopubCreator {
      * @param fdoSuffix the suffix to be appended to the FDO IRI
      * @return a NanopubCreator instance ready to create a Nanopub
      */
-    public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) {
+    public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) throws NanopubAlreadyFinalizedException {
         String npIriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         String fdoIriString = npIriString + fdoSuffix;
         IRI fdoIri = vf.createIRI(fdoIriString);
@@ -65,7 +66,7 @@ public class FdoNanopubCreator {
         return prepareNanopubCreator(fdoRecord, fdoIri, npIri);
     }
 
-    static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) {
+    static NanopubCreator prepareNanopubCreator(FdoRecord fdoRecord, IRI fdoIri, IRI npIri) throws NanopubAlreadyFinalizedException {
         fdoRecord.setId(fdoIri);
         NanopubCreator creator = new NanopubCreator(npIri);
         creator.addDefaultNamespaces();
@@ -87,7 +88,7 @@ public class FdoNanopubCreator {
      * @throws java.io.IOException                   if there is an error during the HTTP request to the handle system
      * @throws java.lang.InterruptedException        if the thread is interrupted while waiting for the HTTP request to complete
      */
-    public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+    public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, NanopubAlreadyFinalizedException {
         FdoRecord record = createFdoRecordFromHandleSystem(id);
 
         IRI fdoIri = FdoUtils.createIri(id);

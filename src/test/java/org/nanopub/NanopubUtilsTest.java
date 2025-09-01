@@ -36,7 +36,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getStatementsMinimal() throws MalformedNanopubException {
+    void getStatementsMinimal() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         // Create valid nanopub
@@ -72,7 +72,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void writeToStream() throws MalformedNanopubException {
+    void writeToStream() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -92,7 +92,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void writeToString() throws MalformedNanopubException, IOException {
+    void writeToString() throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
 
         RDFFormat format = RDFFormat.JSONLD; // TODO NullPointerException with TrustyNanopubUtils.STNP_FORMAT
@@ -102,7 +102,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithoutLabelAssertionReturnsNull() throws MalformedNanopubException {
+    void getLabelWithoutLabelAssertionReturnsNull() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         // Create nanopub with Label
@@ -122,7 +122,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithIntroLabel() throws MalformedNanopubException {
+    void getLabelWithIntroLabel() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         String introducedObject = "https://knowledgepixels.com/nanopubIri#introducedObject";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
@@ -145,7 +145,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInAssertionWithRDFS() throws MalformedNanopubException {
+    void getLabelWithLabelInAssertionWithRDFS() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -166,7 +166,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInAssertionWithDC() throws MalformedNanopubException {
+    void getLabelWithLabelInAssertionWithDC() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -190,7 +190,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInProvenanceWithRDFS() throws MalformedNanopubException {
+    void getLabelWithLabelInProvenanceWithRDFS() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -211,7 +211,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInProvenanceWithDC() throws MalformedNanopubException {
+    void getLabelWithLabelInProvenanceWithDC() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -232,7 +232,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInPubInfoWithRDFS() throws MalformedNanopubException {
+    void getLabelWithLabelInPubInfoWithRDFS() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -254,7 +254,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getLabelWithLabelInPubInfoWithDC() throws MalformedNanopubException {
+    void getLabelWithLabelInPubInfoWithDC() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String label = "My Label";
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
@@ -277,7 +277,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getDescription() throws MalformedNanopubException {
+    void getDescription() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
 
         String description = "My Description";
@@ -298,7 +298,7 @@ public class NanopubUtilsTest {
     }
 
     @Test
-    void getTypes() throws MalformedNanopubException {
+    void getTypes() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         Set<IRI> types = NanopubUtils.getTypes(nanopub);
         // This is an extremely minimal test, some more assertions were nice

@@ -4,6 +4,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NP;
@@ -57,7 +58,7 @@ public abstract class NanopubIndexCreator {
      *
      * @param np The nanopublication to add.
      */
-    public void addElement(Nanopub np) {
+    public void addElement(Nanopub np) throws NanopubAlreadyFinalizedException {
         addElement(np.getUri());
     }
 
@@ -66,8 +67,8 @@ public abstract class NanopubIndexCreator {
      *
      * @param npUri The URI of the nanopublication to add.
      */
-    public void addElement(IRI npUri) {
-        if (finalized) throw new RuntimeException("Already finalized");
+    public void addElement(IRI npUri) throws NanopubAlreadyFinalizedException {
+        if (finalized) throw new NanopubAlreadyFinalizedException();
         if (npCreator == null || itemCount >= NanopubIndex.MAX_SIZE) {
             newNpCreator();
         }
@@ -92,7 +93,7 @@ public abstract class NanopubIndexCreator {
      *
      * @param npc The nanopublication index to add as a sub-index.
      */
-    public void addSubIndex(NanopubIndex npc) {
+    public void addSubIndex(NanopubIndex npc) throws NanopubAlreadyFinalizedException {
         addSubIndex(npc.getUri());
     }
 
@@ -101,8 +102,8 @@ public abstract class NanopubIndexCreator {
      *
      * @param npcUri The URI of the nanopublication index to add as a sub-index.
      */
-    public void addSubIndex(IRI npcUri) {
-        if (finalized) throw new RuntimeException("Already finalized");
+    public void addSubIndex(IRI npcUri) throws NanopubAlreadyFinalizedException {
+        if (finalized) throw new NanopubAlreadyFinalizedException();
         if (npCreator == null || itemCount >= NanopubIndex.MAX_SIZE) {
             newNpCreator();
         }
@@ -115,7 +116,7 @@ public abstract class NanopubIndexCreator {
      *
      * @param npc The nanopublication index that is superseded.
      */
-    public void setSupersededIndex(NanopubIndex npc) {
+    public void setSupersededIndex(NanopubIndex npc) throws NanopubAlreadyFinalizedException {
         setSupersededIndex(npc.getUri());
     }
 
@@ -124,16 +125,16 @@ public abstract class NanopubIndexCreator {
      *
      * @param npcUri The URI of the nanopublication index that is superseded.
      */
-    public void setSupersededIndex(IRI npcUri) {
-        if (finalized) throw new RuntimeException("Already finalized");
+    public void setSupersededIndex(IRI npcUri) throws NanopubAlreadyFinalizedException {
+        if (finalized) throw new NanopubAlreadyFinalizedException();
         supersededIndexUri = npcUri;
     }
 
     /**
      * Finalizes the nanopublication, making it immutable and ready for use.
      */
-    public void finalizeNanopub() {
-        if (finalized) throw new RuntimeException("Already finalized");
+    public void finalizeNanopub() throws NanopubAlreadyFinalizedException {
+        if (finalized) throw new NanopubAlreadyFinalizedException();
         if (npCreator == null) {
             newNpCreator();
         }
@@ -185,7 +186,7 @@ public abstract class NanopubIndexCreator {
      * @param npCreator Access to a partially created incomplete nanopublication in the form of
      *                  a NanopubCreator object.
      */
-    public abstract void enrichIncompleteIndex(NanopubCreator npCreator);
+    public abstract void enrichIncompleteIndex(NanopubCreator npCreator) throws NanopubAlreadyFinalizedException;
 
     /**
      * This method gives access to the creation of the "complete" index nanopublications before it
@@ -198,7 +199,7 @@ public abstract class NanopubIndexCreator {
      * @param npCreator Access to the partially created complete nanopublication in the form of
      *                  a NanopubCreator object.
      */
-    public abstract void enrichCompleteIndex(NanopubCreator npCreator);
+    public abstract void enrichCompleteIndex(NanopubCreator npCreator) throws NanopubAlreadyFinalizedException;
 
     /**
      * With this method, newly created "incomplete" nanopublication indexes are announced.
@@ -223,7 +224,7 @@ public abstract class NanopubIndexCreator {
      * This method is called to create a new nanopublication index. It finalizes the existing
      * index nanopub (if any) and initializes a new one.
      */
-    private void newNpCreator() {
+    private void newNpCreator() throws NanopubAlreadyFinalizedException {
         // Finalize existing index nanopub:
         if (npCreator != null) {
             npCreator.addPubinfoStatement(RDF.TYPE, NPX.INCOMPLETE_INDEX);

@@ -63,7 +63,7 @@ public class RoCrateImporter extends CliRunner {
      * @throws java.security.SignatureException      if there is an issue with signing the nanopub
      * @throws java.security.InvalidKeyException     if the signing key is invalid
      */
-    public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException {
+    public void run() throws MalformedNanopubException, IOException, URISyntaxException, InterruptedException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
 
         InputStream roCreateMetadata = null;
         if (localFileName != null) {

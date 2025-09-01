@@ -4,10 +4,7 @@ import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.CliRunner;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.NanopubUtils;
+import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
@@ -25,15 +22,15 @@ public class MakeIndex extends CliRunner {
     private List<File> inputFiles = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
-            "as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")
+                                                                 "as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")
     private boolean useSubindexes = false;
 
     @com.beust.jcommander.Parameter(names = "-e", description = "Add given URIs as elements " +
-            "(in addition to the ones from the input files)")
+                                                                "(in addition to the ones from the input files)")
     private List<String> elements = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-s", description = "Add given URIs as sub-indexes " +
-            "(in addition to the ones from the input files, if given)")
+                                                                "(in addition to the ones from the input files, if given)")
     private List<String> subindexes = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-x", description = "Set given URI as superseded index")
@@ -190,7 +187,7 @@ public class MakeIndex extends CliRunner {
                         if (useSubindexes && IndexUtils.isIndex(np)) {
                             try {
                                 indexCreator.addSubIndex(IndexUtils.castToIndex(np));
-                            } catch (MalformedNanopubException ex) {
+                            } catch (MalformedNanopubException | NanopubAlreadyFinalizedException ex) {
                                 throw new RuntimeException(ex);
                             }
                         } else {

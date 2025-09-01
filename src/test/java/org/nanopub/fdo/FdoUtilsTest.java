@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.FDOF;
@@ -102,7 +103,7 @@ class FdoUtilsTest {
     }
 
     @Test
-    void isFdoNanopubWithValidFdoNanopub() throws MalformedNanopubException {
+    void isFdoNanopubWithValidFdoNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatement(TestUtils.anyIri, RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
         creator.addProvenanceStatement(TestUtils.anyIri, TestUtils.anyIri);
@@ -113,7 +114,7 @@ class FdoUtilsTest {
     }
 
     @Test
-    void isFdoNanopubWithInvalidFdoNanopub() throws MalformedNanopubException {
+    void isFdoNanopubWithInvalidFdoNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub np = TestUtils.createNanopub();
         assertFalse(FdoUtils.isFdoNanopub(np));
     }

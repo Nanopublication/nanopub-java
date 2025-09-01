@@ -13,10 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubImpl;
+import org.nanopub.*;
 import org.nanopub.extra.security.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.MockFileService;
@@ -340,7 +337,7 @@ class FdoRecordTest {
     }
 
     @Test
-    void createUpdatedNanopubRecordWithNanopub() throws MalformedCryptoElementException, IOException, MalformedNanopubException {
+    void createUpdatedNanopubRecordWithNanopub() throws MalformedCryptoElementException, IOException, MalformedNanopubException, NanopubAlreadyFinalizedException {
         String artifact = "RA2A-0ojBbTr2aeXUe2Bq4Fn8VLl5Ddr82fOuegiILGkA";
         String fdoNanopubUrl = "https://w3id.org/np/" + artifact;
 

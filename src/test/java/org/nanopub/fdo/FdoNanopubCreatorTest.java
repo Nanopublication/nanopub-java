@@ -10,10 +10,7 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubUtils;
+import org.nanopub.*;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
@@ -48,7 +45,7 @@ import static org.mockito.Mockito.*;
 public class FdoNanopubCreatorTest {
 
     @Test
-    void prepareNanopubCreator() {
+    void prepareNanopubCreator() throws NanopubAlreadyFinalizedException {
         IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "ExampleFdoToUpdate";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);
@@ -72,7 +69,7 @@ public class FdoNanopubCreatorTest {
         );
     }
 
-    public void createWithFdoIri() throws MalformedNanopubException {
+    public void createWithFdoIri() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
@@ -88,7 +85,7 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    public void createWithFdoSuffix() throws MalformedNanopubException {
+    public void createWithFdoSuffix() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String fdoSuffix = "abc-table";
         IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "abc-table-fdo";
@@ -104,7 +101,7 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    void testFdoNanopubCreation() throws MalformedNanopubException {
+    void testFdoNanopubCreation() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         String fdoHandle = "21.T11967/39b0ec87d17a4856c5f7";
         IRI fdoProfile = iri(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "NumberFdo1";
@@ -117,7 +114,7 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    void testNonFdoNanopub() throws MalformedNanopubException {
+    void testNonFdoNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator npCreator = new NanopubCreator(true);
         final IRI nonFdoNanopub = iri("https://example.com/nonFdoNanopub");
         npCreator.addAssertionStatement(nonFdoNanopub, RDF.TYPE, iri("https://schema.org/Any"));
@@ -151,7 +148,7 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    public void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
+    public void exampleCreateFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
         String fdoSuffix = "example-fdo-01";
         IRI profile = iri("https://w3id.org/np/RABPR2eJ7dbuf_OPDLztvRZI-el2_wBFkVBiPCLmr1Q50/test-fdo-profile");
         String label = "ExampleFdo01";

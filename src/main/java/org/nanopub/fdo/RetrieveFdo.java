@@ -4,6 +4,7 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.util.Values;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.services.*;
 
@@ -86,7 +87,7 @@ public class RetrieveFdo {
      * @throws java.io.IOException                   if an I/O error occurs
      * @throws java.lang.InterruptedException        if the operation is interrupted
      */
-    public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+    public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, NanopubAlreadyFinalizedException {
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
         return new FdoRecord(np);
     }

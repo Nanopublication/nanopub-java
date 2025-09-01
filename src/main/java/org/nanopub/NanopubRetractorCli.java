@@ -62,7 +62,7 @@ public class NanopubRetractorCli extends CliRunner {
      * @throws java.security.GeneralSecurityException                     if any.
      * @throws org.nanopub.extra.security.MalformedCryptoElementException if any.
      */
-    public void run() throws MalformedNanopubException, IOException, TrustyUriException, GeneralSecurityException, MalformedCryptoElementException {
+    public void run() throws MalformedNanopubException, IOException, TrustyUriException, GeneralSecurityException, MalformedCryptoElementException, NanopubAlreadyFinalizedException {
         Nanopub orig = getNanopubToRetract();
         Nanopub retraction = NanopubRetractor.createRetraction(orig, TransformContext.makeDefault());
         if (publish) {

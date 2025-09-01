@@ -70,15 +70,15 @@ public class UsageExamples {
         in.transferTo(System.out);
     }
 
-    void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException {
+    void createFdoNanopubManuallyWithoutHandleSystem() throws MalformedNanopubException, NoSuchAlgorithmException, IOException, InvalidKeySpecException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
         new FdoNanopubCreatorTest().exampleCreateFdoNanopubManuallyWithoutHandleSystem();
     }
 
-    void createNanopubWithFdoIri() throws MalformedNanopubException {
+    void createNanopubWithFdoIri() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         new FdoNanopubCreatorTest().createWithFdoIri();
     }
 
-    void createNanopubWithFdoIriSuffix() throws MalformedNanopubException {
+    void createNanopubWithFdoIriSuffix() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         new FdoNanopubCreatorTest().createWithFdoSuffix();
     }
 

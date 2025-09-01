@@ -95,7 +95,7 @@ public class IndexReuse extends CliRunner {
     private boolean reuseStopped = false;
     private NanopubIndexCreator indexCreator = null;
 
-    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException, NanopubAlreadyFinalizedException {
 
         reuseCount = 0;
 

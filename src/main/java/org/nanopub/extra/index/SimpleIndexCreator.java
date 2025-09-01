@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DC;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
      * Enriches an incomplete nanopublication index with metadata.
      */
     @Override
-    public void enrichIncompleteIndex(NanopubCreator npCreator) {
+    public void enrichIncompleteIndex(NanopubCreator npCreator) throws NanopubAlreadyFinalizedException {
         if (title != null) {
             npCreator.addPubinfoStatement(DC.TITLE, SimpleValueFactory.getInstance().createLiteral(title));
         }
@@ -155,7 +156,7 @@ public abstract class SimpleIndexCreator extends NanopubIndexCreator {
      * Enriches a complete nanopublication index with additional metadata.
      */
     @Override
-    public void enrichCompleteIndex(NanopubCreator npCreator) {
+    public void enrichCompleteIndex(NanopubCreator npCreator) throws NanopubAlreadyFinalizedException {
         enrichIncompleteIndex(npCreator);
         if (description != null) {
             npCreator.addPubinfoStatement(DC.DESCRIPTION, SimpleValueFactory.getInstance().createLiteral(description));

@@ -12,7 +12,7 @@ import static org.nanopub.utils.TestUtils.vf;
 
 class NanopubCreatorTest {
 
-    private NanopubCreator createNanopubCreator() {
+    private NanopubCreator createNanopubCreator() throws NanopubAlreadyFinalizedException {
         NanopubCreator creator = new NanopubCreator(vf.createIRI(TestUtils.NANOPUB_URI));
         Statement assertionStatement = vf.createStatement(anyIri, anyIri, anyIri);
         creator.addAssertionStatements(assertionStatement);
@@ -39,7 +39,7 @@ class NanopubCreatorTest {
     }
 
     @Test
-    void setNanopubUri() {
+    void setNanopubUri() throws NanopubAlreadyFinalizedException {
         // Test with String
         NanopubCreator creator = new NanopubCreator();
         Assertions.assertNull(creator.getNanopubUri());
@@ -53,14 +53,14 @@ class NanopubCreatorTest {
     }
 
     @Test
-    void setNanopubUriWithFinalized() throws MalformedNanopubException {
+    void setNanopubUriWithFinalized() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = createNanopubCreator();
         creator.finalizeNanopub();
-        assertThrows(RuntimeException.class, () -> creator.setNanopubUri(TestUtils.NANOPUB_URI));
+        assertThrows(NanopubAlreadyFinalizedException.class, () -> creator.setNanopubUri(TestUtils.NANOPUB_URI));
     }
 
     @Test
-    void finalizeOnFinalized() throws MalformedNanopubException {
+    void finalizeOnFinalized() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = createNanopubCreator();
         Nanopub nanopub = creator.finalizeNanopub();
         assertNotNull(nanopub);
@@ -75,7 +75,7 @@ class NanopubCreatorTest {
     }
 
     @Test
-    void finalizeNanopubWithoutTimestamp() throws MalformedNanopubException {
+    void finalizeNanopubWithoutTimestamp() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = createNanopubCreator();
         Nanopub nanopub = creator.finalizeNanopub();
         assertNotNull(nanopub);
@@ -84,7 +84,7 @@ class NanopubCreatorTest {
     }
 
     @Test
-    void finalizeNanopubWithTimestamp() throws MalformedNanopubException {
+    void finalizeNanopubWithTimestamp() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = createNanopubCreator();
         Nanopub nanopub = creator.finalizeNanopub(true);
         assertNotNull(nanopub);

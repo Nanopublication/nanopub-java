@@ -48,7 +48,7 @@ public class RoCrateParser {
      * @throws java.lang.InterruptedException        if the operation is interrupted.
      * @throws java.net.URISyntaxException           if the URL is malformed.
      */
-    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException {
+    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
 
         // Configure parser settings

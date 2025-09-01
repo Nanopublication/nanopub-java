@@ -69,7 +69,7 @@ public class Build extends CliRunner {
     private List<Pair<String, String>> namespaces = new ArrayList<>();
 
     private void run() throws IOException, RDFParseException, RDFHandlerException,
-            MalformedNanopubException, TrustyUriException {
+            MalformedNanopubException, TrustyUriException, NanopubAlreadyFinalizedException {
 
         if (outputFile == null) {
             if (outFormat == null) {
@@ -112,12 +112,20 @@ public class Build extends CliRunner {
 
                 @Override
                 public void handleStatement(Statement st) throws RDFHandlerException {
-                    processStatement(st);
+                    try {
+                        processStatement(st);
+                    } catch (NanopubAlreadyFinalizedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 @Override
                 public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
-                    processNamespace(prefix, uri);
+                    try {
+                        processNamespace(prefix, uri);
+                    } catch (NanopubAlreadyFinalizedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 @Override
@@ -142,18 +150,18 @@ public class Build extends CliRunner {
         }
     }
 
-    private void processStatement(Statement st) {
+    private void processStatement(Statement st) throws NanopubAlreadyFinalizedException {
         prepareCreator(st.getSubject());
         npCreator.addAssertionStatements(st);
     }
 
-    private void processNamespace(String prefix, String uri) {
+    private void processNamespace(String prefix, String uri) throws NanopubAlreadyFinalizedException {
         prepareCreator(null);
         namespaces.add(Pair.of(prefix, uri));
         npCreator.addNamespace(prefix, uri);
     }
 
-    private void prepareCreator(Resource subj) {
+    private void prepareCreator(Resource subj) throws NanopubAlreadyFinalizedException {
         if (previousSubj != null && subj != null && !subj.equals(previousSubj)) {
             finalizeNanopub();
         }
@@ -163,7 +171,7 @@ public class Build extends CliRunner {
         previousSubj = subj;
     }
 
-    private void initNanopub() {
+    private void initNanopub() throws NanopubAlreadyFinalizedException {
         String npUriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         nanopubIri = vf.createIRI(npUriString);
         assertionIri = vf.createIRI(npUriString + "assertion");
@@ -186,7 +194,7 @@ public class Build extends CliRunner {
         }
     }
 
-    private void finalizeNanopub() {
+    private void finalizeNanopub() throws NanopubAlreadyFinalizedException {
         npCreator.addTimestampNow();
         npCreator.setRemoveUnusedPrefixesEnabled(true);
         try {

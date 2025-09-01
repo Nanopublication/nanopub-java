@@ -33,7 +33,7 @@ public class NanopubRetractor {
      * @throws net.trustyuri.TrustyUriException                           if the original nanopub's URI is not a valid Trusty URI
      * @throws java.security.GeneralSecurityException                     if there is a security issue with signing the retraction
      */
-    public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException {
+    public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException, NanopubAlreadyFinalizedException {
         SignatureUtils.assertMatchingPubkeys(tc, originalNp);
         NanopubCreator c = new NanopubCreator(true);
         c.addAssertionStatement(tc.getSigner(), NPX.RETRACTS, originalNp.getUri());

@@ -50,7 +50,7 @@ public class Create extends CliRunner {
     private OutputStream outputStream = System.out;
 
     private void run() throws IOException, RDFParseException, RDFHandlerException,
-            MalformedNanopubException, TrustyUriException {
+            MalformedNanopubException, TrustyUriException, NanopubAlreadyFinalizedException {
 
         if (outputFile == null) {
             if (format == null) {

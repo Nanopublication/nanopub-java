@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.NPX;
@@ -18,7 +19,7 @@ import static org.nanopub.utils.TestUtils.anyIri;
 class IndexUtilsTest {
 
     @Test
-    void isIndex() throws MalformedNanopubException {
+    void isIndex() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator1 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "1"));
         Statement assertionStatement = Statements.statement(triple(anyIri, anyIri, anyIri));
         creator1.addAssertionStatement(assertionStatement);
@@ -39,7 +40,7 @@ class IndexUtilsTest {
     }
 
     @Test
-    void castToIndexWithNanopubIndex() throws MalformedNanopubException {
+    void castToIndexWithNanopubIndex() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator2 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "2"));
         creator2.addAssertionStatement(Statements.statement(triple(anyIri, anyIri, anyIri)));
         creator2.addProvenanceStatement(anyIri, anyIri);
@@ -52,7 +53,7 @@ class IndexUtilsTest {
     }
 
     @Test
-    void castToIndexWithNanopub() throws MalformedNanopubException {
+    void castToIndexWithNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator2 = new NanopubCreator(Values.iri(TestUtils.NANOPUB_URI + "2"));
         creator2.addAssertionStatement(Statements.statement(triple(anyIri, anyIri, anyIri)));
         creator2.addProvenanceStatement(anyIri, anyIri);

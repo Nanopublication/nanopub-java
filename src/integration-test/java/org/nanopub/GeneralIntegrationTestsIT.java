@@ -64,7 +64,7 @@ public class GeneralIntegrationTestsIT {
     }
 
     @Test
-    void createNanopubFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
+    void createNanopubFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException, NanopubAlreadyFinalizedException {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
 

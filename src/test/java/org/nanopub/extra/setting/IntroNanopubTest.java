@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.vocabulary.FOAF;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class IntroNanopubTest {
 
     @Test
-    void getNanopub() throws MalformedNanopubException {
+    void getNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
@@ -25,7 +26,7 @@ class IntroNanopubTest {
     }
 
     @Test
-    void getUser() throws MalformedNanopubException {
+    void getUser() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
@@ -34,7 +35,7 @@ class IntroNanopubTest {
     }
 
     @Test
-    void getNameNotSet() throws MalformedNanopubException {
+    void getNameNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         String userName = "John Doe";
         IRI userUri = iri(TestUtils.ORCID);
@@ -43,7 +44,7 @@ class IntroNanopubTest {
     }
 
     @Test
-    void getNameSet() throws MalformedNanopubException {
+    void getNameSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         IRI userUri = iri(TestUtils.ORCID);
         String userName = "John Doe";
 
@@ -59,7 +60,7 @@ class IntroNanopubTest {
     }
 
     @Test
-    void constructWithNullName() throws MalformedNanopubException {
+    void constructWithNullName() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         IRI userUri = iri(TestUtils.ORCID);
         String userName = "John Doe";
 

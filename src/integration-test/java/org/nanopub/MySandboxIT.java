@@ -38,7 +38,7 @@ public class MySandboxIT {
     }
 
     //     @Test
-    public void exampleCreateWithFdoIri() throws MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, IOException {
+    public void exampleCreateWithFdoIri() throws MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, IOException, NanopubAlreadyFinalizedException {
         IRI fdoProfile = vf.createIRI(HDL.NAMESPACE + "21.T11966/365ff9576c26ca6053db");
         String fdoLabel = "ExampleFdoToUpdate";
         FdoRecord record = new FdoRecord(fdoProfile, fdoLabel, null);

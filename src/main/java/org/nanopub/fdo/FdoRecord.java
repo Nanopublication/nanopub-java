@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
@@ -238,7 +239,7 @@ public class FdoRecord implements Serializable {
      * @return a NanopubCreator for this FdoRecord
      * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
-    public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
+    public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException, NanopubAlreadyFinalizedException {
         return createUpdatedNanopub(TransformContext.makeDefault());
     }
 
@@ -249,7 +250,7 @@ public class FdoRecord implements Serializable {
      * @return a NanopubCreator for this FdoRecord
      * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
      */
-    public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
+    public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException, NanopubAlreadyFinalizedException {
         if (originalNanopub == null) {
             throw new MalformedCryptoElementException("There is no original nanopub to update.");
         }

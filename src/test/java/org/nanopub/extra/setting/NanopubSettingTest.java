@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.NPX;
@@ -37,7 +38,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void constructorThrowsRuntimeException() throws MalformedNanopubException {
+    void constructorThrowsRuntimeException() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(vf.createStatement(anyIri, anyIri, anyIri));
         creator.addProvenanceStatements(vf.createStatement(creator.getAssertionUri(), anyIri, anyIri));
@@ -56,7 +57,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void constructorWithDoubleAgent() throws MalformedNanopubException {
+    void constructorWithDoubleAgent() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri),
@@ -73,7 +74,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void constructorWithDoubleServices() throws MalformedNanopubException {
+    void constructorWithDoubleServices() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri),
@@ -88,7 +89,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void constructorWithDoubleTrustRangeAlgorithm() throws MalformedNanopubException {
+    void constructorWithDoubleTrustRangeAlgorithm() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri),
@@ -103,7 +104,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void constructorWithDoubleUpdateStrategy() throws MalformedNanopubException {
+    void constructorWithDoubleUpdateStrategy() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri),
@@ -118,7 +119,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getNanopub() throws MalformedNanopubException {
+    void getNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(vf.createStatement(anyIri, RDF.TYPE, anyIri));
         creator.addProvenanceStatements(vf.createStatement(creator.getAssertionUri(), anyIri, anyIri));
@@ -131,7 +132,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getNameWhenSet() throws MalformedNanopubException {
+    void getNameWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         String settingLabel = "Test Setting";
         creator.addAssertionStatements(
@@ -147,7 +148,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getNameWhenNotSet() throws MalformedNanopubException {
+    void getNameWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)
@@ -161,7 +162,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getUpdateStrategyWhenSet() throws MalformedNanopubException {
+    void getUpdateStrategyWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         IRI updateStrategyIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#updateStrategy");
         creator.addAssertionStatements(
@@ -177,7 +178,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getUpdateStrategyWhenNotSet() throws MalformedNanopubException {
+    void getUpdateStrategyWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)
@@ -191,7 +192,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getTrustRangeAlgorithmWhenSet() throws MalformedNanopubException {
+    void getTrustRangeAlgorithmWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         IRI trustRangeAlgorithmIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#trustRangeAlgorithm");
         creator.addAssertionStatements(
@@ -207,7 +208,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getTrustRangeAlgorithmWhenNotSet() throws MalformedNanopubException {
+    void getTrustRangeAlgorithmWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)
@@ -221,7 +222,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getServiceIntroCollectionWhenSet() throws MalformedNanopubException {
+    void getServiceIntroCollectionWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         IRI serviceIntroCollectionIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#serviceIntroCollection");
         creator.addAssertionStatements(
@@ -237,7 +238,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getServiceIntroCollectionWhenNotSet() throws MalformedNanopubException {
+    void getServiceIntroCollectionWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)
@@ -251,7 +252,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getAgentIntroCollectionWhenSet() throws MalformedNanopubException {
+    void getAgentIntroCollectionWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         IRI agentIntroCollectionIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#agentIntroCollection");
         creator.addAssertionStatements(
@@ -267,7 +268,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getAgentIntroCollectionWhenNotSet() throws MalformedNanopubException {
+    void getAgentIntroCollectionWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)
@@ -281,7 +282,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getBootstrapServicesWhenSet() throws MalformedNanopubException {
+    void getBootstrapServicesWhenSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         Set<IRI> bootstrapServices = new HashSet<>();
         IRI bootstrapService1 = vf.createIRI("https://knowledgepixels.com/nanopubIri#bootstrapService1");
@@ -303,7 +304,7 @@ class NanopubSettingTest {
     }
 
     @Test
-    void getBootstrapServicesWhenNotSet() throws MalformedNanopubException {
+    void getBootstrapServicesWhenNotSet() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, RDF.TYPE, anyIri)

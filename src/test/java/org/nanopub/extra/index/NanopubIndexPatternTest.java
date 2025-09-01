@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.utils.TestUtils;
 
 import java.net.MalformedURLException;
@@ -21,7 +22,7 @@ class NanopubIndexPatternTest {
     }
 
     @Test
-    void appliesToReturnsTrueForValidIndexNanopub() throws MalformedNanopubException {
+    void appliesToReturnsTrueForValidIndexNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         try (var mockedIndexUtils = Mockito.mockStatic(IndexUtils.class)) {
             mockedIndexUtils.when(() -> IndexUtils.isIndex(nanopub)).thenReturn(true);
@@ -31,7 +32,7 @@ class NanopubIndexPatternTest {
     }
 
     @Test
-    void appliesToReturnsFalseForNonIndexNanopub() throws MalformedNanopubException {
+    void appliesToReturnsFalseForNonIndexNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         try (var mockedIndexUtils = Mockito.mockStatic(IndexUtils.class)) {
             mockedIndexUtils.when(() -> IndexUtils.isIndex(nanopub)).thenReturn(false);
