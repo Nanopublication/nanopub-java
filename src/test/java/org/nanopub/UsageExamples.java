@@ -12,8 +12,10 @@ import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.PublishNanopub;
+import org.nanopub.extra.services.APINotReachableException;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.FailedApiCallException;
+import org.nanopub.extra.services.NotEnoughAPIInstancesException;
 import org.nanopub.fdo.FdoNanopubCreatorTest;
 import org.nanopub.fdo.FdoQuery;
 import org.nanopub.fdo.RetrieveFdo;
@@ -90,7 +92,7 @@ public class UsageExamples {
         new GeneralIntegrationTestsIT();
     }
 
-    void examplesForQueryingFdo() throws FailedApiCallException {
+    void examplesForQueryingFdo() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         // This query performs a full-text search on the FDO nanopublications.
         ApiResponse response1 = FdoQuery.textSearch("myText");
 

@@ -31,7 +31,7 @@ public class QueryCall {
      * @param params  the parameters to pass to the query
      * @return the HTTP response from the query API
      */
-    public static HttpResponse run(String queryId, Map<String, String> params) {
+    public static HttpResponse run(String queryId, Map<String, String> params) throws APINotReachableException, NotEnoughAPIInstancesException {
         int retryCount = 0;
         while (retryCount < maxRetryCount) {
             QueryCall apiCall = new QueryCall(queryId, params);
@@ -48,7 +48,7 @@ public class QueryCall {
             }
             retryCount = retryCount + 1;
         }
-        throw new RuntimeException("Giving up contacting API: " + queryId);
+        throw new APINotReachableException("Giving up contacting API: " + queryId);
     }
 
     /**
@@ -68,7 +68,7 @@ public class QueryCall {
      *
      * @return a list of accessible query API instance
      */
-    public static List<String> getApiInstances() {
+    public static List<String> getApiInstances() throws NotEnoughAPIInstancesException {
         if (checkedApiInstances != null) return checkedApiInstances;
         checkedApiInstances = new ArrayList<>();
         for (String a : queryApiInstances) {
@@ -88,7 +88,7 @@ public class QueryCall {
         logger.info("{} accessible Nanopub Query instances", checkedApiInstances.size());
         if (checkedApiInstances.size() < 2) {
             checkedApiInstances = null;
-            throw new RuntimeException("Not enough healthy Nanopub Query instances available");
+            throw new NotEnoughAPIInstancesException("Not enough healthy Nanopub Query instances available");
         }
         return checkedApiInstances;
     }
@@ -114,7 +114,7 @@ public class QueryCall {
         logger.info("Invoking API operation {} {}", queryId, paramString);
     }
 
-    private void run() {
+    private void run() throws NotEnoughAPIInstancesException {
         List<String> apiInstancesToTry = new LinkedList<>(getApiInstances());
         while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
             int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));

@@ -42,7 +42,7 @@ public abstract class QueryAccess {
      * @param params  the parameters to pass to the query
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public void call(String queryId, Map<String, String> params) throws FailedApiCallException {
+    public void call(String queryId, Map<String, String> params) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         HttpResponse resp = QueryCall.run(queryId, params);
         try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
             String[] line = null;
@@ -68,7 +68,7 @@ public abstract class QueryAccess {
      * @param writer  the writer to print the CSV response to
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static void printCvsResponse(String queryId, Map<String, String> params, Writer writer) throws FailedApiCallException {
+    public static void printCvsResponse(String queryId, Map<String, String> params, Writer writer) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();
         QueryAccess a = new QueryAccess() {
 
@@ -95,7 +95,7 @@ public abstract class QueryAccess {
      * @return an ApiResponse object containing the response data
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static ApiResponse get(String queryId, Map<String, String> params) throws FailedApiCallException {
+    public static ApiResponse get(String queryId, Map<String, String> params) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         final ApiResponse response = new ApiResponse();
         QueryAccess a = new QueryAccess() {
 

@@ -46,11 +46,11 @@ public class QueryCallTest {
 
     @Test
     void getApiInstancesWithNotAccessibleInstances() {
-        assertThrows(RuntimeException.class, QueryCall::getApiInstances);
+        assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
     }
 
     @Test
-    void getApiInstancesAlreadyChecked() {
+    void getApiInstancesAlreadyChecked() throws NotEnoughAPIInstancesException {
         mockNanopubUtils.setHttpResponseStatusCode(200);
 
         QueryCall.getApiInstances();
@@ -63,11 +63,11 @@ public class QueryCallTest {
     void getApiInstancesWithOnlyOneInstance() {
         mockNanopubUtils.setHttpResponseStatusCode(200);
         QueryCall.queryApiInstances = new String[]{"https://mocked.instance1.com/"};
-        assertThrows(RuntimeException.class, QueryCall::getApiInstances);
+        assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
     }
 
     @Test
-    void getApiInstancesWithValidInstances() {
+    void getApiInstancesWithValidInstances() throws NotEnoughAPIInstancesException {
         mockNanopubUtils.setHttpResponseStatusCode(200);
         List<String> apiInstances = QueryCall.getApiInstances();
         assertEquals(apiInstances, List.of(QueryCall.queryApiInstances));

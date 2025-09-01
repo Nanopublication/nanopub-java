@@ -2,10 +2,7 @@ package org.nanopub;
 
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.ApiResponseEntry;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.*;
 import org.nanopub.fdo.RetrieveFdo;
 
 import java.util.HashMap;
@@ -43,7 +40,7 @@ public class FdoQueryIT {
     }
 
     @Test
-    public void testQueryNanopubNetworkNpUriForFdo() throws FailedApiCallException {
+    public void testQueryNanopubNetworkNpUriForFdo() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         Map<String, String> params = new HashMap<>();
         params.put("fdoid", "https://w3id.org/np/RAsSeIyT03LnZt3QvtwUqIHSCJHWW1YeLkyu66Lg4FeBk/nanodash-readme");
         ApiResponse apiResponse = QueryAccess.get(RetrieveFdo.GET_FDO_QUERY_ID, params);

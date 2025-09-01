@@ -36,7 +36,7 @@ public class RunQuery extends CliRunner {
         }
     }
 
-    private void run() throws FailedApiCallException {
+    private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         Map<String, String> paramMap = prepareParamsMap(params);
 
         QueryAccess.printCvsResponse(queryId, paramMap, new PrintWriter(System.out));

@@ -5,10 +5,7 @@ import org.eclipse.rdf4j.model.util.Values;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.ApiResponseEntry;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +64,7 @@ public class RetrieveFdo {
      * @return the Nanopub corresponding to the IRI or handle, or null if not found
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
+    public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         Map<String, String> params = new HashMap<>();
         params.put("fdoid", iriOrHandle);
         ApiResponse apiResponse = QueryAccess.get(GET_FDO_QUERY_ID, params);

@@ -12,10 +12,7 @@ import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.ApiResponseEntry;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.*;
 import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.HDL;
@@ -39,7 +36,7 @@ import static org.mockito.Mockito.*;
 class RetrieveFdoTest {
 
     @Test
-    void resolveInNanopubNetworkWithValidHandle() throws FailedApiCallException, MalformedNanopubException, IOException {
+    void resolveInNanopubNetworkWithValidHandle() throws FailedApiCallException, MalformedNanopubException, IOException, APINotReachableException, NotEnoughAPIInstancesException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
 
@@ -65,7 +62,7 @@ class RetrieveFdoTest {
     }
 
     @Test
-    void resolveInNanopubNetworkWithInvalidHandle() throws FailedApiCallException {
+    void resolveInNanopubNetworkWithInvalidHandle() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         String handle = "notAValidHandle";
         try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
             mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mock(ApiResponse.class));

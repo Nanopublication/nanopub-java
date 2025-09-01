@@ -2,10 +2,7 @@ package org.nanopub.fdo;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.ApiResponseEntry;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.*;
 
 import java.util.List;
 
@@ -15,7 +12,7 @@ import static org.mockito.Mockito.*;
 class FdoQueryTest {
 
     @Test
-    void textSearch() throws FailedApiCallException {
+    void textSearch() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         String query = "test";
         try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
             ApiResponse mockedResponse = mock(ApiResponse.class);
@@ -32,7 +29,7 @@ class FdoQueryTest {
     }
 
     @Test
-    void findByRef() throws FailedApiCallException {
+    void findByRef() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         String ref = "21.T11966/82045bd97a0acce88378";
         try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
             ApiResponse mockedResponse = mock(ApiResponse.class);

@@ -1,8 +1,6 @@
 package org.nanopub.fdo;
 
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.*;
 
 import java.util.Map;
 
@@ -27,7 +25,7 @@ public class FdoQuery {
      * @return An ApiResponse containing the FDOs that match the search query.
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
-    public static ApiResponse textSearch(String query) throws FailedApiCallException {
+    public static ApiResponse textSearch(String query) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         return QueryAccess.get(textSearch, Map.of("query", query));
     }
 
@@ -38,7 +36,7 @@ public class FdoQuery {
      * @return An ApiResponse containing the FDOs that refer to the given PID / handle.
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
-    public static ApiResponse findByRef(String ref) throws FailedApiCallException {
+    public static ApiResponse findByRef(String ref) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         return QueryAccess.get(findByRef, Map.of("refid", ref));
     }
 
@@ -49,7 +47,7 @@ public class FdoQuery {
      * @return An ApiResponse containing the FDOs created by the specified user.
      * @throws FailedApiCallException if the API call fails.
      */
-    public static ApiResponse getFeed(String creator) throws FailedApiCallException {
+    public static ApiResponse getFeed(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         return QueryAccess.get(getFeed, Map.of("creator", creator));
     }
 
@@ -60,7 +58,7 @@ public class FdoQuery {
      * @return An ApiResponse containing the favorite things of the specified user.
      * @throws FailedApiCallException if the API call fails.
      */
-    public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException {
+    public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         return QueryAccess.get(getFavoriteThings, Map.of("creator", creator));
     }
 
