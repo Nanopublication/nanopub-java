@@ -5,6 +5,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -20,6 +22,7 @@ public class QueryCall {
 
     private static int parallelCallCount = 2;
     private static int maxRetryCount = 3;
+    private static final Logger logger = LoggerFactory.getLogger(QueryCall.class);
 
     /**
      * Run a query call with the given query ID and parameters.
@@ -70,19 +73,19 @@ public class QueryCall {
         checkedApiInstances = new ArrayList<>();
         for (String a : queryApiInstances) {
             try {
-                System.err.println("Checking API instance: " + a);
+                logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
                 if (wasSuccessful(resp)) {
-                    System.err.println("SUCCESS: Nanopub Query instance is accessible: " + a);
+                    logger.info("SUCCESS: Nanopub Query instance is accessible: {}", a);
                     checkedApiInstances.add(a);
                 } else {
-                    System.err.println("FAILURE: Nanopub Query instance isn't accessible: " + a);
+                    logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
                 }
             } catch (IOException ex) {
-                System.err.println("FAILURE: Nanopub Query instance isn't accessible: " + a);
+                logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
             }
         }
-        System.err.println(checkedApiInstances.size() + " accessible Nanopub Query instances");
+        logger.info("{} accessible Nanopub Query instances", checkedApiInstances.size());
         if (checkedApiInstances.size() < 2) {
             checkedApiInstances = null;
             throw new RuntimeException("Not enough healthy Nanopub Query instances available");
@@ -108,7 +111,7 @@ public class QueryCall {
                 paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8);
             }
         }
-        System.err.println("Invoking API operation " + queryId + " " + paramString);
+        logger.info("Invoking API operation {} {}", queryId, paramString);
     }
 
     private void run() {
@@ -117,7 +120,7 @@ public class QueryCall {
             int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
             String apiUrl = apiInstancesToTry.get(randomIndex);
             apisToCall.add(apiUrl);
-            System.err.println("Trying API (" + apisToCall.size() + ") " + apiUrl);
+            logger.info("Trying API ({}) {}", apisToCall.size(), apiUrl);
             apiInstancesToTry.remove(randomIndex);
         }
         for (String api : apisToCall) {
@@ -132,9 +135,9 @@ public class QueryCall {
             EntityUtils.consumeQuietly(resp.getEntity());
             return;
         }
-        System.err.println("Result in from " + apiUrl + ":");
-        System.err.println("- Request: " + queryId + " " + paramString);
-        System.err.println("- Response size: " + resp.getEntity().getContentLength());
+        logger.info("Result in from {}:", apiUrl);
+        logger.info("- Request: {} {}", queryId, paramString);
+        logger.info("- Response size: {}", resp.getEntity().getContentLength());
         this.resp = resp;
 
         for (Call c : calls) {
@@ -177,7 +180,7 @@ public class QueryCall {
                 finished(this, resp, apiUrl);
             } catch (Exception ex) {
                 if (resp != null) EntityUtils.consumeQuietly(resp.getEntity());
-                System.err.println("Request to " + apiUrl + " was not successful: " + ex.getMessage());
+                logger.error("Request to {} was not successful: {}", apiUrl, ex.getMessage());
             }
             calls.remove(this);
         }
