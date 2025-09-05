@@ -23,6 +23,12 @@ public class NanopubRetractor {
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     /**
+     * No instances.
+     */
+    private NanopubRetractor() {
+    }
+
+    /**
      * Create a retraction np out of the original np and a transformation context
      *
      * @param originalNp The Nanopublication to be retracted
