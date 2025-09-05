@@ -99,6 +99,7 @@ public class Nanopub2Html extends CliRunner {
         }
         try (printHtml) {
             HtmlWriter htmlWriter = new HtmlWriter(printHtml, !indentContextDisabled);
+            htmlWriter.startRDF();
             if (np instanceof NanopubWithNs npNs) {
                 for (String prefix : npNs.getNsPrefixes()) {
                     htmlWriter.handleNamespace(prefix, npNs.getNamespace(prefix));
@@ -109,7 +110,6 @@ public class Nanopub2Html extends CliRunner {
             }
             htmlWriter.startPart("nanopub");
             htmlWriter.startPart("nanopub-prefixes");
-            htmlWriter.startRDF();
             htmlWriter.endPart();
             htmlWriter.startPart("nanopub-head");
             for (Statement st : np.getHead()) {
