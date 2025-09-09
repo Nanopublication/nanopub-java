@@ -60,15 +60,6 @@ public class MakeIndex extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-p", description = "Make plain (non-trusty) index nanopublications")
     private boolean plainNanopub;
 
-//	@com.beust.jcommander.Parameter(names = "--sig", description = "Path and file name of key files")
-//	private boolean useSignature;
-//
-//	@com.beust.jcommander.Parameter(names = "--sig-key-file", description = "Path and file name of key files")
-//	private String keyFilename;
-//
-//	@com.beust.jcommander.Parameter(names = "--sig-algorithm", description = "Signature algorithm: either RSA or DSA")
-//	private SignatureAlgorithm algorithm;
-
     /**
      * Main method to run the MakeIndex tool.
      *
@@ -94,7 +85,6 @@ public class MakeIndex extends CliRunner {
     private OutputStreamWriter writer;
     private RDFFormat outFormat;
     private int count;
-//	private KeyPair key;
 
     private void init() throws IOException {
         count = 0;
@@ -148,25 +138,6 @@ public class MakeIndex extends CliRunner {
 
     private void run() throws Exception {
         init();
-
-//		if (useSignature) {
-//			if (algorithm == null) {
-//				if (keyFilename == null) {
-//					keyFilename = "~/.nanopub/id_rsa";
-//					algorithm = SignatureAlgorithm.RSA;
-//				} else if (keyFilename.endsWith("_rsa")) {
-//					algorithm = SignatureAlgorithm.RSA;
-//				} else if (keyFilename.endsWith("_dsa")) {
-//					algorithm = SignatureAlgorithm.DSA;
-//				} else {
-//					// Assuming RSA if not other information is available
-//					algorithm = SignatureAlgorithm.RSA;
-//				}
-//			} else if (keyFilename == null) {
-//				keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
-//			}
-//			key = SignNanopub.loadKey(keyFilename, algorithm);
-//		}
 
         try {
             for (File f : inputFiles) {
