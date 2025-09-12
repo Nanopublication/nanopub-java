@@ -201,7 +201,7 @@ public class SignatureUtils {
         RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
         RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri, TrustyNanopubUtils.transformRdfSetting);
 
-        // TODO Why do we do this?
+        // Required preprocessing for RdfHasher:
         try {
             preContent.propagate(rp);
         } catch (RDFHandlerException ex) {
@@ -276,8 +276,6 @@ public class SignatureUtils {
     private static String removeArtifactCode(String s, String ac) {
         return s.replaceAll(ac + "[#/]?", "");
     }
-
-    // ----------
 
     private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureElementUri = null;
