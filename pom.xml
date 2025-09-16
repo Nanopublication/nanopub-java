@@ -100,7 +100,7 @@
     <dependency>
       <groupId>eu.neverblink.jelly</groupId>
       <artifactId>jelly-rdf4j</artifactId>
-      <version>3.5.0</version>
+      <version>3.5.2</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
