@@ -1,5 +1,12 @@
 package org.nanopub.extra.services;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -7,13 +14,6 @@ import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Second-generation query API call.
@@ -154,7 +154,8 @@ public class QueryCall {
 
     private static boolean wasSuccessfulNonempty(HttpResponse resp) {
         if (!wasSuccessful(resp)) return false;
-        if (resp.getEntity().getContentLength() < 0) return false;
+        // TODO Make sure we always return proper error codes, and then this shouldn't be necessary:
+        if (resp.getHeaders("Content-Length").length > 0 && resp.getEntity().getContentLength() < 0) return false;
         return true;
     }
 
