@@ -1,12 +1,5 @@
 package org.nanopub.extra.services;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVWriterBuilder;
-import com.opencsv.ICSVWriter;
-import com.opencsv.exceptions.CsvValidationException;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpResponse;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,6 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.HttpResponse;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
 
 /**
  * Second-generation query API access
@@ -42,8 +43,8 @@ public abstract class QueryAccess {
      * @param params  the parameters to pass to the query
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public void call(String queryId, Map<String, String> params) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        HttpResponse resp = QueryCall.run(queryId, params);
+    public void call(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        HttpResponse resp = QueryCall.run(queryRef);
         try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
             String[] line = null;
             int n = 0;
@@ -63,12 +64,11 @@ public abstract class QueryAccess {
     /**
      * Print the response of a query in CSV format to the given writer.
      *
-     * @param queryId the ID of the query to call
-     * @param params  the parameters to pass to the query
+     * @param queryRef the query reference
      * @param writer  the writer to print the CSV response to
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static void printCvsResponse(String queryId, Map<String, String> params, Writer writer) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+    public static void printCvsResponse(QueryRef queryRef, Writer writer) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();
         QueryAccess a = new QueryAccess() {
 
@@ -83,19 +83,18 @@ public abstract class QueryAccess {
             }
 
         };
-        a.call(queryId, params);
+        a.call(queryRef);
         icsvWriter.flushQuietly();
     }
 
     /**
      * Get the response of a query as an ApiResponse object.
      *
-     * @param queryId the ID of the query to call
-     * @param params  the parameters to pass to the query
+     * @param queryRef the query reference
      * @return an ApiResponse object containing the response data
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static ApiResponse get(String queryId, Map<String, String> params) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+    public static ApiResponse get(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         final ApiResponse response = new ApiResponse();
         QueryAccess a = new QueryAccess() {
 
@@ -110,7 +109,7 @@ public abstract class QueryAccess {
             }
 
         };
-        a.call(queryId, params);
+        a.call(queryRef);
         return response;
     }
 
@@ -130,10 +129,8 @@ public abstract class QueryAccess {
         long currentTime = System.currentTimeMillis();
         if (!latestVersionMap.containsKey(nanopubId) || currentTime - latestVersionMap.get(nanopubId).getLeft() > 1000 * 60 * 60) {
             // Re-fetch if existing value is older than 1 hour
-            Map<String, String> params = new HashMap<>();
-            params.put("np", nanopubId);
             try {
-                ApiResponse r = QueryAccess.get(GET_NEWER_VERSIONS, params);
+                ApiResponse r = QueryAccess.get(new QueryRef(GET_NEWER_VERSIONS, "np", nanopubId));
                 List<String> latestList = new ArrayList<>();
                 for (ApiResponseEntry e : r.getData()) {
                     if (e.get("retractedBy").isEmpty() && e.get("supersededBy").isEmpty()) {

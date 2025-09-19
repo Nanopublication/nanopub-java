@@ -1,6 +1,12 @@
 package org.nanopub;
 
-import net.trustyuri.TrustyUriException;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
+import java.util.List;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -16,17 +22,12 @@ import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.QueryRef;
 import org.nanopub.fdo.FdoNanopubCreator;
 import org.nanopub.fdo.FdoRecord;
 import org.nanopub.vocabulary.HDL;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.SignatureException;
-import java.util.List;
-import java.util.Map;
+import net.trustyuri.TrustyUriException;
 
 public class MySandboxIT {
 
@@ -140,7 +141,7 @@ public class MySandboxIT {
         String getFeed = "RAP1G35VvTs3gfMaucv_xZUMZuvjB9lxM8tWUGttr5mmo/get-fdo-feed";
         String getFavorites = "RAsyc6zFFnE8mblnDfdCCNRsrcN1CSCBDW9I4Ppidgk9g/get-favorite-things";
 
-        ApiResponse apiResponse = QueryAccess.get(getFeed, Map.of("creator", "https://orcid.org/0009-0008-3635-347X"));
+        ApiResponse apiResponse = QueryAccess.get(new QueryRef(getFeed, "creator", "https://orcid.org/0009-0008-3635-347X"));
         List<ApiResponseEntry> data = apiResponse.getData();
         for (ApiResponseEntry entry : data) {
             for (String k : entry.getKeys()) {

@@ -1,12 +1,13 @@
 package org.nanopub.extra.services;
 
-import com.beust.jcommander.ParameterException;
+import java.io.PrintWriter;
+import java.util.List;
+
 import org.nanopub.CliRunner;
 
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.beust.jcommander.ParameterException;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * RunQuery is a command-line utility to execute a query against the Nanopub service.
@@ -37,13 +38,13 @@ public class RunQuery extends CliRunner {
     }
 
     private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        Map<String, String> paramMap = prepareParamsMap(params);
+        Multimap<String, String> paramMap = prepareParamsMap(params);
 
-        QueryAccess.printCvsResponse(queryId, paramMap, new PrintWriter(System.out));
+        QueryAccess.printCvsResponse(new QueryRef(queryId, paramMap), new PrintWriter(System.out));
     }
 
-    Map<String, String> prepareParamsMap(List<String> params) {
-        Map<String, String> paramMap = new HashMap<>();
+    Multimap<String, String> prepareParamsMap(List<String> params) {
+        Multimap<String, String> paramMap = ArrayListMultimap.create();
         if (params != null) {
             for (String p : params) {
                 int i = p.indexOf('=');

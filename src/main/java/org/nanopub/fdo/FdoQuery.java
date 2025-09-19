@@ -1,8 +1,11 @@
 package org.nanopub.fdo;
 
-import org.nanopub.extra.services.*;
-
-import java.util.Map;
+import org.nanopub.extra.services.APINotReachableException;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.FailedApiCallException;
+import org.nanopub.extra.services.NotEnoughAPIInstancesException;
+import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.QueryRef;
 
 /**
  * This class represents an FDO query.
@@ -26,7 +29,7 @@ public class FdoQuery {
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse textSearch(String query) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        return QueryAccess.get(textSearch, Map.of("query", query));
+        return QueryAccess.get(new QueryRef(textSearch, "query", query));
     }
 
     /**
@@ -37,7 +40,7 @@ public class FdoQuery {
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
      */
     public static ApiResponse findByRef(String ref) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        return QueryAccess.get(findByRef, Map.of("refid", ref));
+        return QueryAccess.get(new QueryRef(findByRef, "refid", ref));
     }
 
     /**
@@ -48,7 +51,7 @@ public class FdoQuery {
      * @throws FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFeed(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        return QueryAccess.get(getFeed, Map.of("creator", creator));
+        return QueryAccess.get(new QueryRef(getFeed, "creator", creator));
     }
 
     /**
@@ -59,7 +62,7 @@ public class FdoQuery {
      * @throws FailedApiCallException if the API call fails.
      */
     public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        return QueryAccess.get(getFavoriteThings, Map.of("creator", creator));
+        return QueryAccess.get(new QueryRef(getFavoriteThings, "creator", creator));
     }
 
 }

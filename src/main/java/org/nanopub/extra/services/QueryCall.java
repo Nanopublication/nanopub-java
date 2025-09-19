@@ -1,13 +1,10 @@
 package org.nanopub.extra.services;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
@@ -31,10 +28,10 @@ public class QueryCall {
      * @param params  the parameters to pass to the query
      * @return the HTTP response from the query API
      */
-    public static HttpResponse run(String queryId, Map<String, String> params) throws APINotReachableException, NotEnoughAPIInstancesException {
+    public static HttpResponse run(QueryRef queryRef) throws APINotReachableException, NotEnoughAPIInstancesException {
         int retryCount = 0;
         while (retryCount < maxRetryCount) {
-            QueryCall apiCall = new QueryCall(queryId, params);
+            QueryCall apiCall = new QueryCall(queryRef);
             apiCall.run();
             while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
                 try {
@@ -48,7 +45,7 @@ public class QueryCall {
             }
             retryCount = retryCount + 1;
         }
-        throw new APINotReachableException("Giving up contacting API: " + queryId);
+        throw new APINotReachableException("Giving up contacting API: " + queryRef.getName());
     }
 
     /**
@@ -93,25 +90,15 @@ public class QueryCall {
         return checkedApiInstances;
     }
 
-    private String queryId;
-    private String paramString;
+    private QueryRef queryRef;
     private List<String> apisToCall = new ArrayList<>();
     private List<Call> calls = new ArrayList<>();
 
     private HttpResponse resp;
 
-    private QueryCall(String queryId, Map<String, String> params) {
-        this.queryId = queryId;
-        paramString = "";
-        if (params != null) {
-            paramString = "?";
-            for (String k : params.keySet()) {
-                if (paramString.length() > 1) paramString += "&";
-                paramString += k + "=";
-                paramString += URLEncoder.encode(params.get(k), Charsets.UTF_8);
-            }
-        }
-        logger.info("Invoking API operation {} {}", queryId, paramString);
+    private QueryCall(QueryRef queryRef) {
+        this.queryRef = queryRef;
+        logger.info("Invoking API operation {}", queryRef);
     }
 
     private void run() throws NotEnoughAPIInstancesException {
@@ -136,7 +123,7 @@ public class QueryCall {
             return;
         }
         logger.info("Result in from {}:", apiUrl);
-        logger.info("- Request: {} {}", queryId, paramString);
+        logger.info("- Request: {}", queryRef);
         logger.info("- Response size: {}", resp.getEntity().getContentLength());
         this.resp = resp;
 
@@ -170,7 +157,7 @@ public class QueryCall {
         }
 
         public void run() {
-            get = new HttpGet(apiUrl + "api/" + queryId + paramString);
+            get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
             get.setHeader("Accept", "text/csv");
             HttpResponse resp = null;
             try {

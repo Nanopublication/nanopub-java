@@ -1,13 +1,5 @@
 package org.nanopub.fdo;
 
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.util.Values;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubAlreadyFinalizedException;
-import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.services.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -15,9 +7,21 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.util.Values;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
+import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.extra.services.APINotReachableException;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.ApiResponseEntry;
+import org.nanopub.extra.services.FailedApiCallException;
+import org.nanopub.extra.services.NotEnoughAPIInstancesException;
+import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.QueryRef;
 
 /**
  * Retrieve FDOs (FDO Records) from the nanopub network or handle system.
@@ -66,9 +70,7 @@ public class RetrieveFdo {
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
     public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
-        Map<String, String> params = new HashMap<>();
-        params.put("fdoid", iriOrHandle);
-        ApiResponse apiResponse = QueryAccess.get(GET_FDO_QUERY_ID, params);
+        ApiResponse apiResponse = QueryAccess.get(new QueryRef(GET_FDO_QUERY_ID, "fdoid", iriOrHandle));
         List<ApiResponseEntry> data = apiResponse.getData();
         if (data.isEmpty()) {
             return null;

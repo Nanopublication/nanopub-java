@@ -50,7 +50,7 @@ class RetrieveFdoTest {
                 responseEntryList.add(apiResponseEntry);
 
                 when(mockedApiResponse.getData()).thenReturn(responseEntryList);
-                mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mockedApiResponse);
+                mockedQueryAccess.when(() -> QueryAccess.get(any())).thenReturn(mockedApiResponse);
 
                 Nanopub nanopubFromId = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np")))));
                 mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
@@ -65,7 +65,7 @@ class RetrieveFdoTest {
     void resolveInNanopubNetworkWithInvalidHandle() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         String handle = "notAValidHandle";
         try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
-            mockedQueryAccess.when(() -> QueryAccess.get(any(), any())).thenReturn(mock(ApiResponse.class));
+            mockedQueryAccess.when(() -> QueryAccess.get(any())).thenReturn(mock(ApiResponse.class));
 
             Nanopub np = RetrieveFdo.resolveInNanopubNetwork(handle);
             assertNull(np);
