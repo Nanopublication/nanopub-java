@@ -7,6 +7,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFWriter;
@@ -124,7 +125,7 @@ public class TimestampUpdater extends CliRunner {
             if (!st.getSubject().equals(np.getUri())) continue;
             if (!SimpleTimestampPattern.isCreationTimeProperty(st.getPredicate())) continue;
             if (!(st.getObject() instanceof Literal l)) continue;
-            if (!l.getDatatype().equals(SimpleTimestampPattern.XSD_DATETIME)) continue;
+            if (!l.getDatatype().equals(XSD.DATETIME)) continue;
             statementsToRemove.add(st);
         }
         for (Statement st : statementsToRemove) {

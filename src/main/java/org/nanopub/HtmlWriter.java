@@ -404,7 +404,7 @@ public class HtmlWriter extends TurtleWriter {
 
         if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {
             if (XSD.INTEGER.equals(datatype) || XSD.DECIMAL.equals(datatype)
-                    || XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype)) {
+                || XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype)) {
                 try {
                     writer.write(escapeHtml4(XMLDatatypeUtil.normalize(label, datatype)));
                     return; // done

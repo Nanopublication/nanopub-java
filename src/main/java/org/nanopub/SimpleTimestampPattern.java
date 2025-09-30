@@ -4,9 +4,9 @@ import jakarta.xml.bind.DatatypeConverter;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.nanopub.vocabulary.PAV;
 
 import java.net.MalformedURLException;
@@ -80,18 +80,13 @@ public class SimpleTimestampPattern implements NanopubPattern {
             if (!st.getSubject().equals(nanopub.getUri())) continue;
             if (!isCreationTimeProperty(st.getPredicate())) continue;
             if (!(st.getObject() instanceof Literal l)) continue;
-            if (!l.getDatatype().equals(XSD_DATETIME)) continue;
+            if (!l.getDatatype().equals(XSD.DATETIME)) continue;
             s = l.stringValue();
             break;
         }
         if (s == null) return null;
         return DatatypeConverter.parseDateTime(s);
     }
-
-    /**
-     * Constant <code>XSD_DATETIME</code>
-     */
-    public static final IRI XSD_DATETIME = SimpleValueFactory.getInstance().createIRI("http://www.w3.org/2001/XMLSchema#dateTime");
 
     /**
      * Checks if the given IRI is a property that indicates the creation time of a nanopublication.
