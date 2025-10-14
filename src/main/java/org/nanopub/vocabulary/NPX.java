@@ -38,6 +38,8 @@ public class NPX {
 
     public static final IRI NANOPUB_INDEX = Utils.createIRI(NAMESPACE, "NanopubIndex");
 
+    public static final IRI NANOPUB_SERVICE = Utils.createIRI(NAMESPACE, "NanopubService");
+
     public static final IRI INCOMPLETE_INDEX = Utils.createIRI(NAMESPACE, "IncompleteIndex");
 
     public static final IRI INDEX_ASSERTION = Utils.createIRI(NAMESPACE, "IndexAssertion");
