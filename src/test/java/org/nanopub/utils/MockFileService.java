@@ -23,7 +23,7 @@ public class MockFileService {
     private static final Map<String, String> validAndSignedNanopubs = new HashMap<>();
     private static final Map<String, String> fdoNanopubs = new HashMap<>();
 
-    public MockFileService() {
+    protected MockFileService() {
         try (Stream<Path> paths = Files.walk(Path.of(TEST_SUITE + "/valid/signed"))) {
             paths.filter(Files::isRegularFile).forEach(this::processFile);
         } catch (IOException e) {
