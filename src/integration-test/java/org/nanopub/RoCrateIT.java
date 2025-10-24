@@ -2,6 +2,7 @@ package org.nanopub;
 
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.rio.RDFFormat;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
@@ -13,8 +14,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.List;
 import java.util.Objects;
 
+/**
+ * This Integration test class does also have the function of being a script for importing RO-Crates into the
+ * Nanopub network.
+ *
+ * If you feel entitled to, go on  -  but please use that scripting functionality very carefully.
+ * There are reasons we did not (yet) implemented it as end user cli commands.
+ */
 public class RoCrateIT {
 
     @BeforeAll
@@ -23,7 +32,7 @@ public class RoCrateIT {
     }
 
     @Test
-    void importFromFile() throws IOException, MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
+    void importFromMetadataJsonFile() throws IOException, MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
         String url = "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/";
         String filename = Objects.requireNonNull(RoCrateTest.class.getResource("/588ada8d-a185-402e-8b60-3c17435110ee.jsonld").getPath());
 
@@ -37,10 +46,78 @@ public class RoCrateIT {
 //        PublishNanopub.publish(signedNp);
     }
 
-    Nanopub createNpFromRoCrate (String url, String metadataFilename) throws Exception {
-        InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(url + metadataFilename);
+    /**
+     * Imports the metadata of RO-Crates from the RO-Hub API as nanopubs into the nanopub network.
+     * <p> Notes:</br>
+     * - Implemented as an integration Test, end user are not ment to do it right now.</br>
+     * - Carefully, if you know what you're doing: Uncomment the @Test annotation, to run it and really import RO-Crates as Nanopubs.</br>
+     * - <strong><i>TODO</i> Please set the new offset </strong> as stated offset at the end of the the output.</br>
+     * - We do not (yet) check for duplicates now. So <strong>please do not flood the network</strong> with too much non-original RO-Crate Nanopublications!
+     * </p>
+     * @throws Exception
+     */
+//     @Test
+    void importRoCratesFromRohubApi() throws Exception {
+        int page = 1; // carefully increment when offset gets bigger than something between 3050 and 3292 (and roll over offset)
+        // TODO   When this 'script', implemented as an integration Test, successfully runs,
+        // TODO   please set the new offset as stated at the end of the the output.
+        int offset = 3; // 2 are already imported {0,1,...}
+        int amount = 10; // the amount of RO-Crates you want to import as Nanopubs in the Nanopub Network
+
+        Iterable<String> metadataUrls = getRoCratesMetadataIdFromRoHubApi(page, offset, amount);
+        for (String metadataId : metadataUrls) {
+            importRoCrateFromRohubApi(metadataId);
+        }
+
+        System.err.println("----------------------------------");
+        System.err.println("   Please set new offset to " + (offset + amount));
+        System.err.println("----------------------------------");
+    }
+
+    // TODO implement
+    Iterable<String> getRoCratesMetadataIdFromRoHubApi(int page, int offset, int amount) {
+//        String roId = "302b4ebf-db38-49d5-8ab4-4561181f4e94"; // index 0
+//        String roId = "8a351029-86a8-4e90-a9d1-a67d45d63656"; // index 1
+        String roId = "55a1b422-f279-4765-9ba7-d27268059844"; // index 2
+        return List.of(roId);
+    }
+
+//    @Test
+    void importRoCrateFromRohubApi(String roId) throws Exception {
+        // TODO get list of roIds from https://api.rohub.org/api/ros/
+        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+//        String filename = Objects.requireNonNull(RoCrateTest.class.getResource(roId + ".jsonld").getPath());
+//        FileInputStream metadata = new FileInputStream(filename);
+//        RoCrateParser parser = new RoCrateParser();
+
+        Nanopub signedNp = createNpFromRoCrate(downloadUrl, "");
+
+//        Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+        NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
+        try {
+            PublishNanopub.publish(signedNp);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Nanopub Network Problem. Failed to publish " + roId);
+            System.out.println("Nanopub uri: " + signedNp.getUri());
+        }
+        System.out.println("Published into Nanopub network: " + roId);
+        System.out.println("Nanopub uri: " + signedNp.getUri());
+    }
+
+    /**
+     * Create a signed Nanopub with the path to a RO-Crate available in the internet. The signature is done with
+     * default values (~/nanopub/profile)
+     * @param downloadUrl the downloadUrl where the metadata file is published (including trailing "/")
+     * @param metadataFilename the ro-create metadata filename, may be empty
+     * @return the signed Nanopub
+     * @throws Exception any troubles e.g. network or wrong path
+     */
+    Nanopub createNpFromRoCrate (@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
+        InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
-        Nanopub np = parser.parseRoCreate(url, metadata);
+        Nanopub np = parser.parseRoCreate(downloadUrl, metadata);
 
         Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
         NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);

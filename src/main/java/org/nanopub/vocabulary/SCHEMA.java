@@ -24,4 +24,6 @@ public class SCHEMA {
 
     public static final IRI PERSON = Utils.createIRI(NAMESPACE, "Person");
 
+    public static final IRI RO_CRATE_IDENTIFIER = Utils.createIRI(NAMESPACE, "identifier");
+
 }
