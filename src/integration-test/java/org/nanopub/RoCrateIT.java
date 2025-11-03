@@ -89,8 +89,12 @@ class RoCrateIT {
             System.out.println(String.format("%04d triple count (%s)", signedNp.getTripleCount(), infoString));
         }
 
-//        Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
 //        NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
+          // TODO uncomment this, to really publish all the requested and created nanopubs
+        // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
+        // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
+        // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
 
 //        try {
 //            PublishNanopub.publish(signedNp);

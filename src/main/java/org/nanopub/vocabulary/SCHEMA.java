@@ -26,4 +26,6 @@ public class SCHEMA {
 
     public static final IRI RO_CRATE_IDENTIFIER = Utils.createIRI(NAMESPACE, "identifier");
 
+    public static final IRI RO_CRATE_HAS_PART = Utils.createIRI(NAMESPACE, "hasPart");
+
 }

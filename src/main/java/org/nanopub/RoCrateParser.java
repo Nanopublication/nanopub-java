@@ -30,6 +30,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -159,13 +160,21 @@ public class RoCrateParser {
             LOG.info(String.format("This RO-Crate has an invalid number (%n) of names: %s", nameCandidates.size(), subj.stringValue()));
             nameCandidates.stream().forEach(possibleName -> LOG.debug(possibleName.toString()));
         }
-        String name = nameCandidates.stream()
-                .findFirst().get().getObject().stringValue();
-        if (name == null) {
-            name = metadataStatements.stream()
+
+        String name;
+        Optional<Statement> nameCandidate = nameCandidates.stream().findFirst();
+        if (nameCandidate.isPresent()) {
+            name = nameCandidate.get().getObject().stringValue();
+        } else {
+            nameCandidate = metadataStatements.stream()
                     .filter(st -> st.getSubject().equals(subj)
                             && st.getPredicate().equals(SCHEMA.DESCRIPTION))
-                    .findFirst().get().getObject().stringValue();
+                    .findFirst();
+            if (nameCandidate.isPresent()) {
+                name = nameCandidate.get().getObject().toString();
+            }
+            // the very last fallback
+            name = subj.stringValue();
         }
         return StringUtils.substring(name, 0, 212); // 212 is just our convention;-) 222 was a good choice, too
     }
@@ -177,7 +186,7 @@ public class RoCrateParser {
         }
         // TODO verify if this is correct, and check if sometimes the backup is an even better choice
         IRI identifier = (IRI) metadataStatements.stream()
-                .filter(st -> st.getPredicate().equals(SCHEMA.RO_CRATE_IDENTIFIER))
+                .filter(st -> st.getPredicate().equals(SCHEMA.RO_CRATE_HAS_PART))
                 .findFirst().get().getSubject(); // TODO or do we need the Object-Value???
         if (identifier == null) {
             identifier = vf.createIRI(latestBackupIdentifier);
