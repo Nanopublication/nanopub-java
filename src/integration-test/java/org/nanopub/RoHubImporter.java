@@ -8,7 +8,6 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.fdo.rest.rohub.gson.Page;
@@ -47,7 +46,7 @@ public class RoHubImporter {
         GeneralIntegrationTestsIT.makeSureKeysAreAvailable();
     }
 
-    @Test
+//    @Test
     synchronized void testRoHubIndexParsing () throws Exception {
         for (int pageNumber = 10; pageNumber <= 10; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
@@ -58,16 +57,41 @@ public class RoHubImporter {
         }
     }
 
-    synchronized void prepareRoCrateFromRohubApi(String roId, String infoString) throws Exception {
-        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+//    @Test
+    void importSomeRoCrates () throws Exception {
+        for (int pageNumber = 2; pageNumber <= 10; pageNumber++) {
+            RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
 
+            for (int j = 1; j < currentPage.length; j++) {
+                Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier, String.format("Page %02d - %02d", pageNumber, j));
+                if (roCrate != null) {
+                    // Note: it's possible to publish and sign with any key,
+                    // knowledge pixels usually use the special bot identity https://w3id.org/kpxl/gen/terms/RoCrateBot
+                    Nanopub signedNp = SignNanopub.signAndTransform(roCrate, TransformContext.makeDefault());
+//                    NanopubUtils.writeToStream(signedNp, System.out, RDFFormat.TRIG);
+                    System.out.println("Publishing " + signedNp.getUri());
+                    // TODO iykyn  !!! only if you know what you do !!!
+//                    PublishNanopub.publish(signedNp);
+                }
+            }
+        }
+    }
+
+    /**
+     * @return the unsigned Nanopub, or null if a not-severe exception occured
+     * @throws Exception
+     */
+    synchronized Nanopub prepareRoCrateFromRohubApi(String roId, String infoString) throws Exception {
+        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+        Nanopub unsignedNp = null;
         try {
             restartTimerIfEnabled();
-            Nanopub unsignedNp = createUnsignedNpFromRoCrate(downloadUrl, "");
+            unsignedNp = createUnsignedNpFromRoCrate(downloadUrl, "");
             int containingFilesInRoCrate = countHasPartRelationsInRoCrateNanopub(unsignedNp);
             if (infoString != null) {
                 System.out.println(String.format("%04d, triple count - hasPart=, %03d, (%s)", unsignedNp.getTripleCount(), containingFilesInRoCrate, infoString));
             }
+            return unsignedNp;
         } catch (RDFParseException | MalformedNanopubException e) {
             if (infoString != null) {
                 System.out.println(String.format("%04d triple count (%s)", 0,
@@ -82,6 +106,7 @@ public class RoHubImporter {
                 System.err.println("NanoCreations total Time: " + creationTimer.getTime());
             }
         }
+        return unsignedNp;
     }
 
     /**
