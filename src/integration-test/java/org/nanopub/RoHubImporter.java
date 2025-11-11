@@ -8,6 +8,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
 import org.nanopub.fdo.rest.rohub.gson.Page;
@@ -46,7 +47,7 @@ public class RoHubImporter {
         GeneralIntegrationTestsIT.makeSureKeysAreAvailable();
     }
 
-//    @Test
+    @Test
     synchronized void testRoHubIndexParsing () throws Exception {
         for (int pageNumber = 10; pageNumber <= 10; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
@@ -59,25 +60,42 @@ public class RoHubImporter {
 
 //    @Test
     void importSomeRoCrates () throws Exception {
-        for (int pageNumber = 2; pageNumber <= 10; pageNumber++) {
+        for (int pageNumber = 11; pageNumber <= 11; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
 
-            for (int j = 1; j < currentPage.length; j++) {
+            for (int j = 0; j < currentPage.length; j++) {
                 Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier, String.format("Page %02d - %02d", pageNumber, j));
                 if (roCrate != null) {
-                    // Note: it's possible to publish and sign with any key,
-                    // knowledge pixels usually use the special bot identity https://w3id.org/kpxl/gen/terms/RoCrateBot
-                    Nanopub signedNp = SignNanopub.signAndTransform(roCrate, TransformContext.makeDefault());
+                    try {
+                        // Note: it's possible to publish and sign with any key,
+                        // knowledge pixels usually use the special bot identity https://w3id.org/kpxl/gen/terms/RoCrateBot
+                        Nanopub signedNp = SignNanopub.signAndTransform(roCrate, TransformContext.makeDefault());
 //                    NanopubUtils.writeToStream(signedNp, System.out, RDFFormat.TRIG);
-                    System.out.println("Publishing " + signedNp.getUri());
-                    // TODO iykyn  !!! only if you know what you do !!!
-//                    PublishNanopub.publish(signedNp);
+                        System.out.println("Publishing " + signedNp.getUri());
+                        // TODO iykyn  !!! only if you know what you do !!!
+//                        PublishNanopub.publish(signedNp);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
+    @Test
+    void testLogging () throws Exception {
+        log.debug("abc");
+        if (log.isDebugEnabled()) {
+            log.error("debug-error");
+        }
+        log.trace("trace");
+        log.error("error");
+        log.info("info");
+    }
+
     /**
+     * Note: The synchronization is only for the stop-watches (timer). Parallelization would make it faster,
+     * but we do not care for now. Since the bottleneck is clearly ro-hub.
      * @return the unsigned Nanopub, or null if a not-severe exception occured
      * @throws Exception
      */
@@ -165,7 +183,7 @@ public class RoHubImporter {
         System.out.println(String.format("Page %02d: result size = %d", pageNumber, p.results.length));
         if (log.isDebugEnabled()) {
             for (int i = 0; i < p.results.length; i++) {
-                // TODO enableling log output for tests
+                // TODO enableing log output for tests
                 System.err.println(String.format("# %02d : %s", i, p.results[i].api_link));
                 log.debug(p.results[i].api_link);
             }

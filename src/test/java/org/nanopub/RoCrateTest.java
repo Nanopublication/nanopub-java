@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.nanopub.vocabulary.NPX;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.util.List;
@@ -21,6 +23,7 @@ public class RoCrateTest {
 
     final String roCrateUrl = "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/";
     final String roCrateMetadataPath = Objects.requireNonNull(this.getClass().getResource("/")).getPath() + "7ad44bec-6784-437f-b5f3-2199b43a5303.jsonld";
+    static final Logger log = LoggerFactory.getLogger(RoCrateTest.class);
 
     @Test
     void testParseRoCrateMetadata() throws Exception {
@@ -40,6 +43,28 @@ public class RoCrateTest {
                 roCrateUrl
         });
         ro.run();
+    }
+
+    @Test
+    void testLogging () throws Exception {
+
+        // Source - https://stackoverflow.com/a/46052596
+// Posted by user5845413
+// Retrieved 2025-11-11, License - CC BY-SA 3.0
+
+//        System.setProperty(org.slf4j.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
+//        ILoggerFactory factory = LoggerFactory.getILoggerFactory();
+//        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+
+        log.debug("xzyABC212 abc");
+        if (log.isDebugEnabled()) {
+            log.error("xzyABC212 debug-error");
+            System.out.println("Sysout: xzyABC212 debug-error");
+        }
+        log.trace("xzyABC212 trace");
+        log.error("xzyABC212 error");
+        log.info("xzyABC212 info");
+        System.out.println("Sysout xzyABC212 : end");
     }
 
     @Test
