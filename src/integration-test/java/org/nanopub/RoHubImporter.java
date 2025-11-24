@@ -60,11 +60,15 @@ public class RoHubImporter {
 
 //    @Test
     void importSomeRoCrates () throws Exception {
-        for (int pageNumber = 11; pageNumber <= 11; pageNumber++) {
+        // TODO DEVELOPER: Insert page(s) to import. As long as RO-Hubs ordeing is constant, it should stay > 11
+        for (int pageNumber = 11; pageNumber <= 10; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
 
             for (int j = 0; j < currentPage.length; j++) {
-                Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier, String.format("Page %02d - %02d", pageNumber, j));
+                Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier,
+                        String.format("Page %02d - %02d", pageNumber, j));
+                                // My IntelliJ shortly had a problem with auto-boxing in my current version of
+                                // openjdk/24.0.1, the workaround Integer.valueOf(int) "fixes" that.
                 if (roCrate != null) {
                     try {
                         // Note: it's possible to publish and sign with any key,

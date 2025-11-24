@@ -2,6 +2,8 @@ package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -24,11 +26,13 @@ import java.util.Map;
  */
 public class PublishNanopub extends CliRunner {
 
+    private static final Log LOG = LogFactory.getLog(PublishNanopub.class);
+
     @com.beust.jcommander.Parameter(description = "nanopubs", required = true)
     private List<String> nanopubs = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
-    private boolean verbose = false;
+    private boolean verbose; // TODO fix verbose mode
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")
     private List<String> serverUrls;
@@ -107,7 +111,29 @@ public class PublishNanopub extends CliRunner {
      */
     public PublishNanopub() {
         super();
+        initLogging();
     }
+
+
+
+    /**
+     * Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
+     * The other way around, we do interpret the command line concept of setting the verbose flag as
+     * activation of debug log.
+     */
+    // TODO Push-Up! This will be useful with other CliTasks that support the verbose flag.
+    public void initLogging () {
+        if (LOG.isDebugEnabled()) {
+            verbose = true;
+        } else if (verbose) {
+            logOrSysout(LOG, "Enabling DEBUG log, since VERBOSE cli flag is enabled.");
+            if (!LOG.isTraceEnabled()) {
+                LogFactory.getFactory().setAttribute(LogFactory.PRIORITY_KEY, "DEBUG");
+            }
+        }
+        logOrSysout(LOG, "Initialized logging for CLI Runner. Verbose mode: " + verbose);
+    }
+
 
     private void run() throws IOException {
         failed = false;
@@ -122,34 +148,36 @@ public class PublishNanopub extends CliRunner {
                     processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));
                 } else {
                     if (verbose) {
-                        System.out.println("Reading file: " + s);
+                        logOrSysout(LOG, "Reading file: " + s);
                     }
                     MultiNanopubRdfHandler.process(new File(s), np -> {
                         if (failed) return;
                         processNanopub(np);
                     });
                     if (count == 0) {
-                        System.out.println("NO NANOPUB FOUND: " + s);
+                        String msg = "NO NANOPUB FOUND: " + s;
+                        LOG.info(msg);
+                        System.out.println(msg);
                         break;
                     }
                 }
             } catch (RDF4JException ex) {
-                System.out.println("RDF ERROR: " + s);
+                logOrSysout(LOG, "RDF ERROR: " + s);
                 ex.printStackTrace(System.err);
                 break;
             } catch (MalformedNanopubException ex) {
-                System.out.println("INVALID NANOPUB: " + s);
+                logOrSysout(LOG, "INVALID NANOPUB: " + s);
                 ex.printStackTrace(System.err);
                 break;
             }
             if (failed) {
-                System.out.println("FAILED TO PUBLISH NANOPUBS");
+                logOrSysout(LOG, "FAILED TO PUBLISH NANOPUBS");
                 break;
             }
         }
         for (String s : usedServers.keySet()) {
             int c = usedServers.get(s);
-            System.out.println(c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
+            logOrSysout(LOG, c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
         }
         if (sparqlRepo != null) {
             try {
@@ -163,7 +191,7 @@ public class PublishNanopub extends CliRunner {
     private void processNanopub(Nanopub nanopub) {
         count++;
         if (count % 100 == 0) {
-            System.err.print(count + " nanopubs...\r");
+            System.err.print(count + " nanopubs...\r"); // TODO handle System.err with logging in a similar way to System.out with logOrSysout --> logAndSysERR ??
         }
         try {
             publishNanopub(nanopub);
@@ -196,6 +224,13 @@ public class PublishNanopub extends CliRunner {
      * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
+        if (LOG.isDebugEnabled()) {
+            // Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
+            // The other way around, we do interpret the command line concept of setting the verbose flag as
+            // activation of debug log.
+            verbose = true;
+        }
+
         if (registryInfo == null) {
             if (serverUrl != null) {
                 serverIterator = new ServerIterator(serverUrl);
@@ -208,8 +243,7 @@ public class PublishNanopub extends CliRunner {
         }
         artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
         if (verbose) {
-            System.out.println("---");
-            System.out.println("Trying to publish nanopub: " + artifactCode);
+            logOrSysout(LOG, "Trying to publish nanopub: " + artifactCode);
         }
         if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
             throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
@@ -220,7 +254,7 @@ public class PublishNanopub extends CliRunner {
             // TODO Check here whether nanopub type is covered at given registry.
 
             if (verbose) {
-                System.out.println("Trying server: " + url);
+                logOrSysout(LOG, "Trying server: " + url);
             }
             try {
                 HttpPost post = new HttpPost(registryInfo.getUrl());
@@ -237,23 +271,25 @@ public class PublishNanopub extends CliRunner {
                     }
                     String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
                     if (verbose) {
-                        System.out.println("Published: " + nanopubUrl);
+                        logOrSysout(LOG, "Published: " + nanopubUrl);
                     }
                     return nanopubUrl;
                 } else {
                     if (verbose) {
-                        System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
+                        logOrSysout(LOG, "Response: " + code + " " + response.getStatusLine().getReasonPhrase());
                     }
                 }
             } catch (IOException | RDF4JException ex) {
                 if (verbose) {
-                    System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
+                    logOrSysout(LOG, ex.getClass().getName() + ": " + ex.getMessage());
                 }
             }
             registryInfo = serverIterator.next();
         }
         registryInfo = null;
-        throw new RuntimeException("Failed to publish the nanopub");
+        throw new RuntimeException(String.format("Failed to publish the nanopub. " +
+                "Details: HTTP Response Codes from Servers where not between 200 and 300\n" +
+                "Server URL = '%s'", serverUrl));
     }
 
     /**
