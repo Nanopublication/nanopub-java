@@ -32,7 +32,10 @@ public class PublishNanopub extends CliRunner {
     private List<String> nanopubs = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
-    private boolean verbose; // TODO fix verbose mode
+    private boolean verbose;
+
+    @com.beust.jcommander.Parameter(names = "--dry-run", description = "Simulate (no action)")
+    private boolean dryRun;
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")
     private List<String> serverUrls;
@@ -220,7 +223,7 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
-     * @return the URL of the published nanopublication
+     * @return the URL of the published nanopublication, iff not --dry-run (then it's np.getUri() which may be null)
      * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
@@ -257,27 +260,10 @@ public class PublishNanopub extends CliRunner {
                 logOrSysout(LOG, "Trying server: " + url);
             }
             try {
-                HttpPost post = new HttpPost(registryInfo.getUrl());
-                String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
-                post.setEntity(new StringEntity(nanopubString, "UTF-8"));
-                post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
-                HttpResponse response = NanopubUtils.getHttpClient().execute(post);
-                int code = response.getStatusLine().getStatusCode();
-                if (code >= 200 && code < 300) {
-                    if (usedServers.containsKey(url)) {
-                        usedServers.put(url, usedServers.get(url) + 1);
-                    } else {
-                        usedServers.put(url, 1);
-                    }
-                    String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
-                    if (verbose) {
-                        logOrSysout(LOG, "Published: " + nanopubUrl);
-                    }
-                    return nanopubUrl;
-                } else {
-                    if (verbose) {
-                        logOrSysout(LOG, "Response: " + code + " " + response.getStatusLine().getReasonPhrase());
-                    }
+                HttpPost post = preparePost(nanopub);
+                if (!dryRun) {
+                    String nanopubUrl = executePost(post, url);
+                    if (nanopubUrl != null) return nanopubUrl;
                 }
             } catch (IOException | RDF4JException ex) {
                 if (verbose) {
@@ -287,9 +273,44 @@ public class PublishNanopub extends CliRunner {
             registryInfo = serverIterator.next();
         }
         registryInfo = null;
-        throw new RuntimeException(String.format("Failed to publish the nanopub. " +
-                "Details: HTTP Response Codes from Servers where not between 200 and 300\n" +
-                "Server URL = '%s'", serverUrl));
+        if (dryRun) {
+            System.out.println("Nanopub NOT published: --dry-run, np-uri=" + nanopub.getUri());
+            return null;
+        } else {
+            throw new RuntimeException(String.format("Failed to publish the nanopub. " +
+                    "Details: Probably the HTTP Response Codes from Servers where not between 200 and 300\n" +
+                    "Server URL = '%s'", serverUrl));
+        }
+    }
+
+    private HttpPost preparePost(Nanopub nanopub) throws IOException {
+        HttpPost post = new HttpPost(registryInfo.getUrl());
+        String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
+        post.setEntity(new StringEntity(nanopubString, "UTF-8"));
+        post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
+        return post;
+    }
+
+    private String executePost(HttpPost post, String url) throws IOException {
+        HttpResponse response = NanopubUtils.getHttpClient().execute(post);
+        int code = response.getStatusLine().getStatusCode();
+        if (code >= 200 && code < 300) {
+            if (usedServers.containsKey(url)) {
+                usedServers.put(url, usedServers.get(url) + 1);
+            } else {
+                usedServers.put(url, 1);
+            }
+            String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
+            if (verbose) {
+                logOrSysout(LOG, "Published: " + nanopubUrl);
+            }
+            return nanopubUrl;
+        } else {
+            if (verbose) {
+                logOrSysout(LOG, "Response: " + code + " " + response.getStatusLine().getReasonPhrase());
+            }
+        }
+        return null; // post failed
     }
 
     /**

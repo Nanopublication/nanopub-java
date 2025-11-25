@@ -3,6 +3,9 @@ package org.nanopub;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.Arrays;
 
 /**
  * Abstract class for command-line interface (CLI) runners.
@@ -28,6 +31,8 @@ public abstract class CliRunner {
         try {
             jc.parse(args);
         } catch (ParameterException ex) {
+            String arguments = "args = " + Arrays.toString(args);
+            logOrSysout(LogFactory.getLog(CliRunner.class), arguments);
             jc.usage();
             throw ex;
         }
