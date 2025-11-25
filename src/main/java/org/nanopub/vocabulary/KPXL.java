@@ -1,0 +1,11 @@
+package org.nanopub.vocabulary;
+
+import org.eclipse.rdf4j.model.IRI;
+
+public final class KPXL {
+
+    public static final String NAMESPACE = "https://w3id.org/kpxl/gen/terms/";
+
+    /** https://w3id.org/kpxl/gen/terms/RoCrateNanopub */
+    public static final IRI RO_CRATE_NANOPUB = Utils.createIRI(NPX.NAMESPACE, "RoCrateNanopub");
+}

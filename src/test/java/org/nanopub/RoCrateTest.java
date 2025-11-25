@@ -6,7 +6,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.KPXL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class RoCrateTest {
         List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE))
                 .toList();
         assertEquals(1, typePred.size());
-        assertEquals(NPX.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
+        assertEquals(KPXL.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
     }
 
     @Test
