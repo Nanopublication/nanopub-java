@@ -55,7 +55,7 @@ public class QueryCall {
     public static String[] queryApiInstances = new String[]{
             "https://query.knowledgepixels.com/",
             "https://query.petapico.org/",
-            "https://query.np.trustyuri.net/"
+            "https://query.nanodash.net/"
     };
 
     private static List<String> checkedApiInstances;
