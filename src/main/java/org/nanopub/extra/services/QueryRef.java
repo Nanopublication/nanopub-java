@@ -1,16 +1,17 @@
 package org.nanopub.extra.services;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import org.apache.commons.codec.Charsets;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-
-import org.apache.commons.codec.Charsets;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * A reference to a query with optional parameters.
@@ -79,6 +80,11 @@ public class QueryRef implements Serializable {
         return params;
     }
 
+    /**
+     * Get the query reference as a URL string.
+     *
+     * @return the query reference as a URL string
+     */
     public String getAsUrlString() {
         if (urlString == null) {
             String paramString = "";
@@ -101,6 +107,28 @@ public class QueryRef implements Serializable {
     @Override
     public String toString() {
         return getAsUrlString();
+    }
+
+    /**
+     * Parse a QueryRef from a string.
+     *
+     * @param queryRefUrlString the string to parse
+     * @return the parsed QueryRef
+     */
+    public static QueryRef parseString(String queryRefUrlString) {
+        // TODO add check that the string is a valid one before parsing
+        if (queryRefUrlString.contains("?")) {
+            String queryName = queryRefUrlString.split("\\?")[0];
+            Multimap<String, String> queryParams = ArrayListMultimap.create();
+            if (!queryRefUrlString.endsWith("?")) {
+                for (NameValuePair nvp : URLEncodedUtils.parse(queryRefUrlString.split("\\?")[1], Charsets.UTF_8)) {
+                    queryParams.put(nvp.getName(), nvp.getValue());
+                }
+            }
+            return new QueryRef(queryName, queryParams);
+        } else {
+            return new QueryRef(queryRefUrlString);
+        }
     }
 
 }
