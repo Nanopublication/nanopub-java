@@ -1,5 +1,7 @@
 package org.nanopub;
 
+import net.trustyuri.ModuleDirectory;
+import net.trustyuri.TrustyUriModule;
 import net.trustyuri.TrustyUriUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +13,10 @@ import java.util.Objects;
  */
 public class ArtifactCodeImpl implements ArtifactCode {
 
-    private final String code;
     private static final Logger logger = LoggerFactory.getLogger(ArtifactCodeImpl.class);
+
+    private final String code;
+    private final TrustyUriModule module;
 
     /**
      * Constructs an ArtifactCodeImpl with the given code.
@@ -23,6 +27,7 @@ public class ArtifactCodeImpl implements ArtifactCode {
     public ArtifactCodeImpl(String code) {
         if (TrustyUriUtils.isPotentialArtifactCode(code)) {
             this.code = code;
+            this.module = ModuleDirectory.getModule(TrustyUriUtils.getModuleId(code));
         } else {
             logger.error("Invalid artifact code: {}", code);
             throw new IllegalArgumentException("Invalid artifact code: " + code);
@@ -40,10 +45,14 @@ public class ArtifactCodeImpl implements ArtifactCode {
     }
 
     @Override
+    public TrustyUriModule getModule() {
+        return this.module;
+    }
+
+    @Override
     public String toString() {
         return "ArtifactCode{" + "code='" + code + '\'' + '}';
     }
-
 
     @Override
     public boolean equals(Object o) {
