@@ -1,5 +1,6 @@
 package org.nanopub;
 
+import net.trustyuri.rdf.RdfModule;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +40,13 @@ class ArtifactCodeImplTest {
     void testToString() {
         ArtifactCodeImpl artifactCode = new ArtifactCodeImpl(validArtifactCode);
         assertEquals("ArtifactCode{code='" + validArtifactCode + "'}", artifactCode.toString());
+    }
+
+    @Test
+    void testGetModule() {
+        ArtifactCodeImpl artifactCode = new ArtifactCodeImpl(validArtifactCode);
+        assertInstanceOf(RdfModule.class, artifactCode.getModule());
+        assertEquals(RdfModule.MODULE_ID, artifactCode.getModule().getModuleId());
     }
 
 }
