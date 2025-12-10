@@ -107,14 +107,14 @@ public class GetNanopub extends CliRunner {
      */
     public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
         ServerIterator serverIterator = new ServerIterator();
-        String ac = getArtifactCode(uriOrArtifactCode);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
+        ArtifactCode artifactCode = getArtifactCode(uriOrArtifactCode);
+        if (!artifactCode.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
             throw new IllegalArgumentException("Not a trusty URI of type RA");
         }
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = get(ac, registryInfo, httpClient);
+                Nanopub np = get(artifactCode.getCode(), registryInfo, httpClient);
                 if (np != null) {
                     return np;
                 }
@@ -133,11 +133,11 @@ public class GetNanopub extends CliRunner {
      * @return the Nanopub object, or null if not found
      */
     public static Nanopub get(String uriOrArtifactCode, NanopubDb db) {
-        String ac = getArtifactCode(uriOrArtifactCode);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
+        ArtifactCode artifactCode = getArtifactCode(uriOrArtifactCode);
+        if (!artifactCode.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
             throw new IllegalArgumentException("Not a trusty URI of type RA");
         }
-        return db.getNanopub(ac);
+        return db.getNanopub(artifactCode.getCode());
     }
 
     /**
@@ -202,7 +202,7 @@ public class GetNanopub extends CliRunner {
      * @param uriOrArtifactCode the URI or artifact code of the nanopub
      * @return the artifact code
      */
-    public static String getArtifactCode(String uriOrArtifactCode) {
+    public static ArtifactCode getArtifactCode(String uriOrArtifactCode) {
         return extractArtifactCode(uriOrArtifactCode);
     }
 

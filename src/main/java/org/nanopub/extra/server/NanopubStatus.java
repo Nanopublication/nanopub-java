@@ -7,9 +7,7 @@ import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
-import org.nanopub.CliRunner;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
+import org.nanopub.*;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 
@@ -51,23 +49,17 @@ public class NanopubStatus extends CliRunner {
         }
     }
 
-    private static String getArtifactCode(String uriOrArtifactCode) {
+    private static ArtifactCode getArtifactCode(String uriOrArtifactCode) {
         return extractArtifactCode(uriOrArtifactCode);
     }
 
-    static String extractArtifactCode(String uriOrArtifactCode) {
+    static ArtifactCode extractArtifactCode(String uriOrArtifactCode) {
+        String artifactCode = uriOrArtifactCode;
         if (uriOrArtifactCode.indexOf(":") > 0) {
             IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
-            if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
-                throw new IllegalArgumentException("Not a well-formed trusty URI");
-            }
-            return TrustyUriUtils.getArtifactCode(uri.toString());
-        } else {
-            if (!TrustyUriUtils.isPotentialArtifactCode(uriOrArtifactCode)) {
-                throw new IllegalArgumentException("Not a well-formed artifact code");
-            }
-            return uriOrArtifactCode;
+            artifactCode = TrustyUriUtils.getArtifactCode(uri.toString());
         }
+        return new ArtifactCodeImpl(artifactCode);
     }
 
     private int contentNpCount, indexNpCount;
@@ -80,7 +72,7 @@ public class NanopubStatus extends CliRunner {
     public NanopubStatus() {
     }
 
-    private void run() throws IOException, RDFHandlerException {
+    private void run() throws RDFHandlerException {
         checkNanopub(nanopubIds.getFirst(), recursive);
         if (recursive) {
             System.out.print(indexNpCount + " index nanopub" + (indexNpCount != 1 ? "s" : "") + "; ");
@@ -92,8 +84,8 @@ public class NanopubStatus extends CliRunner {
     }
 
     private void checkNanopub(String nanopubId, boolean checkIndexContent) {
-        String ac = getArtifactCode(nanopubId);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
+        ArtifactCode artifactCode = getArtifactCode(nanopubId);
+        if (!artifactCode.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
             System.err.println("ERROR. Not a trusty URI of type RA: " + nanopubId);
             System.exit(1);
         }
@@ -103,7 +95,7 @@ public class NanopubStatus extends CliRunner {
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = GetNanopub.get(ac, registryInfo);
+                Nanopub np = GetNanopub.get(artifactCode.getCode(), registryInfo);
                 if (np != null) {
                     if (checkIndexContent && !IndexUtils.isIndex(np)) {
                         System.err.println("ERROR. Not an index: " + nanopubId);
@@ -111,7 +103,7 @@ public class NanopubStatus extends CliRunner {
                     }
                     if (nanopub == null) nanopub = np;
                     if (!recursive || verbose) {
-                        System.out.println("URL: " + registryInfo.getCollectionUrl() + ac);
+                        System.out.println("URL: " + registryInfo.getCollectionUrl() + artifactCode);
                     }
                     if (checkAllServers) {
                         count++;
@@ -138,7 +130,7 @@ public class NanopubStatus extends CliRunner {
             if (!recursive) {
                 System.out.println(text + ".");
             } else if (verbose) {
-                System.out.println(text + ": " + ac);
+                System.out.println(text + ": " + artifactCode);
             }
             if (minCount < 0 || minCount > count) {
                 minCount = count;
