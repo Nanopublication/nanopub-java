@@ -33,6 +33,7 @@ public class Run {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void main(String[] args) throws IOException, RDF4JException {
+        // TODO is this really what we want here, INFO seems better
         System.setProperty("slf4j.internal.verbosity", "WARN");
         NanopubImpl.ensureLoaded();
         run(args);

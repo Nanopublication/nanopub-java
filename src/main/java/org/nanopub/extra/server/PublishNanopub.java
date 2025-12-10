@@ -2,6 +2,8 @@ package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -24,11 +26,16 @@ import java.util.Map;
  */
 public class PublishNanopub extends CliRunner {
 
+    private static final Log LOG = LogFactory.getLog(PublishNanopub.class);
+
     @com.beust.jcommander.Parameter(description = "nanopubs", required = true)
     private List<String> nanopubs = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
-    private boolean verbose = false;
+    private boolean verbose;
+
+    @com.beust.jcommander.Parameter(names = "--dry-run", description = "Simulate (no action)")
+    private boolean dryRun;
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")
     private List<String> serverUrls;
@@ -107,7 +114,29 @@ public class PublishNanopub extends CliRunner {
      */
     public PublishNanopub() {
         super();
+        initLogging();
     }
+
+
+
+    /**
+     * Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
+     * The other way around, we do interpret the command line concept of setting the verbose flag as
+     * activation of debug log.
+     */
+    // TODO Push-Up! This will be useful with other CliTasks that support the verbose flag.
+    public void initLogging () {
+        if (LOG.isDebugEnabled()) {
+            verbose = true;
+        } else if (verbose) {
+            logOrSysout(LOG, "Enabling DEBUG log, since VERBOSE cli flag is enabled.");
+            if (!LOG.isTraceEnabled()) {
+                LogFactory.getFactory().setAttribute(LogFactory.PRIORITY_KEY, "DEBUG");
+            }
+        }
+        logOrSysout(LOG, "Initialized logging for CLI Runner. Verbose mode: " + verbose);
+    }
+
 
     private void run() throws IOException {
         failed = false;
@@ -122,34 +151,36 @@ public class PublishNanopub extends CliRunner {
                     processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));
                 } else {
                     if (verbose) {
-                        System.out.println("Reading file: " + s);
+                        logOrSysout(LOG, "Reading file: " + s);
                     }
                     MultiNanopubRdfHandler.process(new File(s), np -> {
                         if (failed) return;
                         processNanopub(np);
                     });
                     if (count == 0) {
-                        System.out.println("NO NANOPUB FOUND: " + s);
+                        String msg = "NO NANOPUB FOUND: " + s;
+                        LOG.info(msg);
+                        System.out.println(msg);
                         break;
                     }
                 }
             } catch (RDF4JException ex) {
-                System.out.println("RDF ERROR: " + s);
+                logOrSysout(LOG, "RDF ERROR: " + s);
                 ex.printStackTrace(System.err);
                 break;
             } catch (MalformedNanopubException ex) {
-                System.out.println("INVALID NANOPUB: " + s);
+                logOrSysout(LOG, "INVALID NANOPUB: " + s);
                 ex.printStackTrace(System.err);
                 break;
             }
             if (failed) {
-                System.out.println("FAILED TO PUBLISH NANOPUBS");
+                logOrSysout(LOG, "FAILED TO PUBLISH NANOPUBS");
                 break;
             }
         }
         for (String s : usedServers.keySet()) {
             int c = usedServers.get(s);
-            System.out.println(c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
+            logOrSysout(LOG, c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
         }
         if (sparqlRepo != null) {
             try {
@@ -163,7 +194,7 @@ public class PublishNanopub extends CliRunner {
     private void processNanopub(Nanopub nanopub) {
         count++;
         if (count % 100 == 0) {
-            System.err.print(count + " nanopubs...\r");
+            System.err.print(count + " nanopubs...\r"); // TODO handle System.err with logging in a similar way to System.out with logOrSysout --> logAndSysERR ??
         }
         try {
             publishNanopub(nanopub);
@@ -192,10 +223,17 @@ public class PublishNanopub extends CliRunner {
      *
      * @param nanopub   the nanopublication to publish
      * @param serverUrl the URL of the nanopub server
-     * @return the URL of the published nanopublication
+     * @return the URL of the published nanopublication, iff not --dry-run (then it's np.getUri() which may be null)
      * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
+        if (LOG.isDebugEnabled()) {
+            // Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
+            // The other way around, we do interpret the command line concept of setting the verbose flag as
+            // activation of debug log.
+            verbose = true;
+        }
+
         if (registryInfo == null) {
             if (serverUrl != null) {
                 serverIterator = new ServerIterator(serverUrl);
@@ -208,8 +246,7 @@ public class PublishNanopub extends CliRunner {
         }
         artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
         if (verbose) {
-            System.out.println("---");
-            System.out.println("Trying to publish nanopub: " + artifactCode);
+            logOrSysout(LOG, "Trying to publish nanopub: " + artifactCode);
         }
         if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
             throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
@@ -220,40 +257,60 @@ public class PublishNanopub extends CliRunner {
             // TODO Check here whether nanopub type is covered at given registry.
 
             if (verbose) {
-                System.out.println("Trying server: " + url);
+                logOrSysout(LOG, "Trying server: " + url);
             }
             try {
-                HttpPost post = new HttpPost(registryInfo.getUrl());
-                String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
-                post.setEntity(new StringEntity(nanopubString, "UTF-8"));
-                post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
-                HttpResponse response = NanopubUtils.getHttpClient().execute(post);
-                int code = response.getStatusLine().getStatusCode();
-                if (code >= 200 && code < 300) {
-                    if (usedServers.containsKey(url)) {
-                        usedServers.put(url, usedServers.get(url) + 1);
-                    } else {
-                        usedServers.put(url, 1);
-                    }
-                    String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
-                    if (verbose) {
-                        System.out.println("Published: " + nanopubUrl);
-                    }
-                    return nanopubUrl;
-                } else {
-                    if (verbose) {
-                        System.out.println("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
-                    }
+                HttpPost post = preparePost(nanopub);
+                if (!dryRun) {
+                    String nanopubUrl = executePost(post, url);
+                    if (nanopubUrl != null) return nanopubUrl;
                 }
             } catch (IOException | RDF4JException ex) {
                 if (verbose) {
-                    System.out.println(ex.getClass().getName() + ": " + ex.getMessage());
+                    logOrSysout(LOG, ex.getClass().getName() + ": " + ex.getMessage());
                 }
             }
             registryInfo = serverIterator.next();
         }
         registryInfo = null;
-        throw new RuntimeException("Failed to publish the nanopub");
+        if (dryRun) {
+            System.out.println("Nanopub NOT published: --dry-run, np-uri=" + nanopub.getUri());
+            return null;
+        } else {
+            throw new RuntimeException(String.format("Failed to publish the nanopub. " +
+                    "Details: Probably the HTTP Response Codes from Servers where not between 200 and 300\n" +
+                    "Server URL = '%s'", serverUrl));
+        }
+    }
+
+    private HttpPost preparePost(Nanopub nanopub) throws IOException {
+        HttpPost post = new HttpPost(registryInfo.getUrl());
+        String nanopubString = NanopubUtils.writeToString(nanopub, RDFFormat.TRIG);
+        post.setEntity(new StringEntity(nanopubString, "UTF-8"));
+        post.setHeader("Content-Type", RDFFormat.TRIG.getDefaultMIMEType());
+        return post;
+    }
+
+    private String executePost(HttpPost post, String url) throws IOException {
+        HttpResponse response = NanopubUtils.getHttpClient().execute(post);
+        int code = response.getStatusLine().getStatusCode();
+        if (code >= 200 && code < 300) {
+            if (usedServers.containsKey(url)) {
+                usedServers.put(url, usedServers.get(url) + 1);
+            } else {
+                usedServers.put(url, 1);
+            }
+            String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
+            if (verbose) {
+                logOrSysout(LOG, "Published: " + nanopubUrl);
+            }
+            return nanopubUrl;
+        } else {
+            if (verbose) {
+                logOrSysout(LOG, "Response: " + code + " " + response.getStatusLine().getReasonPhrase());
+            }
+        }
+        return null; // post failed
     }
 
     /**

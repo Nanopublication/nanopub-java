@@ -19,6 +19,7 @@ import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
 import org.jspecify.annotations.NonNull;
+import org.nanopub.vocabulary.KPXL;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.SCHEMA;
 
@@ -94,7 +95,7 @@ public class RoCrateParser {
         npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ "ro-crate-metadata.json"));
         npCreator.addPubinfoStatement(NPX.INTRODUCES,  identifier);
         npCreator.addPubinfoStatement(RDFS.LABEL, vf.createLiteral(label));
-        npCreator.addPubinfoStatement(RDF.TYPE, NPX.RO_CRATE_NANOPUB);
+        npCreator.addPubinfoStatement(RDF.TYPE, KPXL.RO_CRATE_NANOPUB);
 
         return npCreator.finalizeNanopub(true);
     }

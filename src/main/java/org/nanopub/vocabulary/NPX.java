@@ -79,8 +79,6 @@ public class NPX {
     // Deprecated; used for legacy signatures
     public static final IRI HAS_SIGNATURE_ELEMENT = Utils.createIRI(NAMESPACE, "hasSignatureElement");
 
-    public static final IRI RO_CRATE_NANOPUB = Utils.createIRI(NAMESPACE, "RoCrateNanopub");
-
     public static final IRI WAS_CREATED_AT = Utils.createIRI(NAMESPACE, "wasCreatedAt");
 
     public static final IRI UPDATES_BY_CREATOR = Utils.createIRI(NAMESPACE, "UpdatesByCreator");

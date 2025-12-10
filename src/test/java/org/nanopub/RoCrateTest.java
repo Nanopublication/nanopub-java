@@ -6,7 +6,9 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.nanopub.vocabulary.NPX;
+import org.nanopub.vocabulary.KPXL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.util.List;
@@ -21,15 +23,15 @@ public class RoCrateTest {
 
     final String roCrateUrl = "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/";
     final String roCrateMetadataPath = Objects.requireNonNull(this.getClass().getResource("/")).getPath() + "7ad44bec-6784-437f-b5f3-2199b43a5303.jsonld";
+    static final Logger log = LoggerFactory.getLogger(RoCrateTest.class);
 
     @Test
     void testParseRoCrateMetadata() throws Exception {
         Nanopub np = new RoCrateParser().parseRoCreate(roCrateUrl, new FileInputStream(roCrateMetadataPath));
         assertEquals(312, np.getTripleCount());
-        List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE))
-                .toList();
+        List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE)).toList();
         assertEquals(1, typePred.size());
-        assertEquals(NPX.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
+        assertEquals(KPXL.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
     }
 
     @Test
@@ -43,7 +45,29 @@ public class RoCrateTest {
     }
 
     @Test
-    void testCommandLineWithMockedMetadataDownload () throws Exception {
+    void testLogging() {
+
+        // Source - https://stackoverflow.com/a/46052596
+// Posted by user5845413
+// Retrieved 2025-11-11, License - CC BY-SA 3.0
+
+//        System.setProperty(org.slf4j.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
+//        ILoggerFactory factory = LoggerFactory.getILoggerFactory();
+//        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+
+        log.debug("xzyABC212 abc");
+        if (log.isDebugEnabled()) {
+            log.error("xzyABC212 debug-error");
+            System.out.println("Sysout: xzyABC212 debug-error");
+        }
+        log.trace("xzyABC212 trace");
+        log.error("xzyABC212 error");
+        log.info("xzyABC212 info");
+        System.out.println("Sysout xzyABC212 : end");
+    }
+
+    @Test
+    void testCommandLineWithMockedMetadataDownload() {
         String mockedUrl = roCrateUrl + "ro-crate-metadata.json";
         IRI res = RoCrateParser.constructRoCrateUrl(mockedUrl, null);
         try (MockedStatic<RoCrateParser> staticMock = Mockito.mockStatic(RoCrateParser.class)) {
@@ -63,7 +87,7 @@ public class RoCrateTest {
     }
 
     @Test
-    void testConstructRoCrateUrl() throws Exception {
+    void testConstructRoCrateUrl() {
         // id #536707bd-bca4-42a1-b1ec-e9e3eab75073
 
         // https://rawcdn.githack.com/biocompute-objects/bco-ro-example-chipseq/76cb84c8d6a17a3fd7ae3102f68de3f780458601/data/
@@ -83,8 +107,9 @@ public class RoCrateTest {
     }
 
     static final String BASE_ROHUB_URL = "https://w3id.org/ro-id/";
+
     @Test
-    void testConstructRoHubApiUrl() throws Exception {
+    void testConstructRoHubApiUrl() {
         String roHubId = "302b4ebf-db38-49d5-8ab4-4561181f4e94";
         String downloadUrl = "https://api.rohub.org/api/ros/" + roHubId + "/crate/download/";
         IRI res = RoCrateParser.constructRoCrateUrl(downloadUrl, null);
@@ -92,15 +117,15 @@ public class RoCrateTest {
     }
 
     @Test
-    void testConstructSimpleRoCrateUrl() throws Exception {
+    void testConstructSimpleRoCrateUrl() {
         String url = "https://zenodo.org/records/3541888/files/";
         String metadataUrl = "ro-crate-metadata.jsonld";
         IRI res = RoCrateParser.constructRoCrateUrl(url + metadataUrl, null);
-        assertEquals(url , res.stringValue());
+        assertEquals(url, res.stringValue());
     }
 
     @Test
-    void testConstructSimpleRoCrateUrlWithMetadataJustOneSlash() throws Exception {
+    void testConstructSimpleRoCrateUrlWithMetadataJustOneSlash() {
         String url = "https://zenodo.org/records/3541888/files/";
         String completeUrl = url + "/";
         IRI res = RoCrateParser.constructRoCrateUrl(url, null);
@@ -108,7 +133,7 @@ public class RoCrateTest {
     }
 
     @Test
-    void testConstructSimpleRoCrateUrlWithMetadataSpecialCaseDoubleSlash() throws Exception {
+    void testConstructSimpleRoCrateUrlWithMetadataSpecialCaseDoubleSlash() {
         // TODO discuss standard-conformity of this, ...//
         String url = "https://zenodo.org/records/3541888/files//";
         IRI res = RoCrateParser.constructRoCrateUrl(url, null);
@@ -116,14 +141,14 @@ public class RoCrateTest {
     }
 
     @Test
-    void testConstructSimpleRoCrateUrlWithDotReferenceInPath() throws Exception {
+    void testConstructSimpleRoCrateUrlWithDotReferenceInPath() {
         String url = "https://abc.ziz/testrecord/./";
         IRI res = RoCrateParser.constructRoCrateUrl(url, null);
         assertEquals(url, res.stringValue());
     }
 
     @Test
-    void testConstructNonIdRoCrateUrl() throws Exception {
+    void testConstructNonIdRoCrateUrl() {
         String urlWithoutIdNorMetadata = "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/get_typename_from_WFS.ipynb";
         String expectedUrlNoMetadata__ = "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/";
         IRI res = RoCrateParser.constructRoCrateUrl(urlWithoutIdNorMetadata, null);

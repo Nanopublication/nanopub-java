@@ -41,7 +41,7 @@ class RegistryInfoTest {
             SETUP_ID, TRUST_STATE_COUNTER, LAST_TRUST_STATE_UPDATE, TRUST_STATE_HASH, STATUS, COVERAGE_TYPES, COVERAGE_AGENTS, CURRENT_SETTING, ORIGINAL_SETTING, AGENT_COUNT, ACCOUNT_COUNT, NANOPUB_COUNT, LOAD_COUNTER
     );
 
-    private final String validUrl = "https://registry.np.trustyuri.net/";
+    private final String validUrl = "https://registry.nanodash.net/";
     private final String invalidUrl = "https://invalid.registry.url/";
 
     MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);

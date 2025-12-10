@@ -2,6 +2,10 @@ package org.nanopub;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.Arrays;
 
 /**
  * Abstract class for command-line interface (CLI) runners.
@@ -27,10 +31,23 @@ public abstract class CliRunner {
         try {
             jc.parse(args);
         } catch (ParameterException ex) {
+            String arguments = "args = " + Arrays.toString(args);
+            logOrSysout(LogFactory.getLog(CliRunner.class), arguments);
             jc.usage();
             throw ex;
         }
         return obj;
+    }
+
+    /**
+     * Depending on the LOG-LEVEL of log (if >= DEBUG), we forward the logMsg to Sysout or DEBUG LOG.
+     */
+    protected static void logOrSysout(Log log, String logMsg) {
+        if (log.isDebugEnabled()) {
+            log.debug(logMsg);
+        } else {
+            System.out.println(logMsg);
+        }
     }
 
     /**

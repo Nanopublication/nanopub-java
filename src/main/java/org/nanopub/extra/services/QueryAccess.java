@@ -1,21 +1,15 @@
 package org.nanopub.extra.services;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpResponse;
-
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriterBuilder;
 import com.opencsv.ICSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
+import org.apache.http.HttpResponse;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Writer;
 
 /**
  * Second-generation query API access
@@ -39,9 +33,10 @@ public abstract class QueryAccess {
     /**
      * Call a query with the given queryId and parameters.
      *
-     * @param queryId the ID of the query to call
-     * @param params  the parameters to pass to the query
-     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     * @param queryRef the query reference
+     * @throws FailedApiCallException         if the API call fails
+     * @throws APINotReachableException       if the API is not reachable
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public void call(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         HttpResponse resp = QueryCall.run(queryRef);
@@ -65,8 +60,10 @@ public abstract class QueryAccess {
      * Print the response of a query in CSV format to the given writer.
      *
      * @param queryRef the query reference
-     * @param writer  the writer to print the CSV response to
-     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     * @param writer   the writer to print the CSV response to
+     * @throws FailedApiCallException         if the API call fails
+     * @throws APINotReachableException       if the API is not reachable
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public static void printCvsResponse(QueryRef queryRef, Writer writer) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         ICSVWriter icsvWriter = new CSVWriterBuilder(writer).withSeparator(',').build();
@@ -92,7 +89,9 @@ public abstract class QueryAccess {
      *
      * @param queryRef the query reference
      * @return an ApiResponse object containing the response data
-     * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
+     * @throws FailedApiCallException         if the API call fails
+     * @throws APINotReachableException       if the API is not reachable
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public static ApiResponse get(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         final ApiResponse response = new ApiResponse();
@@ -111,45 +110,6 @@ public abstract class QueryAccess {
         };
         a.call(queryRef);
         return response;
-    }
-
-    private static Map<String, Pair<Long, String>> latestVersionMap = new HashMap<>();
-    // TODO Make a better query for this, where superseded and rejected are excluded from the start:
-    private static final String GET_NEWER_VERSIONS = "RA3qSfVzcnAeMOODdpgCg4e-bX6KjZYZ2JQXDsSwluMaI/get-newer-versions-of-np";
-
-    /**
-     * Get the latest version ID of a nanopublication.
-     * If the latest version is not cached or is older than 1 hour, it will re-fetch it.
-     *
-     * @param nanopubId the ID of the nanopublication
-     * @return the latest version ID of the nanopublication
-     */
-    // TODO Is this method used anywhere, Nanodash has a copy of this.
-    public static String getLatestVersionId(String nanopubId) {
-        long currentTime = System.currentTimeMillis();
-        if (!latestVersionMap.containsKey(nanopubId) || currentTime - latestVersionMap.get(nanopubId).getLeft() > 1000 * 60 * 60) {
-            // Re-fetch if existing value is older than 1 hour
-            try {
-                ApiResponse r = QueryAccess.get(new QueryRef(GET_NEWER_VERSIONS, "np", nanopubId));
-                List<String> latestList = new ArrayList<>();
-                for (ApiResponseEntry e : r.getData()) {
-                    if (e.get("retractedBy").isEmpty() && e.get("supersededBy").isEmpty()) {
-                        latestList.add(e.get("newerVersion"));
-                    }
-                }
-                if (latestList.size() == 1) {
-                    String latest = latestList.getFirst();
-                    latestVersionMap.put(nanopubId, Pair.of(currentTime, latest));
-                    return latest;
-                } else {
-                    return nanopubId;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return nanopubId;
-            }
-        }
-        return latestVersionMap.get(nanopubId).getRight();
     }
 
 }

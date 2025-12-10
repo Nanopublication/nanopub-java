@@ -58,16 +58,62 @@ public class RoHubImporter {
         }
     }
 
-    synchronized void prepareRoCrateFromRohubApi(String roId, String infoString) throws Exception {
-        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+//    @Test
+    void importSomeRoCrates () throws Exception {
+        // TODO DEVELOPER: Insert page(s) to import. As long as RO-Hubs ordeing is constant, it should stay > 11
+        for (int pageNumber = 11; pageNumber <= 10; pageNumber++) {
+            RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
 
+            for (int j = 0; j < currentPage.length; j++) {
+                Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier,
+                        String.format("Page %02d - %02d", pageNumber, j));
+                                // My IntelliJ shortly had a problem with auto-boxing in my current version of
+                                // openjdk/24.0.1, the workaround Integer.valueOf(int) "fixes" that.
+                if (roCrate != null) {
+                    try {
+                        // Note: it's possible to publish and sign with any key,
+                        // knowledge pixels usually use the special bot identity https://w3id.org/kpxl/gen/terms/RoCrateBot
+                        Nanopub signedNp = SignNanopub.signAndTransform(roCrate, TransformContext.makeDefault());
+//                    NanopubUtils.writeToStream(signedNp, System.out, RDFFormat.TRIG);
+                        System.out.println("Publishing " + signedNp.getUri());
+                        // TODO iykyn  !!! only if you know what you do !!!
+//                        PublishNanopub.publish(signedNp);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void testLogging () throws Exception {
+        log.debug("abc");
+        if (log.isDebugEnabled()) {
+            log.error("debug-error");
+        }
+        log.trace("trace");
+        log.error("error");
+        log.info("info");
+    }
+
+    /**
+     * Note: The synchronization is only for the stop-watches (timer). Parallelization would make it faster,
+     * but we do not care for now. Since the bottleneck is clearly ro-hub.
+     * @return the unsigned Nanopub, or null if a not-severe exception occured
+     * @throws Exception
+     */
+    synchronized Nanopub prepareRoCrateFromRohubApi(String roId, String infoString) throws Exception {
+        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+        Nanopub unsignedNp = null;
         try {
             restartTimerIfEnabled();
-            Nanopub unsignedNp = createUnsignedNpFromRoCrate(downloadUrl, "");
+            unsignedNp = createUnsignedNpFromRoCrate(downloadUrl, "");
             int containingFilesInRoCrate = countHasPartRelationsInRoCrateNanopub(unsignedNp);
             if (infoString != null) {
                 System.out.println(String.format("%04d, triple count - hasPart=, %03d, (%s)", unsignedNp.getTripleCount(), containingFilesInRoCrate, infoString));
             }
+            return unsignedNp;
         } catch (RDFParseException | MalformedNanopubException e) {
             if (infoString != null) {
                 System.out.println(String.format("%04d triple count (%s)", 0,
@@ -82,6 +128,7 @@ public class RoHubImporter {
                 System.err.println("NanoCreations total Time: " + creationTimer.getTime());
             }
         }
+        return unsignedNp;
     }
 
     /**
@@ -140,7 +187,7 @@ public class RoHubImporter {
         System.out.println(String.format("Page %02d: result size = %d", pageNumber, p.results.length));
         if (log.isDebugEnabled()) {
             for (int i = 0; i < p.results.length; i++) {
-                // TODO enableling log output for tests
+                // TODO enableing log output for tests
                 System.err.println(String.format("# %02d : %s", i, p.results[i].api_link));
                 log.debug(p.results[i].api_link);
             }
