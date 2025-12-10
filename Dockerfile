@@ -1,16 +1,17 @@
-FROM eclipse-temurin:23-alpine
+FROM eclipse-temurin:23-alpine AS jre-build
+
+ARG VERSION
 
 RUN apk add --no-cache curl
 RUN apk add --no-cache bash
-RUN apk add --no-cache maven
 RUN apk add --no-cache git
 
 WORKDIR /app
 
 COPY . .
 
-RUN mvn clean install
-RUN cp target/*.jar bin/
+RUN ./mvnw && ./mvnw versions:set -DnewVersion=${VERSION} && ./mvnw package -Dmaven.test.skip=true
+RUN cp target/nanopub-${VERSION}-*.jar bin/
 
 ENV PATH="/app/bin/:$PATH"
 
