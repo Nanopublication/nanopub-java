@@ -43,7 +43,8 @@ import java.util.Set;
 
 import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.literal;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.nanopub.fdo.ValidateFdo.createShaclValidationShapeFromJson;
 
 /**
@@ -92,7 +93,7 @@ public class GeneralIntegrationTestsIT {
         byte[] buffer = new byte[256];
         IOUtils.readFully(in, buffer);
         String result = new String(buffer, StandardCharsets.UTF_8);
-        assertTrue(result.startsWith("Nanodash"));
+        assertThat(result, containsString("nanodash"));
     }
 
     @Test
