@@ -446,4 +446,49 @@ public class NanopubUtils {
         return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
     }
 
+    /**
+     * Retrieves a set of introduced IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract introduced IRI IDs
+     * @return a set of introduced IRI IDs
+     */
+    public static Set<String> getIntroducedIriIds(Nanopub np) {
+        Set<String> introducedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            IRI p = st.getPredicate();
+            if (!p.equals(NPX.INTRODUCES) && !p.equals(NPX.DESCRIBES) && !p.equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                introducedIriIds.add(obj.stringValue());
+            }
+        }
+        return introducedIriIds;
+    }
+
+    /**
+     * Retrieves a set of embedded IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract embedded IRI IDs
+     * @return a set of embedded IRI IDs
+     */
+    public static Set<String> getEmbeddedIriIds(Nanopub np) {
+        Set<String> embeddedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            if (!st.getPredicate().equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                embeddedIriIds.add(obj.stringValue());
+            }
+        }
+        return embeddedIriIds;
+    }
+
 }
