@@ -21,7 +21,7 @@ public class VocabUtils {
      * @param namespace the full namespace URI
      * @return a Namespace object
      */
-    static Namespace createNamespace(String prefix, String namespace) {
+    public static Namespace createNamespace(String prefix, String namespace) {
         return new VocabularyNamespace(prefix, namespace);
     }
 
@@ -32,7 +32,7 @@ public class VocabUtils {
      * @param localName the local name
      * @return an IRI object
      */
-    static IRI createIRI(String namespace, String localName) {
+    public static IRI createIRI(String namespace, String localName) {
         checkParameter(namespace, "Namespace");
         checkParameter(localName, "Local Name");
         return new InternedIRI(namespace, localName);
@@ -45,7 +45,7 @@ public class VocabUtils {
      * @param parameterName the name of the parameter (for error messages)
      * @throws IllegalArgumentException if the parameter is null or empty
      */
-    static void checkParameter(String parameter, String parameterName) {
+    private static void checkParameter(String parameter, String parameterName) {
         if (parameter == null || parameter.isEmpty()) {
             throw new IllegalArgumentException(parameterName + " cannot be null or empty");
         }
