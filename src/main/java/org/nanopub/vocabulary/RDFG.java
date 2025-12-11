@@ -8,6 +8,6 @@ public class RDFG {
 
     public static final String PREFIX = "rdfg";
 
-    public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);
+    public static final Namespace NS = VocabUtils.createNamespace(PREFIX, NAMESPACE);
 
 }

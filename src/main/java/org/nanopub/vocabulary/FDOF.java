@@ -12,14 +12,14 @@ public class FDOF {
 
     public static final String PREFIX = "fdof";
 
-    public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);
+    public static final Namespace NS = VocabUtils.createNamespace(PREFIX, NAMESPACE);
 
-    public static final IRI FAIR_DIGITAL_OBJECT = Utils.createIRI(NAMESPACE, "FAIRDigitalObject");
+    public static final IRI FAIR_DIGITAL_OBJECT = VocabUtils.createIRI(NAMESPACE, "FAIRDigitalObject");
 
-    public static final IRI IS_MATERIALIZED_BY = Utils.createIRI(NAMESPACE, "isMaterializedBy");
+    public static final IRI IS_MATERIALIZED_BY = VocabUtils.createIRI(NAMESPACE, "isMaterializedBy");
 
-    public static final IRI HAS_ENCODING_FORMAT = Utils.createIRI(NAMESPACE, "hasEncodingFormat");
+    public static final IRI HAS_ENCODING_FORMAT = VocabUtils.createIRI(NAMESPACE, "hasEncodingFormat");
 
-    public static final IRI HAS_METADATA = Utils.createIRI(NAMESPACE, "hasMetadata");
+    public static final IRI HAS_METADATA = VocabUtils.createIRI(NAMESPACE, "hasMetadata");
 
 }
