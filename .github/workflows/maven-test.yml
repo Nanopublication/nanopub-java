@@ -1,4 +1,4 @@
-name: Maven Test
+name: Maven Test & Coverage upload
 
 on:
   push:
@@ -12,21 +12,33 @@ jobs:
     strategy:
       matrix:
         distribution: [ "temurin" ]
-        java: [ "21" ]
+        java: [ "21" , "23", "25" ]
     name: Testing with Java ${{ matrix.java }} (${{ matrix.distribution }})
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
           cache: 'maven'
 
-      - name: Tests and Integration Tests with Maven
+      - name: Test with Maven
         run: ./mvnw -B test
 
-      - name: Publish coverage to Coveralls
+      - name: Send coverage to Coveralls (parallel)
         uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
+        with:
+          parallel: true
+          flag-name: run-${{ join(matrix.*, '-') }}
+
+  coveralls:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close parallel build
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
+        with:
+          parallel-finished: true
