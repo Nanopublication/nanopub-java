@@ -55,13 +55,12 @@ public class RoCrateParser {
     /**
      * Parses a RO-Crate metadata file from a given URL.
      *
-     * @param url          the url where the metadata file is published (including trailing "/")
+     * @param url             the url where the metadata file is published (including trailing "/")
      * @param roCrateMetadata the ro-create metadata file name, may be the empty string
      * @return a signed Nanopub object containing the parsed data.
-     * @throws org.nanopub.MalformedNanopubException if the parsed data does not conform to the expected structure.
-     * @throws java.io.IOException                   if an I/O error occurs while reading the metadata file.
-     * @throws java.lang.InterruptedException        if the operation is interrupted.
-     * @throws java.net.URISyntaxException           if the URL is malformed.
+     * @throws MalformedNanopubException        if the parsed data does not conform to the expected structure.
+     * @throws IOException                      if an I/O error occurs while reading the metadata file.
+     * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized.
      */
     public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
@@ -92,8 +91,8 @@ public class RoCrateParser {
         String label = extractToplevelName(metadataStatements, identifier);
 
         // as provenance statement WAS_DERIVED_FROM we always use the specified name: "ro-crate-metadata.json"
-        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ "ro-crate-metadata.json"));
-        npCreator.addPubinfoStatement(NPX.INTRODUCES,  identifier);
+        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url + "ro-crate-metadata.json"));
+        npCreator.addPubinfoStatement(NPX.INTRODUCES, identifier);
         npCreator.addPubinfoStatement(RDFS.LABEL, vf.createLiteral(label));
         npCreator.addPubinfoStatement(RDF.TYPE, KPXL.RO_CRATE_NANOPUB);
 
@@ -102,7 +101,8 @@ public class RoCrateParser {
 
     /**
      * Find the ID of the RO-Crate.
-     * @param url where we get the RO-crate
+     *
+     * @param url             where we get the RO-crate
      * @param roCrateMetadata LATER not yet implemented
      * @return our current best guess for the ID_IRI
      */
@@ -123,7 +123,8 @@ public class RoCrateParser {
             } else if (url.matches(patternUrlUntilLastSlash)) {
                 // probably ends in  ./metadata.json or something like that, we remove it anyway
                 Pattern p = Pattern.compile(patternUrlUntilLastSlash);
-                Matcher m = p.matcher(url); m.matches();
+                Matcher m = p.matcher(url);
+                m.matches();
                 String resultingUrl = m.group(1);
                 if (LOG.isDebugEnabled()) {
                     try {
@@ -135,7 +136,7 @@ public class RoCrateParser {
                             LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
                         }
                     } catch (IllegalStateException | IndexOutOfBoundsException e) {
-                      // there was no trailing filename, all good
+                        // there was no trailing filename, all good
                     }
                 }
                 if (resultingUrl == null) {
@@ -169,7 +170,7 @@ public class RoCrateParser {
         } else {
             nameCandidate = metadataStatements.stream()
                     .filter(st -> st.getSubject().equals(subj)
-                            && st.getPredicate().equals(SCHEMA.DESCRIPTION))
+                                  && st.getPredicate().equals(SCHEMA.DESCRIPTION))
                     .findFirst();
             if (nameCandidate.isPresent()) {
                 name = nameCandidate.get().getObject().toString();

@@ -1,8 +1,6 @@
 package org.nanopub;
 
 import net.trustyuri.TrustyUriException;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.nanopub.extra.security.MalformedCryptoElementException;
@@ -20,8 +18,6 @@ import java.security.GeneralSecurityException;
  */
 public class NanopubRetractor {
 
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
     /**
      * No instances.
      */
@@ -32,12 +28,13 @@ public class NanopubRetractor {
      * Create a retraction np out of the original np and a transformation context
      *
      * @param originalNp The Nanopublication to be retracted
-     * @param tc         The transfomation context with the public key
+     * @param tc         The transformation context with the public key
      * @return the retraction np, which can be published afterward
-     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the public key in the context is malformed
-     * @throws org.nanopub.MalformedNanopubException                      if the original nanopub is malformed
-     * @throws net.trustyuri.TrustyUriException                           if the original nanopub's URI is not a valid Trusty URI
-     * @throws java.security.GeneralSecurityException                     if there is a security issue with signing the retraction
+     * @throws MalformedCryptoElementException  if the public key in the context is malformed
+     * @throws MalformedNanopubException        if the original nanopub is malformed
+     * @throws TrustyUriException               if the original nanopub's URI is not a valid Trusty URI
+     * @throws GeneralSecurityException         if there is a security issue with signing the retraction
+     * @throws NanopubAlreadyFinalizedException if the original nanopub is already finalized
      */
     public static Nanopub createRetraction(Nanopub originalNp, TransformContext tc) throws MalformedCryptoElementException, MalformedNanopubException, TrustyUriException, GeneralSecurityException, NanopubAlreadyFinalizedException {
         SignatureUtils.assertMatchingPubkeys(tc, originalNp);

@@ -29,7 +29,7 @@ import java.net.http.HttpResponse;
 /**
  * This Class intentionally does not have the ...IT suffix, since we do not want it to run with maven. It's just
  * ment for scripting in Java, and running in your IDE.
- *
+ * <p>
  * Please use carefully, and only if you know what you're doing! Especially when importing huge numbers of new
  * RO_Crates to the Nanopub Networks
  */
@@ -38,7 +38,7 @@ public class RoHubImporter {
     static final Logger log = LoggerFactory.getLogger(RoHubImporter.class);
 
     // TODO debug output and log and timer are ideally different things
-    final boolean enabledTimer = false; // tODO false
+    final boolean enabledTimer = false; // TODO false
     final StopWatch webRequestTimer = new StopWatch();
     final StopWatch creationTimer = new StopWatch();
 
@@ -48,7 +48,7 @@ public class RoHubImporter {
     }
 
     @Test
-    synchronized void testRoHubIndexParsing () throws Exception {
+    synchronized void testRoHubIndexParsing() throws Exception {
         for (int pageNumber = 10; pageNumber <= 10; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
 
@@ -58,8 +58,8 @@ public class RoHubImporter {
         }
     }
 
-//    @Test
-    void importSomeRoCrates () throws Exception {
+    //    @Test
+    void importSomeRoCrates() throws Exception {
         // TODO DEVELOPER: Insert page(s) to import. As long as RO-Hubs ordeing is constant, it should stay > 11
         for (int pageNumber = 11; pageNumber <= 10; pageNumber++) {
             RoCrateIndex[] currentPage = readRoHubIndexPage(pageNumber);
@@ -67,8 +67,8 @@ public class RoHubImporter {
             for (int j = 0; j < currentPage.length; j++) {
                 Nanopub roCrate = prepareRoCrateFromRohubApi(currentPage[j].identifier,
                         String.format("Page %02d - %02d", pageNumber, j));
-                                // My IntelliJ shortly had a problem with auto-boxing in my current version of
-                                // openjdk/24.0.1, the workaround Integer.valueOf(int) "fixes" that.
+                // My IntelliJ shortly had a problem with auto-boxing in my current version of
+                // openjdk/24.0.1, the workaround Integer.valueOf(int) "fixes" that.
                 if (roCrate != null) {
                     try {
                         // Note: it's possible to publish and sign with any key,
@@ -87,7 +87,7 @@ public class RoHubImporter {
     }
 
     @Test
-    void testLogging () throws Exception {
+    void testLogging() throws Exception {
         log.debug("abc");
         if (log.isDebugEnabled()) {
             log.error("debug-error");
@@ -100,6 +100,7 @@ public class RoHubImporter {
     /**
      * Note: The synchronization is only for the stop-watches (timer). Parallelization would make it faster,
      * but we do not care for now. Since the bottleneck is clearly ro-hub.
+     *
      * @return the unsigned Nanopub, or null if a not-severe exception occured
      * @throws Exception
      */
@@ -133,16 +134,17 @@ public class RoHubImporter {
 
     /**
      * Count the files in a nanopub created from an RO-Crate.
+     *
      * @param unsignedNp it can be signed, too
      * @return the count +1
      */
     private int countHasPartRelationsInRoCrateNanopub(Nanopub unsignedNp) {
         int count = 1; // we start at 1 for the ro-crate-metadata.jsonld - file itself
-        for (Statement st: unsignedNp.getAssertion()) {
+        for (Statement st : unsignedNp.getAssertion()) {
             if (st.getObject().equals(SCHEMA.RO_CRATE_HAS_PART) ||
-            st.getPredicate().equals(SCHEMA.RO_CRATE_HAS_PART) ||
-            st.getSubject().equals(SCHEMA.RO_CRATE_HAS_PART) ||
-            st.getContext().equals(SCHEMA.RO_CRATE_HAS_PART)
+                st.getPredicate().equals(SCHEMA.RO_CRATE_HAS_PART) ||
+                st.getSubject().equals(SCHEMA.RO_CRATE_HAS_PART) ||
+                st.getContext().equals(SCHEMA.RO_CRATE_HAS_PART)
             ) {
                 count++;
             }
@@ -195,7 +197,7 @@ public class RoHubImporter {
         return p.results;
     }
 
-    synchronized Nanopub createUnsignedNpFromRoCrate (@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
+    synchronized Nanopub createUnsignedNpFromRoCrate(@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
         resumeRoHubTimerIfEnabled(downloadUrl);
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
@@ -228,12 +230,13 @@ public class RoHubImporter {
     /**
      * Create a signed Nanopub with the path to a RO-Crate available in the internet. The signature is done with
      * default values (~/nanopub/profile)
-     * @param downloadUrl the downloadUrl where the metadata file is published (including trailing "/")
+     *
+     * @param downloadUrl      the downloadUrl where the metadata file is published (including trailing "/")
      * @param metadataFilename the ro-create metadata filename, may be empty
      * @return the signed Nanopub
      * @throws Exception any troubles e.g. network or wrong path
      */
-    static Nanopub createNpFromRoCrate (@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
+    static Nanopub createNpFromRoCrate(@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(downloadUrl, metadata);

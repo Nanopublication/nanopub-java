@@ -23,7 +23,7 @@ import java.util.Objects;
 /**
  * This Integration test class does also have the function of being a script for importing RO-Crates into the
  * Nanopub network.
- *
+ * <p>
  * If you feel entitled to, go on  -  but please use that scripting functionality very carefully.
  * There are reasons we did not (yet) implemented it as end user cli commands.
  */
@@ -61,6 +61,7 @@ class RoCrateIT {
      * - <strong><i>TODO</i> Please set the new offset </strong> as stated offset at the end of the the output.</br>
      * - We do not (yet) check for duplicates now. So <strong>please do not flood the network</strong> with too much non-original RO-Crate Nanopublications!
      * </p>
+     *
      * @throws Exception
      */
 //     @Test
@@ -91,7 +92,7 @@ class RoCrateIT {
 
 //        NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
 
-          // TODO uncomment this, to really publish all the requested and created nanopubs
+        // TODO uncomment this, to really publish all the requested and created nanopubs
         // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
         // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
         // WARNING !!!! WE DO NOT CHECK FOR DUPLICATES HERE !!!! DO IT BY HAND OR DO NOT TOUCH THIS CODE !!!!
@@ -118,12 +119,13 @@ class RoCrateIT {
     /**
      * Create a signed Nanopub with the path to a RO-Crate available in the internet. The signature is done with
      * default values (~/nanopub/profile)
-     * @param downloadUrl the downloadUrl where the metadata file is published (including trailing "/")
+     *
+     * @param downloadUrl      the downloadUrl where the metadata file is published (including trailing "/")
      * @param metadataFilename the ro-create metadata filename, may be empty
      * @return the signed Nanopub
      * @throws Exception any troubles e.g. network or wrong path
      */
-    Nanopub createNpFromRoCrate (@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
+    Nanopub createNpFromRoCrate(@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(downloadUrl, metadata);
@@ -135,7 +137,7 @@ class RoCrateIT {
         return signedNp;
     }
 
-    Nanopub createUnsignedNpFromRoCrate (@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
+    Nanopub createUnsignedNpFromRoCrate(@NonNull String downloadUrl, @NonNull String metadataFilename) throws Exception {
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl + metadataFilename);
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(downloadUrl, metadata);
@@ -144,7 +146,7 @@ class RoCrateIT {
     }
 
     @Test
-    void examples () throws Exception {
+    void examples() throws Exception {
         String url0 = "https://rawcdn.githack.com/biocompute-objects/bco-ro-example-chipseq/76cb84c8d6a17a3fd7ae3102f68de3f780458601/data/";
         String metadata0 = "ro-crate-metadata.json";
         createNpFromRoCrate(url0, metadata0);
@@ -168,7 +170,7 @@ class RoCrateIT {
         //        createNpFromRoCrate(url4, metadata4);
     }
 
-//    @Test
+    //    @Test
     void moreExamples() throws Exception {
         String metadataFilename = "ro-crate-metadata.json";
 

@@ -40,7 +40,10 @@ public abstract class CliRunner {
     }
 
     /**
-     * Depending on the LOG-LEVEL of log (if >= DEBUG), we forward the logMsg to Sysout or DEBUG LOG.
+     * Depending on the LOG-LEVEL of log (if >= DEBUG), we forward the logMsg to SysOut or DEBUG LOG.
+     *
+     * @param log    the Log instance
+     * @param logMsg the message to log
      */
     protected static void logOrSysout(Log log, String logMsg) {
         if (log.isDebugEnabled()) {
