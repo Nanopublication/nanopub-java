@@ -5,6 +5,8 @@ import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.nanopub.ArtifactCode;
+import org.nanopub.ArtifactCodeImpl;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
@@ -353,18 +355,19 @@ public class FetchIndex {
         /**
          * Attempts to fetch the nanopub from the specified server.
          *
-         * @param r the registry info of the server to try
+         * @param registryInfo the registry info of the server to try
          */
-        public void tryServer(RegistryInfo r) {
+        public void tryServer(RegistryInfo registryInfo) {
+            ArtifactCode artifactCode = new ArtifactCodeImpl(TrustyUriUtils.getArtifactCode(npUri));
             boolean serverTried = false;
             try {
                 serverTried = true;
-                nanopub = GetNanopub.get(TrustyUriUtils.getArtifactCode(npUri), r);
+                nanopub = GetNanopub.get(artifactCode, registryInfo);
             } catch (ConnectionPoolTimeoutException ex) {
                 serverTried = false;
                 // too many connection attempts; try again later
             } catch (Exception ex) {
-                if (listener != null) listener.exceptionHappened(ex, r, TrustyUriUtils.getArtifactCode(npUri));
+                if (listener != null) listener.exceptionHappened(ex, registryInfo, artifactCode);
             } finally {
                 running = false;
                 if (serverTried) {
@@ -375,7 +378,7 @@ public class FetchIndex {
                             for (FetchNanopubTask s : siblings) {
                                 s.cancelled = true;
                             }
-                            serverUsage.put(r, serverUsage.get(r) + 1);
+                            serverUsage.put(registryInfo, serverUsage.get(registryInfo) + 1);
                         }
                     }
                 }
@@ -404,7 +407,7 @@ public class FetchIndex {
          * @param r            the registry info of the server where the exception occurred
          * @param artifactCode the artifact code of the nanopub that caused the exception
          */
-        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode);
+        public void exceptionHappened(Exception ex, RegistryInfo r, ArtifactCode artifactCode);
 
     }
 

@@ -95,7 +95,7 @@ public class NanopubStatus extends CliRunner {
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = GetNanopub.get(artifactCode.getCode(), registryInfo);
+                Nanopub np = GetNanopub.get(artifactCode, registryInfo);
                 if (np != null) {
                     if (checkIndexContent && !IndexUtils.isIndex(np)) {
                         System.err.println("ERROR. Not an index: " + nanopubId);

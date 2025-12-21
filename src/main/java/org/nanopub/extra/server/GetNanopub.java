@@ -114,7 +114,7 @@ public class GetNanopub extends CliRunner {
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = get(artifactCode.getCode(), registryInfo, httpClient);
+                Nanopub np = get(artifactCode, registryInfo, httpClient);
                 if (np != null) {
                     return np;
                 }
@@ -150,7 +150,7 @@ public class GetNanopub extends CliRunner {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
-    public static Nanopub get(String artifactCode, RegistryInfo registryInfo)
+    public static Nanopub get(ArtifactCode artifactCode, RegistryInfo registryInfo)
             throws IOException, RDF4JException, MalformedNanopubException {
         return get(artifactCode, registryInfo, NanopubUtils.getHttpClient());
     }
@@ -166,13 +166,13 @@ public class GetNanopub extends CliRunner {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed
      */
-    public static Nanopub get(String artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
+    public static Nanopub get(ArtifactCode artifactCode, RegistryInfo registryInfo, HttpClient httpClient)
             throws IOException, RDF4JException, MalformedNanopubException {
         HttpGet get = null;
         try {
-            get = new HttpGet(registryInfo.getCollectionUrl() + artifactCode);
+            get = new HttpGet(registryInfo.getCollectionUrl() + artifactCode.getCode());
         } catch (IllegalArgumentException ex) {
-            throw new IOException("invalid URL: " + registryInfo.getCollectionUrl() + artifactCode);
+            throw new IOException("invalid URL: " + registryInfo.getCollectionUrl() + artifactCode.getCode());
         }
         get.setHeader("Accept", "application/trig");
         InputStream in = null;
@@ -268,13 +268,13 @@ public class GetNanopub extends CliRunner {
                         }
 
                         @Override
-                        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode) {
+                        public void exceptionHappened(Exception ex, RegistryInfo r, ArtifactCode artifactCode) {
                             if (showReport) {
                                 exceptions.add(ex);
                             }
                             if (errorStream != null) {
                                 String exString = ex.toString().replaceAll("\\n", "\\\\n");
-                                errorStream.println(r + " " + artifactCode + " " + exString);
+                                errorStream.println(r + " " + artifactCode.getCode() + " " + exString);
                             }
                         }
 
