@@ -1,35 +1,34 @@
 package org.nanopub.extra.services;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class QueryRefTest {
 
+    private static final String TEST_QUERY_ID = "RAapc3jbJ3GkDy0ncKx3pok_zEKqwrT6-Z5TkCP1k96II/test-query";
+
     @Test
-    void constructorWithNullQueryNameNullOrEmpty() {
+    void constructorWithInvalidQueryId() {
         assertThrows(IllegalArgumentException.class, () -> new QueryRef(null));
         assertThrows(IllegalArgumentException.class, () -> new QueryRef(""));
         assertThrows(IllegalArgumentException.class, () -> new QueryRef(" "));
+        assertThrows(IllegalArgumentException.class, () -> new QueryRef("test-query"));
     }
 
     @Test
     void constructorWithNameAndParams() {
         Multimap<String, String> params = ArrayListMultimap.create();
         params.put("param1", "value1");
-        QueryRef queryRef = new QueryRef("test-query", params);
+        QueryRef queryRef = new QueryRef(TEST_QUERY_ID, params);
         assertNotNull(queryRef);
     }
 
     @Test
     void constructorWithNameAndParam() {
-        QueryRef queryRef = new QueryRef("test-query", "param1", "value1");
+        QueryRef queryRef = new QueryRef(TEST_QUERY_ID, "param1", "value1");
         assertNotNull(queryRef);
         assertEquals(1, queryRef.getParams().size());
         assertEquals("value1", queryRef.getParams().get("param1").iterator().next());
@@ -37,30 +36,30 @@ class QueryRefTest {
 
     @Test
     void constructorWithNameAndParamNameNullOrEmpty() {
-        assertThrows(IllegalArgumentException.class, () -> new QueryRef("test-query", null, "value1"));
-        assertThrows(IllegalArgumentException.class, () -> new QueryRef("test-query", "", "value1"));
-        assertThrows(IllegalArgumentException.class, () -> new QueryRef("test-query", " ", "value1"));
+        assertThrows(IllegalArgumentException.class, () -> new QueryRef(TEST_QUERY_ID, null, "value1"));
+        assertThrows(IllegalArgumentException.class, () -> new QueryRef(TEST_QUERY_ID, "", "value1"));
+        assertThrows(IllegalArgumentException.class, () -> new QueryRef(TEST_QUERY_ID, " ", "value1"));
     }
 
     @Test
     void constructorWithName() {
-        QueryRef queryRef = new QueryRef("test-query");
+        QueryRef queryRef = new QueryRef(TEST_QUERY_ID);
         assertNotNull(queryRef);
         assertTrue(queryRef.getParams().isEmpty());
     }
 
     @Test
-    void getName() {
-        QueryRef queryRef = new QueryRef("test-query");
-        assertNotNull(queryRef.getName());
-        assertEquals("test-query", queryRef.getName());
+    void getQueryId() {
+        QueryRef queryRef = new QueryRef(TEST_QUERY_ID);
+        assertNotNull(queryRef.getQueryId());
+        assertEquals(TEST_QUERY_ID, queryRef.getQueryId());
     }
 
     @Test
     void getParams() {
         Multimap<String, String> params = ArrayListMultimap.create();
         params.put("param1", "value1");
-        QueryRef queryRef = new QueryRef("test-query", params);
+        QueryRef queryRef = new QueryRef(TEST_QUERY_ID, params);
         assertNotNull(queryRef.getParams());
         assertEquals(1, queryRef.getParams().size());
         assertEquals("value1", queryRef.getParams().get("param1").iterator().next());
