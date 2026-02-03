@@ -46,7 +46,7 @@ public class QueryCall {
             }
             retryCount = retryCount + 1;
         }
-        throw new APINotReachableException("Giving up contacting API: " + queryRef.getName());
+        throw new APINotReachableException("Giving up contacting API: " + queryRef.getQueryId());
     }
 
     /**

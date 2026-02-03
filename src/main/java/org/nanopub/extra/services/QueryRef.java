@@ -15,47 +15,54 @@ import java.util.Map.Entry;
 
 /**
  * A reference to a query with optional parameters.
- * This class is used to encapsulate the name of the query and any parameters
+ * This class is used to encapsulate the id of the query and any parameters
  * that need to be passed to it.
  */
 public class QueryRef implements Serializable {
 
-    private final String name;
+    private final String queryId;
     private final Multimap<String, String> params;
     private String urlString;
 
     /**
      * Constructor for QueryRef.
      *
-     * @param name   the name of the query
-     * @param params a map of parameters for the query
+     * @param queryId the id of the query (of the form "artifactCode/querySuffix")
+     * @param params  a map of parameters for the query
      */
-    public QueryRef(String name, Multimap<String, String> params) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Query name cannot be null or empty");
-        }
-        this.name = name;
+    public QueryRef(String queryId, Multimap<String, String> params) {
+        validateQueryId(queryId);
+        this.queryId = queryId;
         this.params = params;
+    }
+
+    private void validateQueryId(String queryId) {
+        if (queryId == null || queryId.isBlank()) {
+            throw new IllegalArgumentException("Query id cannot be null or empty");
+        }
+        if (!queryId.matches("RA[A-Za-z0-9-_]{43}[/#][^/#]+")) {
+            throw new IllegalArgumentException("Query id is invalid: " + queryId);
+        }
     }
 
     /**
      * Constructor for QueryRef with no parameters.
      *
-     * @param name the name of the query
+     * @param queryId the id of the query (of the form "artifactCode/querySuffix")
      */
-    public QueryRef(String name) {
-        this(name, ArrayListMultimap.create());
+    public QueryRef(String queryId) {
+        this(queryId, ArrayListMultimap.create());
     }
 
     /**
      * Constructor for QueryRef with a single parameter.
      *
-     * @param name       the name of the query
+     * @param queryId    the id of the query (of the form "artifactCode/querySuffix")
      * @param paramKey   the key of the parameter
      * @param paramValue the value of the parameter
      */
-    public QueryRef(String name, String paramKey, String paramValue) {
-        this(name);
+    public QueryRef(String queryId, String paramKey, String paramValue) {
+        this(queryId);
         if (paramKey == null || paramKey.isBlank()) {
             throw new IllegalArgumentException("Parameter key cannot be null or empty");
         }
@@ -63,12 +70,12 @@ public class QueryRef implements Serializable {
     }
 
     /**
-     * Get the name of the query.
+     * Get the id of the query.
      *
-     * @return the name of the query
+     * @return the id of the query
      */
-    public String getName() {
-        return name;
+    public String getQueryId() {
+        return queryId;
     }
 
     /**
@@ -99,7 +106,7 @@ public class QueryRef implements Serializable {
                     paramString += URLEncoder.encode(e.getValue() == null ? "" : e.getValue(), Charsets.UTF_8);
                 }
             }
-            urlString = name + paramString;
+            urlString = queryId + paramString;
         }
         return urlString;
     }
