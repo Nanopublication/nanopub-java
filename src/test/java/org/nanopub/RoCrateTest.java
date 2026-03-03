@@ -27,7 +27,7 @@ public class RoCrateTest {
 
     @Test
     void testParseRoCrateMetadata() throws Exception {
-        Nanopub np = new RoCrateParser().parseRoCreate(roCrateUrl, new FileInputStream(roCrateMetadataPath));
+        Nanopub np = new RoCrateParser().parseRoCreate(roCrateUrl, new FileInputStream(roCrateMetadataPath)).finalizeNanopub(true);
         assertEquals(312, np.getTripleCount());
         List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE)).toList();
         assertEquals(1, typePred.size());

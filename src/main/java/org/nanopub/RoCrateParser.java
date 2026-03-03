@@ -57,12 +57,12 @@ public class RoCrateParser {
      *
      * @param url             the url where the metadata file is published (including trailing "/")
      * @param roCrateMetadata the ro-create metadata file name, may be the empty string
-     * @return a signed Nanopub object containing the parsed data.
+     * @return a NanopubCreator object containing the parsed data.
      * @throws MalformedNanopubException        if the parsed data does not conform to the expected structure.
      * @throws IOException                      if an I/O error occurs while reading the metadata file.
      * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized.
      */
-    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
+    public NanopubCreator parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
 
         // Configure parser settings
@@ -96,7 +96,7 @@ public class RoCrateParser {
         npCreator.addPubinfoStatement(RDFS.LABEL, vf.createLiteral(label));
         npCreator.addPubinfoStatement(RDF.TYPE, KPXL.RO_CRATE_NANOPUB);
 
-        return npCreator.finalizeNanopub(true);
+        return npCreator;
     }
 
     /**
@@ -186,13 +186,12 @@ public class RoCrateParser {
         if (bestGuess != null) {
             return vf.createIRI(bestGuess);
         }
-        // TODO verify if this is correct, and check if sometimes the backup is an even better choice
         IRI identifier = (IRI) metadataStatements.stream()
                 .filter(st -> st.getPredicate().equals(SCHEMA.RO_CRATE_HAS_PART))
-                .findFirst().get().getSubject(); // TODO or do we need the Object-Value???
+                .findFirst().get().getSubject();
         if (identifier == null) {
             identifier = vf.createIRI(latestBackupIdentifier);
-            // TODO, probably the best first backup choice is the download url if available in the metadate,
+            // probably the best first backup choice is the download url if available in the metadate,
             // the url from above is only the second backup, so we never have any null pointer issues.
         }
         return identifier;

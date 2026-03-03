@@ -1,8 +1,10 @@
 package org.nanopub.fdo.rest.rohub.gson;
 
 /**
- * Representing a page from RO-HUBs index. You get a page by the RoHub API in the following manner:
- * <a href="https://api.rohub.org/api/ros/?page=1">https://api.rohub.org/api/ros/?page=1</a>
+ * Representing a page from RO-HUBs index. You get a page by the RoHub API in
+ * the following manner:
+ * <a href=
+ * "https://api.rohub.org/api/ros/?page=1">https://api.rohub.org/api/ros/?page=1</a>
  * <p>
  * And the response looks like:
  * <p>
@@ -25,4 +27,5 @@ package org.nanopub.fdo.rest.rohub.gson;
  */
 public class Page {
     public RoCrateIndex[] results;
+    public String next;
 }

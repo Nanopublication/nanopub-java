@@ -74,7 +74,7 @@ public class RoCrateImporter extends CliRunner {
         String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));
 
         RoCrateParser parser = new RoCrateParser();
-        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata);
+        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata).finalizeNanopub(true);
 
         if (createLocally) {
             NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);
