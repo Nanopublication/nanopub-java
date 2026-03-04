@@ -42,6 +42,15 @@ class StripDownTest {
 
             System.out.println("Successfully removed sig: " + testFile.getName());
 
+            // check if public key from assertion is not removed
+            NanopubImpl sigNano = new NanopubImpl(testFile, RDFFormat.TRIG);
+            for (Statement st : sigNano.getAssertion()) {
+                if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {
+                    assertTrue(testNano.getAssertion().stream().anyMatch(
+                            s -> s.getPredicate().equals(NPX.HAS_PUBLIC_KEY)));
+                }
+            }
+
             // delete target file if everything was fine
             outFile.delete();
         }

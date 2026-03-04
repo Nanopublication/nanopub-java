@@ -131,14 +131,15 @@ public class StripDown extends CliRunner {
 
         List<Statement> newStatements = new ArrayList<>();
         for (Statement st : statements) {
-            // skip signatures
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) continue;
-            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) continue;
-            if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) continue;
-            if (st.getPredicate().equals(NPX.SIGNED_BY)) continue;
-
+            if (st.getContext().equals(np.getPubinfoUri())) {
+                // skip signatures in pubinfo
+                if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) continue;
+                if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
+                if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) continue;
+                if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) continue;
+                if (st.getPredicate().equals(NPX.HAS_ALGORITHM)) continue;
+                if (st.getPredicate().equals(NPX.SIGNED_BY)) continue;
+            }
             // remove hashes
             Resource context = transform(st.getContext(), artifactCode, replacement);
             Resource subject = transform(st.getSubject(), artifactCode, replacement);
