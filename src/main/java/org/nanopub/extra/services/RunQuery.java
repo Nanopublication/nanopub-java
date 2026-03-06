@@ -1,13 +1,15 @@
 package org.nanopub.extra.services;
 
-import java.io.PrintWriter;
-import java.util.List;
-
-import org.nanopub.CliRunner;
-
 import com.beust.jcommander.ParameterException;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
+import org.nanopub.CliRunner;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
 
 /**
  * RunQuery is a command-line utility to execute a query against the Nanopub service.
@@ -37,10 +39,15 @@ public class RunQuery extends CliRunner {
         }
     }
 
-    private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+    private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException, IOException {
         Multimap<String, String> paramMap = prepareParamsMap(params);
-
-        QueryAccess.printCvsResponse(new QueryRef(queryId, paramMap), new PrintWriter(System.out));
+        QueryRef queryRef = new QueryRef(queryId, paramMap);
+        ApiResponse response = QueryAccess.get(queryRef);
+        if (response.isRdfResponse()) {
+            Rio.write(response.getRdfContent(), System.out, RDFFormat.TURTLE);
+        } else {
+            QueryAccess.printCvsResponse(queryRef, new PrintWriter(System.out));
+        }
     }
 
     Multimap<String, String> prepareParamsMap(List<String> params) {

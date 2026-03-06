@@ -5,6 +5,9 @@ import com.opencsv.CSVWriterBuilder;
 import com.opencsv.ICSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import org.apache.http.HttpResponse;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.Rio;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +34,15 @@ public abstract class QueryAccess {
     protected abstract void processLine(String[] line);
 
     /**
+     * Process the RDF content from a SPARQL CONSTRUCT query response.
+     * Override this method to handle RDF responses. Default implementation is a no-op.
+     *
+     * @param model the parsed RDF model
+     */
+    protected void processRdfContent(Model model) {
+    }
+
+    /**
      * Call a query with the given queryId and parameters.
      *
      * @param queryRef the query reference
@@ -40,19 +52,32 @@ public abstract class QueryAccess {
      */
     public void call(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         HttpResponse resp = QueryCall.run(queryRef);
-        try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
-            String[] line = null;
-            int n = 0;
-            while ((line = csvReader.readNext()) != null) {
-                n++;
-                if (n == 1) {
-                    processHeader(line);
-                } else {
-                    processLine(line);
+        String contentType = resp.getFirstHeader("Content-Type") != null
+                ? resp.getFirstHeader("Content-Type").getValue() : "";
+        String mimeType = contentType.contains(";") ? contentType.split(";")[0].trim() : contentType.trim();
+        if (mimeType.equals("text/csv") || mimeType.isEmpty()) {
+            try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
+                String[] line = null;
+                int n = 0;
+                while ((line = csvReader.readNext()) != null) {
+                    n++;
+                    if (n == 1) {
+                        processHeader(line);
+                    } else {
+                        processLine(line);
+                    }
                 }
+            } catch (IOException | CsvValidationException ex) {
+                throw new FailedApiCallException(ex);
             }
-        } catch (IOException | CsvValidationException ex) {
-            throw new FailedApiCallException(ex);
+        } else {
+            RDFFormat format = Rio.getParserFormatForMIMEType(mimeType).orElse(RDFFormat.TURTLE);
+            try {
+                Model model = Rio.parse(resp.getEntity().getContent(), format);
+                processRdfContent(model);
+            } catch (IOException ex) {
+                throw new FailedApiCallException(ex);
+            }
         }
     }
 
@@ -105,6 +130,11 @@ public abstract class QueryAccess {
             @Override
             protected void processLine(String[] line) {
                 response.add(line);
+            }
+
+            @Override
+            protected void processRdfContent(Model model) {
+                response.setRdfContent(model);
             }
 
         };

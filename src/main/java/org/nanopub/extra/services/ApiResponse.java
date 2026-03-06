@@ -1,5 +1,7 @@
 package org.nanopub.extra.services;
 
+import org.eclipse.rdf4j.model.Model;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +14,7 @@ public class ApiResponse implements Serializable {
 
     private String[] header;
     private List<ApiResponseEntry> data = new ArrayList<>();
+    private transient Model rdfContent;
 
     /**
      * Default constructor for ApiResponse.
@@ -85,6 +88,33 @@ public class ApiResponse implements Serializable {
      */
     public int size() {
         return data.size();
+    }
+
+    /**
+     * Sets the RDF content for this response (for SPARQL CONSTRUCT query results).
+     *
+     * @param rdfContent the RDF model to store
+     */
+    public void setRdfContent(Model rdfContent) {
+        this.rdfContent = rdfContent;
+    }
+
+    /**
+     * Returns the RDF content of this response, or null if this is a tabular response.
+     *
+     * @return the RDF model, or null
+     */
+    public Model getRdfContent() {
+        return rdfContent;
+    }
+
+    /**
+     * Returns true if this response contains RDF content (e.g. from a SPARQL CONSTRUCT query).
+     *
+     * @return true if RDF content is present
+     */
+    public boolean isRdfResponse() {
+        return rdfContent != null;
     }
 
 }

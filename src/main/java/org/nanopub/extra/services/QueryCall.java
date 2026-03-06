@@ -159,7 +159,7 @@ public class QueryCall {
 
         public void run() {
             get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
-            get.setHeader("Accept", "text/csv");
+            get.setHeader("Accept", "text/csv, text/turtle;q=0.9, application/ld+json;q=0.8");
             HttpResponse resp = null;
             try {
                 resp = NanopubUtils.getHttpClient().execute(get);
