@@ -241,4 +241,6 @@ public class NTEMPLATE {
      */
     public static final IRI SEQUENCE_ELEMENT_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "SequenceElementPlaceholder");
 
+    public static final IRI ADVANCED_STATEMENT = VocabUtils.createIRI(NAMESPACE, "AdvancedStatement");
+
 }
