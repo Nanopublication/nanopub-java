@@ -21,6 +21,12 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>org.nanopub</groupId>
+      <artifactId>nanopub-testsuite</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.13.4</version>
