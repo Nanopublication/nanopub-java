@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
@@ -31,7 +33,7 @@ class NanopubRetractorTest {
         Nanopub retraction = NanopubRetractor.createRetraction(orig, tc);
 
         Statement expectedRetractionStatement = vf.createStatement(tc.getSigner(), NPX.RETRACTS, orig.getUri(),
-                vf.createIRI(retraction.getUri()+"/assertion"));
+                vf.createIRI(retraction.getUri() + "/assertion"));
 
         assertTrue(retraction.getAssertion().contains(expectedRetractionStatement));
     }
@@ -42,9 +44,10 @@ class NanopubRetractorTest {
     }
 
     private TransformContext loadTransformationContext() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
-        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key2/key/id_rsa").getPath(), RSA);
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key2");
+        KeyPair key = SignNanopub.loadKey(signingKeyPair.getPrivateKeyFile().getPath(), RSA);
         IRI signer = vf.createIRI("https://orcid.org/0000-0002-4808-1845");
-        return new TransformContext(RSA, key, signer, false, false,false);
+        return new TransformContext(RSA, key, signer, false, false, false);
     }
 
     @Test
@@ -56,9 +59,10 @@ class NanopubRetractorTest {
     }
 
     private TransformContext loadWrongTransformationContext() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
-        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(), RSA);
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        KeyPair key = SignNanopub.loadKey(signingKeyPair.getPrivateKeyFile().getPath(), RSA);
         IRI signer = vf.createIRI("https://orcid.org/0000-0002-4808-1845");
-        return new TransformContext(RSA, key, signer, false, false,false);
+        return new TransformContext(RSA, key, signer, false, false, false);
     }
 
 }

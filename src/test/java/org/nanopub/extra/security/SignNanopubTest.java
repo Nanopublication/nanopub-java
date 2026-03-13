@@ -7,6 +7,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.NanopubImpl;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
 import org.nanopub.utils.TestUtils;
 
 import java.io.File;
@@ -37,7 +39,7 @@ class SignNanopubTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "signed.trig");
 
-        String keyFile = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath();
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
         String signerOrcid = TestUtils.ORCID;
         String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
         String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/").getPath();
@@ -46,7 +48,7 @@ class SignNanopubTest {
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
-                    "-k ", keyFile,
+                    "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
                     "-s ", signerOrcid,
                     "-o ", outFile.getPath(),});
             c.run();

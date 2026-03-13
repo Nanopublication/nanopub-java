@@ -1,13 +1,11 @@
 package org.nanopub;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class NanopubProfileTest {
 
@@ -15,10 +13,10 @@ class NanopubProfileTest {
     void constructorWithInvalidProfileFile() {
         String profileFileName = Objects.requireNonNull(this.getClass().getResource("/")).getPath() + "profile.yml";
         File profileFile = new File(profileFileName);
-        Assertions.assertFalse(profileFile.exists());
+        assertFalse(profileFile.exists());
 
         NanopubProfile profile = new NanopubProfile(profileFileName);
-        Assertions.assertNotNull(profile);
+        assertNotNull(profile);
     }
 
     @Test
@@ -31,12 +29,12 @@ class NanopubProfileTest {
     void constructorWithValidProfileFile() {
         String profileFileName = Objects.requireNonNull(this.getClass().getResource("/testsuite/transform/profile.yaml")).getPath();
         File profileFile = new File(profileFileName);
-        Assertions.assertTrue(profileFile.exists());
+        assertTrue(profileFile.exists());
 
         NanopubProfile profile = new NanopubProfile(profileFileName);
-        Assertions.assertNotNull(profile);
-        Assertions.assertNotNull(profile.getPrivateKeyPath());
-        Assertions.assertNotNull(profile.getOrcidId());
+        assertNotNull(profile);
+        assertNotNull(profile.getPrivateKeyPath());
+        assertNotNull(profile.getOrcidId());
     }
 
     @Test
