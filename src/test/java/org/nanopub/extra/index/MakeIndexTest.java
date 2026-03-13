@@ -4,6 +4,9 @@ import org.eclipse.rdf4j.model.IRI;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.NanopubImpl;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,11 +47,11 @@ class MakeIndexTest {
         return outFile;
     }
 
-    private List<String> getNanopubFiles () {
-        File[] files =  new File(this.getClass().getResource("/testsuite/valid/signed/").getPath()).listFiles();
-        return Arrays.asList(files).stream()
+    private List<String> getNanopubFiles() {
+        List<TestSuiteEntry> entries = new ArrayList<>(NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.SIGNED));
+        return entries.stream()
                 .limit(100) // make it more stable when testsuite changes
-                .map(File::getPath)
+                .map(entry -> entry.toFile().getAbsolutePath())
                 .filter(s -> s.endsWith("1024.trig")) // filter for one keysize, to get rid of duplicates
                 .toList();
     }

@@ -39,7 +39,7 @@ class NanopubRetractorTest {
     }
 
     private Nanopub loadNanopubToRetract() throws MalformedNanopubException, IOException {
-        File file = new File(this.getClass().getResource("/testsuite/transform/signed/rsa-key2/example7.out.trig").getFile());
+        File file = NanopubTestSuite.getLatest().getTransformCases("rsa-key2").getFirst().getSignedEntry().toFile();
         return new NanopubImpl(file);
     }
 

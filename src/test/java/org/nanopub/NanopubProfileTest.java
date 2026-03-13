@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import org.junit.jupiter.api.Test;
+import org.nanopub.testsuite.NanopubTestSuite;
 
 import java.io.File;
 import java.util.Objects;
@@ -27,11 +28,10 @@ class NanopubProfileTest {
 
     @Test
     void constructorWithValidProfileFile() {
-        String profileFileName = Objects.requireNonNull(this.getClass().getResource("/testsuite/transform/profile.yaml")).getPath();
-        File profileFile = new File(profileFileName);
+        File profileFile = NanopubTestSuite.getLatest().getTransformProfile();
         assertTrue(profileFile.exists());
 
-        NanopubProfile profile = new NanopubProfile(profileFileName);
+        NanopubProfile profile = new NanopubProfile(profileFile.getPath());
         assertNotNull(profile);
         assertNotNull(profile.getPrivateKeyPath());
         assertNotNull(profile.getOrcidId());
@@ -39,14 +39,14 @@ class NanopubProfileTest {
 
     @Test
     void getPrivateKeyPath() {
-        String profileFileName = Objects.requireNonNull(this.getClass().getResource("/testsuite/transform/profile.yaml")).getPath();
+        String profileFileName = NanopubTestSuite.getLatest().getTransformProfile().getPath();
         NanopubProfile profile = new NanopubProfile(profileFileName);
         assertEquals("src/test/resources/testsuite/transform/signed/rsa-key2/key/id_rsa", profile.getPrivateKeyPath());
     }
 
     @Test
     void getOrcid() {
-        String profileFileName = Objects.requireNonNull(this.getClass().getResource("/testsuite/transform/profile.yaml")).getPath();
+        String profileFileName = NanopubTestSuite.getLatest().getTransformProfile().getPath();
         NanopubProfile profile = new NanopubProfile(profileFileName);
         assertEquals("https://orcid.org/0000-0000-0000-0000", profile.getOrcidId());
     }

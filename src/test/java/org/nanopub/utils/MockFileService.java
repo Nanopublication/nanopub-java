@@ -16,17 +16,11 @@ import java.util.stream.Stream;
 
 public class MockFileService {
 
-    private final Path TEST_SUITE = Path.of(Objects.requireNonNull(this.getClass().getResource("/testsuite")).getPath());
     private final Path FDOs = Path.of(Objects.requireNonNull(this.getClass().getResource("/fdo")).getPath());
 
     private static final Map<String, String> fdoNanopubs = new HashMap<>();
 
     protected MockFileService() {
-        try (Stream<Path> paths = Files.walk(Path.of(TEST_SUITE + "/valid/signed"))) {
-            paths.filter(Files::isRegularFile).forEach(this::processFile);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read mock files from: " + TEST_SUITE, e);
-        }
         try (Stream<Path> paths = Files.walk(FDOs)) {
             paths.filter(Files::isRegularFile).forEach(this::processFile);
         } catch (IOException e) {

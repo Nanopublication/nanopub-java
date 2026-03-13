@@ -3,6 +3,9 @@ package org.nanopub;
 import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
 
 import java.io.File;
 import java.util.Calendar;
@@ -19,7 +22,7 @@ public class TimestampUpdaterTest {
 
     @Test
     void initWithValidArgs() {
-        String path = this.getClass().getResource("/testsuite/valid/plain/aida1.trig").getPath();
+        String path = NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.PLAIN).getFirst().toFile().getPath();
         String[] args = new String[]{"-v", path};
 
         CliRunner.initJc(new TimestampUpdater(), args);
@@ -31,8 +34,8 @@ public class TimestampUpdaterTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
 
-        String inFiles = this.getClass().getResource("/testsuite/valid/plain/").getPath();
-        for (File testFile : new File(inFiles).listFiles((dir, name) -> name.endsWith(".trig"))) {
+        for (TestSuiteEntry testSuiteEntry : NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.PLAIN)) {
+            File testFile = testSuiteEntry.toFile();
             Calendar before = Calendar.getInstance();
 
             // create signed nanopub file
