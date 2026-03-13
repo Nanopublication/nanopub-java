@@ -13,6 +13,8 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.services.*;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.HDL;
@@ -52,7 +54,11 @@ class RetrieveFdoTest {
                 when(mockedApiResponse.getData()).thenReturn(responseEntryList);
                 mockedQueryAccess.when(() -> QueryAccess.get(any())).thenReturn(mockedApiResponse);
 
-                Nanopub nanopubFromId = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np")))));
+                String artifactCode = TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np"));
+                TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                        .getByArtifactCode(artifactCode)
+                        .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifactCode));
+                Nanopub nanopubFromId = new NanopubImpl(entry.toFile());
                 mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
 
                 Nanopub retrievedNanopub = RetrieveFdo.resolveInNanopubNetwork(handle);
@@ -154,7 +160,10 @@ class RetrieveFdoTest {
     @Test
     void retrieveContentFromIdWithDataRef() throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         String fdoNanopubId = "https://w3id.org/np/RA1KlMiWjiJtQiU2R6twcLtvZv93KOqJGoXuk-HjkgiNE";
-        Nanopub fdoNanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getValidAndSignedNanopubFromId(TrustyUriUtils.getArtifactCode(fdoNanopubId)))));
+        TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                .getByArtifactCode(fdoNanopubId)
+                .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + fdoNanopubId));
+        Nanopub fdoNanopub = new NanopubImpl(entry.toFile());
         IRI dataRef = iri("https://raw.githubusercontent.com/knowledgepixels/nanodash/refs/heads/master/README.md");
 
         InputStream content = IOUtils.toInputStream(getMockedContentFromIdWithDataRef(), StandardCharsets.UTF_8);

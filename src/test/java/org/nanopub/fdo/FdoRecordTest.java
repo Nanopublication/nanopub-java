@@ -15,8 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.nanopub.*;
 import org.nanopub.extra.security.*;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.trusty.TempUriReplacer;
-import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.HDL;
@@ -343,7 +344,10 @@ class FdoRecordTest {
 
         try (MockedStatic<SignatureUtils> signatureUtilsMock = mockStatic(SignatureUtils.class, CALLS_REAL_METHODS);
              MockedStatic<RetrieveFdo> mockedRetrieveFdo = mockStatic(RetrieveFdo.class)) {
-            Nanopub nanopub = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(artifact)));
+            TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                    .getByArtifactCode(artifact)
+                    .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifact));
+            Nanopub nanopub = new NanopubImpl(entry.toFile());
             FdoRecord fdoRecord = new FdoRecord(nanopub);
             mockedRetrieveFdo.when(() -> RetrieveFdo.resolveId(fdoNanopubUrl)).thenReturn(fdoRecord);
             NanopubCreator creator;

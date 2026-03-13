@@ -10,7 +10,8 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.nanopub.utils.MockFileService;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.utils.MockFileServiceExtension;
 
 import java.io.File;
@@ -34,7 +35,10 @@ public class GetIndexIT {
         int expectedNanopubs = 102; // number of nanopubs in the index
         String artifactCode = "RApww43dy8UvCoEc8QKOaXhojCTgao3ZXX_d6V_jVBo6s";
         String nanopubUrl = "https://w3id.org/fair/fip/np/index/" + artifactCode;
-        Nanopub npFromFilesystem = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(artifactCode)));
+        TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                .getByArtifactCode(artifactCode)
+                .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifactCode));
+        Nanopub npFromFilesystem = new NanopubImpl(entry.toFile());
 
         // download index nanopub itself and create file
         GetNanopub cli1 = CliRunner.initJc(new GetNanopub(), new String[]{nanopubUrl, "-i ", "-o ", outFile.getPath()});

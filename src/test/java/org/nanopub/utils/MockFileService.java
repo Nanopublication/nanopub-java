@@ -1,6 +1,5 @@
 package org.nanopub.utils;
 
-import net.trustyuri.TrustyUriUtils;
 import org.eclipse.rdf4j.model.Resource;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
@@ -20,7 +19,6 @@ public class MockFileService {
     private final Path TEST_SUITE = Path.of(Objects.requireNonNull(this.getClass().getResource("/testsuite")).getPath());
     private final Path FDOs = Path.of(Objects.requireNonNull(this.getClass().getResource("/fdo")).getPath());
 
-    private static final Map<String, String> validAndSignedNanopubs = new HashMap<>();
     private static final Map<String, String> fdoNanopubs = new HashMap<>();
 
     protected MockFileService() {
@@ -43,16 +41,11 @@ public class MockFileService {
                 Resource uriHandle = nanopub.getAssertion().stream().findFirst().get().getSubject();
                 fdoNanopubs.put(FdoUtils.extractHandle(uriHandle), filePath.toString());
             }
-            validAndSignedNanopubs.put(TrustyUriUtils.getArtifactCode(String.valueOf(nanopub.getUri())), filePath.toString());
         } catch (IOException e) {
             throw new RuntimeException("Error reading file: " + filePath, e);
         } catch (MalformedNanopubException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static String getValidAndSignedNanopubFromId(String nanopubId) {
-        return validAndSignedNanopubs.get(nanopubId);
     }
 
     public static String getFdoNanopubFromHandle(String handle) {

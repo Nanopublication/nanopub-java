@@ -13,8 +13,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.trusty.TrustyNanopubUtils;
-import org.nanopub.utils.MockFileService;
 import org.nanopub.utils.MockFileServiceExtension;
 
 import java.io.File;
@@ -42,7 +43,11 @@ class NanopubImplTest {
             CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
             HttpEntity mockEntity = mock(HttpEntity.class);
             when(mockResponse.getEntity()).thenReturn(mockEntity);
-            when(mockEntity.getContent()).thenReturn(new FileInputStream(MockFileService.getValidAndSignedNanopubFromId(npId)));
+            when(mockResponse.getEntity()).thenReturn(mockEntity);
+            TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                    .getByArtifactCode(npId)
+                    .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + npId));
+            when(mockEntity.getContent()).thenReturn(new FileInputStream(entry.toFile()));
             when(mockResponse.getStatusLine()).thenReturn(mock(StatusLine.class));
             when(mockResponse.getStatusLine().getStatusCode()).thenReturn(200);
             when(mockResponse.getFirstHeader("Content-Type")).thenReturn(mock(Header.class));
