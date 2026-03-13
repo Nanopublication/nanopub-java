@@ -188,4 +188,11 @@ public interface Nanopub {
         return SignNanopub.signAndTransform(this, context);
     }
 
+    /**
+     * Returns the artifact code of this nanopublication, which is a unique identifier derived from the content of the nanopub.
+     *
+     * @return the artifact code of this nanopublication
+     */
+    ArtifactCode getArtifactCode();
+
 }
