@@ -11,40 +11,40 @@ class ArtifactCodeImplTest {
 
     @Test
     void constructWithValidCode() {
-        ArtifactCodeImpl artifactCode = new ArtifactCodeImpl(validArtifactCode);
+        ArtifactCode artifactCode = ArtifactCode.of(validArtifactCode);
         assertEquals(validArtifactCode, artifactCode.getCode());
     }
 
     @Test
     void constructWithInvalidCode() {
-        assertThrows(IllegalArgumentException.class, () -> new ArtifactCodeImpl("INVALID_CODE"));
+        assertNull(ArtifactCode.of("INVALID_CODE"));
     }
 
     @Test
     void testEquals() {
-        ArtifactCodeImpl code1 = new ArtifactCodeImpl(validArtifactCode);
-        ArtifactCodeImpl code2 = new ArtifactCodeImpl("RAoYy0bW33mUXlf6MOe3Q09AMualJr4D99z9vtEHFVsgE");
-        ArtifactCodeImpl code3 = new ArtifactCodeImpl(validArtifactCode);
+        ArtifactCode code1 = ArtifactCode.of(validArtifactCode);
+        ArtifactCode code2 = ArtifactCode.of("RAoYy0bW33mUXlf6MOe3Q09AMualJr4D99z9vtEHFVsgE");
+        ArtifactCode code3 = ArtifactCode.of(validArtifactCode);
         assertEquals(code1, code3);
         assertNotEquals(code1, code2);
     }
 
     @Test
     void testHashCode() {
-        ArtifactCodeImpl code1 = new ArtifactCodeImpl(validArtifactCode);
-        ArtifactCodeImpl code2 = new ArtifactCodeImpl(validArtifactCode);
+        ArtifactCode code1 = ArtifactCode.of(validArtifactCode);
+        ArtifactCode code2 = ArtifactCode.of(validArtifactCode);
         assertEquals(code1.hashCode(), code2.hashCode());
     }
 
     @Test
     void testToString() {
-        ArtifactCodeImpl artifactCode = new ArtifactCodeImpl(validArtifactCode);
+        ArtifactCode artifactCode = ArtifactCode.of(validArtifactCode);
         assertEquals("ArtifactCode{code='" + validArtifactCode + "'}", artifactCode.toString());
     }
 
     @Test
     void testGetModule() {
-        ArtifactCodeImpl artifactCode = new ArtifactCodeImpl(validArtifactCode);
+        ArtifactCode artifactCode = ArtifactCode.of(validArtifactCode);
         assertInstanceOf(RdfModule.class, artifactCode.getModule());
         assertEquals(RdfModule.MODULE_ID, artifactCode.getModule().getModuleId());
     }

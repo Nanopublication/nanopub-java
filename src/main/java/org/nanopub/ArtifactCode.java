@@ -22,4 +22,21 @@ public interface ArtifactCode {
      */
     TrustyUriModule getModule();
 
+    /**
+     * Creates an ArtifactCode from the given string. Returns null if the string is not a valid artifact code.
+     *
+     * @param code the string to create the ArtifactCode from
+     * @return the ArtifactCode, or null if the string is not a valid artifact code
+     */
+    static ArtifactCode of(String code) {
+        if (code == null) {
+            return null;
+        }
+        try {
+            return new ArtifactCodeImpl(code);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
 }

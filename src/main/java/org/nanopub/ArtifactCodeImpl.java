@@ -24,7 +24,7 @@ public class ArtifactCodeImpl implements ArtifactCode {
      * @param code the artifact code
      * @throws IllegalArgumentException if the code is not a valid artifact code
      */
-    public ArtifactCodeImpl(String code) {
+    ArtifactCodeImpl(String code) {
         if (TrustyUriUtils.isPotentialArtifactCode(code)) {
             this.code = code;
             this.module = ModuleDirectory.getModule(TrustyUriUtils.getModuleId(code));

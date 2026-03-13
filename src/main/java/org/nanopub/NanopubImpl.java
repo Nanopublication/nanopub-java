@@ -362,6 +362,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         checkProvenance();
         checkPubinfo();
         isValidAndTrusty = TrustyNanopubUtils.isValidTrustyNanopub(this);
+        if (isValidAndTrusty) {
+            artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopubUri.stringValue()));
+        }
     }
 
     private void collectNanopubUri(Collection<Statement> statements) throws MalformedNanopubException {
@@ -375,7 +378,6 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
                 }
                 nanopubUri = (IRI) st.getSubject();
                 headUri = (IRI) st.getContext();
-                artifactCode = new ArtifactCodeImpl(TrustyUriUtils.getArtifactCode(String.valueOf(this.nanopubUri)));
             }
         }
     }

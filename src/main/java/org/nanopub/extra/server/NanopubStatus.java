@@ -59,7 +59,7 @@ public class NanopubStatus extends CliRunner {
             IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
             artifactCode = TrustyUriUtils.getArtifactCode(uri.toString());
         }
-        return new ArtifactCodeImpl(artifactCode);
+        return ArtifactCode.of(artifactCode);
     }
 
     private int contentNpCount, indexNpCount;

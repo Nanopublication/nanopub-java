@@ -358,7 +358,7 @@ public class FetchIndex {
          * @param registryInfo the registry info of the server to try
          */
         public void tryServer(RegistryInfo registryInfo) {
-            ArtifactCode artifactCode = new ArtifactCodeImpl(TrustyUriUtils.getArtifactCode(npUri));
+            ArtifactCode artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(npUri));
             boolean serverTried = false;
             try {
                 serverTried = true;
