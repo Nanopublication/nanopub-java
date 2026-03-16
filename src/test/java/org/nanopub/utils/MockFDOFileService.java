@@ -14,17 +14,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class MockFileService {
-
-    private final Path FDOs = Path.of(Objects.requireNonNull(this.getClass().getResource("/fdo")).getPath());
+public class MockFDOFileService {
 
     private static final Map<String, String> fdoNanopubs = new HashMap<>();
 
-    protected MockFileService() {
-        try (Stream<Path> paths = Files.walk(FDOs)) {
+    protected MockFDOFileService() {
+        Path FDO_PATH = Path.of(Objects.requireNonNull(this.getClass().getResource("/fdo")).getPath());
+        try (Stream<Path> paths = Files.walk(FDO_PATH)) {
             paths.filter(Files::isRegularFile).forEach(this::processFile);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read mock files from: " + "/fdo", e);
+            throw new RuntimeException("Failed to read mock files from: " + FDO_PATH, e);
         }
     }
 
@@ -32,7 +31,10 @@ public class MockFileService {
         try {
             Nanopub nanopub = new NanopubImpl(filePath.toFile());
             if (FdoUtils.isFdoNanopub(nanopub)) {
-                Resource uriHandle = nanopub.getAssertion().stream().findFirst().get().getSubject();
+                Resource uriHandle = nanopub.getAssertion()
+                        .stream().findFirst()
+                        .orElseThrow()
+                        .getSubject();
                 fdoNanopubs.put(FdoUtils.extractHandle(uriHandle), filePath.toString());
             }
         } catch (IOException e) {
@@ -42,6 +44,12 @@ public class MockFileService {
         }
     }
 
+    /**
+     * Returns the file path of the FDO nanopub corresponding to the given handle.
+     *
+     * @param handle the handle of the FDO nanopub
+     * @return the file path of the FDO nanopub, or null if not found
+     */
     public static String getFdoNanopubFromHandle(String handle) {
         return fdoNanopubs.get(handle);
     }

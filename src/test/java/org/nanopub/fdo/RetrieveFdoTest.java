@@ -15,8 +15,8 @@ import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.extra.services.*;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
-import org.nanopub.utils.MockFileService;
-import org.nanopub.utils.MockFileServiceExtension;
+import org.nanopub.utils.MockFDOFileService;
+import org.nanopub.utils.MockFDOFileServiceExtension;
 import org.nanopub.vocabulary.HDL;
 
 import java.io.File;
@@ -34,13 +34,13 @@ import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockFileServiceExtension.class)
+@ExtendWith(MockFDOFileServiceExtension.class)
 class RetrieveFdoTest {
 
     @Test
     void resolveInNanopubNetworkWithValidHandle() throws FailedApiCallException, MalformedNanopubException, IOException, APINotReachableException, NotEnoughAPIInstancesException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
+        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFDOFileService.getFdoNanopubFromHandle(handle))));
 
         try (MockedStatic<GetNanopub> mockedStatic = mockStatic(GetNanopub.class)) {
             try (MockedStatic<QueryAccess> mockedQueryAccess = mockStatic(QueryAccess.class)) {
@@ -89,7 +89,7 @@ class RetrieveFdoTest {
     @Test
     void resolveIdWithValidHandleFromNetwork() throws FdoNotFoundException, MalformedNanopubException, IOException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
+        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFDOFileService.getFdoNanopubFromHandle(handle))));
 
         try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
             try (MockedStatic<RetrieveFdo> mockedStatic = mockStatic(RetrieveFdo.class, CALLS_REAL_METHODS)) {
@@ -104,7 +104,7 @@ class RetrieveFdoTest {
     @Test
     void resolveIdWithValidHandleFromSystem() throws FdoNotFoundException, MalformedNanopubException, IOException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
-        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
+        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFDOFileService.getFdoNanopubFromHandle(handle))));
         FdoRecord fdoRecord = new FdoRecord(nanopub);
 
         try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
@@ -122,7 +122,7 @@ class RetrieveFdoTest {
     void resolveIdWithValidHandleIriFromSystem() throws FdoNotFoundException, MalformedNanopubException, IOException {
         String handle = "21.T11967/39b0ec87d17a4856c5f7";
         String handleIri = HDL.NAMESPACE + handle;
-        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFileService.getFdoNanopubFromHandle(handle))));
+        Nanopub nanopub = new NanopubImpl(new File(Objects.requireNonNull(MockFDOFileService.getFdoNanopubFromHandle(handle))));
         FdoRecord fdoRecord = new FdoRecord(nanopub);
 
         try (MockedStatic<QueryAccess> noInternetMock = mockStatic(QueryAccess.class)) {
