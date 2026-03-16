@@ -3,7 +3,6 @@ package org.nanopub.extra.server;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.nanopub.CliRunner;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.Nanopub;
@@ -12,7 +11,6 @@ import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
-import org.nanopub.utils.MockFileServiceExtension;
 
 import java.io.File;
 import java.util.HashSet;
@@ -23,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test which uses GetNanopub, GetIndex and the Nanopub network.
  */
-@ExtendWith(MockFileServiceExtension.class)
 public class GetIndexIT {
 
     @Test
@@ -37,7 +34,7 @@ public class GetIndexIT {
         String nanopubUrl = "https://w3id.org/fair/fip/np/index/" + artifactCode;
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
                 .getByArtifactCode(artifactCode)
-                .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifactCode));
+                .getFirst();
         Nanopub npFromFilesystem = new NanopubImpl(entry.toFile());
 
         // download index nanopub itself and create file

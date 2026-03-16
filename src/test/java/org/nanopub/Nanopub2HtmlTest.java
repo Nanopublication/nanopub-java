@@ -14,8 +14,7 @@ class Nanopub2HtmlTest {
     private Nanopub readFile() throws MalformedNanopubException, IOException {
         String npUri = "http://purl.org/nanopub/temp/155322900/";
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
-                .getByNanopubUri(npUri)
-                .orElseThrow(() -> new IllegalStateException("Nanopublication not found with URI: " + npUri));
+                .getByNanopubUri(npUri).getFirst();
         return new NanopubImpl(entry.toFile());
     }
 

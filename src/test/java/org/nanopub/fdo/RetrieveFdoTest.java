@@ -57,7 +57,7 @@ class RetrieveFdoTest {
                 String artifactCode = TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np"));
                 TestSuiteEntry entry = NanopubTestSuite.getLatest()
                         .getByArtifactCode(artifactCode)
-                        .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifactCode));
+                        .getFirst();
                 Nanopub nanopubFromId = new NanopubImpl(entry.toFile());
                 mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
 
@@ -159,10 +159,10 @@ class RetrieveFdoTest {
 
     @Test
     void retrieveContentFromIdWithDataRef() throws FdoNotFoundException, URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
-        String fdoNanopubId = "https://w3id.org/np/RA1KlMiWjiJtQiU2R6twcLtvZv93KOqJGoXuk-HjkgiNE";
+        String fdoNanopubId = "RA1KlMiWjiJtQiU2R6twcLtvZv93KOqJGoXuk-HjkgiNE";
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
                 .getByArtifactCode(fdoNanopubId)
-                .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + fdoNanopubId));
+                .getFirst();
         Nanopub fdoNanopub = new NanopubImpl(entry.toFile());
         IRI dataRef = iri("https://raw.githubusercontent.com/knowledgepixels/nanodash/refs/heads/master/README.md");
 

@@ -104,8 +104,8 @@ class SignNanopubTest {
             outFile.delete();
         }
 
-        if (Files.exists(keyPath)) {
-            Files.walk(keyPath)
+        if (Files.exists(keyPath.getParent())) {
+            Files.walk(keyPath.getParent())
                     .sorted(Comparator.reverseOrder())
                     .forEach(p -> {
                         try {

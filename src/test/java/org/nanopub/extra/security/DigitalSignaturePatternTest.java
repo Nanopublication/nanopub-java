@@ -46,8 +46,7 @@ class DigitalSignaturePatternTest {
     private Nanopub readInvalidRsaNanopub() throws MalformedNanopubException, IOException {
         String npUri = "http://example.org/nanopub-validator-example/RAeUPiCKlke8Pw9wYbqIESyBqFJM5UDSkx4uF9kkRfCh0";
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
-                .getByNanopubUri(npUri)
-                .orElseThrow(() -> new IllegalStateException("Nanopub with URI " + npUri + " not found in test suite"));
+                .getByNanopubUri(npUri).getFirst();
         return new NanopubImpl(entry.toFile());
     }
 
@@ -74,7 +73,7 @@ class DigitalSignaturePatternTest {
     private Nanopub fetchNanopub(String npUri) throws MalformedNanopubException, IOException {
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
                 .getByNanopubUri(npUri)
-                .orElseThrow(() -> new IllegalStateException("Nanopub with URI " + npUri + " not found in test suite"));
+                .getFirst();
         return new NanopubImpl(entry.toFile());
     }
 

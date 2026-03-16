@@ -11,14 +11,12 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.nanopub.*;
 import org.nanopub.extra.security.*;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.trusty.TempUriReplacer;
-import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
@@ -39,7 +37,6 @@ import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
 import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
 import static org.nanopub.utils.TestUtils.vf;
 
-@ExtendWith(MockFileServiceExtension.class)
 class FdoRecordTest {
 
     private static final String TEST_KEY_PATH = "~/.nanopub/testkey/";
@@ -346,7 +343,7 @@ class FdoRecordTest {
              MockedStatic<RetrieveFdo> mockedRetrieveFdo = mockStatic(RetrieveFdo.class)) {
             TestSuiteEntry entry = NanopubTestSuite.getLatest()
                     .getByArtifactCode(artifact)
-                    .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifact));
+                    .getFirst();
             Nanopub nanopub = new NanopubImpl(entry.toFile());
             FdoRecord fdoRecord = new FdoRecord(nanopub);
             mockedRetrieveFdo.when(() -> RetrieveFdo.resolveId(fdoNanopubUrl)).thenReturn(fdoRecord);

@@ -2,14 +2,12 @@ package org.nanopub.extra.server;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
-import org.nanopub.utils.MockFileServiceExtension;
 
 import java.io.File;
 import java.util.Objects;
@@ -17,7 +15,6 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mockStatic;
 
-@ExtendWith(MockFileServiceExtension.class)
 public class GetNanopubTest {
 
     @Test
@@ -30,7 +27,7 @@ public class GetNanopubTest {
         String nanopubUrl = "https://w3id.org/np/" + artifactCode;
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
                 .getByArtifactCode(artifactCode)
-                .orElseThrow(() -> new IllegalStateException("Artifact code not found in test suite: " + artifactCode));
+                .getFirst();
         Nanopub nanopub = new NanopubImpl(entry.toFile());
 
         try (MockedStatic<GetNanopub> mockedStatic = mockStatic(GetNanopub.class)) {
