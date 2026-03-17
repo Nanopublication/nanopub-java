@@ -29,7 +29,7 @@
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub-testsuite-connector</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
