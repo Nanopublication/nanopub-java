@@ -2,58 +2,62 @@ package org.nanopub;
 
 import org.junit.jupiter.api.Test;
 import org.nanopub.CheckNanopub.Report;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
 
-import java.io.File;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class CheckInvalidNanopubsTest {
 
     @Test
-    public void runTest() {
-        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/plain/").getPath()).listFiles()) {
-            testPlain(testFile.getName());
+    public void runTest() throws Exception {
+        for (TestSuiteEntry testFile : NanopubTestSuite.getLatest().getInvalid(TestSuiteSubfolder.PLAIN)) {
+            testPlain(testFile);
         }
-        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/trusty/").getPath()).listFiles()) {
-            testTrusty(testFile.getName());
+        for (TestSuiteEntry testFile : NanopubTestSuite.getLatest().getInvalid(TestSuiteSubfolder.TRUSTY)) {
+            testTrusty(testFile);
         }
-        for (File testFile : new File(this.getClass().getResource("/testsuite/invalid/signed/").getPath()).listFiles()) {
-            testSigned(testFile.getName());
+        for (TestSuiteEntry testFile : NanopubTestSuite.getLatest().getInvalid(TestSuiteSubfolder.SIGNED)) {
+            testSigned(testFile);
         }
     }
 
-    public void testPlain(String filename) throws RuntimeException {
-        Report report = null;
+
+    public void testPlain(TestSuiteEntry testSuiteEntry) throws RuntimeException {
+        Report report;
         try {
-            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/plain/" + filename).getPath()});
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{testSuiteEntry.toFile().getPath()});
             report = c.check();
             System.out.println(report.getSummary());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        assert report == null || !report.areAllValid();
+        assertFalse(report.areAllValid());
     }
 
-    public void testTrusty(String filename) throws RuntimeException {
-        Report report = null;
+    public void testTrusty(TestSuiteEntry testSuiteEntry) throws RuntimeException {
+        Report report;
         try {
-            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/trusty/" + filename).getPath()});
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{testSuiteEntry.toFile().getPath()});
             report = c.check();
             System.out.println(report.getSummary());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        assert report == null || !report.areAllTrusty();
+        assertFalse(report.areAllTrusty());
     }
 
-    public void testSigned(String filename) throws RuntimeException {
-        Report report = null;
+    public void testSigned(TestSuiteEntry testSuiteEntry) throws RuntimeException {
+        Report report;
         try {
-            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{this.getClass().getResource("/testsuite/invalid/signed/" + filename).getPath()});
+            CheckNanopub c = CliRunner.initJc(new CheckNanopub(), new String[]{testSuiteEntry.toFile().getPath()});
             report = c.check();
             System.out.println(report.getSummary());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        assert report == null || !report.areAllSigned();
+        assertFalse(report.areAllSigned());
     }
 
 }

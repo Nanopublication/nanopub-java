@@ -1,8 +1,9 @@
 package org.nanopub;
 
 import org.junit.jupiter.api.Test;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -11,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class Nanopub2HtmlTest {
 
     private Nanopub readFile() throws MalformedNanopubException, IOException {
-        File file = new File(this.getClass().getResource("/testsuite/valid/plain/workflow-1.trig").getFile());
-        return new NanopubImpl(file);
+        String npUri = "http://purl.org/nanopub/temp/155322900/";
+        TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                .getByNanopubUri(npUri).getFirst();
+        return new NanopubImpl(entry.toFile());
     }
 
     @Test

@@ -12,7 +12,6 @@ import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.nanopub.extra.security.MakeKeys;
@@ -25,6 +24,8 @@ import org.nanopub.fdo.FdoRecord;
 import org.nanopub.fdo.FdoUtils;
 import org.nanopub.fdo.RetrieveFdo;
 import org.nanopub.fdo.rest.HandleResolver;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
 import org.nanopub.vocabulary.FDOC;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.NTEMPLATE;
@@ -47,6 +48,7 @@ import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.literal;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.nanopub.fdo.ValidateFdo.createShaclValidationShapeFromJson;
 
 /**
@@ -85,8 +87,9 @@ public class GeneralIntegrationTestsIT {
 
         String signer = "https://orcid.org/0009-0008-3635-347X"; // TODO enter your orcid
 
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
         KeyPair key = SignNanopub.loadKey(
-                this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(),
+                signingKeyPair.getPrivateKeyFile().getPath(),
                 SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, Values.iri(signer), true, true,
                 true);
@@ -108,7 +111,7 @@ public class GeneralIntegrationTestsIT {
     void retrieveRecordFromHandleSystem() throws Exception {
         String id = "21.T11967/39b0ec87d17a4856c5f7";
         FdoRecord record = RetrieveFdo.resolveId(id);
-        Assertions.assertEquals(FdoUtils.createIri(id), record.getId());
+        assertEquals(FdoUtils.createIri(id), record.getId());
 
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(id);
 
@@ -128,8 +131,9 @@ public class GeneralIntegrationTestsIT {
         // TODO enter your orcid either here or in the nanopub yaml
         String signer = "https://orcid.org/0009-0008-3635-347X";
         // for updating the original nanopub must be signed with the same key
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
         KeyPair key = SignNanopub.loadKey(
-                this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(),
+                signingKeyPair.getPrivateKeyFile().getPath(),
                 SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, vf.createIRI(signer), true, true,
                 true);

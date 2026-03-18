@@ -6,13 +6,14 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,10 +25,9 @@ class StripDownTest {
         String outPath = this.getClass().getResource("/").getPath() + "test-output/strip/";
         new File(outPath).mkdirs();
         File outFile = new File(outPath, "updated.trig");
-        String inFiles = Objects.requireNonNull(this.getClass().getResource("/testsuite/valid/signed")).getPath();
 
-        for (File testFile : Objects.requireNonNull(new File(inFiles).listFiles())) {
-            // create signed nanopub file
+        for (TestSuiteEntry entry : NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.SIGNED)) {
+            File testFile = entry.toFile();
             StripDown c = CliRunner.initJc(new StripDown(), new String[]{
                     "-o", outFile.getPath(),
                     testFile.getPath()});
@@ -37,7 +37,7 @@ class StripDownTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             assertFalse(TrustyUriUtils.isPotentialTrustyUri(testNano.getUri()));
             for (Statement statement : NanopubUtils.getStatements(testNano)) {
-                Assertions.assertNotEquals(statement.getPredicate(), NPX.HAS_SIGNATURE_ELEMENT);
+                assertNotEquals(NPX.HAS_SIGNATURE_ELEMENT, statement.getPredicate());
             }
 
             System.out.println("Successfully removed sig: " + testFile.getName());

@@ -4,14 +4,14 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class MockFileServiceExtension implements BeforeAllCallback, AfterAllCallback {
+public class MockFDOFileServiceExtension implements BeforeAllCallback, AfterAllCallback {
 
-    private static MockFileService service;
+    private static MockFDOFileService service;
 
     @Override
     public void beforeAll(ExtensionContext context) {
         if (service == null) {
-            service = new MockFileService();
+            service = new MockFDOFileService();
         }
     }
 

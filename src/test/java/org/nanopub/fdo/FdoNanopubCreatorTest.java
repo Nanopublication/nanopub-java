@@ -17,6 +17,8 @@ import org.nanopub.extra.security.TransformContext;
 import org.nanopub.fdo.rest.HandleResolver;
 import org.nanopub.fdo.rest.ResponsePrinter;
 import org.nanopub.fdo.rest.gson.ParsedJsonResponse;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.FDOF;
@@ -164,7 +166,8 @@ public class FdoNanopubCreatorTest {
         Nanopub np = creator.finalizeNanopub();
 
         // enter your key
-        KeyPair key = SignNanopub.loadKey(this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath(), SignatureAlgorithm.RSA);
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        KeyPair key = SignNanopub.loadKey(signingKeyPair.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
         TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key, iri(signer), true, true, true);
         // signing
         Nanopub signedNp = SignNanopub.signAndTransform(np, context);
