@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.DC;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.nanopub.ArtifactCode;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubWithNs;
@@ -223,6 +224,11 @@ public class NanopubIndexImpl implements NanopubIndex, NanopubWithNs {
     @Override
     public long getByteCount() {
         return np.getByteCount();
+    }
+
+    @Override
+    public ArtifactCode getArtifactCode() {
+        return np.getArtifactCode();
     }
 
     /**
