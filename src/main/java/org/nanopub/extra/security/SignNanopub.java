@@ -118,6 +118,9 @@ public class SignNanopub extends CliRunner {
             signerIri = vf.createIRI(signer);
         } else if (profile.getOrcidId() != null) {
             signerIri = vf.createIRI(profile.getOrcidId());
+        } else {
+            String msg = "No valid signer specified. Use either: -s or --profile !";
+            throw new Exception(msg);
         }
         final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
