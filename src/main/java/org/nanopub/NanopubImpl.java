@@ -2,6 +2,7 @@ package org.nanopub;
 
 import com.google.common.collect.ImmutableSet;
 import jakarta.activation.MimetypesFileTypeMap;
+import net.trustyuri.TrustyUriUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -78,6 +79,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
     private static final MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap();
 
     private IRI nanopubUri;
+    private ArtifactCode artifactCode;
     private IRI headUri, assertionUri, provenanceUri, pubinfoUri;
     private Set<IRI> graphUris;
     private Set<Statement> head, assertion, provenance, pubinfo;
@@ -360,6 +362,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         checkProvenance();
         checkPubinfo();
         isValidAndTrusty = TrustyNanopubUtils.isValidTrustyNanopub(this);
+        if (isValidAndTrusty) {
+            artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopubUri.stringValue()));
+        }
     }
 
     private void collectNanopubUri(Collection<Statement> statements) throws MalformedNanopubException {
@@ -669,6 +674,11 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         return byteCount;
     }
 
+    @Override
+    public ArtifactCode getArtifactCode() {
+        return artifactCode;
+    }
+
     /**
      * Returns whether this nanopublication is valid and trustworthy.
      *
@@ -720,6 +730,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
             return Objects.hash(nanopubUri);
         } else {
             return Objects.hash(
+                    artifactCode,
                     unusedPrefixesRemoved,
                     tripleCount,
                     byteCount,
