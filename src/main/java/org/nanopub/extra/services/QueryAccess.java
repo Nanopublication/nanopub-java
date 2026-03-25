@@ -1,7 +1,10 @@
 package org.nanopub.extra.services;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVParser;
 import com.opencsv.ICSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import org.apache.http.HttpResponse;
@@ -56,7 +59,9 @@ public abstract class QueryAccess {
                 ? resp.getFirstHeader("Content-Type").getValue() : "";
         String mimeType = contentType.contains(";") ? contentType.split(";")[0].trim() : contentType.trim();
         if (mimeType.equals("text/csv") || mimeType.isEmpty()) {
-            try (CSVReader csvReader = new CSVReader(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))) {
+            try (CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))
+                    .withCSVParser(new CSVParserBuilder().withEscapeChar(ICSVParser.NULL_CHARACTER).build())
+                    .build()) {
                 String[] line = null;
                 int n = 0;
                 while ((line = csvReader.readNext()) != null) {
