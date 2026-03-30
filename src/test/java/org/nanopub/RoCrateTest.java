@@ -28,16 +28,15 @@ public class RoCrateTest {
     @Test
     void testParseRoCrateMetadata() throws Exception {
         Nanopub np = new RoCrateParser().parseRoCreate(roCrateUrl, new FileInputStream(roCrateMetadataPath)).finalizeNanopub(true);
-        assertEquals(312, np.getTripleCount());
+        assertEquals(313, np.getTripleCount());
         List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE)).toList();
-        assertEquals(1, typePred.size());
+        assertEquals(2, typePred.size());
         assertEquals(KPXL.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
     }
 
     @Test
     void testCommandLineWithExplicitLocalFile () throws Exception {
         RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[] {
-                "-l",
                 "-f", roCrateMetadataPath,
                 roCrateUrl
         });
@@ -76,7 +75,6 @@ public class RoCrateTest {
             staticMock.when(() -> RoCrateParser.constructRoCrateUrl(Mockito.any(), Mockito.any()))
                     .thenReturn(res);
             RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[]{
-                    "-l",
                     mockedUrl
             });
             ro.run();
