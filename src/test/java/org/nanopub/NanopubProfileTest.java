@@ -48,7 +48,7 @@ class NanopubProfileTest {
     void getOrcid() {
         String profileFileName = NanopubTestSuite.getLatest().getTransformProfile().getPath();
         NanopubProfile profile = new NanopubProfile(profileFileName);
-        assertEquals("https://orcid.org/0000-0000-0000-0000", profile.getOrcidId());
+        assertEquals("https://orcid.org/0000-0000-0000-0001", profile.getOrcidId());
     }
 
 }
