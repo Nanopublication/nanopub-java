@@ -8,7 +8,6 @@ import org.nanopub.CliRunner;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubProfile;
 import org.nanopub.testsuite.*;
-import org.nanopub.utils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,12 +37,12 @@ class SignNanopubTest {
 
     @Test
     void signAndTransform1024RSA() throws Exception {
-        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
-        new File(outPath).mkdirs();
-        File outFile = new File(outPath, "signed.trig");
+        Path tempDir = Files.createTempDirectory("test-output-sign-nanopub");
+        File outFile = new File(tempDir.toFile(), "signed.trig");
+        outFile.deleteOnExit();
 
         SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
-        String signerOrcid = TestUtils.ORCID;
+        String signerOrcid = "https://orcid.org/0000-0000-0000-0000";
         for (TransformTestCase transformTestCase : NanopubTestSuite.getLatest().getTransformCases("rsa-key1")) {
             File testFile = transformTestCase.getPlainEntry().toFile();
 
@@ -61,17 +60,14 @@ class SignNanopubTest {
 
             assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
             System.out.println("File signed correctly: " + testFile.getName());
-
-            // delete target file if everything was fine
-            outFile.delete();
         }
     }
 
     @Test
     void signAndTransform2048RSA() throws Exception {
-        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
-        new File(outPath).mkdirs();
-        File outFile = new File(outPath, "signed.trig");
+        Path tempDir = Files.createTempDirectory("test-output-sign-nanopub");
+        File outFile = new File(tempDir.toFile(), "signed.trig");
+        outFile.deleteOnExit();
 
         final String keyName = "rsa-key2";
         NanopubTestSuite suite = NanopubTestSuite.getLatest();
@@ -99,9 +95,6 @@ class SignNanopubTest {
 
             assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
             System.out.println("File signed correctly: " + testFile.getName());
-
-            // delete target file if everything was fine
-            outFile.delete();
         }
 
         if (Files.exists(keyPath.getParent())) {
