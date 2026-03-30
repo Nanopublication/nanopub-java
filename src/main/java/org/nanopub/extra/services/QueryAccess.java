@@ -8,12 +8,14 @@ import com.opencsv.ICSVParser;
 import com.opencsv.ICSVWriter;
 import com.opencsv.exceptions.CsvValidationException;
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 
@@ -55,34 +57,38 @@ public abstract class QueryAccess {
      */
     public void call(QueryRef queryRef) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         HttpResponse resp = QueryCall.run(queryRef);
-        String contentType = resp.getFirstHeader("Content-Type") != null
-                ? resp.getFirstHeader("Content-Type").getValue() : "";
-        String mimeType = contentType.contains(";") ? contentType.split(";")[0].trim() : contentType.trim();
-        if (mimeType.equals("text/csv") || mimeType.isEmpty()) {
-            try (CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))
-                    .withCSVParser(new CSVParserBuilder().withEscapeChar(ICSVParser.NULL_CHARACTER).build())
-                    .build()) {
-                String[] line = null;
-                int n = 0;
-                while ((line = csvReader.readNext()) != null) {
-                    n++;
-                    if (n == 1) {
-                        processHeader(line);
-                    } else {
-                        processLine(line);
+        try {
+            String contentType = resp.getFirstHeader("Content-Type") != null
+                    ? resp.getFirstHeader("Content-Type").getValue() : "";
+            String mimeType = contentType.contains(";") ? contentType.split(";")[0].trim() : contentType.trim();
+            if (mimeType.equals("text/csv") || mimeType.isEmpty()) {
+                try (CSVReader csvReader = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(resp.getEntity().getContent())))
+                        .withCSVParser(new CSVParserBuilder().withEscapeChar(ICSVParser.NULL_CHARACTER).build())
+                        .build()) {
+                    String[] line = null;
+                    int n = 0;
+                    while ((line = csvReader.readNext()) != null) {
+                        n++;
+                        if (n == 1) {
+                            processHeader(line);
+                        } else {
+                            processLine(line);
+                        }
                     }
+                } catch (IOException | CsvValidationException ex) {
+                    throw new FailedApiCallException(ex);
                 }
-            } catch (IOException | CsvValidationException ex) {
-                throw new FailedApiCallException(ex);
+            } else {
+                RDFFormat format = Rio.getParserFormatForMIMEType(mimeType).orElse(RDFFormat.TURTLE);
+                try (InputStream in = resp.getEntity().getContent()) {
+                    Model model = Rio.parse(in, format);
+                    processRdfContent(model);
+                } catch (IOException ex) {
+                    throw new FailedApiCallException(ex);
+                }
             }
-        } else {
-            RDFFormat format = Rio.getParserFormatForMIMEType(mimeType).orElse(RDFFormat.TURTLE);
-            try {
-                Model model = Rio.parse(resp.getEntity().getContent(), format);
-                processRdfContent(model);
-            } catch (IOException ex) {
-                throw new FailedApiCallException(ex);
-            }
+        } finally {
+            EntityUtils.consumeQuietly(resp.getEntity());
         }
     }
 

@@ -73,6 +73,7 @@ public class QueryCall {
             try {
                 logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
+                EntityUtils.consumeQuietly(resp.getEntity());
                 if (wasSuccessful(resp)) {
                     logger.info("SUCCESS: Nanopub Query instance is accessible: {}", a);
                     checkedApiInstances.add(a);

@@ -428,7 +428,7 @@ public class NanopubUtils {
      */
     public static CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
-            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(500).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
+            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(10000).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
             PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
             connManager.setDefaultMaxPerRoute(200);
             connManager.setMaxTotal(400);
