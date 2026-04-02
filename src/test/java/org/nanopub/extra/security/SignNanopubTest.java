@@ -2,12 +2,15 @@ package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubProfile;
 import org.nanopub.testsuite.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,10 +19,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SignNanopubTest {
+
+    private final Logger logger = LoggerFactory.getLogger(SignNanopubTest.class);
 
     @Test
     void initWithoutArgs() {
@@ -57,9 +61,12 @@ class SignNanopubTest {
             // read nanopub from file
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
-
             assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
-            System.out.println("File signed correctly: " + testFile.getName());
+
+            assertNotNull(SignatureUtils.getSignatureElement(testNano), "No signature element found in signed nanopub: " + testFile.getName());
+            assertFalse(SignatureUtils.getSignatureElement(testNano).getSigners().isEmpty(), "No signers found in signed nanopub: " + testFile.getName());
+            assertTrue(SignatureUtils.getSignatureElement(testNano).getSigners().contains(Values.iri(signerOrcid)), "Expected signer not found in signed nanopub: " + testFile.getName());
+            logger.info("File signed correctly: {}", testFile.getName());
         }
     }
 
@@ -73,8 +80,9 @@ class SignNanopubTest {
         NanopubTestSuite suite = NanopubTestSuite.getLatest();
         SigningKeyPair keySource = suite.getSigningKey(keyName);
         String profileFile = NanopubTestSuite.getLatest().getTransformProfile().getPath();
+        NanopubProfile profile = new NanopubProfile(profileFile);
 
-        Path keyPath = Path.of(new NanopubProfile(profileFile).getPrivateKeyPath());
+        Path keyPath = Path.of(profile.getPrivateKeyPath());
         Files.createDirectories(keyPath.getParent());
         Files.copy(keySource.getPrivateKeyFile().toPath(), keyPath, StandardCopyOption.REPLACE_EXISTING);
         Files.copy(keySource.getPublicKeyFile().toPath(), Path.of(keyPath + ".pub"), StandardCopyOption.REPLACE_EXISTING);
@@ -94,7 +102,11 @@ class SignNanopubTest {
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
             assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
-            System.out.println("File signed correctly: " + testFile.getName());
+
+            assertNotNull(SignatureUtils.getSignatureElement(testNano), "No signature element found in signed nanopub: " + testFile.getName());
+            assertFalse(SignatureUtils.getSignatureElement(testNano).getSigners().isEmpty(), "No signers found in signed nanopub: " + testFile.getName());
+            assertTrue(SignatureUtils.getSignatureElement(testNano).getSigners().contains(Values.iri(profile.getOrcidId())), "Expected signer not found in signed nanopub: " + testFile.getName());
+            logger.info("File signed correctly: {}", testFile.getName());
         }
 
         if (Files.exists(keyPath.getParent())) {
