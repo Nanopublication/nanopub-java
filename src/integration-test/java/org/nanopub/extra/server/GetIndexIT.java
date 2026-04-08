@@ -1,5 +1,6 @@
 package org.nanopub.extra.server;
 
+import net.trustyuri.ArtifactCode;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
@@ -30,10 +31,10 @@ public class GetIndexIT {
         File outFile = new File(outPath + "out.trig");
 
         int expectedNanopubs = 102; // number of nanopubs in the index
-        String artifactCode = "RApww43dy8UvCoEc8QKOaXhojCTgao3ZXX_d6V_jVBo6s";
+        ArtifactCode artifactCode = ArtifactCode.of("RApww43dy8UvCoEc8QKOaXhojCTgao3ZXX_d6V_jVBo6s");
         String nanopubUrl = "https://w3id.org/fair/fip/np/index/" + artifactCode;
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
-                .getByArtifactCode(artifactCode)
+                .getByArtifactCode(artifactCode.toString())
                 .getFirst();
         Nanopub npFromFilesystem = new NanopubImpl(entry.toFile());
 

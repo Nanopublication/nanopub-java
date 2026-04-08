@@ -1,6 +1,7 @@
 package org.nanopub.extra.security;
 
 import jakarta.xml.bind.DatatypeConverter;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfFileContent;
@@ -46,7 +47,9 @@ public class SignatureUtils {
      */
     public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureUri = getSignatureElementUri(nanopub);
-        if (signatureUri == null) return null;
+        if (signatureUri == null) {
+            return null;
+        }
         NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 
         for (Statement st : nanopub.getHead()) se.addTargetStatement(st);
@@ -137,9 +140,9 @@ public class SignatureUtils {
 
         String u = preNanopub.getUri().stringValue();
         if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||
-                !preNanopub.getAssertionUri().stringValue().startsWith(u) ||
-                !preNanopub.getProvenanceUri().stringValue().startsWith(u) ||
-                !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
+            !preNanopub.getAssertionUri().stringValue().startsWith(u) ||
+            !preNanopub.getProvenanceUri().stringValue().startsWith(u) ||
+            !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
             throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
         }
 
@@ -234,7 +237,7 @@ public class SignatureUtils {
         // Create nanopub object:
         NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
         IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler, TrustyNanopubUtils.transformRdfSetting);
-        Map<Resource, IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));
+        Map<Resource, IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), ArtifactCode.of(TrustyUriUtils.getArtifactCode(trustyUri.toString())));
         c.mergeTransformMap(transformMap);
         return nanopubHandler.getNanopub();
     }
@@ -280,8 +283,12 @@ public class SignatureUtils {
     private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureElementUri = null;
         for (Statement st : nanopub.getPubinfo()) {
-            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
-            if (!st.getObject().equals(nanopub.getUri())) continue;
+            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) {
+                continue;
+            }
+            if (!st.getObject().equals(nanopub.getUri())) {
+                continue;
+            }
             if (!(st.getSubject() instanceof IRI)) {
                 throw new MalformedCryptoElementException("Signature element must be identified by URI");
             }
@@ -301,10 +308,18 @@ public class SignatureUtils {
      */
     public static boolean seemsToHaveSignature(Nanopub nanopub) {
         for (Statement st : nanopub.getPubinfo()) {
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) return true;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) return true;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) return true;
-            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) return true;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {
+                return true;
+            }
         }
         return false;
     }

@@ -1,5 +1,6 @@
 package org.nanopub;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -66,7 +67,7 @@ class NanopubImplTest {
         try (MockedStatic<NanopubUtils> nanopubUtilsMock = mockStatic(NanopubUtils.class, CALLS_REAL_METHODS)) {
             nanopubUtilsMock.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
-            final String artifactCode = "RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA";
+            final ArtifactCode artifactCode = ArtifactCode.of("RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA");
             NanopubImpl nanopub1 = new NanopubImpl(new URI("https://w3id.org/np/" + artifactCode).toURL());
             NanopubImpl nanopub2 = new NanopubImpl(NanopubTestSuite.getLatest()
                     .getByArtifactCode("RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA", TestSuiteCategory.VALID)
@@ -84,10 +85,10 @@ class NanopubImplTest {
         try (MockedStatic<NanopubUtils> nanopubUtilsMock = mockStatic(NanopubUtils.class, CALLS_REAL_METHODS)) {
             nanopubUtilsMock.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
-            final String artifactCode = "RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA";
+            final ArtifactCode artifactCode = ArtifactCode.of("RA6T-YLqLnYd5XfnqR9PaGUjCzudvHdYjcG4GvOc7fdpA");
             NanopubImpl nanopub1 = new NanopubImpl(new URI("https://w3id.org/np/" + artifactCode).toURL());
             NanopubImpl nanopub2 = new NanopubImpl(NanopubTestSuite.getLatest()
-                    .getByArtifactCode(artifactCode, TestSuiteCategory.INVALID)
+                    .getByArtifactCode(artifactCode.toString(), TestSuiteCategory.INVALID)
                     .orElseThrow(() -> new IllegalStateException("Nanopub with artifact code " + artifactCode + " not found in test suite"))
                     .toFile(), RDFFormat.TRIG);
 

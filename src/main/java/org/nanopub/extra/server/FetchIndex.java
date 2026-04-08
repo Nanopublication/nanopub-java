@@ -1,5 +1,6 @@
 package org.nanopub.extra.server;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.eclipse.rdf4j.model.IRI;
@@ -92,7 +93,9 @@ public class FetchIndex {
      */
     public void run() {
         synchronized (this) {
-            if (running) return;
+            if (running) {
+                return;
+            }
             running = true;
         }
         while (!fetchTasks.isEmpty()) {
@@ -106,7 +109,9 @@ public class FetchIndex {
 
     private void checkTasks() {
         for (FetchNanopubTask task : new ArrayList<>(fetchTasks)) {
-            if (task.isRunning()) continue;
+            if (task.isRunning()) {
+                continue;
+            }
             if (task.isCancelled()) {
                 fetchTasks.remove(task);
                 serverLoad.get(task.getLastRegistry()).remove(task);
@@ -128,7 +133,9 @@ public class FetchIndex {
                 List<RegistryInfo> shuffledServers = new ArrayList<>(registries);
                 Collections.shuffle(shuffledServers);
                 for (RegistryInfo registryInfo : shuffledServers) {
-                    if (task.hasServerBeenTried(registryInfo)) continue;
+                    if (task.hasServerBeenTried(registryInfo)) {
+                        continue;
+                    }
                     int load = serverLoad.get(registryInfo).size();
                     if (load >= maxParallelRequestsPerServer) {
                         continue;
@@ -364,7 +371,9 @@ public class FetchIndex {
                 serverTried = false;
                 // too many connection attempts; try again later
             } catch (Exception ex) {
-                if (listener != null) listener.exceptionHappened(ex, r, TrustyUriUtils.getArtifactCode(npUri));
+                if (listener != null) {
+                    listener.exceptionHappened(ex, r, ArtifactCode.of(TrustyUriUtils.getArtifactCode(npUri)));
+                }
             } finally {
                 running = false;
                 if (serverTried) {
@@ -404,7 +413,7 @@ public class FetchIndex {
          * @param r            the registry info of the server where the exception occurred
          * @param artifactCode the artifact code of the nanopub that caused the exception
          */
-        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode);
+        public void exceptionHappened(Exception ex, RegistryInfo r, ArtifactCode artifactCode);
 
     }
 

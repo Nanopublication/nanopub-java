@@ -1,5 +1,6 @@
 package org.nanopub.fdo;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -54,9 +55,9 @@ class RetrieveFdoTest {
                 when(mockedApiResponse.getData()).thenReturn(responseEntryList);
                 mockedQueryAccess.when(() -> QueryAccess.get(any())).thenReturn(mockedApiResponse);
 
-                String artifactCode = TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np"));
+                ArtifactCode artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(mockedApiResponse.getData().getFirst().get("np")));
                 TestSuiteEntry entry = NanopubTestSuite.getLatest()
-                        .getByArtifactCode(artifactCode)
+                        .getByArtifactCode(artifactCode.toString())
                         .getFirst();
                 Nanopub nanopubFromId = new NanopubImpl(entry.toFile());
                 mockedStatic.when(() -> GetNanopub.get(nanopub.getUri().toString())).thenReturn(nanopubFromId);
