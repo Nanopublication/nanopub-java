@@ -81,7 +81,7 @@ public class NanopubDb {
     }
 
     /**
-     * Returs a Nanopub object for the given artifact code.
+     * Returns a Nanopub object for the given artifact code.
      *
      * @param artifactCode the artifact code of the nanopub to retrieve
      * @return the Nanopub object, or null if no nanopub with the given artifact code exists
@@ -97,7 +97,7 @@ public class NanopubDb {
         try {
             np = new NanopubImpl(nanopubString, internalFormat);
         } catch (MalformedNanopubException ex) {
-            throw new RuntimeException("Stored nanopub is not wellformed (this shouldn't happen)", ex);
+            throw new RuntimeException("Stored nanopub is not well-formed (this shouldn't happen)", ex);
         } catch (RDF4JException ex) {
             throw new RuntimeException("Stored nanopub is corrupted (this shouldn't happen)", ex);
         }

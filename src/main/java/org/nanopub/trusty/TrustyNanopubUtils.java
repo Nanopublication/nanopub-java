@@ -1,5 +1,6 @@
 package org.nanopub.trusty;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
@@ -93,7 +94,9 @@ public class TrustyNanopubUtils {
         }
 
         String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
-        if (artifactCode == null) return false;
+        if (artifactCode == null) {
+            return false;
+        }
         List<Statement> statements = NanopubUtils.getStatements(nanopub);
         statements = RdfPreprocessor.run(statements, artifactCode);
 
@@ -101,8 +104,8 @@ public class TrustyNanopubUtils {
 //		System.err.print(RdfHasher.getDigestString(statements));
 //		System.err.println("---");
 
-        String ac = RdfHasher.makeArtifactCode(statements);
-        return ac.equals(artifactCode);
+        ArtifactCode ac = RdfHasher.makeArtifactCode(statements);
+        return ac.toString().equals(artifactCode);
     }
 
     /**
@@ -113,7 +116,9 @@ public class TrustyNanopubUtils {
      */
     public static String getTrustyDigestString(Nanopub nanopub) {
         String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
-        if (artifactCode == null) return null;
+        if (artifactCode == null) {
+            return null;
+        }
         List<Statement> statements = NanopubUtils.getStatements(nanopub);
         statements = RdfPreprocessor.run(statements, artifactCode);
         return RdfHasher.getDigestString(statements);

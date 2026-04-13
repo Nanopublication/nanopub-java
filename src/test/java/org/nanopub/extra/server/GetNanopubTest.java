@@ -1,5 +1,6 @@
 package org.nanopub.extra.server;
 
+import net.trustyuri.ArtifactCode;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -23,10 +24,10 @@ public class GetNanopubTest {
         new File(outPath).mkdirs();
         File outFile = new File(outPath + "out.trig");
 
-        String artifactCode = "RAWH0fe1RCpoOgaJE1B2qfTzzdTiBUUK7iIk6l7Zll9mg";
+        ArtifactCode artifactCode = ArtifactCode.of("RAWH0fe1RCpoOgaJE1B2qfTzzdTiBUUK7iIk6l7Zll9mg");
         String nanopubUrl = "https://w3id.org/np/" + artifactCode;
         TestSuiteEntry entry = NanopubTestSuite.getLatest()
-                .getByArtifactCode(artifactCode)
+                .getByArtifactCode(artifactCode.toString())
                 .getFirst();
         Nanopub nanopub = new NanopubImpl(entry.toFile());
 
