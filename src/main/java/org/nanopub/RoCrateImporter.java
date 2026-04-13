@@ -2,8 +2,6 @@ package org.nanopub;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
@@ -32,7 +30,7 @@ public class RoCrateImporter extends CliRunner {
     private boolean publish;
 
     @com.beust.jcommander.Parameter(names = "-f", description = "Use this local file for a ro-crate-metadata.json, " +
-            "instead of downloading from metadataUrl.")
+                                                                "instead of downloading from metadataUrl.")
     private String localFileName;
 
     /**

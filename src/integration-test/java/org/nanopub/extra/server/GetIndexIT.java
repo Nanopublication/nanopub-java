@@ -62,12 +62,9 @@ public class GetIndexIT {
 
         // read created multi-nanopub file
         HashSet<String> containedNanopubs = new HashSet<>();
-        MultiNanopubRdfHandler.process(indexContentFile, new MultiNanopubRdfHandler.NanopubHandler() {
-            @Override
-            public void handleNanopub(Nanopub np) {
-                containedNanopubs.add(np.getUri().toString());
-                assertTrue(indexedNanopubs.remove(np.getUri().toString()));
-            }
+        MultiNanopubRdfHandler.process(indexContentFile, (MultiNanopubRdfHandler.NanopubHandler) np -> {
+            containedNanopubs.add(np.getUri().toString());
+            assertTrue(indexedNanopubs.remove(np.getUri().toString()));
         });
         outFile.delete();
         indexContentFile.delete();

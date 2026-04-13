@@ -41,7 +41,6 @@ import java.util.Random;
 import static java.lang.System.out;
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class FdoNanopubCreatorTest {
@@ -211,7 +210,7 @@ public class FdoNanopubCreatorTest {
         try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
             HttpClient mockClient = mock();
             when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockHttpResponse);
-            httpClientStaticMock.when(() -> HttpClient.newHttpClient()).thenReturn(mockClient);
+            httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(mockClient);
 
             FdoRecord fdoRecord = FdoNanopubCreator.createFdoRecordFromHandleSystem(handle);
             assertNotNull(fdoRecord);

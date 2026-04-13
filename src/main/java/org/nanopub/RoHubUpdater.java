@@ -1,16 +1,8 @@
 package org.nanopub;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Instant;
-import java.util.Optional;
-
+import com.beust.jcommander.ParameterException;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -24,15 +16,18 @@ import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.extra.services.QueryRef;
 import org.nanopub.fdo.rest.rohub.gson.Page;
-import org.nanopub.fdo.rest.rohub.gson.RoCrateIndex;
 import org.nanopub.vocabulary.NPX;
-import org.nanopub.vocabulary.SCHEMA;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.beust.jcommander.ParameterException;
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Update the nanopublications from the RO-Hub.
@@ -77,7 +72,7 @@ public class RoHubUpdater extends CliRunner {
         QueryRef query = new QueryRef(QUERY_ID);
         ApiResponse response = QueryAccess.get(query);
 
-        for (int pageNumber = 1;; pageNumber++) {
+        for (int pageNumber = 1; ; pageNumber++) {
             Page currentPage = readRoHubIndexPage(pageNumber);
 
             for (int j = 0; j < currentPage.results.length; j++) {
@@ -116,7 +111,7 @@ public class RoHubUpdater extends CliRunner {
                         }
                     } catch (Exception e) {
                         System.out.println("Not publishing " + roCrateIdentifier + ", since there was an Exception: " +
-                                e.getMessage());
+                                           e.getMessage());
                     }
                 }
             }
@@ -141,8 +136,8 @@ public class RoHubUpdater extends CliRunner {
     }
 
     /**
-     * @return the unsigned Nanopub, or null if a not-severe exception occured
-     * @throws Exception
+     * @return the unsigned Nanopub, or null if a not-severe exception occurred
+     * @throws Exception if a severe exception occurred, e.g. IOException
      */
     Nanopub prepareRoCrateFromRohubApi(String roId, String noToReplace) throws Exception {
         String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
@@ -150,7 +145,7 @@ public class RoHubUpdater extends CliRunner {
             return createUnsignedNpFromRoCrate(downloadUrl, noToReplace);
         } catch (RDFParseException | MalformedNanopubException e) {
             System.out.println("Stop processing " + roId + ", since there was an Exception: " +
-                    e.getMessage());
+                               e.getMessage());
             return null;
         }
     }
