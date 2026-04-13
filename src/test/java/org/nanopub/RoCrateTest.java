@@ -10,7 +10,10 @@ import org.nanopub.vocabulary.KPXL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,13 +38,26 @@ public class RoCrateTest {
     }
 
     @Test
-    void testCommandLineWithExplicitLocalFile () throws Exception {
-        RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[] {
-                "-u",
-                "-f", roCrateMetadataPath,
-                roCrateUrl
-        });
-        ro.run();
+    void testCommandLineWithExplicitLocalFile() throws Exception {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(bout);
+        System.setOut(ps);
+
+        try {
+            RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[]{
+                    "-u",
+                    "-f", roCrateMetadataPath,
+                    roCrateUrl
+            });
+            ro.run();
+        } finally {
+            System.out.flush();
+            System.setOut(originalOut);
+        }
+        String out = bout.toString(StandardCharsets.UTF_8);
+        log.debug("Captured CLI output: {}", out);
+        assertFalse(out.isBlank(), "Expected CLI to write to stdout");
     }
 
     @Test

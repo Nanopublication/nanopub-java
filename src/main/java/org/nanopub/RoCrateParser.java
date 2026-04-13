@@ -59,11 +59,10 @@ public class RoCrateParser {
      * @param url             the url where the metadata file is published (including trailing "/")
      * @param roCrateMetadata the ro-create metadata file name, may be the empty string
      * @return a NanopubCreator object containing the parsed data.
-     * @throws MalformedNanopubException        if the parsed data does not conform to the expected structure.
      * @throws IOException                      if an I/O error occurs while reading the metadata file.
      * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized.
      */
-    public NanopubCreator parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
+    public NanopubCreator parseRoCreate(String url, InputStream roCrateMetadata) throws IOException, NanopubAlreadyFinalizedException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
 
         // Configure parser settings
