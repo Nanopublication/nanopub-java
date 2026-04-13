@@ -25,33 +25,35 @@ In a nutshell, to create and publish nanopublications, you need to first make su
 local keypair. To create such a keypair, run just once:
 
 ```java
-    MakeKeys.make("~/.nanopub/id", SignatureAlgorithm.RSA);
+MakeKeys.make("~/.nanopub/id", SignatureAlgorithm.RSA);
 ```
 
 And then nanopublications can be created and published programmatically like this:
 
 ```java
-    System.err.println("# Creating nanopub...");
-    NanopubCreator npCreator = new NanopubCreator(true);
-    final ValueFactory vf = SimpleValueFactory.getInstance();
-    final IRI anne = vf.createIRI("https://example.com/anne");
-    npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
-    npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
-    npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
-    Nanopub np = npCreator.finalizeNanopub(true);
-    System.err.println("# Nanopub before signing:");
-    NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+System.err.println("# Creating nanopub...");
+NanopubCreator npCreator = new NanopubCreator(true);
 
-    System.err.println("# Signing nanopub...");
-    Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
-    System.err.println("# Final nanopub after signing:");
-    NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+final ValueFactory vf = SimpleValueFactory.getInstance();
+final IRI anne = vf.createIRI("https://example.com/anne");
 
-    System.err.println("# Publishing to test server...");
-    PublishNanopub.publishToTestServer(signedNp);
-    //System.err.println("# Publishing to real server...");
-    //PublishNanopub.publish(signedNp);
-    System.err.println("# Published");
+npCreator.addAssertionStatement(anne, RDF.TYPE, vf.createIRI("https://schema.org/Person"));
+npCreator.addProvenanceStatement(PROV.WAS_ATTRIBUTED_TO, anne);
+npCreator.addPubinfoStatement(RDF.TYPE, vf.createIRI("http://purl.org/nanopub/x/ExampleNanopub"));
+Nanopub np = npCreator.finalizeNanopub(true);
+System.err.println("# Nanopub before signing:");
+NanopubUtils.writeToStream(np, System.err, RDFFormat.TRIG);
+
+System.err.println("# Signing nanopub...");
+Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+System.err.println("# Final nanopub after signing:");
+NanopubUtils.writeToStream(signedNp, System.err, RDFFormat.TRIG);
+
+System.err.println("# Publishing to test server...");
+PublishNanopub.publishToTestServer(signedNp);
+//System.err.println("# Publishing to real server...");
+//PublishNanopub.publish(signedNp);
+System.err.println("# Published");
 ```
 
 For the complete code checkout ``UsageExamples.java``. 
@@ -83,7 +85,7 @@ You can also directly use the [prebuilt jar
 files](https://github.com/Nanopublication/nanopub-java/releases):
 
 ```bash
-java -jar nanopub-1.67-jar-with-dependencies.jar check nanopubfile.trig
+java -jar nanopub-1.86.2-jar-with-dependencies.jar check nanopubfile.trig
 ```
 
 Note: For Mac users, before running `np` ensure that the GNU version of `curl`
@@ -119,7 +121,7 @@ docker build -t nanopub/nanopub-java .
 Maven has to be installed to compile the library:
 
 ```bash
-mvn clean package
+./mvnw clean package
 ```
 
 The library features can then be accessed by calling `scripts/run.sh` (with the
@@ -129,11 +131,11 @@ and not the jar file).
 ## Test Coverage
 Create the file target/jacoco.exec which includes the test coverage information in a binary format.
 ```bash
-mvn clean verify
+./mvnw clean verify
 ```
 To create a HTML report out of jacoco.exec (target/site/jacoco/index.html) use:
 ```bash
-mvn jacoco:report
+./mvnw jacoco:report
 ```
 
 
@@ -146,6 +148,6 @@ mvn jacoco:report
 
 ## License
 
-nanopub-java is free software under the MIT License. See LICENSE.txt.
+`nanopub-java` is free software under the MIT License. See [LICENSE](https://github.com/Nanopublication/nanopub-java/blob/master/LICENSE.txt).
 
-For an overview of the dependencies and their licenses, run `mvn project-info-reports:dependencies` and then visit `target/reports/dependencies.html`.
+For an overview of the dependencies and their licenses, run `./mvnw project-info-reports:dependencies` and then visit `target/reports/dependencies.html`.
