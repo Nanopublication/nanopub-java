@@ -37,6 +37,7 @@ public class RoCrateTest {
     @Test
     void testCommandLineWithExplicitLocalFile () throws Exception {
         RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[] {
+                "-u",
                 "-f", roCrateMetadataPath,
                 roCrateUrl
         });
@@ -80,7 +81,6 @@ public class RoCrateTest {
             });
             ro.run();
         } catch (Exception e) {
-            e.printStackTrace();
             fail(e.getMessage());
         }
         assertTrue(true);
