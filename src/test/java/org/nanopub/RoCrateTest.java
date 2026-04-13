@@ -75,10 +75,12 @@ public class RoCrateTest {
             staticMock.when(() -> RoCrateParser.constructRoCrateUrl(Mockito.any(), Mockito.any()))
                     .thenReturn(res);
             RoCrateImporter ro = CliRunner.initJc(new RoCrateImporter(), new String[]{
-                    "-u", mockedUrl
+                    "-u",
+                    mockedUrl
             });
             ro.run();
         } catch (Exception e) {
+            e.printStackTrace();
             fail(e.getMessage());
         }
         assertTrue(true);
