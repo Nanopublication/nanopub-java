@@ -102,10 +102,7 @@ public class NanopubRetractorCli extends CliRunner {
             signerIri = vf.createIRI(profile.getOrcidId());
         }
         if (keyFilename == null) {
-            keyFilename = profile.getPrivateKeyPath();
-        }
-        if (keyFilename == null) {
-            keyFilename = TransformContext.DEFAULT_KEY_PATH;
+            keyFilename = profile.getPrivateKeyPath() != null ? profile.getPrivateKeyPath() : TransformContext.DEFAULT_KEY_PATH;
         }
         SignatureAlgorithm algorithm = keyFilename.endsWith("_dsa") ? SignatureAlgorithm.DSA : SignatureAlgorithm.RSA;
         KeyPair key;

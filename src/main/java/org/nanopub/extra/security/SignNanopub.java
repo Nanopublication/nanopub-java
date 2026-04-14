@@ -99,10 +99,7 @@ public class SignNanopub extends CliRunner {
             profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
         }
         if (keyFilename == null) {
-            keyFilename = profile.getPrivateKeyPath();
-        }
-        if (keyFilename == null) {
-            keyFilename = "~/.nanopub/id_rsa";
+            keyFilename = profile.getPrivateKeyPath() != null ? profile.getPrivateKeyPath() : TransformContext.DEFAULT_KEY_PATH;
         }
 
         if (keyFilename.endsWith("_dsa")) {
