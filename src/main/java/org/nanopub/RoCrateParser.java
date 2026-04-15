@@ -125,25 +125,26 @@ public class RoCrateParser {
                 // probably ends in  ./metadata.json or something like that, we remove it anyway
                 Pattern p = Pattern.compile(patternUrlUntilLastSlash);
                 Matcher m = p.matcher(url);
-                m.matches();
-                String resultingUrl = m.group(1);
-                if (LOG.isDebugEnabled()) {
-                    try {
-                        String filename = m.group(2);
-                        if (filename.equals("ro-crate-metadata.json") || filename.equals("ro-crate-metadata.jsonld")) {
-                            // standard case, no logging
-                        } else {
-                            LOG.debug("Unexpected filename for RO-Create Metadata: " + filename);
-                            LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
+                if (m.matches()) {
+                    String resultingUrl = m.group(1);
+                    if (LOG.isDebugEnabled()) {
+                        try {
+                            String filename = m.group(2);
+                            if (filename.equals("ro-crate-metadata.json") || filename.equals("ro-crate-metadata.jsonld")) {
+                                // standard case, no logging
+                            } else {
+                                LOG.debug("Unexpected filename for RO-Create Metadata: " + filename);
+                                LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
+                            }
+                        } catch (IllegalStateException | IndexOutOfBoundsException e) {
+                            // there was no trailing filename, all good
                         }
-                    } catch (IllegalStateException | IndexOutOfBoundsException e) {
-                        // there was no trailing filename, all good
                     }
+                    if (resultingUrl == null) {
+                        LOG.warn("Could not determine RO-Crate base URL with input url: " + url);
+                    }
+                    return vf.createIRI(resultingUrl);
                 }
-                if (resultingUrl == null) {
-                    LOG.warn("Could not determine RO-Crate base URL with input url: " + url);
-                }
-                return vf.createIRI(resultingUrl);
             } else {
                 // TODO extract from roCrateMetadata
                 return vf.createIRI(url);

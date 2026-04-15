@@ -1,5 +1,6 @@
 package org.nanopub;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -238,6 +239,115 @@ public class RoCrateParserTest {
         @Test
         void firstFinalizationSucceeds() {
             assertDoesNotThrow(() -> parser.parseRoCreate(RO_CRATE_URL, fixtureStream()).finalizeNanopub(true));
+        }
+
+    }
+
+    @Nested
+    class ConstructRoCrateUrl {
+
+        @Test
+        void testConstructRoCrateUrl() {
+            String suffix = "crate/download/";
+            String baseDownloadUrl = "https://api.rohub.org/api/ros/";
+            String id = "55a1b422-f279-4765-9ba7-d27268059844/";
+            String fullUrl = baseDownloadUrl + id + suffix;
+            IRI res = RoCrateParser.constructRoCrateUrl(fullUrl, null);
+            assertEquals("https://w3id.org/ro-id/" + id, res.stringValue());
+        }
+
+        @Test
+        void testConstructRoHubApiUrl() {
+            String roHubId = "302b4ebf-db38-49d5-8ab4-4561181f4e94";
+            String downloadUrl = "https://api.rohub.org/api/ros/" + roHubId + "/crate/download/";
+            IRI res = RoCrateParser.constructRoCrateUrl(downloadUrl, null);
+            assertEquals(BASE_ROHUB_URL + roHubId + "/", res.stringValue());
+        }
+
+        @Test
+        void testConstructSimpleRoCrateUrlWithMetadataJustOneSlash() {
+            String url = "https://zenodo.org/records/3541888/files/";
+            IRI res = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, res.stringValue());
+        }
+
+        @Test
+        void testConstructSimpleRoCrateUrl() {
+            String url = "https://zenodo.org/records/3541888/files/";
+            String metadataUrl = "ro-crate-metadata.jsonld";
+            IRI res = RoCrateParser.constructRoCrateUrl(url + metadataUrl, null);
+            assertEquals(url, res.stringValue());
+        }
+
+        @Test
+        void metadataFileIsStripped_json() {
+            String url = "https://example.org/data/ro-crate-metadata.json";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals("https://example.org/data/", result.stringValue());
+        }
+
+        @Test
+        void arbitraryFileIsStrippedToBasePath() {
+            String url = "https://example.org/path/to/file.txt";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals("https://example.org/path/to/", result.stringValue());
+        }
+
+        @Test
+        void doubleSlashPath_isPreserved() {
+            String url = "https://zenodo.org/records/3541888/files//";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, result.stringValue());
+        }
+
+        @Test
+        void dotSegmentPath_isPreserved() {
+            String url = "https://abc.ziz/testrecord/./";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, result.stringValue());
+        }
+
+        @Test
+        void nonHttpUrl_isReturnedAsIri() {
+            String url = "ftp://example.org/data/";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, result.stringValue());
+        }
+
+        @Test
+        void nonMatchingHttpPattern_returnsOriginalUrl() {
+            String url = "https://example.org";
+
+            IRI result = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, result.stringValue());
+        }
+
+        @Test
+        void testConstructSimpleRoCrateUrlWithMetadataSpecialCaseDoubleSlash() {
+            // TODO discuss standard-conformity of this, ...//
+            String url = "https://zenodo.org/records/3541888/files//";
+            IRI res = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, res.stringValue());
+        }
+
+        @Test
+        void testConstructSimpleRoCrateUrlWithDotReferenceInPath() {
+            String url = "https://abc.ziz/testrecord/./";
+            IRI res = RoCrateParser.constructRoCrateUrl(url, null);
+            assertEquals(url, res.stringValue());
+        }
+
+        @Test
+        void testConstructNonIdRoCrateUrl() {
+            String urlWithoutIdNorMetadata = "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/get_typename_from_WFS.ipynb";
+            String expectedUrlNoMetadata__ = "https://raw.githubusercontent.com/FAIR2Adapt/saarland-flooding/refs/heads/main/notebooks/";
+            IRI res = RoCrateParser.constructRoCrateUrl(urlWithoutIdNorMetadata, null);
+            assertEquals(expectedUrlNoMetadata__, res.stringValue());
         }
 
     }
