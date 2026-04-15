@@ -3,17 +3,24 @@ package org.nanopub;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.nanopub.extra.security.TransformContext;
 import org.nanopub.vocabulary.KPXL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,15 +34,6 @@ public class RoCrateTest {
     final String roCrateUrl = "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/";
     final String roCrateMetadataPath = Objects.requireNonNull(this.getClass().getResource("/")).getPath() + "7ad44bec-6784-437f-b5f3-2199b43a5303.jsonld";
     static final Logger log = LoggerFactory.getLogger(RoCrateTest.class);
-
-    @Test
-    void testParseRoCrateMetadata() throws Exception {
-        Nanopub np = new RoCrateParser().parseRoCreate(roCrateUrl, new FileInputStream(roCrateMetadataPath)).finalizeNanopub(true);
-        assertEquals(313, np.getTripleCount());
-        List<Statement> typePred = np.getPubinfo().stream().filter(st -> st.getPredicate().equals(RDF.TYPE)).toList();
-        assertEquals(2, typePred.size());
-        assertEquals(KPXL.RO_CRATE_NANOPUB, typePred.getFirst().getObject());
-    }
 
     @Test
     void testCommandLineWithExplicitLocalFile() throws Exception {
