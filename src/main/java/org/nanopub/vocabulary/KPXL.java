@@ -9,5 +9,5 @@ public final class KPXL {
     /**
      * <a href="https://w3id.org/kpxl/gen/terms/RoCrateNanopub">https://w3id.org/kpxl/gen/terms/RoCrateNanopub</a>
      */
-    public static final IRI RO_CRATE_NANOPUB = VocabUtils.createIRI(NPX.NAMESPACE, "RoCrateNanopub");
+    public static final IRI RO_CRATE_NANOPUB = VocabUtils.createIRI(NAMESPACE, "RoCrateNanopub");
 }
