@@ -3,9 +3,9 @@ package org.nanopub;
 import com.beust.jcommander.ParameterException;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.jspecify.annotations.NonNull;
 import org.nanopub.extra.security.SignNanopub;
@@ -16,6 +16,7 @@ import org.nanopub.extra.services.ApiResponseEntry;
 import org.nanopub.extra.services.QueryAccess;
 import org.nanopub.extra.services.QueryRef;
 import org.nanopub.fdo.rest.rohub.gson.Page;
+import org.nanopub.vocabulary.KPXL;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.IOException;
@@ -38,9 +39,6 @@ public class RoHubUpdater extends CliRunner {
     private boolean createLocally;
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
-    static final IRI CREATOR = vf.createIRI("http://purl.org/dc/terms/creator");
-    static final IRI RO_CRATE_BOT = vf.createIRI("https://w3id.org/kpxl/gen/terms/RoCrateBot");
 
     static final String QUERY_ID = "RAFGm6dE-H9M5WgOViQJQrvKrwQofZxViNF2wq2CbAZTA/get-rocrate-nanopubs";
 
@@ -155,7 +153,7 @@ public class RoHubUpdater extends CliRunner {
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl);
         RoCrateParser parser = new RoCrateParser();
         NanopubCreator npCreator = parser.parseRoCreate(downloadUrl, metadata);
-        npCreator.addPubinfoStatement(CREATOR, RO_CRATE_BOT);
+        npCreator.addPubinfoStatement(DCTERMS.CREATOR, KPXL.RO_CRATE_BOT);
         if (npToReplace != null) {
             npCreator.addPubinfoStatement(NPX.SUPERSEDES, vf.createIRI(npToReplace));
         }
