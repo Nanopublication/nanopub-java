@@ -76,6 +76,7 @@ public class RoCrateImporter extends CliRunner {
 
         if (unsigned && publish) {
             System.err.println("Do not use -u and -p together.");
+            throw new ParameterException("Cannot use -u and -p together.");
         }
 
         if (unsigned) {
