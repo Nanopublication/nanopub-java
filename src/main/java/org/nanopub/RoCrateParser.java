@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.rdf4j.model.IRI;
@@ -117,7 +118,7 @@ public class RoCrateParser {
         if (url.startsWith("http")) {
             if (url.startsWith("https://api.rohub.org/api/ros/")) {
                 id = StringUtils.substringAfter(url, BASE_ROCRATE_API_URL);
-                id = StringUtils.removeEnd(id, BASE_ROCRATE_API_URL_SUFFIX);
+                id = Strings.CS.removeEnd(id, BASE_ROCRATE_API_URL_SUFFIX);
                 return vf.createIRI(BASE_ROHUB_URL + id);
             } else if (url.endsWith("/")) {
                 return vf.createIRI(url);
