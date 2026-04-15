@@ -69,7 +69,7 @@ public class RoCrateImporter extends CliRunner {
         } else {
             roCreateMetadata = RoCrateParser.downloadRoCreateMetadataFile(metadataUrl);
         }
-        String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));
+        String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/') + 1);
 
         RoCrateParser parser = new RoCrateParser();
         Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata).finalizeNanopub(true);
