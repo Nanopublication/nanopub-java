@@ -39,7 +39,7 @@ class RoCrateIT {
     @Test
     void importFromMetadataJsonFile() throws IOException, MalformedNanopubException, TrustyUriException, SignatureException, InvalidKeyException, NanopubAlreadyFinalizedException {
         String url = "https://w3id.org/ro-id/588ada8d-a185-402e-8b60-3c17435110ee/";
-        String filename = Objects.requireNonNull(RoCrateTest.class.getResource("/588ada8d-a185-402e-8b60-3c17435110ee.jsonld").getPath());
+        String filename = Objects.requireNonNull(RoCrateImporterTest.class.getResource("/588ada8d-a185-402e-8b60-3c17435110ee.jsonld").getPath());
 
         FileInputStream metadata = new FileInputStream(filename);
         RoCrateParser parser = new RoCrateParser();
