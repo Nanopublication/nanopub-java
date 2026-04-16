@@ -249,9 +249,8 @@ public class RoCrateParserTest {
         @Test
         void testConstructRoCrateUrl() {
             String suffix = "crate/download/";
-            String baseDownloadUrl = "https://api.rohub.org/api/ros/";
             String id = "55a1b422-f279-4765-9ba7-d27268059844/";
-            String fullUrl = baseDownloadUrl + id + suffix;
+            String fullUrl = RoCrateParser.BASE_ROCRATE_API_URL + id + suffix;
             IRI res = RoCrateParser.constructRoCrateUrl(fullUrl, null);
             assertEquals("https://w3id.org/ro-id/" + id, res.stringValue());
         }
@@ -259,7 +258,7 @@ public class RoCrateParserTest {
         @Test
         void testConstructRoHubApiUrl() {
             String roHubId = "302b4ebf-db38-49d5-8ab4-4561181f4e94";
-            String downloadUrl = "https://api.rohub.org/api/ros/" + roHubId + "/crate/download/";
+            String downloadUrl = RoCrateParser.BASE_ROCRATE_API_URL + roHubId + "/crate/download/";
             IRI res = RoCrateParser.constructRoCrateUrl(downloadUrl, null);
             assertEquals(BASE_ROHUB_URL + roHubId + "/", res.stringValue());
         }

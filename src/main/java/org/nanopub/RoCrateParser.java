@@ -45,6 +45,7 @@ public class RoCrateParser {
 
     private static final Log LOG = LogFactory.getLog(RoCrateParser.class);
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    static final String BASE_ROCRATE_API_URL = "https://api.rohub.org/api/ros/";
 
     private static final HttpClient client = HttpClient.newHttpClient();
 
@@ -111,12 +112,11 @@ public class RoCrateParser {
     // default access for testing
     static IRI constructRoCrateUrl(String url, InputStream roCrateMetadata) {
         String id;
-        final String BASE_ROCRATE_API_URL = "https://api.rohub.org/api/ros/";
         final String BASE_ROCRATE_API_URL_SUFFIX = "crate/download/";
         final String BASE_ROHUB_URL = "https://w3id.org/ro-id/";
         final String patternUrlUntilLastSlash = "(https?://.*/)(.*)";
         if (url.startsWith("http")) {
-            if (url.startsWith("https://api.rohub.org/api/ros/")) {
+            if (url.startsWith(BASE_ROCRATE_API_URL)) {
                 id = StringUtils.substringAfter(url, BASE_ROCRATE_API_URL);
                 id = Strings.CS.removeEnd(id, BASE_ROCRATE_API_URL_SUFFIX);
                 return vf.createIRI(BASE_ROHUB_URL + id);

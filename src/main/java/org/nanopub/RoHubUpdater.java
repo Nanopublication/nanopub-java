@@ -80,8 +80,7 @@ public class RoHubUpdater extends CliRunner {
                 // modification not newer as Nanopub publication
                 String npToReplace = null;
 
-                Optional<ApiResponseEntry> entry = response.getData().stream().filter(
-                        e -> e.get("rocrate").equals("https://w3id.org/ro-id/" + roCrateIdentifier)).findFirst();
+                Optional<ApiResponseEntry> entry = response.getData().stream().filter(e -> e.get("rocrate").equals("https://w3id.org/ro-id/" + roCrateIdentifier)).findFirst();
                 if (entry.isPresent()) {
                     // check if entry on RoHub is updated after entry from Nanopub
                     Instant roHubUpdateTime = Instant.parse(currentPage.results[j].modified);
@@ -108,8 +107,7 @@ public class RoHubUpdater extends CliRunner {
                             PublishNanopub.publish(signedNp);
                         }
                     } catch (Exception e) {
-                        System.out.println("Not publishing " + roCrateIdentifier + ", since there was an Exception: " +
-                                           e.getMessage());
+                        System.out.println("Not publishing " + roCrateIdentifier + ", since there was an Exception: " + e.getMessage());
                     }
                 }
             }
@@ -120,17 +118,14 @@ public class RoHubUpdater extends CliRunner {
         }
     }
 
-    Page readRoHubIndexPage(int pageNumber)
-            throws URISyntaxException, IOException, InterruptedException {
-        final String url = "https://api.rohub.org/api/ros/?page=" + pageNumber;
+    Page readRoHubIndexPage(int pageNumber) throws URISyntaxException, IOException, InterruptedException {
+        final String url = RoCrateParser.BASE_ROCRATE_API_URL + "?page=" + pageNumber;
         System.out.println("Read page: " + url);
         HttpRequest req = HttpRequest.newBuilder().GET().uri(new URI(url)).build();
         HttpResponse<InputStream> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
 
         JsonReader reader = new JsonReader(new InputStreamReader(httpResponse.body()));
-        Page p = new Gson().fromJson(reader, Page.class);
-
-        return p;
+        return new Gson().fromJson(reader, Page.class);
     }
 
     /**
@@ -138,18 +133,16 @@ public class RoHubUpdater extends CliRunner {
      * @throws Exception if a severe exception occurred, e.g. IOException
      */
     Nanopub prepareRoCrateFromRohubApi(String roId, String noToReplace) throws Exception {
-        String downloadUrl = "https://api.rohub.org/api/ros/" + roId + "/crate/download/";
+        String downloadUrl = RoCrateParser.BASE_ROCRATE_API_URL + roId + "/crate/download/";
         try {
             return createUnsignedNpFromRoCrate(downloadUrl, noToReplace);
         } catch (RDFParseException | MalformedNanopubException e) {
-            System.out.println("Stop processing " + roId + ", since there was an Exception: " +
-                               e.getMessage());
+            System.out.println("Stop processing " + roId + ", since there was an Exception: " + e.getMessage());
             return null;
         }
     }
 
-    private Nanopub createUnsignedNpFromRoCrate(@NonNull String downloadUrl, String npToReplace)
-            throws Exception {
+    private Nanopub createUnsignedNpFromRoCrate(@NonNull String downloadUrl, String npToReplace) throws Exception {
         InputStream metadata = RoCrateParser.downloadRoCreateMetadataFile(downloadUrl);
         RoCrateParser parser = new RoCrateParser();
         NanopubCreator npCreator = parser.parseRoCreate(downloadUrl, metadata);
