@@ -1,5 +1,7 @@
 package org.nanopub.extra.services;
 
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -62,6 +64,22 @@ class ApiResponseTest {
         assertEquals(0, response.size());
         response.add(new ApiResponseEntry());
         assertEquals(1, response.size());
+    }
+
+    @Test
+    void isRdfResponseReturnsFalseByDefault() {
+        ApiResponse response = new ApiResponse();
+        assertFalse(response.isRdfResponse());
+        assertNull(response.getRdfContent());
+    }
+
+    @Test
+    void setRdfContentMakesIsRdfResponseReturnTrue() {
+        ApiResponse response = new ApiResponse();
+        Model model = new LinkedHashModel();
+        response.setRdfContent(model);
+        assertTrue(response.isRdfResponse());
+        assertSame(model, response.getRdfContent());
     }
 
 }

@@ -1,9 +1,11 @@
 package org.nanopub.trusty;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
 import net.trustyuri.rdf.TransformRdfSetting;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -21,6 +23,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Utility class for handling Trusty Nanopubs.
@@ -82,8 +85,18 @@ public class TrustyNanopubUtils {
      * @return true if the Nanopub is valid, false otherwise
      */
     public static boolean isValidTrustyNanopub(Nanopub nanopub) {
+        Set<IRI> graphUris = nanopub.getGraphUris();
+        IRI nanopubUri = nanopub.getUri();
+        for (IRI uri : graphUris) {
+            if (!uri.stringValue().startsWith(nanopubUri.stringValue())) {
+                return false;
+            }
+        }
+
         String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
-        if (artifactCode == null) return false;
+        if (artifactCode == null) {
+            return false;
+        }
         List<Statement> statements = NanopubUtils.getStatements(nanopub);
         statements = RdfPreprocessor.run(statements, artifactCode);
 
@@ -91,8 +104,8 @@ public class TrustyNanopubUtils {
 //		System.err.print(RdfHasher.getDigestString(statements));
 //		System.err.println("---");
 
-        String ac = RdfHasher.makeArtifactCode(statements);
-        return ac.equals(artifactCode);
+        ArtifactCode ac = RdfHasher.makeArtifactCode(statements);
+        return ac.toString().equals(artifactCode);
     }
 
     /**
@@ -103,7 +116,9 @@ public class TrustyNanopubUtils {
      */
     public static String getTrustyDigestString(Nanopub nanopub) {
         String artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
-        if (artifactCode == null) return null;
+        if (artifactCode == null) {
+            return null;
+        }
         List<Statement> statements = NanopubUtils.getStatements(nanopub);
         statements = RdfPreprocessor.run(statements, artifactCode);
         return RdfHasher.getDigestString(statements);

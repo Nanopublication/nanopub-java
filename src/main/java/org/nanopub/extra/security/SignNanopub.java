@@ -99,10 +99,7 @@ public class SignNanopub extends CliRunner {
             profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
         }
         if (keyFilename == null) {
-            keyFilename = profile.getPrivateKeyPath();
-        }
-        if (keyFilename == null) {
-            keyFilename = "~/.nanopub/id_rsa";
+            keyFilename = profile.getPrivateKeyPath() != null ? profile.getPrivateKeyPath() : TransformContext.DEFAULT_KEY_PATH;
         }
 
         if (keyFilename.endsWith("_dsa")) {
@@ -118,6 +115,9 @@ public class SignNanopub extends CliRunner {
             signerIri = vf.createIRI(signer);
         } else if (profile.getOrcidId() != null) {
             signerIri = vf.createIRI(profile.getOrcidId());
+        } else {
+            String msg = "No valid signer specified. Use either: -s or --profile !";
+            throw new Exception(msg);
         }
         final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 

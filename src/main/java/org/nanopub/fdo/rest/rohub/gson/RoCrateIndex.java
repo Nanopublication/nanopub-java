@@ -2,8 +2,7 @@ package org.nanopub.fdo.rest.rohub.gson;
 
 public class RoCrateIndex {
     public String identifier;
-    public String shared_link;
-    public String api_link;
+    public String modified;
 
     /**
      * Here an example of a concrete Index with all the potentially provided information:

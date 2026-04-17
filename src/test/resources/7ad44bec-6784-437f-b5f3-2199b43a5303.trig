@@ -1,0 +1,367 @@
+@prefix this: <http://purl.org/nanopub/temp/770902647/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix dce: <http://purl.org/dc/elements/1.1/> .
+@prefix pav: <http://purl.org/pav/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+
+this:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion this:assertion;
+    np:hasProvenance this:provenance;
+    np:hasPublicationInfo this:pubinfo .
+}
+
+this:assertion {
+  <http://eurovoc.europa.eu/2919> a <http://schema.org/DefinedTerm>;
+    <http://schema.org/description> "";
+    <http://schema.org/name> "Environmental research" .
+
+  <https://orcid.org/0000-0001-6728-7745> a <http://xmlns.com/foaf/0.1/Agent>;
+    <http://schema.org/affiliation> "University of Florida";
+    <http://schema.org/email> "ethanwhite@ufl.edu";
+    <http://schema.org/name> "Ethan P. White";
+    <https://w3id.org/dingo#orcid> "0000-0001-6728-7745" .
+
+  <https://orcid.org/0009-0005-0392-4377> a <http://xmlns.com/foaf/0.1/Agent>;
+    <http://schema.org/affiliation> "The Alan Turing Institute";
+    <http://schema.org/email> "lvanzeeland@turing.ac.uk";
+    <http://schema.org/name> "Louisa Van Zeeland";
+    <https://w3id.org/dingo#orcid> "0009-0005-0392-4377" .
+
+  <https://w3id.org/ro-id/0368b491-8ec4-486a-ac1c-05f586f55612> a <https://w3id.org/ro/terms/earth-science#Phrase>;
+    <http://schema.org/name> "DeepForest notebook";
+    <https://w3id.org/ro/terms/earth-science#normScore> "34.64249748237664";
+    <https://w3id.org/ro/terms/earth-science#score> "34.4" .
+
+  <https://w3id.org/ro-id/0524d334-9343-4da9-97e1-3bf548ec43a4> a <https://w3id.org/ro/terms/earth-science#FieldOfResearch>;
+    <http://schema.org/name> "earth sciences";
+    <https://w3id.org/ro/terms/earth-science#normScore> "100.0";
+    <https://w3id.org/ro/terms/earth-science#score> "0.7395366430282593" .
+
+  <https://w3id.org/ro-id/111854d7-7863-4e42-84cd-92fadc504e8c> a <https://w3id.org/ro/terms/earth-science#Phrase>;
+    <http://schema.org/name> "Environmental Data Science book";
+    <https://w3id.org/ro/terms/earth-science#normScore> "15.609264853977846";
+    <https://w3id.org/ro/terms/earth-science#score> "15.5" .
+
+  <https://w3id.org/ro-id/122efe44-26a9-4b91-a5d3-eb01213346bb> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "detection";
+    <https://w3id.org/ro/terms/earth-science#normScore> "11.345939933259174";
+    <https://w3id.org/ro/terms/earth-science#score> "10.2" .
+
+  <https://w3id.org/ro-id/13e7bc1d-6788-4671-a6b0-6775f1b35c66> a <https://w3id.org/ro/terms/earth-science#NASA>;
+    <http://schema.org/name> "geophysics";
+    <https://w3id.org/ro/terms/earth-science#normScore> "100.0";
+    <https://w3id.org/ro/terms/earth-science#score> "0.4561961591243744" .
+
+  <https://w3id.org/ro-id/18f88f96-891f-4283-bca6-96e5b5790a9f> a <https://w3id.org/ro/terms/earth-science#Concept>;
+    <http://schema.org/name> "notebook";
+    <https://w3id.org/ro/terms/earth-science#normScore> "19.120135363790187";
+    <https://w3id.org/ro/terms/earth-science#score> "11.3" .
+
+  <https://w3id.org/ro-id/25b882de-d196-406b-bb10-3e3d9144e703> a <https://w3id.org/ro/terms/earth-science#Concept>;
+    <http://schema.org/name> "research";
+    <https://w3id.org/ro/terms/earth-science#normScore> "19.4585448392555";
+    <https://w3id.org/ro/terms/earth-science#score> "11.5" .
+
+  <https://w3id.org/ro-id/39837817-242b-44c5-96d7-14c471898391> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "object";
+    <https://w3id.org/ro/terms/earth-science#normScore> "14.571746384872078";
+    <https://w3id.org/ro/terms/earth-science#score> "13.1" .
+
+  <https://w3id.org/ro-id/45e6be16-1a7d-4b5d-9df8-110c40627fc6> a <https://w3id.org/ro/terms/earth-science#NASA>;
+    <http://schema.org/name> "geosciences";
+    <https://w3id.org/ro/terms/earth-science#normScore> "100.0";
+    <https://w3id.org/ro/terms/earth-science#score> "0.4561961591243744" .
+
+  <https://w3id.org/ro-id/4db6da95-285e-42db-932c-1fd23e6fcdd2> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "Environmental Data Science";
+    <https://w3id.org/ro/terms/earth-science#normScore> "17.575083426028918";
+    <https://w3id.org/ro/terms/earth-science#score> "15.8" .
+
+  <https://w3id.org/ro-id/5784402a-b47e-4560-b6ef-c9fecfef2115> a <http://purl.org/wf4ever/ro#ResearchObject>,
+      <http://purl.org/wf4ever/roevo#ForkedRO>, <http://purl.org/wf4ever/roevo#LiveRO>;
+    <http://purl.org/wf4ever/roevo#forkedAtTime> "2025-05-27 16:35:09.245985+00:00";
+    <http://purl.org/wf4ever/roevo#forkedBy> "https://w3id.org/ro-id/users/annef%40simula.no";
+    prov:wasDerivedFrom "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303" .
+
+  <https://w3id.org/ro-id/5ab77465-cf90-426c-ae7f-ffbb76d7a775> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "research";
+    <https://w3id.org/ro/terms/earth-science#normScore> "13.348164627363737";
+    <https://w3id.org/ro/terms/earth-science#score> "12.0" .
+
+  <https://w3id.org/ro-id/6f7d2e05-5259-4e8e-b0e1-f32803318c16> a <https://w3id.org/ro/terms/earth-science#Concept>;
+    <http://schema.org/name> "aim";
+    <https://w3id.org/ro/terms/earth-science#normScore> "21.489001692047378";
+    <https://w3id.org/ro/terms/earth-science#score> "12.7" .
+
+  <https://w3id.org/ro-id/72028dbc-cc0c-4df0-a402-1fbfdc212361> a <https://w3id.org/ro/terms/earth-science#Phrase>;
+    <http://schema.org/name> "Livestock detection";
+    <https://w3id.org/ro/terms/earth-science#normScore> "15.105740181268883";
+    <https://w3id.org/ro/terms/earth-science#score> "15.0" .
+
+  <https://w3id.org/ro-id/763687ae-23cf-4cdd-9cd2-5abdc64a0292> a <https://w3id.org/ro/terms/earth-science#FieldOfResearch>;
+    <http://schema.org/name> "geology";
+    <https://w3id.org/ro/terms/earth-science#normScore> "100.0";
+    <https://w3id.org/ro/terms/earth-science#score> "0.7395366430282593" .
+
+  <https://w3id.org/ro-id/79e08be3-7b6f-4e45-8b22-c7601981149f> a <https://w3id.org/ro/terms/earth-science#IPTC>;
+    <http://schema.org/name> "Book industry";
+    <https://w3id.org/ro/terms/earth-science#path> "Economy, business and finance/Economic sector/Media/Book industry" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/> a <http://purl.org/wf4ever/ro#ResearchObject>,
+      <http://purl.org/wf4ever/roevo#LiveRO>, <http://schema.org/Dataset>, <https://w3id.org/ro/terms/earth-science#ExecutableResearchObject>;
+    <http://purl.org/wf4ever/roevo#hasFork> "https://w3id.org/ro-id/5784402a-b47e-4560-b6ef-c9fecfef2115";
+    <http://schema.org/about> <http://eurovoc.europa.eu/2919>;
+    <http://schema.org/author> <mailto:c.appel@qmul.ac.uk>;
+    <http://schema.org/contentSize> "0"^^xsd:integer;
+    <http://schema.org/contentUrl> "https://api.rohub.org/api/ros/7ad44bec-6784-437f-b5f3-2199b43a5303/crate/download/";
+    <http://schema.org/contributor> <https://orcid.org/0000-0001-6728-7745>, <https://orcid.org/0009-0005-0392-4377>;
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 22:59:05.987316+00:00";
+    <http://schema.org/dateModified> "2025-05-27 17:13:45.833609+00:00";
+    <http://schema.org/datePublished> "2024-12-04 22:59:05.987316+00:00";
+    <http://schema.org/description> "The research object refers to the Livestock detection using DeepForest notebook published in the Environmental Data Science book.";
+    <http://schema.org/encodingFormat> "application/ld+json";
+    <http://schema.org/hasPart> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/4828c52f-a7e9-4f07-b4d7-d14f683a4196>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/709b7582-d7b6-4211-b16e-00a7d0dcbbc1>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/71a38785-696d-4694-86c5-0710a18f829e>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/b53ccdbd-22f0-48b6-9515-429c2599d308>;
+    <http://schema.org/identifier> "https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Livestock detection using DeepForest (Jupyter Notebook) published in the Environmental Data Science book";
+    <http://w3id.org/ro-id/rohub/model#creation_mode> "MANUAL";
+    <https://w3id.org/contentdesc#Domain> "https://w3id.org/ro-id/f48250c4-c494-456a-9b6e-f4e6357a38c3";
+    <https://w3id.org/ro/terms/earth-science#Concept> "https://w3id.org/ro-id/18f88f96-891f-4283-bca6-96e5b5790a9f",
+      "https://w3id.org/ro-id/25b882de-d196-406b-bb10-3e3d9144e703", "https://w3id.org/ro-id/6f7d2e05-5259-4e8e-b0e1-f32803318c16",
+      "https://w3id.org/ro-id/fc4c7bbf-fd88-4614-b0a2-ee4d42cdb14f", "https://w3id.org/ro-id/fd30f53e-5736-4cfe-8f87-c830284b2eb0";
+    <https://w3id.org/ro/terms/earth-science#FieldOfResearch> "https://w3id.org/ro-id/0524d334-9343-4da9-97e1-3bf548ec43a4",
+      "https://w3id.org/ro-id/763687ae-23cf-4cdd-9cd2-5abdc64a0292";
+    <https://w3id.org/ro/terms/earth-science#IPTC> "https://w3id.org/ro-id/79e08be3-7b6f-4e45-8b22-c7601981149f",
+      "https://w3id.org/ro-id/8729e151-1755-45c5-bc96-984df50473fd", "https://w3id.org/ro-id/8d0c7987-45ed-4898-a75c-99b4bdc79a95";
+    <https://w3id.org/ro/terms/earth-science#Lemma> "https://w3id.org/ro-id/122efe44-26a9-4b91-a5d3-eb01213346bb",
+      "https://w3id.org/ro-id/39837817-242b-44c5-96d7-14c471898391", "https://w3id.org/ro-id/4db6da95-285e-42db-932c-1fd23e6fcdd2",
+      "https://w3id.org/ro-id/5ab77465-cf90-426c-ae7f-ffbb76d7a775", "https://w3id.org/ro-id/83560376-2acb-4676-8468-48db185146f6",
+      "https://w3id.org/ro-id/a0692c42-42b4-4787-8e33-d8efbb6d7ad1", "https://w3id.org/ro-id/e23cfbb6-9d20-440a-8cba-3c2cec67c0e0";
+    <https://w3id.org/ro/terms/earth-science#NASA> "https://w3id.org/ro-id/13e7bc1d-6788-4671-a6b0-6775f1b35c66",
+      "https://w3id.org/ro-id/45e6be16-1a7d-4b5d-9df8-110c40627fc6";
+    <https://w3id.org/ro/terms/earth-science#Phrase> "https://w3id.org/ro-id/0368b491-8ec4-486a-ac1c-05f586f55612",
+      "https://w3id.org/ro-id/111854d7-7863-4e42-84cd-92fadc504e8c", "https://w3id.org/ro-id/72028dbc-cc0c-4df0-a402-1fbfdc212361",
+      "https://w3id.org/ro-id/a6a10782-a94e-4c0d-8b1a-f55dd52f35c9", "https://w3id.org/ro-id/c1f82fab-b31e-4415-a94d-264d91ae82de";
+    <https://w3id.org/ro/terms/earth-science#Sentence> "https://w3id.org/ro-id/cbf391bc-8a89-4faa-80a3-45105c7864b2",
+      "https://w3id.org/ro-id/de5f84e2-2c7a-4242-9750-a9913493a6ca";
+    <https://w3id.org/ro/terms/earth-science#template> "https://w3id.org/ro/terms/earth-science#ExecutableResearchObjectTemplate";
+    <https://www.w3.org/ns/iana/link-relations/relation#cite-as> "Cameron Appel, Ethan P. White, and Louisa Van Zeeland. \"Livestock detection using DeepForest (Jupyter Notebook) published in the Environmental Data Science book.\" ROHub. Dec 04 ,2024. https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303." .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/4828c52f-a7e9-4f07-b4d7-d14f683a4196>
+    a <http://purl.org/wf4ever/wf4ever#Folder>, <http://schema.org/Dataset>;
+    <http://schema.org/hasPart> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/832ec27f-3faf-4051-9a42-dfa6d421a6ed>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/8df0b492-90c0-45e7-829b-21a9dfa10947>;
+    <http://schema.org/name> "output" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/709b7582-d7b6-4211-b16e-00a7d0dcbbc1>
+    a <http://purl.org/wf4ever/wf4ever#Folder>, <http://schema.org/Dataset>;
+    <http://schema.org/hasPart> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/0b7e04ec-2f7f-403d-90de-43f556bbf7f0>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/653a81be-57a8-4957-a6b6-1ce247d2e1b1>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/bdbfeb31-f728-42af-97f7-4b9a9c01ee31>,
+      <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/dee4309b-432f-4819-a6d4-61fe906ddd11>;
+    <http://schema.org/name> "tool" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/71a38785-696d-4694-86c5-0710a18f829e>
+    a <http://purl.org/wf4ever/wf4ever#Folder>, <http://schema.org/Dataset>;
+    <http://schema.org/hasPart> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/64c222bd-ba46-4ff1-9de4-e9b02173609e>;
+    <http://schema.org/name> "input" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/folders/b53ccdbd-22f0-48b6-9515-429c2599d308>
+    a <http://purl.org/wf4ever/wf4ever#Folder>, <http://schema.org/Dataset>;
+    <http://schema.org/hasPart> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/189ecff7-0351-476b-9d21-c9b22210dce9>;
+    <http://schema.org/name> "biblio" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/0b7e04ec-2f7f-403d-90de-43f556bbf7f0>
+    a <http://purl.org/wf4ever/wf4ever#Resource>, <http://schema.org/MediaObject>, <https://w3id.org/ro/terms/earth-science#JupyterNotebook>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://github.com/eds-book-gallery/95199651-9e81-4cae-a3a7-66398a9a5f62/blob/main/notebook.ipynb";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:20.603543+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:21.556504+00:00";
+    <http://schema.org/description> "Jupyter Notebook hosted by the Environmental Data Science Book";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Jupyter notebook";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:20.603543+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/189ecff7-0351-476b-9d21-c9b22210dce9>
+    a dct:BibliographicResource, <http://purl.org/wf4ever/wf4ever#Resource>, <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://doi.org/https://doi.org/10.1111/2041-210X.13472";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:33.471709+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:34.525430+00:00";
+    <http://schema.org/description> "Related publication of the modelling presented in the Jupyter notebook";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Deepforest: a python package for rgb deep learning tree crown delineation";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:33.471709+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/64c222bd-ba46-4ff1-9de4-e9b02173609e>
+    a <http://purl.org/wf4ever/wf4ever#Dataset>, <http://purl.org/wf4ever/wf4ever#Resource>,
+      <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://doi.org/10.7910/DVN/N7GJYU";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:24.659570+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:25.667439+00:00";
+    <http://schema.org/description> "Contains input Input dataset for the fine-tuned model used in the Jupyter notebook of Livestock detection using DeepForest";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Input Input dataset for the fine-tuned model";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:24.659570+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/653a81be-57a8-4957-a6b6-1ce247d2e1b1>
+    a <http://purl.org/wf4ever/wf4ever#Resource>, <http://schema.org/MediaObject>, <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/Publication>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://edsbook.org/notebooks/gallery/95199651-9e81-4cae-a3a7-66398a9a5f62/notebook.html";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:46.367365+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:47.573187+00:00";
+    <http://schema.org/description> "Rendered version of the Jupyter Notebook hosted by the Environmental Data Science Book";
+    <http://schema.org/encodingFormat> "text/html";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Online rendered version of the Jupyter notebook";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:46.367365+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/832ec27f-3faf-4051-9a42-dfa6d421a6ed>
+    a <http://purl.org/wf4ever/roterms#Sketch>, <http://purl.org/wf4ever/wf4ever#Resource>,
+      <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentSize> "457238"^^xsd:integer;
+    <http://schema.org/contentUrl> "https://api.rohub.org/api/resources/832ec27f-3faf-4051-9a42-dfa6d421a6ed/download/";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:16.094540+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:17.222084+00:00";
+    <http://schema.org/encodingFormat> "image/png";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Image showing an example of the finetuned model predictions to detect livestock";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:16.094540+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/8df0b492-90c0-45e7-829b-21a9dfa10947>
+    a <http://purl.org/wf4ever/wf4ever#Dataset>, <http://purl.org/wf4ever/wf4ever#Resource>,
+      <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://doi.org/10.5281/zenodo.14279111";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:28.915134+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:30.048350+00:00";
+    <http://schema.org/description> "Contains outputs, (results), generated in the Jupyter notebook of Livestock detection using DeepForest";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Outputs";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:28.915134+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/bdbfeb31-f728-42af-97f7-4b9a9c01ee31>
+    a <http://purl.org/wf4ever/wf4ever#Resource>, <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://github.com/eds-book-gallery/95199651-9e81-4cae-a3a7-66398a9a5f62/tree/main/.lock/conda-lock.yml";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:37.727861+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:38.784747+00:00";
+    <http://schema.org/description> "Lock conda file of the Jupyter notebook hosted by the Environmental Data Science Book";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Lock conda file";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:37.727861+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/resources/dee4309b-432f-4819-a6d4-61fe906ddd11>
+    a <http://purl.org/wf4ever/wf4ever#Resource>, <http://schema.org/MediaObject>;
+    <http://schema.org/author> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/contentUrl> "https://github.com/eds-book-gallery/95199651-9e81-4cae-a3a7-66398a9a5f62/tree/main/.binder/environment.yml";
+    <http://schema.org/creator> <mailto:environmental.ds.book@gmail.com>;
+    <http://schema.org/dateCreated> "2024-12-04 23:00:41.963542+00:00";
+    <http://schema.org/dateModified> "2024-12-04 23:00:43.056070+00:00";
+    <http://schema.org/description> "Conda environment when user want to have the same libraries installed without concerns of package versions";
+    <http://schema.org/license> <https://choosealicense.com/no-permission/>;
+    <http://schema.org/name> "Conda environment";
+    <http://schema.org/sdDatePublished> "2024-12-04 23:00:41.963542+00:00" .
+
+  <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/ro-crate-metadata.json>
+    a <http://schema.org/CreativeWork>;
+    dct:conformsTo <https://w3id.org/ro/crate/1.1>;
+    <http://schema.org/about> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/> .
+
+  <https://w3id.org/ro-id/83560376-2acb-4676-8468-48db185146f6> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "book";
+    <https://w3id.org/ro/terms/earth-science#normScore> "12.235817575083425";
+    <https://w3id.org/ro/terms/earth-science#score> "11.0" .
+
+  <https://w3id.org/ro-id/8729e151-1755-45c5-bc96-984df50473fd> a <https://w3id.org/ro/terms/earth-science#IPTC>;
+    <http://schema.org/name> "Literature";
+    <https://w3id.org/ro/terms/earth-science#path> "Arts, culture and entertainment/Arts and entertainment/Literature" .
+
+  <https://w3id.org/ro-id/8d0c7987-45ed-4898-a75c-99b4bdc79a95> a <https://w3id.org/ro/terms/earth-science#IPTC>;
+    <http://schema.org/name> "Language";
+    <https://w3id.org/ro/terms/earth-science#path> "Arts, culture and entertainment/Culture/Language" .
+
+  <https://w3id.org/ro-id/a0692c42-42b4-4787-8e33-d8efbb6d7ad1> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "notebook";
+    <https://w3id.org/ro/terms/earth-science#normScore> "13.125695216907674";
+    <https://w3id.org/ro/terms/earth-science#score> "11.8" .
+
+  <https://w3id.org/ro-id/a6a10782-a94e-4c0d-8b1a-f55dd52f35c9> a <https://w3id.org/ro/terms/earth-science#Phrase>;
+    <http://schema.org/name> "use DeepForest notebook";
+    <https://w3id.org/ro/terms/earth-science#normScore> "0.6042296072507553";
+    <https://w3id.org/ro/terms/earth-science#score> "0.6" .
+
+  <https://w3id.org/ro-id/c1f82fab-b31e-4415-a94d-264d91ae82de> a <https://w3id.org/ro/terms/earth-science#Phrase>;
+    <http://schema.org/name> "research object";
+    <https://w3id.org/ro/terms/earth-science#normScore> "34.038267875125875";
+    <https://w3id.org/ro/terms/earth-science#score> "33.8" .
+
+  <https://w3id.org/ro-id/cbf391bc-8a89-4faa-80a3-45105c7864b2> a <https://w3id.org/ro/terms/earth-science#Sentence>;
+    <http://schema.org/name> "The research object refers to the Livestock detection using DeepForest notebook published in the Environmental Data Science book.";
+    <https://w3id.org/ro/terms/earth-science#normScore> "60.76076076076076";
+    <https://w3id.org/ro/terms/earth-science#score> "60.7" .
+
+  <https://w3id.org/ro-id/de5f84e2-2c7a-4242-9750-a9913493a6ca> a <https://w3id.org/ro/terms/earth-science#Sentence>;
+    <http://schema.org/name> "Livestock detection using DeepForest (Jupyter Notebook) published in the Environmental Data Science book.";
+    <https://w3id.org/ro/terms/earth-science#normScore> "39.23923923923924";
+    <https://w3id.org/ro/terms/earth-science#score> "39.2" .
+
+  <https://w3id.org/ro-id/e23cfbb6-9d20-440a-8cba-3c2cec67c0e0> a <https://w3id.org/ro/terms/earth-science#Lemma>;
+    <http://schema.org/name> "DeepForest";
+    <https://w3id.org/ro/terms/earth-science#normScore> "17.797552836484982";
+    <https://w3id.org/ro/terms/earth-science#score> "16.0" .
+
+  <https://w3id.org/ro-id/f48250c4-c494-456a-9b6e-f4e6357a38c3> a <https://w3id.org/contentdesc#Domain>;
+    <http://schema.org/name> "publishing";
+    <https://w3id.org/ro/terms/earth-science#normScore> "100.0";
+    <https://w3id.org/ro/terms/earth-science#score> "6.9" .
+
+  <https://w3id.org/ro-id/fc4c7bbf-fd88-4614-b0a2-ee4d42cdb14f> a <https://w3id.org/ro/terms/earth-science#Concept>;
+    <http://schema.org/name> "detection";
+    <https://w3id.org/ro/terms/earth-science#normScore> "17.089678510998308";
+    <https://w3id.org/ro/terms/earth-science#score> "10.1" .
+
+  <https://w3id.org/ro-id/fd30f53e-5736-4cfe-8f87-c830284b2eb0> a <https://w3id.org/ro/terms/earth-science#Concept>;
+    <http://schema.org/name> "book";
+    <https://w3id.org/ro/terms/earth-science#normScore> "22.84263959390863";
+    <https://w3id.org/ro/terms/earth-science#score> "13.5" .
+
+  <mailto:c.appel@qmul.ac.uk> a <http://xmlns.com/foaf/0.1/Agent>;
+    <http://schema.org/affiliation> "Queen Mary University London";
+    <http://schema.org/email> "c.appel@qmul.ac.uk";
+    <http://schema.org/name> "Cameron Appel" .
+
+  <mailto:environmental.ds.book@gmail.com> a <http://xmlns.com/foaf/0.1/Agent>;
+    <http://schema.org/name> "Environmental Data Science Book Community" .
+}
+
+this:provenance {
+  this:assertion prov:wasDerivedFrom <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/ro-crate-metadata.json> .
+}
+
+this:pubinfo {
+  this: a <https://w3id.org/fdof/ontology#FAIRDigitalObject>, <https://w3id.org/kpxl/gen/terms/RoCrateNanopub>;
+    dct:created "2026-04-15T15:38:59.888+02:00"^^xsd:dateTime;
+    <http://purl.org/nanopub/x/introduces> <https://w3id.org/ro-id/7ad44bec-6784-437f-b5f3-2199b43a5303/>;
+    rdfs:label "Livestock detection using DeepForest (Jupyter Notebook) published in the Environmental Data Science book" .
+}

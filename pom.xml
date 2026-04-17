@@ -3,7 +3,7 @@
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
   <packaging>jar</packaging>
-  <version>1.85-SNAPSHOT</version>
+  <version>1.86.3-SNAPSHOT</version>
   <name>nanopub</name>
   <description>Java library for nanopublications based on RDF4J</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
@@ -18,8 +18,20 @@
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <rdf4j.version>5.1.5</rdf4j.version>
+    <slf4j.version>2.0.17</slf4j.version>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nanopub</groupId>
+      <artifactId>nanopub-testsuite-connector</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -64,18 +76,18 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.0.17</version>
+      <version>${slf4j.version}</version>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>org.slf4j</groupId>-->
-<!--      <artifactId>slf4j-nop</artifactId>-->
-<!--      <version>2.0.17</version>-->
-<!--      <optional>true</optional>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>2.0.17</version>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -86,7 +98,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.13.1</version>
+      <version>2.13.2</version>
     </dependency>
     <dependency>
       <groupId>org.commonjava.mimeparse</groupId>
@@ -101,7 +113,7 @@
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.23</version>
+      <version>1.24.0</version>
     </dependency>
     <dependency>
       <groupId>eu.neverblink.jelly</groupId>
@@ -141,7 +153,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.19.0</version>
+      <version>5.23.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -363,43 +375,6 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <!-- Profile to fetch submodules before build. -->
-    <!-- Activate unless we are in Jitpack CI environment. -->
-    <profile>
-      <activation>
-        <property>
-          <name>!env.JITPACK</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.5.0</version>
-            <inherited>false</inherited>
-            <executions>
-              <execution>
-                <phase>initialize</phase>
-                <id>invoke build</id>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <executable>git</executable>
-              <arguments>
-                <argument>submodule</argument>
-                <argument>update</argument>
-                <argument>--init</argument>
-                <argument>--recursive</argument>
-              </arguments>
-            </configuration>
           </plugin>
         </plugins>
       </build>

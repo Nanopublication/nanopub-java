@@ -1,16 +1,16 @@
 package org.nanopub.extra.services;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Second-generation query API call.
@@ -24,9 +24,10 @@ public class QueryCall {
     /**
      * Run a query call with the given query ID and parameters.
      *
-     * @param queryId the ID of the query to run
-     * @param params  the parameters to pass to the query
+     * @param queryRef the reference to the query to run
      * @return the HTTP response from the query API
+     * @throws APINotReachableException       if the API is not reachable after retries
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public static HttpResponse run(QueryRef queryRef) throws APINotReachableException, NotEnoughAPIInstancesException {
         int retryCount = 0;
@@ -45,7 +46,7 @@ public class QueryCall {
             }
             retryCount = retryCount + 1;
         }
-        throw new APINotReachableException("Giving up contacting API: " + queryRef.getName());
+        throw new APINotReachableException("Giving up contacting API: " + queryRef.getQueryId());
     }
 
     /**
@@ -72,6 +73,7 @@ public class QueryCall {
             try {
                 logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
+                EntityUtils.consumeQuietly(resp.getEntity());
                 if (wasSuccessful(resp)) {
                     logger.info("SUCCESS: Nanopub Query instance is accessible: {}", a);
                     checkedApiInstances.add(a);
@@ -158,7 +160,7 @@ public class QueryCall {
 
         public void run() {
             get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
-            get.setHeader("Accept", "text/csv");
+            get.setHeader("Accept", "text/csv, text/turtle;q=0.9, application/ld+json;q=0.8");
             HttpResponse resp = null;
             try {
                 resp = NanopubUtils.getHttpClient().execute(get);

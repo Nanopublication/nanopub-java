@@ -199,8 +199,9 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
          * Handles a nanopub.
          *
          * @param np The nanopub to handle.
+         * @throws NanopubAlreadyFinalizedException If the nanopub is already finalized.
          */
-        public void handleNanopub(Nanopub np) throws NanopubAlreadyFinalizedException;
+        void handleNanopub(Nanopub np) throws NanopubAlreadyFinalizedException;
 
     }
 

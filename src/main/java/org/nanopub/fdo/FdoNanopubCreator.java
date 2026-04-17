@@ -44,6 +44,7 @@ public class FdoNanopubCreator {
      * @param fdoRecord the FdoRecord to be included in the Nanopub
      * @param fdoIri    the IRI of the FDO record
      * @return a NanopubCreator instance ready to create a Nanopub
+     * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized
      */
     public static NanopubCreator createWithFdoIri(FdoRecord fdoRecord, IRI fdoIri) throws NanopubAlreadyFinalizedException {
         IRI npIri = vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
@@ -56,6 +57,7 @@ public class FdoNanopubCreator {
      * @param fdoRecord the FdoRecord to be included in the Nanopub
      * @param fdoSuffix the suffix to be appended to the FDO IRI
      * @return a NanopubCreator instance ready to create a Nanopub
+     * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized
      */
     public static NanopubCreator createWithFdoSuffix(FdoRecord fdoRecord, String fdoSuffix) throws NanopubAlreadyFinalizedException {
         String npIriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
@@ -83,10 +85,11 @@ public class FdoNanopubCreator {
      *
      * @param id the handle system identifier
      * @return Nanopub containing the data from the handle system
-     * @throws org.nanopub.MalformedNanopubException if the Nanopub cannot be created due to malformed data
-     * @throws java.net.URISyntaxException           if the handle system identifier is not a valid URI
-     * @throws java.io.IOException                   if there is an error during the HTTP request to the handle system
-     * @throws java.lang.InterruptedException        if the thread is interrupted while waiting for the HTTP request to complete
+     * @throws org.nanopub.MalformedNanopubException        if the Nanopub cannot be created due to malformed data
+     * @throws java.net.URISyntaxException                  if the handle system identifier is not a valid URI
+     * @throws java.io.IOException                          if there is an error during the HTTP request to the handle system
+     * @throws java.lang.InterruptedException               if the thread is interrupted while waiting for the HTTP request to complete
+     * @throws org.nanopub.NanopubAlreadyFinalizedException if the Nanopub has already been finalized
      */
     public static Nanopub createFromHandleSystem(String id) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, NanopubAlreadyFinalizedException {
         FdoRecord record = createFdoRecordFromHandleSystem(id);
@@ -115,8 +118,7 @@ public class FdoNanopubCreator {
                 record.setAttribute(FDOF.IS_MATERIALIZED_BY, vf.createIRI(String.valueOf(v.data.value)));
                 continue;
             }
-            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") &&
-                !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
+            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") && !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
                 // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
                 String dataValue = String.valueOf(v.data.value);
                 String dataValueToImport;

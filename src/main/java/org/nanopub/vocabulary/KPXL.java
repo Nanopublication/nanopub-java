@@ -6,6 +6,11 @@ public final class KPXL {
 
     public static final String NAMESPACE = "https://w3id.org/kpxl/gen/terms/";
 
-    /** https://w3id.org/kpxl/gen/terms/RoCrateNanopub */
-    public static final IRI RO_CRATE_NANOPUB = Utils.createIRI(NPX.NAMESPACE, "RoCrateNanopub");
+    /**
+     * <a href="https://w3id.org/kpxl/gen/terms/RoCrateNanopub">https://w3id.org/kpxl/gen/terms/RoCrateNanopub</a>
+     */
+    public static final IRI RO_CRATE_NANOPUB = VocabUtils.createIRI(NAMESPACE, "RoCrateNanopub");
+
+    public static final IRI RO_CRATE_BOT = VocabUtils.createIRI(NAMESPACE, "RoCrateBot");
+
 }

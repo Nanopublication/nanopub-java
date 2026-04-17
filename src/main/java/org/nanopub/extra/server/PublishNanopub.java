@@ -1,6 +1,7 @@
 package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -106,7 +107,7 @@ public class PublishNanopub extends CliRunner {
     private int count;
     private boolean failed;
     private SPARQLRepository sparqlRepo;
-    private String artifactCode;
+    private ArtifactCode artifactCode;
 
     /**
      * Default constructor for PublishNanopub.
@@ -118,14 +119,13 @@ public class PublishNanopub extends CliRunner {
     }
 
 
-
     /**
      * Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
      * The other way around, we do interpret the command line concept of setting the verbose flag as
      * activation of debug log.
      */
     // TODO Push-Up! This will be useful with other CliTasks that support the verbose flag.
-    public void initLogging () {
+    public void initLogging() {
         if (LOG.isDebugEnabled()) {
             verbose = true;
         } else if (verbose) {
@@ -154,7 +154,9 @@ public class PublishNanopub extends CliRunner {
                         logOrSysout(LOG, "Reading file: " + s);
                     }
                     MultiNanopubRdfHandler.process(new File(s), np -> {
-                        if (failed) return;
+                        if (failed) {
+                            return;
+                        }
                         processNanopub(np);
                     });
                     if (count == 0) {
@@ -244,7 +246,7 @@ public class PublishNanopub extends CliRunner {
             }
             registryInfo = serverIterator.next();
         }
-        artifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+        artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
         if (verbose) {
             logOrSysout(LOG, "Trying to publish nanopub: " + artifactCode);
         }
@@ -263,7 +265,9 @@ public class PublishNanopub extends CliRunner {
                 HttpPost post = preparePost(nanopub);
                 if (!dryRun) {
                     String nanopubUrl = executePost(post, url);
-                    if (nanopubUrl != null) return nanopubUrl;
+                    if (nanopubUrl != null) {
+                        return nanopubUrl;
+                    }
                 }
             } catch (IOException | RDF4JException ex) {
                 if (verbose) {
@@ -278,8 +282,8 @@ public class PublishNanopub extends CliRunner {
             return null;
         } else {
             throw new RuntimeException(String.format("Failed to publish the nanopub. " +
-                    "Details: Probably the HTTP Response Codes from Servers where not between 200 and 300\n" +
-                    "Server URL = '%s'", serverUrl));
+                                                     "Details: Probably the HTTP Response Codes from Servers where not between 200 and 300\n" +
+                                                     "Server URL = '%s'", serverUrl));
         }
     }
 

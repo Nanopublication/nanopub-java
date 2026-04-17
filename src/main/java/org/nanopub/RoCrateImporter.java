@@ -2,8 +2,6 @@ package org.nanopub;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
@@ -25,15 +23,15 @@ public class RoCrateImporter extends CliRunner {
     @com.beust.jcommander.Parameter(description = "Url of RoCrate metadata", required = true)
     private String metadataUrl;
 
-    @com.beust.jcommander.Parameter(names = "-l", description = "write to std.out, no publishing")
-    private boolean createLocally;
+    @com.beust.jcommander.Parameter(names = "-u", description = "Unsigned, the Nanopub is not signed. Do not use with -p.")
+    private boolean unsigned;
+
+    @com.beust.jcommander.Parameter(names = "-p", description = "Directly publish the Nanopub.")
+    private boolean publish;
 
     @com.beust.jcommander.Parameter(names = "-f", description = "Use this local file for a ro-crate-metadata.json, " +
-            "instead of downloading from metadataUrl.")
+                                                                "instead of downloading from metadataUrl.")
     private String localFileName;
-
-
-    private ValueFactory vf = SimpleValueFactory.getInstance();
 
     /**
      * Main method to run the RoCrateImporter.
@@ -71,16 +69,24 @@ public class RoCrateImporter extends CliRunner {
         } else {
             roCreateMetadata = RoCrateParser.downloadRoCreateMetadataFile(metadataUrl);
         }
-        String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/'));
+        String metadataPath = metadataUrl.substring(0, metadataUrl.lastIndexOf('/') + 1);
 
         RoCrateParser parser = new RoCrateParser();
-        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata);
+        Nanopub np = parser.parseRoCreate(metadataPath, roCreateMetadata).finalizeNanopub(true);
 
-        if (createLocally) {
+        if (unsigned && publish) {
+            System.err.println("Do not use -u and -p together.");
+            throw new ParameterException("Cannot use -u and -p together.");
+        }
+
+        if (unsigned) {
             NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);
-        } else {
+        } else if (publish) {
             Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
             PublishNanopub.publish(signedNp);
+        } else {
+            Nanopub signedNp = SignNanopub.signAndTransform(np, TransformContext.makeDefault());
+            NanopubUtils.writeToStream(signedNp, System.out, RDFFormat.TRIG);
         }
     }
 

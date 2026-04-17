@@ -1,17 +1,17 @@
 package org.nanopub.extra.server;
 
+import net.trustyuri.ArtifactCode;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.nanopub.CliRunner;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
-import org.nanopub.utils.MockFileService;
-import org.nanopub.utils.MockFileServiceExtension;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 
 import java.io.File;
 import java.util.HashSet;
@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test which uses GetNanopub, GetIndex and the Nanopub network.
  */
-@ExtendWith(MockFileServiceExtension.class)
 public class GetIndexIT {
 
     @Test
@@ -32,9 +31,12 @@ public class GetIndexIT {
         File outFile = new File(outPath + "out.trig");
 
         int expectedNanopubs = 102; // number of nanopubs in the index
-        String artifactCode = "RApww43dy8UvCoEc8QKOaXhojCTgao3ZXX_d6V_jVBo6s";
+        ArtifactCode artifactCode = ArtifactCode.of("RApww43dy8UvCoEc8QKOaXhojCTgao3ZXX_d6V_jVBo6s");
         String nanopubUrl = "https://w3id.org/fair/fip/np/index/" + artifactCode;
-        Nanopub npFromFilesystem = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(artifactCode)));
+        TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                .getByArtifactCode(artifactCode.toString())
+                .getFirst();
+        Nanopub npFromFilesystem = new NanopubImpl(entry.toFile());
 
         // download index nanopub itself and create file
         GetNanopub cli1 = CliRunner.initJc(new GetNanopub(), new String[]{nanopubUrl, "-i ", "-o ", outFile.getPath()});
@@ -61,12 +63,9 @@ public class GetIndexIT {
 
         // read created multi-nanopub file
         HashSet<String> containedNanopubs = new HashSet<>();
-        MultiNanopubRdfHandler.process(indexContentFile, new MultiNanopubRdfHandler.NanopubHandler() {
-            @Override
-            public void handleNanopub(Nanopub np) {
-                containedNanopubs.add(np.getUri().toString());
-                assertTrue(indexedNanopubs.remove(np.getUri().toString()));
-            }
+        MultiNanopubRdfHandler.process(indexContentFile, (MultiNanopubRdfHandler.NanopubHandler) np -> {
+            containedNanopubs.add(np.getUri().toString());
+            assertTrue(indexedNanopubs.remove(np.getUri().toString()));
         });
         outFile.delete();
         indexContentFile.delete();

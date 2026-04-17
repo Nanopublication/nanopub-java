@@ -1,6 +1,7 @@
 package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfModule;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
@@ -51,22 +52,22 @@ public class NanopubStatus extends CliRunner {
         }
     }
 
-    private static String getArtifactCode(String uriOrArtifactCode) {
+    private static ArtifactCode getArtifactCode(String uriOrArtifactCode) {
         return extractArtifactCode(uriOrArtifactCode);
     }
 
-    static String extractArtifactCode(String uriOrArtifactCode) {
+    static ArtifactCode extractArtifactCode(String uriOrArtifactCode) {
         if (uriOrArtifactCode.indexOf(":") > 0) {
             IRI uri = SimpleValueFactory.getInstance().createIRI(uriOrArtifactCode);
             if (!TrustyUriUtils.isPotentialTrustyUri(uri)) {
                 throw new IllegalArgumentException("Not a well-formed trusty URI");
             }
-            return TrustyUriUtils.getArtifactCode(uri.toString());
+            return ArtifactCode.of(TrustyUriUtils.getArtifactCode(uri.toString()));
         } else {
             if (!TrustyUriUtils.isPotentialArtifactCode(uriOrArtifactCode)) {
                 throw new IllegalArgumentException("Not a well-formed artifact code");
             }
-            return uriOrArtifactCode;
+            return ArtifactCode.of(uriOrArtifactCode);
         }
     }
 
@@ -92,9 +93,9 @@ public class NanopubStatus extends CliRunner {
     }
 
     private void checkNanopub(String nanopubId, boolean checkIndexContent) {
-        String ac = getArtifactCode(nanopubId);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
-            System.err.println("ERROR. Not a trusty URI of type RA: " + nanopubId);
+        ArtifactCode ac = getArtifactCode(nanopubId);
+        if (!ac.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
+            System.err.println("ERROR. Not a trusty URI of type " + RdfModule.MODULE_ID + ": " + nanopubId);
             System.exit(1);
         }
         int count = 0;
@@ -103,13 +104,15 @@ public class NanopubStatus extends CliRunner {
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = GetNanopub.get(ac, registryInfo);
+                Nanopub np = GetNanopub.get(ac.toString(), registryInfo);
                 if (np != null) {
                     if (checkIndexContent && !IndexUtils.isIndex(np)) {
                         System.err.println("ERROR. Not an index: " + nanopubId);
                         System.exit(1);
                     }
-                    if (nanopub == null) nanopub = np;
+                    if (nanopub == null) {
+                        nanopub = np;
+                    }
                     if (!recursive || verbose) {
                         System.out.println("URL: " + registryInfo.getCollectionUrl() + ac);
                     }

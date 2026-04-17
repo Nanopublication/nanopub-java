@@ -428,10 +428,10 @@ public class NanopubUtils {
      */
     public static CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
-            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(500).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
+            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(10000).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
             PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
-            connManager.setDefaultMaxPerRoute(10);
-            connManager.setMaxTotal(100);
+            connManager.setDefaultMaxPerRoute(200);
+            connManager.setMaxTotal(400);
             httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).setConnectionManager(connManager).build();
         }
         return httpClient;
@@ -444,6 +444,51 @@ public class NanopubUtils {
      */
     public static IRI createTempNanopubIri() {
         return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
+    }
+
+    /**
+     * Retrieves a set of introduced IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract introduced IRI IDs
+     * @return a set of introduced IRI IDs
+     */
+    public static Set<String> getIntroducedIriIds(Nanopub np) {
+        Set<String> introducedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            IRI p = st.getPredicate();
+            if (!p.equals(NPX.INTRODUCES) && !p.equals(NPX.DESCRIBES) && !p.equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                introducedIriIds.add(obj.stringValue());
+            }
+        }
+        return introducedIriIds;
+    }
+
+    /**
+     * Retrieves a set of embedded IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract embedded IRI IDs
+     * @return a set of embedded IRI IDs
+     */
+    public static Set<String> getEmbeddedIriIds(Nanopub np) {
+        Set<String> embeddedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            if (!st.getPredicate().equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                embeddedIriIds.add(obj.stringValue());
+            }
+        }
+        return embeddedIriIds;
     }
 
 }

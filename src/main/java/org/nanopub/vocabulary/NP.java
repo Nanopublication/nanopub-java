@@ -12,14 +12,14 @@ public class NP {
 
     public static final String PREFIX = "np";
 
-    public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);
+    public static final Namespace NS = VocabUtils.createNamespace(PREFIX, NAMESPACE);
 
-    public static final IRI NANOPUBLICATION = Utils.createIRI(NAMESPACE, "Nanopublication");
+    public static final IRI NANOPUBLICATION = VocabUtils.createIRI(NAMESPACE, "Nanopublication");
 
-    public static final IRI HAS_ASSERTION = Utils.createIRI(NAMESPACE, "hasAssertion");
+    public static final IRI HAS_ASSERTION = VocabUtils.createIRI(NAMESPACE, "hasAssertion");
 
-    public static final IRI HAS_PROVENANCE = Utils.createIRI(NAMESPACE, "hasProvenance");
+    public static final IRI HAS_PROVENANCE = VocabUtils.createIRI(NAMESPACE, "hasProvenance");
 
-    public static final IRI HAS_PUBINFO = Utils.createIRI(NAMESPACE, "hasPublicationInfo");
+    public static final IRI HAS_PUBINFO = VocabUtils.createIRI(NAMESPACE, "hasPublicationInfo");
 
 }

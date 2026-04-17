@@ -49,6 +49,7 @@ public class NanopubCreator {
      * Creates a new NanopubCreator with an empty nanopub URI.
      *
      * @param initWithTempNanopubIris if true, initializes the nanopub with temporary IRIs.
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public NanopubCreator(boolean initWithTempNanopubIris) throws NanopubAlreadyFinalizedException {
         this();
@@ -61,6 +62,7 @@ public class NanopubCreator {
      * Creates a new NanopubCreator with a specified nanopub URI.
      *
      * @param nanopubUri the nanopublication URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public NanopubCreator(IRI nanopubUri) throws NanopubAlreadyFinalizedException {
         this();
@@ -71,6 +73,7 @@ public class NanopubCreator {
      * Creates a new NanopubCreator with a specified nanopub URI.
      *
      * @param nanopubUri the nanopublication URI as a string
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public NanopubCreator(String nanopubUri) throws NanopubAlreadyFinalizedException {
         this();
@@ -90,6 +93,7 @@ public class NanopubCreator {
      * Sets the nanopublication URI.
      *
      * @param nanopubUri the nanopublication URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setNanopubUri(IRI nanopubUri) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -107,6 +111,7 @@ public class NanopubCreator {
      * Sets the nanopublication URI.
      *
      * @param nanopubUri the nanopublication URI as a string
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setNanopubUri(String nanopubUri) throws NanopubAlreadyFinalizedException {
         setNanopubUri(vf.createIRI(nanopubUri));
@@ -125,6 +130,7 @@ public class NanopubCreator {
      * Sets the assertion URI of the nanopublication.
      *
      * @param assertionUri the assertion URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setAssertionUri(IRI assertionUri) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -138,6 +144,7 @@ public class NanopubCreator {
      * Sets the assertion URI of the nanopublication.
      *
      * @param assertionUri the assertion URI as a string
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setAssertionUri(String assertionUri) throws NanopubAlreadyFinalizedException {
         setAssertionUri(vf.createIRI(assertionUri));
@@ -156,6 +163,7 @@ public class NanopubCreator {
      * Sets the provenance URI of the nanopublication.
      *
      * @param provenanceUri the head URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setProvenanceUri(IRI provenanceUri) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -166,6 +174,7 @@ public class NanopubCreator {
      * Sets the provenance URI of the nanopublication.
      *
      * @param provenanceUri the head URI as a string
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setProvenanceUri(String provenanceUri) throws NanopubAlreadyFinalizedException {
         setProvenanceUri(vf.createIRI(provenanceUri));
@@ -184,6 +193,7 @@ public class NanopubCreator {
      * Sets the pubinfo URI of the nanopublication.
      *
      * @param pubinfoUri the pubinfo URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setPubinfoUri(IRI pubinfoUri) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -194,6 +204,7 @@ public class NanopubCreator {
      * Sets the pubinfo URI of the nanopublication.
      *
      * @param pubinfoUri the pubinfo URI as a string
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void setPubinfoUri(String pubinfoUri) throws NanopubAlreadyFinalizedException {
         setPubinfoUri(vf.createIRI(pubinfoUri));
@@ -212,6 +223,7 @@ public class NanopubCreator {
      * Adds statements to the assertion part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAssertionStatements(Statement... statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -222,6 +234,7 @@ public class NanopubCreator {
      * Adds statements to the assertion part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAssertionStatements(Iterable<Statement> statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -236,6 +249,7 @@ public class NanopubCreator {
      * @param subj the subject of the statement
      * @param pred the predicate of the statement
      * @param obj  the object of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAssertionStatement(Resource subj, IRI pred, Value obj) throws NanopubAlreadyFinalizedException {
         addAssertionStatements(vf.createStatement(subj, pred, obj));
@@ -245,6 +259,7 @@ public class NanopubCreator {
      * Adds a statement to the assertion part of the nanopublication.
      *
      * @param statement the predicate of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAssertionStatement(Statement statement) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -255,6 +270,7 @@ public class NanopubCreator {
      * Adds statements to the provenance part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addProvenanceStatements(Statement... statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -265,6 +281,7 @@ public class NanopubCreator {
      * Adds statements to the provenance part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addProvenanceStatements(Iterable<Statement> statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -279,6 +296,7 @@ public class NanopubCreator {
      * @param subj the subject of the statement
      * @param pred the predicate of the statement
      * @param obj  the object of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addProvenanceStatement(Resource subj, IRI pred, Value obj) throws NanopubAlreadyFinalizedException {
         addProvenanceStatements(vf.createStatement(subj, pred, obj));
@@ -289,6 +307,7 @@ public class NanopubCreator {
      *
      * @param pred the predicate of the statement
      * @param obj  the object of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addProvenanceStatement(IRI pred, Value obj) throws NanopubAlreadyFinalizedException {
         if (assertionUri == null) throw new RuntimeException("Assertion URI not yet set");
@@ -300,6 +319,7 @@ public class NanopubCreator {
      * Adds a statement to the provenance part of the nanopublication.
      *
      * @param statement the statement to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addProvenanceStatement(Statement statement) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -310,6 +330,7 @@ public class NanopubCreator {
      * Adds statements to the pubinfo part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addPubinfoStatements(Statement... statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -320,6 +341,7 @@ public class NanopubCreator {
      * Adds statements to the pubinfo part of the nanopublication.
      *
      * @param statements the statements to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addPubinfoStatements(Iterable<Statement> statements) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -334,6 +356,7 @@ public class NanopubCreator {
      * @param subj the subject of the statement
      * @param pred the predicate of the statement
      * @param obj  the object of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addPubinfoStatement(Resource subj, IRI pred, Value obj) throws NanopubAlreadyFinalizedException {
         addPubinfoStatements(vf.createStatement(subj, pred, obj));
@@ -344,6 +367,7 @@ public class NanopubCreator {
      *
      * @param pred the predicate of the statement
      * @param obj  the object of the statement
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addPubinfoStatement(IRI pred, Value obj) throws NanopubAlreadyFinalizedException {
         if (nanopubUri == null) throw new RuntimeException("Nanopublication URI not yet set");
@@ -355,6 +379,7 @@ public class NanopubCreator {
      * Adds a statement to the pubinfo part of the nanopublication.
      *
      * @param statement the statement to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addPubinfoStatement(Statement statement) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -365,6 +390,7 @@ public class NanopubCreator {
      * Adds a timestamp to the pubinfo part of the nanopublication.
      *
      * @param date the date to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addTimestamp(Date date) throws NanopubAlreadyFinalizedException {
         addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral(date));
@@ -372,6 +398,8 @@ public class NanopubCreator {
 
     /**
      * Adds a timestamp to the pubinfo part of the nanopublication using the current time.
+     *
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addTimestampNow() throws NanopubAlreadyFinalizedException {
         addPubinfoStatement(DCTERMS.CREATED, TimestampNow.getTimestamp());
@@ -381,6 +409,7 @@ public class NanopubCreator {
      * Adds a creator to the pubinfo part of the nanopublication.
      *
      * @param creator the creator IRI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addCreator(IRI creator) throws NanopubAlreadyFinalizedException {
         addPubinfoStatement(DCTERMS.CREATOR, creator);
@@ -390,6 +419,7 @@ public class NanopubCreator {
      * Adds a creator to the pubinfo part of the nanopublication.
      *
      * @param orcidIdentifier the ORCID identifier of the creator
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addCreator(String orcidIdentifier) throws NanopubAlreadyFinalizedException {
         addCreator(getOrcidUri(orcidIdentifier));
@@ -399,6 +429,7 @@ public class NanopubCreator {
      * Adds an author to the pubinfo part of the nanopublication.
      *
      * @param author the author IRI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAuthor(IRI author) throws NanopubAlreadyFinalizedException {
         addPubinfoStatement(PAV.AUTHORED_BY, author);
@@ -408,6 +439,7 @@ public class NanopubCreator {
      * Adds an author to the pubinfo part of the nanopublication.
      *
      * @param orcidIdentifier the ORCID identifier of the author
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addAuthor(String orcidIdentifier) throws NanopubAlreadyFinalizedException {
         addAuthor(getOrcidUri(orcidIdentifier));
@@ -426,6 +458,7 @@ public class NanopubCreator {
      *
      * @param prefix    the prefix of the namespace
      * @param namespace the namespace URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addNamespace(String prefix, String namespace) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -438,6 +471,7 @@ public class NanopubCreator {
      *
      * @param prefix    the prefix of the namespace
      * @param namespace the namespace URI
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addNamespace(String prefix, IRI namespace) throws NanopubAlreadyFinalizedException {
         addNamespace(prefix, namespace.toString());
@@ -447,6 +481,7 @@ public class NanopubCreator {
      * Adds a namespace to the nanopub.
      *
      * @param namespace the namespace to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addNamespace(Namespace namespace) throws NanopubAlreadyFinalizedException {
         addNamespace(namespace.getPrefix(), namespace.getName());
@@ -456,6 +491,7 @@ public class NanopubCreator {
      * Adds multiple namespaces to the nanopub.
      *
      * @param namespaces the namespaces to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addNamespaces(Namespace... namespaces) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -469,6 +505,7 @@ public class NanopubCreator {
      * Adds multiple namespaces to the nanopub.
      *
      * @param namespaces the namespaces to add
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addNamespaces(Iterable<Namespace> namespaces) throws NanopubAlreadyFinalizedException {
         if (finalized) throw new NanopubAlreadyFinalizedException();
@@ -482,6 +519,8 @@ public class NanopubCreator {
      * Adds the default namespaces to the nanopub.
      * <p>
      * The default namespaces are defined in {@link org.nanopub.NanopubUtils#getDefaultNamespaces()}.
+     *
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public void addDefaultNamespaces() throws NanopubAlreadyFinalizedException {
         addNamespace("this", nanopubUri);
@@ -505,7 +544,8 @@ public class NanopubCreator {
      * This method does not add a timestamp to the nanopub.
      *
      * @return the finalized nanopub
-     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     * @throws MalformedNanopubException        if the nanopub is malformed
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public Nanopub finalizeNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         return finalizeNanopub(false);
@@ -518,7 +558,8 @@ public class NanopubCreator {
      *
      * @param addTimestamp whether to add a timestamp to the nanopub
      * @return the finalized nanopub
-     * @throws org.nanopub.MalformedNanopubException if the nanopub is malformed
+     * @throws MalformedNanopubException        if the nanopub is malformed
+     * @throws NanopubAlreadyFinalizedException if the nanopub is already finalized
      */
     public Nanopub finalizeNanopub(boolean addTimestamp) throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         if (finalized) {
@@ -545,7 +586,7 @@ public class NanopubCreator {
      * uncomment the entry in the pom file.
      *
      * @return the finalized nanopub with a trusty URI
-     * @throws java.lang.Exception if an error occurs during the transformation
+     * @throws Exception if an error occurs during the transformation
      */
     public Nanopub finalizeTrustyNanopub() throws Exception {
         return finalizeTrustyNanopub(false);
@@ -560,7 +601,7 @@ public class NanopubCreator {
      *
      * @param addTimestamp whether to add a timestamp to the nanopub
      * @return the finalized nanopub with a trusty URI
-     * @throws java.lang.Exception if an error occurs during the transformation
+     * @throws Exception if an error occurs during the transformation
      */
     public Nanopub finalizeTrustyNanopub(boolean addTimestamp) throws Exception {
         Nanopub preNanopub = finalizeNanopub(addTimestamp);

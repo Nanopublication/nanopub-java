@@ -1,6 +1,7 @@
 package org.nanopub;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.rdf4j.model.IRI;
@@ -19,6 +20,7 @@ import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
 import org.jspecify.annotations.NonNull;
+import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.KPXL;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.SCHEMA;
@@ -43,6 +45,7 @@ public class RoCrateParser {
 
     private static final Log LOG = LogFactory.getLog(RoCrateParser.class);
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    static final String BASE_ROCRATE_API_URL = "https://api.rohub.org/api/ros/";
 
     private static final HttpClient client = HttpClient.newHttpClient();
 
@@ -55,15 +58,13 @@ public class RoCrateParser {
     /**
      * Parses a RO-Crate metadata file from a given URL.
      *
-     * @param url          the url where the metadata file is published (including trailing "/")
+     * @param url             the url where the metadata file is published (including trailing "/")
      * @param roCrateMetadata the ro-create metadata file name, may be the empty string
-     * @return a signed Nanopub object containing the parsed data.
-     * @throws org.nanopub.MalformedNanopubException if the parsed data does not conform to the expected structure.
-     * @throws java.io.IOException                   if an I/O error occurs while reading the metadata file.
-     * @throws java.lang.InterruptedException        if the operation is interrupted.
-     * @throws java.net.URISyntaxException           if the URL is malformed.
+     * @return a NanopubCreator object containing the parsed data.
+     * @throws IOException                      if an I/O error occurs while reading the metadata file.
+     * @throws NanopubAlreadyFinalizedException if the Nanopub has already been finalized.
      */
-    public Nanopub parseRoCreate(String url, InputStream roCrateMetadata) throws MalformedNanopubException, IOException, NanopubAlreadyFinalizedException {
+    public NanopubCreator parseRoCreate(String url, InputStream roCrateMetadata) throws IOException, NanopubAlreadyFinalizedException {
         RDFParser parser = Rio.createParser(RDFFormat.JSONLD);
 
         // Configure parser settings
@@ -92,56 +93,59 @@ public class RoCrateParser {
         String label = extractToplevelName(metadataStatements, identifier);
 
         // as provenance statement WAS_DERIVED_FROM we always use the specified name: "ro-crate-metadata.json"
-        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url+ "ro-crate-metadata.json"));
-        npCreator.addPubinfoStatement(NPX.INTRODUCES,  identifier);
+        npCreator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(url + "ro-crate-metadata.json"));
+        npCreator.addPubinfoStatement(NPX.INTRODUCES, identifier);
         npCreator.addPubinfoStatement(RDFS.LABEL, vf.createLiteral(label));
         npCreator.addPubinfoStatement(RDF.TYPE, KPXL.RO_CRATE_NANOPUB);
+        npCreator.addPubinfoStatement(RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
 
-        return npCreator.finalizeNanopub(true);
+        return npCreator;
     }
 
     /**
      * Find the ID of the RO-Crate.
-     * @param url where we get the RO-crate
+     *
+     * @param url             where we get the RO-crate
      * @param roCrateMetadata LATER not yet implemented
      * @return our current best guess for the ID_IRI
      */
     // default access for testing
     static IRI constructRoCrateUrl(String url, InputStream roCrateMetadata) {
         String id;
-        final String BASE_ROCRATE_API_URL = "https://api.rohub.org/api/ros/";
         final String BASE_ROCRATE_API_URL_SUFFIX = "crate/download/";
         final String BASE_ROHUB_URL = "https://w3id.org/ro-id/";
         final String patternUrlUntilLastSlash = "(https?://.*/)(.*)";
         if (url.startsWith("http")) {
-            if (url.startsWith("https://api.rohub.org/api/ros/")) {
+            if (url.startsWith(BASE_ROCRATE_API_URL)) {
                 id = StringUtils.substringAfter(url, BASE_ROCRATE_API_URL);
-                id = StringUtils.removeEnd(id, BASE_ROCRATE_API_URL_SUFFIX);
+                id = Strings.CS.removeEnd(id, BASE_ROCRATE_API_URL_SUFFIX);
                 return vf.createIRI(BASE_ROHUB_URL + id);
             } else if (url.endsWith("/")) {
                 return vf.createIRI(url);
             } else if (url.matches(patternUrlUntilLastSlash)) {
                 // probably ends in  ./metadata.json or something like that, we remove it anyway
                 Pattern p = Pattern.compile(patternUrlUntilLastSlash);
-                Matcher m = p.matcher(url); m.matches();
-                String resultingUrl = m.group(1);
-                if (LOG.isDebugEnabled()) {
-                    try {
-                        String filename = m.group(2);
-                        if (filename.equals("ro-crate-metadata.json") || filename.equals("ro-crate-metadata.jsonld")) {
-                            // standard case, no logging
-                        } else {
-                            LOG.debug("Unexpected filename for RO-Create Metadata: " + filename);
-                            LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
+                Matcher m = p.matcher(url);
+                if (m.matches()) {
+                    String resultingUrl = m.group(1);
+                    if (LOG.isDebugEnabled()) {
+                        try {
+                            String filename = m.group(2);
+                            if (filename.equals("ro-crate-metadata.json") || filename.equals("ro-crate-metadata.jsonld")) {
+                                // standard case, no logging
+                            } else {
+                                LOG.debug("Unexpected filename for RO-Create Metadata: " + filename);
+                                LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
+                            }
+                        } catch (IllegalStateException | IndexOutOfBoundsException e) {
+                            // there was no trailing filename, all good
                         }
-                    } catch (IllegalStateException | IndexOutOfBoundsException e) {
-                      // there was no trailing filename, all good
                     }
+                    if (resultingUrl == null) {
+                        LOG.warn("Could not determine RO-Crate base URL with input url: " + url);
+                    }
+                    return vf.createIRI(resultingUrl);
                 }
-                if (resultingUrl == null) {
-                    LOG.warn("Could not determine RO-Crate base URL with input url: " + url);
-                }
-                return vf.createIRI(resultingUrl);
             } else {
                 // TODO extract from roCrateMetadata
                 return vf.createIRI(url);
@@ -169,7 +173,7 @@ public class RoCrateParser {
         } else {
             nameCandidate = metadataStatements.stream()
                     .filter(st -> st.getSubject().equals(subj)
-                            && st.getPredicate().equals(SCHEMA.DESCRIPTION))
+                                  && st.getPredicate().equals(SCHEMA.DESCRIPTION))
                     .findFirst();
             if (nameCandidate.isPresent()) {
                 name = nameCandidate.get().getObject().toString();
@@ -185,13 +189,12 @@ public class RoCrateParser {
         if (bestGuess != null) {
             return vf.createIRI(bestGuess);
         }
-        // TODO verify if this is correct, and check if sometimes the backup is an even better choice
         IRI identifier = (IRI) metadataStatements.stream()
                 .filter(st -> st.getPredicate().equals(SCHEMA.RO_CRATE_HAS_PART))
-                .findFirst().get().getSubject(); // TODO or do we need the Object-Value???
+                .findFirst().get().getSubject();
         if (identifier == null) {
             identifier = vf.createIRI(latestBackupIdentifier);
-            // TODO, probably the best first backup choice is the download url if available in the metadate,
+            // probably the best first backup choice is the download url if available in the metadate,
             // the url from above is only the second backup, so we never have any null pointer issues.
         }
         return identifier;

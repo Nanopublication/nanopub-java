@@ -424,6 +424,9 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         if (graphUris.contains(uri)) {
             throw new MalformedNanopubException("Each graph needs a unique URI: " + uri);
         }
+        if (!uri.stringValue().startsWith(nanopubUri.stringValue())) {
+            throw new MalformedNanopubException("Graph URI needs to start with nanopub URI: " + nanopubUri);
+        }
         graphUris.add(uri);
     }
 

@@ -2,21 +2,28 @@ package org.nanopub.extra.security;
 
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
-import org.apache.commons.io.IOUtils;
+import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.NanopubImpl;
-import org.nanopub.utils.TestUtils;
+import org.nanopub.NanopubProfile;
+import org.nanopub.testsuite.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.nio.charset.Charset;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SignNanopubTest {
+
+    private final Logger logger = LoggerFactory.getLogger(SignNanopubTest.class);
 
     @Test
     void initWithoutArgs() {
@@ -25,7 +32,8 @@ class SignNanopubTest {
 
     @Test
     void initWithValidArgs() {
-        String path = this.getClass().getResource("/testsuite/valid/plain/aida1.trig").getPath();
+        TestSuiteEntry entry = NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.PLAIN).getFirst();
+        String path = entry.toFile().getPath();
         String[] args = new String[]{"-v", path};
 
         CliRunner.initJc(new SignNanopub(), args);
@@ -33,20 +41,19 @@ class SignNanopubTest {
 
     @Test
     void signAndTransform1024RSA() throws Exception {
-        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
-        new File(outPath).mkdirs();
-        File outFile = new File(outPath, "signed.trig");
+        Path tempDir = Files.createTempDirectory("test-output-sign-nanopub");
+        File outFile = new File(tempDir.toFile(), "signed.trig");
+        outFile.deleteOnExit();
 
-        String keyFile = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/key/id_rsa").getPath();
-        String signerOrcid = TestUtils.ORCID;
-        String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
-        String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key1/").getPath();
-        for (File testFile : new File(inFiles).listFiles(
-                (dir, name) -> name.endsWith(".in.trig"))) {
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        String signerOrcid = "https://orcid.org/0000-0000-0000-0000";
+        for (TransformTestCase transformTestCase : NanopubTestSuite.getLatest().getTransformCases("rsa-key1")) {
+            File testFile = transformTestCase.getPlainEntry().toFile();
+
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
-                    "-k ", keyFile,
+                    "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
                     "-s ", signerOrcid,
                     "-o ", outFile.getPath(),});
             c.run();
@@ -54,31 +61,35 @@ class SignNanopubTest {
             // read nanopub from file
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
+            assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
 
-            FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
-            try {
-                String artifactCodeFromSuite = IOUtils.toString(inputStream, Charset.defaultCharset());
-                assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
-                System.out.println("File signed correctly: " + testFile.getName());
-            } finally {
-                inputStream.close();
-            }
-            // delete target file if everything was fine
-            outFile.delete();
+            assertNotNull(SignatureUtils.getSignatureElement(testNano), "No signature element found in signed nanopub: " + testFile.getName());
+            assertFalse(SignatureUtils.getSignatureElement(testNano).getSigners().isEmpty(), "No signers found in signed nanopub: " + testFile.getName());
+            assertTrue(SignatureUtils.getSignatureElement(testNano).getSigners().contains(Values.iri(signerOrcid)), "Expected signer not found in signed nanopub: " + testFile.getName());
+            logger.info("File signed correctly: {}", testFile.getName());
         }
     }
 
     @Test
     void signAndTransform2048RSA() throws Exception {
-        String outPath = this.getClass().getResource("/").getPath() + "test-output/sign-nanopub/";
-        new File(outPath).mkdirs();
-        File outFile = new File(outPath, "signed.trig");
+        Path tempDir = Files.createTempDirectory("test-output-sign-nanopub");
+        File outFile = new File(tempDir.toFile(), "signed.trig");
+        outFile.deleteOnExit();
 
-        String profileFile = this.getClass().getResource("/testsuite/transform/profile.yaml").getPath();
-        String inFiles = this.getClass().getResource("/testsuite/transform/plain/").getPath();
-        String signedFiles = this.getClass().getResource("/testsuite/transform/signed/rsa-key2/").getPath();
-        for (File testFile : new File(inFiles).listFiles(
-                (dir, name) -> name.endsWith("in.trig"))) {
+        final String keyName = "rsa-key2";
+        NanopubTestSuite suite = NanopubTestSuite.getLatest();
+        SigningKeyPair keySource = suite.getSigningKey(keyName);
+        String profileFile = NanopubTestSuite.getLatest().getTransformProfile().getPath();
+        NanopubProfile profile = new NanopubProfile(profileFile);
+
+        Path keyPath = Path.of(profile.getPrivateKeyPath());
+        Files.createDirectories(keyPath.getParent());
+        Files.copy(keySource.getPrivateKeyFile().toPath(), keyPath, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(keySource.getPublicKeyFile().toPath(), Path.of(keyPath + ".pub"), StandardCopyOption.REPLACE_EXISTING);
+
+        for (TransformTestCase transformTestCase : NanopubTestSuite.getLatest().getTransformCases(keyName)) {
+            File testFile = transformTestCase.getPlainEntry().toFile();
+
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
                     testFile.getPath(),
@@ -90,16 +101,24 @@ class SignNanopubTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
             String testedArtifactCode = TrustyUriUtils.getArtifactCode(testNano.getUri().toString());
 
-            FileInputStream inputStream = new FileInputStream(signedFiles + testFile.getName().replace("in.trig", "out.code"));
-            try {
-                String artifactCodeFromSuite = IOUtils.toString(inputStream, Charset.defaultCharset());
-                assertEquals(testedArtifactCode, artifactCodeFromSuite, "Problem with file: " + testFile.getName());
-                System.out.println("File signed correctly: " + testFile.getName());
-            } finally {
-                inputStream.close();
-            }
-            // delete target file if everything was fine
-            outFile.delete();
+            assertEquals(testedArtifactCode, transformTestCase.getSignedEntry().getArtifactCode(), "Problem with file: " + testFile.getName());
+
+            assertNotNull(SignatureUtils.getSignatureElement(testNano), "No signature element found in signed nanopub: " + testFile.getName());
+            assertFalse(SignatureUtils.getSignatureElement(testNano).getSigners().isEmpty(), "No signers found in signed nanopub: " + testFile.getName());
+            assertTrue(SignatureUtils.getSignatureElement(testNano).getSigners().contains(Values.iri(profile.getOrcidId())), "Expected signer not found in signed nanopub: " + testFile.getName());
+            logger.info("File signed correctly: {}", testFile.getName());
+        }
+
+        if (Files.exists(keyPath.getParent())) {
+            Files.walk(keyPath.getParent())
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
         }
     }
 

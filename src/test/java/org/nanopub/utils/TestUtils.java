@@ -14,7 +14,7 @@ public class TestUtils {
     public final static String NANOPUB_URI = "https://knowledgepixels.com/nanopubIri#title";
     public final static ValueFactory vf = SimpleValueFactory.getInstance();
     public final static IRI anyIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#any");
-    public final static String ORCID = "https://orcid.org/0000-0000-0000-0000";
+    public final static String ORCID = "https://orcid.org/0000-0000-0000-0001";
 
     public static Nanopub createNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         return createNanopub(NANOPUB_URI);
