@@ -16,6 +16,8 @@ import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NPX;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -33,7 +35,8 @@ import java.util.Map;
  */
 public class SignatureUtils {
 
-    private static ValueFactory vf = SimpleValueFactory.getInstance();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    private static final Logger logger = LoggerFactory.getLogger(SignatureUtils.class);
 
     private SignatureUtils() {
     }  // no instances allowed
@@ -176,11 +179,11 @@ public class SignatureUtils {
         // Removing trusty URI if one is already present:
         if (TrustyNanopubUtils.isValidTrustyNanopub(preNanopub)) {
             String ac = TrustyUriUtils.getArtifactCode(preNanopub.getUri().toString());
-            preStatements = removeArtifactCode(preStatements, ac);
-            npUri = (IRI) removeArtifactCode(npUri, ac);
-            piUri = (IRI) removeArtifactCode(piUri, ac);
+            preStatements = ArtifactCodeUtils.removeArtifactCode(preStatements, ac);
+            npUri = (IRI) ArtifactCodeUtils.removeArtifactCode(npUri, ac);
+            piUri = (IRI) ArtifactCodeUtils.removeArtifactCode(piUri, ac);
             for (String prefix : nsMap.keySet()) {
-                nsMap.put(prefix, removeArtifactCode(nsMap.get(prefix), ac));
+                nsMap.put(prefix, ArtifactCodeUtils.removeArtifactCode(nsMap.get(prefix), ac));
             }
         }
 
@@ -250,34 +253,6 @@ public class SignatureUtils {
      */
     public static String encodePublicKey(PublicKey publicKey) {
         return DatatypeConverter.printBase64Binary(publicKey.getEncoded()).replaceAll("\\s", "");
-    }
-
-    // ----------
-    // TODO: Move this into separate class?
-
-    private static List<Statement> removeArtifactCode(List<Statement> in, String ac) {
-        List<Statement> out = new ArrayList<>();
-        for (Statement st : in) {
-            out.add(removeArtifactCode(st, ac));
-        }
-        return out;
-    }
-
-    private static Statement removeArtifactCode(Statement st, String ac) {
-        return vf.createStatement((Resource) removeArtifactCode(st.getSubject(), ac), (IRI) removeArtifactCode(st.getPredicate(), ac),
-                removeArtifactCode(st.getObject(), ac), (Resource) removeArtifactCode(st.getContext(), ac));
-    }
-
-    private static Value removeArtifactCode(Value v, String ac) {
-        if (v instanceof IRI) {
-            return vf.createIRI(removeArtifactCode(v.stringValue(), ac));
-        } else {
-            return v;
-        }
-    }
-
-    private static String removeArtifactCode(String s, String ac) {
-        return s.replaceAll(ac + "[#/]?", "");
     }
 
     private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
@@ -350,6 +325,25 @@ public class SignatureUtils {
         if (!oldPubKey.equals(newPubKey)) {
             throw new MalformedCryptoElementException("The old public key does not match the new public key");
         }
+    }
+
+    /**
+     * Extracts the public key string from the signature element of a nanopub, if it exists and is valid.
+     *
+     * @param nanopub the nanopub to extract the public key from
+     * @return the public key string if a valid signature element is found, null otherwise
+     */
+    public static String getPubKey(Nanopub nanopub) {
+        NanopubSignatureElement signatureElement;
+        try {
+            signatureElement = SignatureUtils.getSignatureElement(nanopub);
+            if (signatureElement != null && SignatureUtils.hasValidSignature(signatureElement) && signatureElement.getPublicKeyString() != null) {
+                return signatureElement.getPublicKeyString();
+            }
+        } catch (MalformedCryptoElementException | GeneralSecurityException ex) {
+            logger.error("Error in checking the signature of the nanopub {}", nanopub.getUri());
+        }
+        return null;
     }
 
 }
