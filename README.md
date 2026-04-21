@@ -71,27 +71,18 @@ source code documentation.
 
 Check out this list of all [command line commands](https://nanopublication.github.io/nanopub-java/quick-start/cli/).
 
-To use this library on the command line, just download the [np
-script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np).
-Make sure it is executable and then you can invoke it with `./np ...` (or simply
-`np ...` if you make sure it's included in the PATH variable), for example:
+To use this library on the command line, just run:
 
+macOS, Linux, WSL:
 ```bash
-./np check nanopubfile.trig
+curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
+```
+Windows PowerShell:
+```bash
+irm -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
 ```
 
 This automatically downloads the latest release as a jar file on the first run.
-You can also directly use the [prebuilt jar
-files](https://github.com/Nanopublication/nanopub-java/releases):
-
-```bash
-java -jar nanopub-1.86.2-jar-with-dependencies.jar check nanopubfile.trig
-```
-
-Note: For Mac users, before running `np` ensure that the GNU version of `curl`
-is installed (not the default BSD versions), and are the ones being used when
-the `curl` command is invoked.
-
 
 ## Usage with Docker
 

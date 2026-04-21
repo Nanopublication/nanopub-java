@@ -1,6 +1,6 @@
 #!/bin/bash
 # Nanopub CLI installer
-# Usage: curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/install.sh | bash
+# Usage: curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
 
 set -e
 
