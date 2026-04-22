@@ -79,7 +79,7 @@ curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master
 ```
 Windows PowerShell:
 ```bash
-irm -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
+irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
 ```
 
 This automatically downloads the latest release as a jar file on the first run.
