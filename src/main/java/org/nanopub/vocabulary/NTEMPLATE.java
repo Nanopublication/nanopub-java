@@ -102,6 +102,14 @@ public class NTEMPLATE {
     public static final IRI AGENT_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "AgentPlaceholder");
 
     /**
+     * Represents the class for root nanopub placeholders. Placeholders of this type
+     * preserve their existing value on supersede/derive actions, and otherwise take
+     * the URI of the current nanopublication. Their value is fixed and not editable
+     * by the user.
+     */
+    public static final IRI ROOT_NANOPUB_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "RootNanopubPlaceholder");
+
+    /**
      * Represents the placeholder for the creator.
      */
     public static final IRI CREATOR_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "CREATOR");
