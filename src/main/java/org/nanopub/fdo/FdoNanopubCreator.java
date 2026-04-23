@@ -109,17 +109,21 @@ public class FdoNanopubCreator {
      * @throws java.io.IOException            if there is an error during the HTTP request to the handle system
      * @throws java.lang.InterruptedException if the thread is interrupted while waiting for the HTTP request to complete
      */
-    public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException {
+    public static FdoRecord createFdoRecordFromHandleSystem(String id) throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         ParsedJsonResponse response = new HandleResolver().call(id);
         FdoRecord record = initFdoRecord(response);
+        if (record.getAttribute(org.eclipse.rdf4j.model.vocabulary.DCTERMS.CONFORMS_TO) == null) {
+            throw new MalformedNanopubException("Handle record for '" + id + "' has no recognised FDO profile type (expected one of: "
+                    + PROFILE_HANDLE + ", " + PROFILE_HANDLE_1 + ", " + PROFILE_HANDLE_2 + ", " + PROFILE_HANDLE_3 + ")");
+        }
 
         for (Value v : response.values) {
             if (v.type.equals(DATA_REF_HANDLE)) {
                 record.setAttribute(FDOF.IS_MATERIALIZED_BY, vf.createIRI(String.valueOf(v.data.value)));
                 continue;
             }
-            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") && !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2)) {
-                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
+            if (!v.type.equals("HS_ADMIN") && !v.type.equals("name") && !v.type.equals("id") && !v.type.equals(PROFILE_HANDLE) && !v.type.equals(PROFILE_HANDLE_1) && !v.type.equals(PROFILE_HANDLE_2) && !v.type.equals(PROFILE_HANDLE_3)) {
+                // TODO later remove PROFILE_HANDLE_1, PROFILE_HANDLE_2 and PROFILE_HANDLE_3
                 String dataValue = String.valueOf(v.data.value);
                 String dataValueToImport;
                 if (looksLikeHandle(dataValue)) {
@@ -151,8 +155,8 @@ public class FdoNanopubCreator {
             if (v.type.equals("name")) {
                 label = String.valueOf(v.data.value);
             }
-            if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2)) {
-                // TODO later remove PROFILE_HANDLE_1 and PROFILE_HANDLE_2
+            if (v.type.equals(PROFILE_HANDLE) || v.type.equals(PROFILE_HANDLE_1) || v.type.equals(PROFILE_HANDLE_2) || v.type.equals(PROFILE_HANDLE_3)) {
+                // TODO later remove PROFILE_HANDLE_1, PROFILE_HANDLE_2 and PROFILE_HANDLE_3
                 String profileValue = String.valueOf(v.data.value);
                 if (looksLikeHandle(profileValue)) {
                     profile = toIri(profileValue);

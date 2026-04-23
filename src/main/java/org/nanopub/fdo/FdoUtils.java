@@ -33,6 +33,11 @@ public final class FdoUtils {
     public static final String PROFILE_HANDLE = "21.T11966/FdoProfile";
 
     /**
+     * The handle for the FDO profile (lowercase variant used by some handle services).
+     */
+    public static final String PROFILE_HANDLE_3 = "fdoProfile";
+
+    /**
      * The handle for the FDO data reference.
      */
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";

@@ -2,6 +2,8 @@ package org.nanopub.fdo;
 
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -201,7 +203,7 @@ public class FdoNanopubCreatorTest {
     }
 
     @Test
-    void createFdoRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException {
+    void createFdoRecordFromHandleSystem() throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
         String handle = "21.T11966/82045bd97a0acce88378";
         String handleSystemResponse = "{\"responseCode\":1,\"handle\":\"21.T11966/82045bd97a0acce88378\",\"values\":[{\"index\":100,\"type\":\"HS_ADMIN\",\"data\":{\"format\":\"admin\",\"value\":{\"handle\":\"0.NA/21.T11966\",\"index\":300,\"permissions\":\"111111111111\"}},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":1,\"type\":\"10320/loc\",\"data\":{\"format\":\"string\",\"value\":\"<locations>\\n<location href=\\\"http://typeregistry.testbed.pid.gwdg.de/objects/21.T11966/82045bd97a0acce88378\\\" weight=\\\"0\\\" view=\\\"json\\\" />\\n<location href=\\\"http://typeregistry.testbed.pid.gwdg.de/#objects/21.T11966/82045bd97a0acce88378\\\" weight=\\\"1\\\" view=\\\"ui\\\" />\\n</locations>\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":2,\"type\":\"21.T11966/FdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/996c38676da9ee56f8ab\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":3,\"type\":\"21.T11966/JsonSchema\",\"data\":{\"format\":\"string\",\"value\":\"{\\\"$ref\\\": \\\"https://typeapi.lab.pidconsortium.net/v1/types/schema/21.T11966/82045bd97a0acce88378\\\"}\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":4,\"type\":\"21.T11966/b5b58656b1fa5aff0505\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/service\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"},{\"index\":5,\"type\":\"0.TYPE/DOIPService\",\"data\":{\"format\":\"string\",\"value\":\"21.T11966/service\"},\"ttl\":86400,\"timestamp\":\"2025-07-02T11:03:54Z\"}]}";
 
@@ -214,6 +216,100 @@ public class FdoNanopubCreatorTest {
 
             FdoRecord fdoRecord = FdoNanopubCreator.createFdoRecordFromHandleSystem(handle);
             assertNotNull(fdoRecord);
+        }
+    }
+
+    @Test
+    void createFdoRecordFromHandleSystem_recognisesLowercaseFdoProfile() throws Exception {
+        String handle = "20.5000.1025/J7E-C1H-1X2";
+        String handleSystemResponse = "{\"responseCode\":1,\"handle\":\"20.5000.1025/J7E-C1H-1X2\",\"values\":["
+                + "{\"index\":1,\"type\":\"fdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"https://doi.org/21.T11148/2e76f544229901c5a942\"},\"ttl\":86400,\"timestamp\":\"2024-12-18T15:52:41Z\"},"
+                + "{\"index\":5,\"type\":\"digitalObjectName\",\"data\":{\"format\":\"string\",\"value\":\"Annotation\"},\"ttl\":86400,\"timestamp\":\"2024-12-18T15:52:41Z\"}"
+                + "]}";
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.body()).thenReturn(handleSystemResponse);
+        try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+            HttpClient mockClient = mock();
+            when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockHttpResponse);
+            httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(mockClient);
+
+            FdoRecord record = FdoNanopubCreator.createFdoRecordFromHandleSystem(handle);
+
+            assertEquals("https://doi.org/21.T11148/2e76f544229901c5a942", record.getProfile());
+            // The recognised profile field must not leak into the generic attribute map.
+            assertNull(record.getAttribute(iri(FdoNanopubCreator.FDO_TYPE_PREFIX + "fdoProfile")));
+        }
+    }
+
+    @Test
+    void createFdoRecordFromHandleSystem_throwsWhenProfileMissing() throws Exception {
+        String handle = "20.5000.1025/NO-PROFILE";
+        String handleSystemResponse = "{\"responseCode\":1,\"handle\":\"20.5000.1025/NO-PROFILE\",\"values\":["
+                + "{\"index\":5,\"type\":\"digitalObjectName\",\"data\":{\"format\":\"string\",\"value\":\"Annotation\"},\"ttl\":86400,\"timestamp\":\"2024-12-18T15:52:41Z\"}"
+                + "]}";
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.body()).thenReturn(handleSystemResponse);
+        try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+            HttpClient mockClient = mock();
+            when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockHttpResponse);
+            httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(mockClient);
+
+            MalformedNanopubException ex = assertThrows(MalformedNanopubException.class,
+                    () -> FdoNanopubCreator.createFdoRecordFromHandleSystem(handle));
+            assertTrue(ex.getMessage().contains(handle));
+            assertTrue(ex.getMessage().contains("fdoProfile"));
+        }
+    }
+
+    @Test
+    void createFromHandleSystem_buildsFdoNanopub() throws Exception {
+        String handle = "20.5000.1025/J7E-C1H-1X2";
+        String profileValue = "https://doi.org/21.T11148/2e76f544229901c5a942";
+        String handleSystemResponse = "{\"responseCode\":1,\"handle\":\"20.5000.1025/J7E-C1H-1X2\",\"values\":["
+                + "{\"index\":1,\"type\":\"fdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"" + profileValue + "\"},\"ttl\":86400,\"timestamp\":\"2024-12-18T15:52:41Z\"},"
+                + "{\"index\":5,\"type\":\"digitalObjectName\",\"data\":{\"format\":\"string\",\"value\":\"Annotation\"},\"ttl\":86400,\"timestamp\":\"2024-12-18T15:52:41Z\"}"
+                + "]}";
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.body()).thenReturn(handleSystemResponse);
+        try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+            HttpClient mockClient = mock();
+            when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(mockHttpResponse);
+            httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(mockClient);
+
+            Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
+
+            IRI fdoIri = FdoUtils.createIri(handle);
+            IRI derivedFrom = iri(HandleResolver.BASE_URI + handle);
+
+            boolean hasTypeStatement = np.getAssertion().stream().anyMatch(st ->
+                    st.getSubject().equals(fdoIri)
+                    && st.getPredicate().equals(RDF.TYPE)
+                    && st.getObject().equals(FDOF.FAIR_DIGITAL_OBJECT));
+            assertTrue(hasTypeStatement, "assertion must declare fdoIri a fdof:FAIRDigitalObject");
+
+            boolean hasConformsTo = np.getAssertion().stream().anyMatch(st ->
+                    st.getSubject().equals(fdoIri)
+                    && st.getPredicate().equals(DCTERMS.CONFORMS_TO)
+                    && st.getObject().equals(iri(profileValue)));
+            assertTrue(hasConformsTo, "assertion must carry dct:conformsTo for the profile");
+
+            boolean hasDerivedFrom = np.getProvenance().stream().anyMatch(st ->
+                    st.getPredicate().equals(PROV.WAS_DERIVED_FROM)
+                    && st.getObject().equals(derivedFrom));
+            assertTrue(hasDerivedFrom, "provenance must trace back to the handle API URL");
+
+            boolean introducesFdo = np.getPubinfo().stream().anyMatch(st ->
+                    st.getPredicate().equals(NPX.INTRODUCES)
+                    && st.getObject().equals(fdoIri));
+            assertTrue(introducesFdo, "pubinfo must introduce the FDO IRI");
+
+            // Sanity: all assertion statements have a non-null object.
+            for (Statement st : np.getAssertion()) {
+                assertNotNull(st.getObject(), "no null objects in assertion");
+            }
         }
     }
 
