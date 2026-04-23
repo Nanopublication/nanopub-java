@@ -332,12 +332,11 @@ public class FdoNanopubCreatorTest {
 
             Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
 
-            IRI fdoIri = FdoUtils.createIri(handle);
             boolean hasReferentLabel = np.getPubinfo().stream().anyMatch(st ->
-                    st.getSubject().equals(fdoIri)
+                    st.getSubject().equals(np.getUri())
                     && st.getPredicate().equals(RDFS.LABEL)
                     && st.getObject().stringValue().equals("Rumex alpinus L."));
-            assertTrue(hasReferentLabel, "pubinfo must carry rdfs:label from referentName");
+            assertTrue(hasReferentLabel, "pubinfo must carry rdfs:label from referentName on the nanopub");
         }
     }
 
@@ -358,12 +357,54 @@ public class FdoNanopubCreatorTest {
 
             Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
 
-            IRI fdoIri = FdoUtils.createIri(handle);
             boolean hasHandleLabel = np.getPubinfo().stream().anyMatch(st ->
-                    st.getSubject().equals(fdoIri)
+                    st.getSubject().equals(np.getUri())
                     && st.getPredicate().equals(RDFS.LABEL)
                     && st.getObject().stringValue().equals(handle));
-            assertTrue(hasHandleLabel, "pubinfo must fall back to the handle id as rdfs:label");
+            assertTrue(hasHandleLabel, "pubinfo must fall back to the handle id as rdfs:label on the nanopub");
+        }
+    }
+
+    @Test
+    void createFromHandleSystem_withDoiUrl_preservesDoiIri() throws Exception {
+        String handle = "10.3535/DOI-TEST";
+        String doiUrl = "https://doi.org/" + handle;
+        String body = "{\"responseCode\":1,\"handle\":\"" + handle + "\",\"values\":["
+                + "{\"index\":1,\"type\":\"fdoProfile\",\"data\":{\"format\":\"string\",\"value\":\"https://doi.org/21.T11148/profile\"}},"
+                + "{\"index\":2,\"type\":\"referentName\",\"data\":{\"format\":\"string\",\"value\":\"DOI Thing\"}}"
+                + "]}";
+
+        HttpResponse<String> resp = mock();
+        when(resp.body()).thenReturn(body);
+
+        try (MockedStatic<HttpClient> httpStatic = mockStatic(HttpClient.class)) {
+            HttpClient mockClient = mock();
+            when(mockClient.send(Mockito.any(), eq(HttpResponse.BodyHandlers.ofString()))).thenReturn(resp);
+            httpStatic.when(HttpClient::newHttpClient).thenReturn(mockClient);
+
+            Nanopub np = FdoNanopubCreator.createFromHandleSystem(doiUrl);
+
+            IRI fdoIri = iri(doiUrl);
+            boolean introducesDoiIri = np.getPubinfo().stream().anyMatch(st ->
+                    st.getPredicate().equals(NPX.INTRODUCES)
+                    && st.getObject().equals(fdoIri));
+            assertTrue(introducesDoiIri, "pubinfo must introduce the DOI URL as the FDO IRI");
+
+            boolean typedAsFdo = np.getAssertion().stream().anyMatch(st ->
+                    st.getSubject().equals(fdoIri)
+                    && st.getPredicate().equals(RDF.TYPE)
+                    && st.getObject().equals(FDOF.FAIR_DIGITAL_OBJECT));
+            assertTrue(typedAsFdo, "assertion must type the DOI URL as fdof:FAIRDigitalObject");
+
+            boolean noHdlSubject = np.getAssertion().stream().noneMatch(st ->
+                    st.getSubject().stringValue().startsWith(HDL.NAMESPACE + handle));
+            assertTrue(noHdlSubject, "DOI URL must not be rewritten to hdl.handle.net in assertion");
+
+            IRI derivedFrom = iri(HandleResolver.BASE_URI + handle);
+            boolean hasDerivedFrom = np.getProvenance().stream().anyMatch(st ->
+                    st.getPredicate().equals(PROV.WAS_DERIVED_FROM)
+                    && st.getObject().equals(derivedFrom));
+            assertTrue(hasDerivedFrom, "provenance still points at the handle API URL");
         }
     }
 

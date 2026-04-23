@@ -120,17 +120,21 @@ public class FdoNanopubCreator {
      * @throws org.nanopub.NanopubAlreadyFinalizedException if the Nanopub has already been finalized
      */
     public static Nanopub createFromHandleSystem(String id, boolean enrichFromSchema) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, NanopubAlreadyFinalizedException {
-        ParsedJsonResponse response = new HandleResolver().call(id);
+        String handleId = FdoUtils.extractHandleId(id);
+        if (handleId == null) {
+            throw new MalformedNanopubException("Not a recognisable handle or handle/DOI URL: " + id);
+        }
+        ParsedJsonResponse response = new HandleResolver().call(handleId);
         Map<IRI, String> labelSink = new LinkedHashMap<>();
-        FdoRecord record = buildFdoRecord(id, response, enrichFromSchema, labelSink);
+        FdoRecord record = buildFdoRecord(handleId, response, enrichFromSchema, labelSink);
 
         IRI fdoIri = FdoUtils.createIri(id);
         NanopubCreator creator = createWithFdoIri(record, fdoIri);
-        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + id));
+        creator.addProvenanceStatement(PROV.WAS_DERIVED_FROM, vf.createIRI(HandleResolver.BASE_URI + handleId));
         for (Map.Entry<IRI, String> e : labelSink.entrySet()) {
             creator.addPubinfoStatement(e.getKey(), RDFS.LABEL, vf.createLiteral(e.getValue()));
         }
-        creator.addPubinfoStatement(fdoIri, RDFS.LABEL, vf.createLiteral(resolveFdoLabel(response, id)));
+        creator.addPubinfoStatement(RDFS.LABEL, vf.createLiteral(resolveFdoLabel(response, handleId)));
         return creator.finalizeNanopub(true);
     }
 
@@ -174,8 +178,12 @@ public class FdoNanopubCreator {
      * @throws org.nanopub.MalformedNanopubException  if the handle record has no recognised profile type
      */
     public static FdoRecord createFdoRecordFromHandleSystem(String id, boolean enrichFromSchema, Map<IRI, String> labelSink) throws URISyntaxException, IOException, InterruptedException, MalformedNanopubException {
-        ParsedJsonResponse response = new HandleResolver().call(id);
-        return buildFdoRecord(id, response, enrichFromSchema, labelSink);
+        String handleId = FdoUtils.extractHandleId(id);
+        if (handleId == null) {
+            throw new MalformedNanopubException("Not a recognisable handle or handle/DOI URL: " + id);
+        }
+        ParsedJsonResponse response = new HandleResolver().call(handleId);
+        return buildFdoRecord(handleId, response, enrichFromSchema, labelSink);
     }
 
     private static FdoRecord buildFdoRecord(String id, ParsedJsonResponse response, boolean enrichFromSchema, Map<IRI, String> labelSink) throws MalformedNanopubException {
