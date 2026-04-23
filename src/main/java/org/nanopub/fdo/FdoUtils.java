@@ -104,6 +104,27 @@ public final class FdoUtils {
     }
 
     /**
+     * Strip a known prefix (hdl.handle.net, doi.org) from the given input and return the bare
+     * handle id, or return the input unchanged if it already looks like a handle.
+     *
+     * @param input a handle, a handle URL, or a DOI URL
+     * @return the bare handle id, or null if the input is not a recognisable handle
+     */
+    public static String extractHandleId(String input) {
+        if (input == null) return null;
+        String[] prefixes = {
+                "https://hdl.handle.net/",
+                "http://hdl.handle.net/",
+                "https://doi.org/",
+                "http://doi.org/"
+        };
+        for (String p : prefixes) {
+            if (input.startsWith(p)) return input.substring(p.length());
+        }
+        return looksLikeHandle(input) ? input : null;
+    }
+
+    /**
      * Create an IRI by prefixing a handle with <a href="https://hdl.handle.net/">...</a> if it's a handle,
      * or by just converting an url.
      *

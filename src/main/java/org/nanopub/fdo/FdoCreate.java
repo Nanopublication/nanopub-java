@@ -22,7 +22,7 @@ import java.security.SignatureException;
  */
 public class FdoCreate extends CliRunner {
 
-    @com.beust.jcommander.Parameter(description = "handle-id", required = true)
+    @com.beust.jcommander.Parameter(description = "handle-id-or-url", required = true)
     private String handleId;
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Unsigned, the Nanopub is not signed. Do not use with -p.")
@@ -30,6 +30,9 @@ public class FdoCreate extends CliRunner {
 
     @com.beust.jcommander.Parameter(names = "-p", description = "Directly publish the Nanopub.")
     private boolean publish;
+
+    @com.beust.jcommander.Parameter(names = {"-s", "--enrich-from-schema"}, description = "Resolve the FDO profile's type registry entry and use property handles as predicates (with rdfs:label in pubinfo).")
+    private boolean enrichFromSchema;
 
     /**
      * Main method to run the FdoCreate command-line tool.
@@ -68,7 +71,13 @@ public class FdoCreate extends CliRunner {
             throw new ParameterException("Cannot use -u and -p together.");
         }
 
-        Nanopub np = FdoNanopubCreator.createFromHandleSystem(handleId);
+        String resolvedId = FdoUtils.extractHandleId(handleId);
+        if (resolvedId == null) {
+            System.err.println("Not a recognisable handle or handle/DOI URL: " + handleId);
+            throw new ParameterException("Not a recognisable handle or handle/DOI URL: " + handleId);
+        }
+
+        Nanopub np = FdoNanopubCreator.createFromHandleSystem(resolvedId, enrichFromSchema);
 
         if (unsigned) {
             NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);
