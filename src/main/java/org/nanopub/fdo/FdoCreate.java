@@ -71,13 +71,12 @@ public class FdoCreate extends CliRunner {
             throw new ParameterException("Cannot use -u and -p together.");
         }
 
-        String resolvedId = FdoUtils.extractHandleId(handleId);
-        if (resolvedId == null) {
+        if (FdoUtils.extractHandleId(handleId) == null) {
             System.err.println("Not a recognisable handle or handle/DOI URL: " + handleId);
             throw new ParameterException("Not a recognisable handle or handle/DOI URL: " + handleId);
         }
 
-        Nanopub np = FdoNanopubCreator.createFromHandleSystem(resolvedId, enrichFromSchema);
+        Nanopub np = FdoNanopubCreator.createFromHandleSystem(handleId, enrichFromSchema);
 
         if (unsigned) {
             NanopubUtils.writeToStream(np, System.out, RDFFormat.TRIG);
