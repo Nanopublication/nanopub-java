@@ -1,7 +1,6 @@
 let publishCmd = `
-IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
-docker build --build-arg="VERSION=\${nextRelease.version}" -t "$IMAGE_NAME_LOWER:\${nextRelease.version}" -t "$IMAGE_NAME_LOWER:latest" .
-docker push --all-tags "$IMAGE_NAME_LOWER"
+docker build -t "$IMAGE_NAME:\${nextRelease.version}" -t "$IMAGE_NAME:latest" .
+docker push --all-tags "$IMAGE_NAME"
 `
 let config = require("semantic-release-preconfigured-conventional-commits");
 config.tagFormat = "nanopub-${version}"
@@ -26,7 +25,10 @@ config.plugins.push(
     "@semantic-release/github",
     {
       "assets": [
-        {"path": "target/nanopub-*-jar-with-dependencies.jar", "label": "JAR for CLI usage"},
+        {
+          "path": "target/nanopub-*-jar-with-dependencies.jar",
+          "label": "JAR for CLI usage (v${nextRelease.version})"
+        },
       ]
     }
   ],
