@@ -1,22 +1,9 @@
-FROM eclipse-temurin:23-alpine AS jre-build
-
-ARG VERSION
-
-RUN apk add --no-cache curl
-RUN apk add --no-cache bash
-RUN apk add --no-cache git
+FROM eclipse-temurin:23-alpine
 
 WORKDIR /app
 
-COPY . .
+COPY target/nanopub-*-jar-with-dependencies.jar bin/
+RUN find bin/ -name "nanopub-*-jar-with-dependencies.jar" -exec mv {} bin/np.jar \;
 
-RUN ./mvnw && ./mvnw versions:set -DnewVersion=${VERSION} && ./mvnw package -Dmaven.test.skip=true
-RUN cp target/nanopub-${VERSION}-*.jar bin/
-
-ENV PATH="/app/bin/:$PATH"
-
-# Download the jar using np a first time
-RUN /app/bin/np help
-
-ENTRYPOINT [ "np" ]
-CMD [ "help" ]
+ENTRYPOINT ["java", "-jar", "/app/bin/np.jar"]
+CMD ["help"]
