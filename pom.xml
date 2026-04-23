@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
@@ -7,35 +8,80 @@
   <name>nanopub</name>
   <description>Java library for nanopublications based on RDF4J</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
+  <developers>
+    <developer>
+      <id>tkuhn</id>
+      <name>Tobias Kuhn</name>
+      <email>kuhntobias@gmail.com</email>
+      <url>http://www.tkuhn.org/</url>
+    </developer>
+  </developers>
   <licenses>
     <license>
       <name>MIT license</name>
       <url>http://www.opensource.org/licenses/mit-license</url>
     </license>
   </licenses>
+
   <properties>
+    <!-- Build -->
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <rdf4j.version>5.3.0</rdf4j.version>
     <slf4j.version>2.0.17</slf4j.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <commons-compress.version>1.28.0</commons-compress.version>
+    <guava.version>33.6.0-jre</guava.version>
+    <gson.version>2.13.2</gson.version>
+    <jcommander.version>1.82</jcommander.version>
+    <mimeparse.version>0.1.3.3</mimeparse.version>
+    <httpclient.version>4.5.14</httpclient.version>
+    <trustyuri.version>1.24.0</trustyuri.version>
+    <jelly-rdf4j.version>3.7.2</jelly-rdf4j.version>
+    <mongo-java-driver.version>3.12.14</mongo-java-driver.version>
+    <jakarta.activation.version>2.1.3</jakarta.activation.version>
+    <jakarta.xml.bind.version>4.0.5</jakarta.xml.bind.version>
+    <opencsv.version>5.12.0</opencsv.version>
+    <snakeyaml.version>2.6</snakeyaml.version>
+
+    <!-- Test dependencies -->
+    <nanopub-testsuite-connector.version>1.0.0</nanopub-testsuite-connector.version>
+    <junit-jupiter.version>5.13.4</junit-jupiter.version>
+    <hamcrest.version>3.0</hamcrest.version>
+    <mockito.version>5.23.0</mockito.version>
+
+    <!-- Plugins -->
+    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+    <central-publishing-plugin.version>0.10.0</central-publishing-plugin.version>
+    <maven-dependency-plugin.version>3.8.1</maven-dependency-plugin.version>
+    <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+    <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
+    <build-helper-plugin.version>3.6.0</build-helper-plugin.version>
+    <jacoco-plugin.version>0.8.13</jacoco-plugin.version>
+    <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+    <maven-gpg-plugin.version>3.2.5</maven-gpg-plugin.version>
   </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.20.0</version>
+      <version>${commons-lang3.version}</version>
     </dependency>
     <dependency>
       <groupId>org.nanopub</groupId>
       <artifactId>nanopub-testsuite-connector</artifactId>
-      <version>1.0.0</version>
+      <version>${nanopub-testsuite-connector.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.13.4</version>
+      <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -71,7 +117,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.6.0-jre</version>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -87,96 +133,90 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
-      <version>3.0</version>
+      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
-      <version>1.82</version>
+      <version>${jcommander.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.13.2</version>
+      <version>${gson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.commonjava.mimeparse</groupId>
       <artifactId>mimeparse</artifactId>
-      <version>0.1.3.3</version>
+      <version>${mimeparse.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.14</version>
+      <version>${httpclient.version}</version>
     </dependency>
     <dependency>
       <groupId>net.trustyuri</groupId>
       <artifactId>trustyuri</artifactId>
-      <version>1.24.0</version>
+      <version>${trustyuri.version}</version>
     </dependency>
     <dependency>
       <groupId>eu.neverblink.jelly</groupId>
       <artifactId>jelly-rdf4j</artifactId>
-      <version>3.7.2</version>
+      <version>${jelly-rdf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>mongo-java-driver</artifactId>
-      <version>3.12.14</version>
+      <version>${mongo-java-driver.version}</version>
     </dependency>
     <dependency>
       <groupId>jakarta.activation</groupId>
       <artifactId>jakarta.activation-api</artifactId>
-      <version>2.1.3</version>
+      <version>${jakarta.activation.version}</version>
     </dependency>
     <dependency>
       <groupId>jakarta.xml.bind</groupId>
       <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.5</version>
+      <version>${jakarta.xml.bind.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.28.0</version>
+      <version>${commons-compress.version}</version>
     </dependency>
     <dependency>
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
-      <version>5.12.0</version>
+      <version>${opencsv.version}</version>
     </dependency>
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
-      <version>2.6</version>
+      <version>${snakeyaml.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.23.0</version>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <scm>
     <url>https://github.com/Nanopublication/nanopub-java</url>
     <connection>scm:git:git@github.com:Nanopublication/nanopub-java.git</connection>
     <developerConnection>scm:git:git@github.com:Nanopublication/nanopub-java.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v@{project.version}</tag>
   </scm>
-  <developers>
-    <developer>
-      <id>tkuhn</id>
-      <name>Tobias Kuhn</name>
-      <email>kuhntobias@gmail.com</email>
-      <url>http://www.tkuhn.org/</url>
-    </developer>
-  </developers>
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.3</version>
+        <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <!--suppress UnresolvedMavenProperty -->
           <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
@@ -184,8 +224,31 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven-release-plugin.version}</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
+          <goals>deploy</goals>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>${central-publishing-plugin.version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+          <autoPublish>true</autoPublish>
+          <waitUntil>published</waitUntil>
+          <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>${maven-dependency-plugin.version}</version>
         <executions>
           <execution>
             <id>build-classpath</id>
@@ -201,36 +264,14 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.7.0</version>
-        <extensions>true</extensions>
-        <configuration>
-          <serverId>ossrh</serverId>
-          <nexusUrl>https://ossrh-staging-api.central.sonatype.com/</nexusUrl>
-          <autoReleaseAfterClose>true</autoReleaseAfterClose>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <useReleaseProfile>false</useReleaseProfile>
-          <releaseProfiles>release</releaseProfiles>
-          <goals>deploy</goals>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.2</version>
+        <version>${maven-jar-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.3</version>
+        <version>${maven-failsafe-plugin.version}</version>
         <configuration>
           <includes>
             <include>**/*IT</include>
@@ -254,7 +295,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.6.0</version>
+        <version>${build-helper-plugin.version}</version>
         <executions>
           <execution>
             <id>add-test-source</id>
@@ -273,7 +314,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.13</version>
+        <version>${jacoco-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -291,20 +332,23 @@
       </plugin>
     </plugins>
   </build>
+
   <distributionManagement>
     <snapshotRepository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/Nanopublication/nanopub-java</url>
+      <id>central.snapshot</id>
+      <name>Maven Central Repository Snapshot</name>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
     </snapshotRepository>
-    <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-    </repository>
   </distributionManagement>
+
   <profiles>
     <profile>
       <id>cli</id>
+      <activation>
+        <property>
+          <name>env.CI</name>
+        </property>
+      </activation>
       <dependencies>
         <dependency>
           <groupId>org.slf4j</groupId>
@@ -318,7 +362,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.7.1</version>
+            <version>${maven-assembly-plugin.version}</version>
             <configuration>
               <archive>
                 <manifest>
@@ -345,16 +389,17 @@
     </profile>
     <profile>
       <id>release</id>
-      <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-      </properties>
+      <activation>
+        <property>
+          <name>env.CI</name>
+        </property>
+      </activation>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>3.3.1</version>
+            <version>${maven-source-plugin.version}</version>
             <executions>
               <execution>
                 <id>attach-sources</id>
@@ -367,7 +412,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.11.2</version>
+            <version>${maven-javadoc-plugin.version}</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -383,7 +428,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>3.2.5</version>
+            <version>${maven-gpg-plugin.version}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -393,9 +438,17 @@
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+              <executable>gpg</executable>
+            </configuration>
           </plugin>
         </plugins>
       </build>
     </profile>
   </profiles>
+
 </project>
