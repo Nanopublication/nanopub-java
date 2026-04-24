@@ -8,6 +8,8 @@ import org.nanopub.NanopubImpl;
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class JellyUtilsTest {
 
     @Test
@@ -15,6 +17,6 @@ public class JellyUtilsTest {
         Nanopub np = new NanopubImpl(new File("./src/test/resources/fdo/validPerson.trig"));
         byte[] bytes = JellyUtils.writeNanopubForDB(np);
         Nanopub np2 = JellyUtils.readFromDB(bytes);
-        assert np.equals(np2);
+        assertEquals(np, np2);
     }
 }
