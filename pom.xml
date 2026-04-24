@@ -47,7 +47,7 @@
 
     <!-- Test dependencies -->
     <nanopub-testsuite-connector.version>1.0.0</nanopub-testsuite-connector.version>
-    <junit-jupiter.version>5.13.4</junit-jupiter.version>
+    <junit-jupiter.version>6.0.3</junit-jupiter.version>
     <hamcrest.version>3.0</hamcrest.version>
     <mockito.version>5.23.0</mockito.version>
 
@@ -66,6 +66,18 @@
     <maven-gpg-plugin.version>3.2.5</maven-gpg-plugin.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit-jupiter.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -81,7 +93,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
