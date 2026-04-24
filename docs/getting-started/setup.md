@@ -9,18 +9,18 @@ The tool is released to Maven central as a Maven artifact and Docker image. Ther
     <dependency>
         <groupId>org.nanopub</groupId>
         <artifactId>nanopub</artifactId>
-        <version>1.77</version>
+        <version>1.86.2</version>
     </dependency>
     ```
 
 === "Gradle (Kotlin)"
     ``` kotlin
-    implementation("org.nanopub:nanopub:1.77")
+    implementation("org.nanopub:nanopub:1.86.2")
     ```
 
 === "sbt"
     ``` scala
-    libraryDependencies += "org.nanopub" % "nanopub" % "1.77"
+    libraryDependencies += "org.nanopub" % "nanopub" % "1.86.2"
     ```
 
 If you use a package manager that is included in the proposed ones, check
@@ -32,22 +32,16 @@ An image is released on Docker Hub
 
 ## :octicons-command-palette-16: Run through the UNIX Command-Line (CLI)
 
-To use this library on the command line, just download
-the [np script](https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/np). Make sure it is
-executable, and then you can invoke it with `./np` ... (or simply `np` ... if you make sure it's included in the PATH
-variable), for example:
+To use this library on the command line, just run:
 
-```
-./np check nanopubfile.trig
-```
+=== "macOS, Linux, WSL"
+    ``` bash
+    curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
+    ```
 
-This automatically downloads the latest release as a jar file on the first run. You can also directly use
-the [pre-built jar files](https://github.com/Nanopublication/nanopub-java/releases/latest):
+=== "Windows PowerShell"
+    ``` bash
+    irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
+    ```
 
-```
-java -jar nanopub-1.77-jar-with-dependencies.jar check nanopubfile.trig
-```
-
-**Note:** For Mac users, before running np ensure that the GNU version of `curl` is installed (not the default BSD
-versions),
-and are the ones being used when the `curl` command is invoked.
+This automatically downloads the latest release as a jar file on the first run.

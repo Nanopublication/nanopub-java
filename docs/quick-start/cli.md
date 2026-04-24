@@ -9,7 +9,7 @@ This is the documentation of the java cli of nanopub.java.
 
 You can get the list of commands by typing:
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar```
+```np help```
 
 In the following list you can see the short command first, followed by the classname
 implementing that command.
@@ -34,7 +34,8 @@ implementing that command.
 - shacl / ShaclValidator
 - rocrate / RoCrateImporter
 
-Some commands are grouped as subcommands of the `op` command.
+Some commands are grouped as subcommands of the `op` command. You can list those by running:
+```np op help```
 
 - filter / Filter
 - extract / Extract
@@ -56,7 +57,7 @@ Some commands are grouped as subcommands of the `op` command.
 
 To get more information on the usage of a command just type it in. E.g.
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar check```
+```np check```
 
 will output:
 
@@ -74,11 +75,12 @@ Usage: <main class> [options] input-nanopubs
 
 Some commands use the keys in `~/.nanopub/`. To generate the key pair use:
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar mkkeys```
+```np mkkeys```
 
 The command `sign` takes a profile file in yaml format:
 
 #### profile.yaml
+
 ```yaml
 orcid_id: https://orcid.org/0009-0008-3635-347X
 public_key: /Users/name/.nanopub/id_rsa.pub
