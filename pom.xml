@@ -37,7 +37,7 @@
     <jcommander.version>1.82</jcommander.version>
     <mimeparse.version>0.1.3.3</mimeparse.version>
     <httpclient.version>4.5.14</httpclient.version>
-    <trustyuri.version>1.24.0</trustyuri.version>
+    <trustyuri.version>1.24.1</trustyuri.version>
     <jelly-rdf4j.version>3.7.2</jelly-rdf4j.version>
     <mongo-java-driver.version>3.12.14</mongo-java-driver.version>
     <jakarta.activation.version>2.1.3</jakarta.activation.version>
