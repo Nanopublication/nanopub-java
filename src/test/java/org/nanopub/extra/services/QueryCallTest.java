@@ -5,7 +5,6 @@ import org.nanopub.utils.MockNanopubUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,34 +13,44 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class QueryCallTest {
 
     private MockNanopubUtils mockNanopubUtils;
-    private static String[] queryApiInstancesOld;
+    private static String overridePropertyOld;
+
+    private static final String DEFAULT_INSTANCES =
+            "https://query.knowledgepixels.com/ https://query.petapico.org/ https://query.nanodash.net/";
 
     @BeforeAll
     static void beforeAll() {
-        // Store the original queryApiInstances for later restoration
-        queryApiInstancesOld = QueryCall.queryApiInstances;
+        overridePropertyOld = System.getProperty(QueryCall.QUERY_INSTANCES_PROPERTY);
     }
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() throws IOException, NoSuchFieldException, IllegalAccessException {
+        resetCheckedApiInstances();
+        ServiceLookup.clearCache();
         mockNanopubUtils = new MockNanopubUtils();
+        System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, DEFAULT_INSTANCES);
     }
 
 
     @AfterEach
     void tearDown() throws NoSuchFieldException, IllegalAccessException {
-        // Reset the static field 'checkedApiInstances' to null after each test using reflection
+        resetCheckedApiInstances();
+        mockNanopubUtils.close();
+    }
+
+    private static void resetCheckedApiInstances() throws NoSuchFieldException, IllegalAccessException {
         Field field = QueryCall.class.getDeclaredField("checkedApiInstances");
         field.setAccessible(true);
         field.set(null, null);
-
-        mockNanopubUtils.close();
     }
 
     @AfterAll
     static void afterAll() {
-        // Restore the original queryApiInstances
-        QueryCall.queryApiInstances = queryApiInstancesOld;
+        if (overridePropertyOld == null) {
+            System.clearProperty(QueryCall.QUERY_INSTANCES_PROPERTY);
+        } else {
+            System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, overridePropertyOld);
+        }
     }
 
     @Test
@@ -56,13 +65,13 @@ public class QueryCallTest {
         QueryCall.getApiInstances();
 
         // Call again to check if it uses the cached instances
-        assertEquals(Arrays.stream(QueryCall.queryApiInstances).toList(), QueryCall.getApiInstances());
+        assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
     }
 
     @Test
     void getApiInstancesWithOnlyOneInstance() {
         mockNanopubUtils.setHttpResponseStatusCode(200);
-        QueryCall.queryApiInstances = new String[]{"https://mocked.instance1.com/"};
+        System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, "https://mocked.instance1.com/");
         assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
     }
 
@@ -70,7 +79,7 @@ public class QueryCallTest {
     void getApiInstancesWithValidInstances() throws NotEnoughAPIInstancesException {
         mockNanopubUtils.setHttpResponseStatusCode(200);
         List<String> apiInstances = QueryCall.getApiInstances();
-        assertEquals(apiInstances, List.of(QueryCall.queryApiInstances));
+        assertEquals(apiInstances, List.of(DEFAULT_INSTANCES.split(" ")));
     }
 
 }

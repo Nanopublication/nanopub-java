@@ -34,7 +34,7 @@ public class NanopubServerUtils {
     public static List<String> getBootstrapServerList() {
         if (bootstrapServerList.isEmpty()) {
             try {
-                for (IRI iri : NanopubSetting.getLocalSetting().getBootstrapServices()) {
+                for (IRI iri : NanopubSetting.getDefaultSetting().getBootstrapServices()) {
                     bootstrapServerList.add(iri.stringValue());
                 }
             } catch (RDF4JException | MalformedNanopubException | IOException ex) {
