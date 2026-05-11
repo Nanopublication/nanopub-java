@@ -1,5 +1,6 @@
 package org.nanopub.extra.services;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
@@ -10,8 +11,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Second-generation query API call.
@@ -56,6 +61,80 @@ public class QueryCall {
             }
         }
         return DEFAULT_PARALLEL_CALL_COUNT;
+    }
+
+    /**
+     * HTTP response header carrying the query instance's sync state.
+     * See nanopub-query's {@code StatusController}.
+     */
+    public static final String QUERY_STATUS_HEADER = "Nanopub-Query-Status";
+
+    /**
+     * System property setting the cool-down (in seconds) before a query instance
+     * evicted for non-ready status is re-considered. Default
+     * {@value #DEFAULT_EVICTION_COOLDOWN_SECONDS}. Env var
+     * {@code NANOPUB_QUERY_EVICTION_COOLDOWN_SECONDS} also accepted.
+     */
+    public static final String EVICTION_COOLDOWN_PROPERTY = "nanopub.query.eviction-cooldown-seconds";
+
+    /**
+     * Environment variable equivalent of {@link #EVICTION_COOLDOWN_PROPERTY}.
+     */
+    public static final String EVICTION_COOLDOWN_ENV = "NANOPUB_QUERY_EVICTION_COOLDOWN_SECONDS";
+
+    private static final int DEFAULT_EVICTION_COOLDOWN_SECONDS = 300;
+
+    private static final ConcurrentMap<String, Long> evictedUntil = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the eviction cool-down in milliseconds, resolved from
+     * {@link #EVICTION_COOLDOWN_PROPERTY}, {@link #EVICTION_COOLDOWN_ENV},
+     * or the default of {@value #DEFAULT_EVICTION_COOLDOWN_SECONDS} seconds.
+     */
+    public static long getEvictionCooldownMillis() {
+        String value = System.getProperty(EVICTION_COOLDOWN_PROPERTY);
+        if (value == null || value.isEmpty()) value = System.getenv(EVICTION_COOLDOWN_ENV);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                long n = Long.parseLong(value.trim());
+                if (n >= 0) return n * 1000L;
+                logger.warn("Ignoring {}={}: must be >= 0", EVICTION_COOLDOWN_PROPERTY, value);
+            } catch (NumberFormatException ex) {
+                logger.warn("Ignoring {}={}: not a number", EVICTION_COOLDOWN_PROPERTY, value);
+            }
+        }
+        return DEFAULT_EVICTION_COOLDOWN_SECONDS * 1000L;
+    }
+
+    /**
+     * Returns true if the response's {@link #QUERY_STATUS_HEADER} signals a
+     * fully-synced state ({@code READY} or {@code LOADING_UPDATES}). Missing
+     * header is treated as ready for backwards compatibility with older
+     * query instances.
+     */
+    static boolean isReadyStatus(HttpResponse resp) {
+        Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+        if (h == null) return true;
+        String v = h.getValue();
+        if (v == null || v.isEmpty()) return true;
+        String upper = v.toUpperCase(Locale.ROOT);
+        return upper.equals("READY") || upper.equals("LOADING_UPDATES");
+    }
+
+    private static void evict(String apiUrl, String reason) {
+        long until = System.currentTimeMillis() + getEvictionCooldownMillis();
+        evictedUntil.put(apiUrl, until);
+        logger.warn("Evicting Nanopub Query instance {} until {} ({})", apiUrl, new Date(until), reason);
+    }
+
+    private static List<String> filterEvicted(List<String> instances) {
+        long now = System.currentTimeMillis();
+        List<String> result = new ArrayList<>(instances.size());
+        for (String url : instances) {
+            Long until = evictedUntil.get(url);
+            if (until == null || until <= now) result.add(url);
+        }
+        return result;
     }
 
     /**
@@ -125,12 +204,17 @@ public class QueryCall {
             try {
                 logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
-                EntityUtils.consumeQuietly(resp.getEntity());
-                if (wasSuccessful(resp)) {
+                if (!wasSuccessful(resp)) {
+                    EntityUtils.consumeQuietly(resp.getEntity());
+                    logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
+                } else if (!isReadyStatus(resp)) {
+                    Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+                    EntityUtils.consumeQuietly(resp.getEntity());
+                    logger.error("FAILURE: Nanopub Query instance not ready (status={}): {}", h.getValue(), a);
+                } else {
+                    EntityUtils.consumeQuietly(resp.getEntity());
                     logger.info("SUCCESS: Nanopub Query instance is accessible: {}", a);
                     checkedApiInstances.add(a);
-                } else {
-                    logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
                 }
             } catch (IOException ex) {
                 logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
@@ -173,7 +257,12 @@ public class QueryCall {
     }
 
     private void run() throws NotEnoughAPIInstancesException {
-        List<String> apiInstancesToTry = new LinkedList<>(getApiInstances());
+        List<String> candidates = filterEvicted(getApiInstances());
+        if (candidates.isEmpty()) {
+            throw new NotEnoughAPIInstancesException(
+                    "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
+        }
+        List<String> apiInstancesToTry = new LinkedList<>(candidates);
         int parallelCallCount = getParallelCallCount();
         while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
             int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
@@ -237,7 +326,14 @@ public class QueryCall {
                 if (!wasSuccessfulNonempty(resp)) {
                     throw new IOException(resp.getStatusLine().toString());
                 }
-                finished(this, resp, apiUrl);
+                if (!isReadyStatus(resp)) {
+                    Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+                    String status = h == null ? "missing" : h.getValue();
+                    evict(apiUrl, "status " + status);
+                    EntityUtils.consumeQuietly(resp.getEntity());
+                } else {
+                    finished(this, resp, apiUrl);
+                }
             } catch (Exception ex) {
                 if (resp != null) EntityUtils.consumeQuietly(resp.getEntity());
                 logger.error("Request to {} was not successful: {}", apiUrl, ex.getMessage());
