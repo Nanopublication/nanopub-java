@@ -4,7 +4,7 @@
   <groupId>org.nanopub</groupId>
   <artifactId>nanopub</artifactId>
   <packaging>jar</packaging>
-  <version>1.87.2-SNAPSHOT</version>
+  <version>1.88.1-SNAPSHOT</version>
   <name>nanopub</name>
   <description>Java library for nanopublications based on RDF4J</description>
   <url>https://github.com/Nanopublication/nanopub-java</url>
