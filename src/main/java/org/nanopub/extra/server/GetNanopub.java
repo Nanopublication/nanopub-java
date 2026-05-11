@@ -107,7 +107,25 @@ public class GetNanopub extends CliRunner {
      * @return the Nanopub object, or null if not found
      */
     public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
-        ServerIterator serverIterator = new ServerIterator();
+        return getWithIterator(uriOrArtifactCode, new ServerIterator(), httpClient);
+    }
+
+    /**
+     * Get a nanopub using an explicit seed list of registry URLs, bypassing the
+     * default registry-discovery path. The seed list is used directly by a
+     * fresh {@link ServerIterator}, which still crawls outward to find more
+     * registries. Intended for callers that need to break out of registry
+     * discovery (e.g. {@link org.nanopub.extra.services.ServiceLookup}).
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @param seedServers       the seed registry URLs
+     * @return the Nanopub object, or null if not found
+     */
+    public static Nanopub get(String uriOrArtifactCode, List<String> seedServers) {
+        return getWithIterator(uriOrArtifactCode, new ServerIterator(seedServers), NanopubUtils.getHttpClient());
+    }
+
+    private static Nanopub getWithIterator(String uriOrArtifactCode, ServerIterator serverIterator, HttpClient httpClient) {
         ArtifactCode ac = getArtifactCode(uriOrArtifactCode);
         if (!ac.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
             throw new IllegalArgumentException("Not a trusty URI of type " + RdfModule.MODULE_ID);

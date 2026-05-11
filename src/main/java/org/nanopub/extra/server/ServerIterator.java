@@ -39,7 +39,7 @@ public class ServerIterator implements Iterator<RegistryInfo> {
             }
         }
         if (cachedServers == null) {
-            serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
+            serversToContact.addAll(NanopubServerUtils.getRegistryServerList());
         }
     }
 

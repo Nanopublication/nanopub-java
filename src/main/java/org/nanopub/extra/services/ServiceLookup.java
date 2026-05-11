@@ -8,6 +8,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.extra.server.NanopubServerUtils;
 import org.nanopub.extra.setting.NanopubSetting;
 import org.nanopub.vocabulary.NPX;
 import org.slf4j.Logger;
@@ -53,7 +54,8 @@ public class ServiceLookup {
                 cache.put(typeIri, urls);
                 return urls;
             }
-            Nanopub collectionNp = GetNanopub.get(collectionIri.stringValue());
+            List<String> bootstrap = NanopubServerUtils.getBootstrapServerList();
+            Nanopub collectionNp = GetNanopub.get(collectionIri.stringValue(), bootstrap);
             if (collectionNp == null) {
                 logger.error("Could not retrieve service intro collection: {}", collectionIri);
                 cache.put(typeIri, urls);
@@ -62,7 +64,7 @@ public class ServiceLookup {
             NanopubIndex index = IndexUtils.castToIndex(collectionNp);
             for (IRI elementIri : index.getElements()) {
                 try {
-                    Nanopub introNp = GetNanopub.get(elementIri.stringValue());
+                    Nanopub introNp = GetNanopub.get(elementIri.stringValue(), bootstrap);
                     if (introNp == null) {
                         logger.warn("Could not retrieve service intro nanopub: {}", elementIri);
                         continue;
