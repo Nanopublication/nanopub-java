@@ -26,6 +26,7 @@ public class QueryCallTest {
     @BeforeEach
     void setUp() throws IOException, NoSuchFieldException, IllegalAccessException {
         resetCheckedApiInstances();
+        clearEvictedUntil();
         ServiceLookup.clearCache();
         mockNanopubUtils = new MockNanopubUtils();
         System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, DEFAULT_INSTANCES);
@@ -35,6 +36,7 @@ public class QueryCallTest {
     @AfterEach
     void tearDown() throws NoSuchFieldException, IllegalAccessException {
         resetCheckedApiInstances();
+        clearEvictedUntil();
         mockNanopubUtils.close();
     }
 
@@ -42,6 +44,13 @@ public class QueryCallTest {
         Field field = QueryCall.class.getDeclaredField("checkedApiInstances");
         field.setAccessible(true);
         field.set(null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearEvictedUntil() throws NoSuchFieldException, IllegalAccessException {
+        Field field = QueryCall.class.getDeclaredField("evictedUntil");
+        field.setAccessible(true);
+        ((java.util.Map<String, Long>) field.get(null)).clear();
     }
 
     @AfterAll
@@ -119,6 +128,99 @@ public class QueryCallTest {
             assertEquals(2, QueryCall.getParallelCallCount());
         } finally {
             System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
+        }
+    }
+
+    // --- Status-header gate ---
+
+    @Test
+    void getApiInstancesAdmitsReadyStatus() throws NotEnoughAPIInstancesException {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("READY");
+        assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
+    }
+
+    @Test
+    void getApiInstancesAdmitsLoadingUpdatesStatus() throws NotEnoughAPIInstancesException {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("LOADING_UPDATES");
+        assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
+    }
+
+    @Test
+    void getApiInstancesAdmitsMissingStatusHeader() throws NotEnoughAPIInstancesException {
+        // Older instances may not set the header at all — must still be admitted.
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus(null);
+        assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
+    }
+
+    @Test
+    void getApiInstancesRejectsLoadingInitialStatus() {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("LOADING_INITIAL");
+        assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
+    }
+
+    @Test
+    void getApiInstancesRejectsResettingStatus() {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("RESETTING");
+        assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
+    }
+
+    @Test
+    void isReadyStatusHelper() {
+        org.apache.http.HttpResponse resp = org.mockito.Mockito.mock(org.apache.http.HttpResponse.class);
+        // No header => ready (backwards compat).
+        org.mockito.Mockito.when(resp.getFirstHeader(QueryCall.QUERY_STATUS_HEADER)).thenReturn(null);
+        assertEquals(true, QueryCall.isReadyStatus(resp));
+
+        for (String good : List.of("READY", "ready", "Loading_Updates", "LOADING_UPDATES")) {
+            org.apache.http.Header h = org.mockito.Mockito.mock(org.apache.http.Header.class);
+            org.mockito.Mockito.when(h.getValue()).thenReturn(good);
+            org.mockito.Mockito.when(resp.getFirstHeader(QueryCall.QUERY_STATUS_HEADER)).thenReturn(h);
+            assertEquals(true, QueryCall.isReadyStatus(resp), good + " should be ready");
+        }
+        for (String bad : List.of("LAUNCHING", "LOADING_INITIAL", "RESETTING", "unknown")) {
+            org.apache.http.Header h = org.mockito.Mockito.mock(org.apache.http.Header.class);
+            org.mockito.Mockito.when(h.getValue()).thenReturn(bad);
+            org.mockito.Mockito.when(resp.getFirstHeader(QueryCall.QUERY_STATUS_HEADER)).thenReturn(h);
+            assertEquals(false, QueryCall.isReadyStatus(resp), bad + " should not be ready");
+        }
+    }
+
+    // --- Eviction cool-down ---
+
+    @Test
+    void getEvictionCooldownMillisDefault() {
+        System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
+        assertEquals(300_000L, QueryCall.getEvictionCooldownMillis());
+    }
+
+    @Test
+    void getEvictionCooldownMillisFromProperty() {
+        System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "60");
+        try {
+            assertEquals(60_000L, QueryCall.getEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
+        }
+    }
+
+    @Test
+    void getEvictionCooldownMillisIgnoresInvalidValues() {
+        System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "-5");
+        try {
+            assertEquals(300_000L, QueryCall.getEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
+        }
+        System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "banana");
+        try {
+            assertEquals(300_000L, QueryCall.getEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
         }
     }
 
