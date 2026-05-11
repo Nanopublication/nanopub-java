@@ -127,10 +127,13 @@ class NanopubServerUtilsTest {
 
     @Test
     void isReadyRegistryStatusByString() {
-        for (String good : List.of("ready", "Ready", "coreReady", "COREREADY", "updating")) {
+        for (String good : List.of("ready", "Ready", "updating", "UPDATING")) {
             assertTrue(NanopubServerUtils.isReadyRegistryStatus(good), good + " should be ready");
         }
-        for (String bad : List.of("launching", "coreLoading", "Loading", "resetting", "unknown")) {
+        // coreReady is excluded: matches the registry's own stricter check in
+        // RegistryPeerConnector / NanopubLoader (only the core nanopubs are
+        // loaded at that stage; the full corpus is still being fetched).
+        for (String bad : List.of("launching", "coreLoading", "coreReady", "Loading", "resetting", "unknown")) {
             assertFalse(NanopubServerUtils.isReadyRegistryStatus(bad), bad + " should not be ready");
         }
         // Backwards compatibility: missing/empty status is treated as ready.

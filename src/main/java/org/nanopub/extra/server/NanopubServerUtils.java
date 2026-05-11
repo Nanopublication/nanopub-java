@@ -152,15 +152,19 @@ public class NanopubServerUtils {
 
     /**
      * Returns true if the given registry status signals a fully-loaded state
-     * usable for fetching nanopubs ({@code ready}, {@code coreReady},
-     * {@code updating}; case-insensitive). Null/empty is treated as ready
-     * for backwards compatibility with older registry instances that do not
-     * report a status.
+     * usable for fetching nanopubs ({@code ready} or {@code updating};
+     * case-insensitive). {@code updating} is the transient state entered from
+     * {@code ready} during the registry's periodic re-sync, so the corpus is
+     * still complete. {@code coreReady} is rejected: at that stage only core
+     * nanopubs are loaded and the rest are still being fetched — matching the
+     * registry's own peer-sync checks in {@code RegistryPeerConnector} and
+     * {@code NanopubLoader}. Null/empty is treated as ready for backwards
+     * compatibility with older registry instances that do not report a status.
      */
     public static boolean isReadyRegistryStatus(String status) {
         if (status == null || status.isEmpty()) return true;
         String lower = status.toLowerCase(Locale.ROOT);
-        return lower.equals("ready") || lower.equals("coreready") || lower.equals("updating");
+        return lower.equals("ready") || lower.equals("updating");
     }
 
     /**
