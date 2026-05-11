@@ -209,6 +209,59 @@ public class QueryCallTest {
     }
 
     @Test
+    void getApiInstancesEvictsFailedAtStartup() throws Exception {
+        // Status 300 means wasSuccessful() returns false for every candidate.
+        mockNanopubUtils.setHttpResponseStatusCode(300);
+        assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
+        // Every candidate should now be sitting in the eviction map.
+        Field f = QueryCall.class.getDeclaredField("evictedUntil");
+        f.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Long> map = (java.util.Map<String, Long>) f.get(null);
+        for (String url : DEFAULT_INSTANCES.split(" ")) {
+            assertEquals(true, map.containsKey(url),
+                    "Failed-at-startup URL should be tracked in eviction map: " + url);
+        }
+    }
+
+    @Test
+    void getApiInstancesReadmitsAfterCooldownExpires() throws NotEnoughAPIInstancesException {
+        // Cool-down 0 means a failed instance is immediately eligible again on
+        // the next call — simulating cool-down expiry.
+        System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "0");
+        try {
+            // First call: all instances fail liveness.
+            mockNanopubUtils.setHttpResponseStatusCode(300);
+            assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
+
+            // Now they become healthy. With a long cool-down they would stay
+            // excluded for the JVM; with cool-down 0 the next call re-checks
+            // them and admits them.
+            mockNanopubUtils.setHttpResponseStatusCode(200);
+            assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
+        } finally {
+            System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
+        }
+    }
+
+    @Test
+    void getApiInstancesReadmitsAfterStatusFlipsToReady() throws NotEnoughAPIInstancesException {
+        System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "0");
+        try {
+            // Reachable but reports LOADING_INITIAL: rejected at startup.
+            mockNanopubUtils.setHttpResponseStatusCode(200);
+            mockNanopubUtils.setNanopubQueryStatus("LOADING_INITIAL");
+            assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
+
+            // Flips to READY: next call re-checks (cool-down 0) and admits.
+            mockNanopubUtils.setNanopubQueryStatus("READY");
+            assertEquals(List.of(DEFAULT_INSTANCES.split(" ")), QueryCall.getApiInstances());
+        } finally {
+            System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
+        }
+    }
+
+    @Test
     void getEvictionCooldownMillisIgnoresInvalidValues() {
         System.setProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY, "-5");
         try {
