@@ -4,6 +4,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NPS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,26 +51,41 @@ public class QueryCall {
     }
 
     /**
-     * List of available query API instances.
+     * System property naming a whitespace-separated list of query API instance URLs.
+     * When set, this overrides discovery via the nanopub setting (env var
+     * {@code NANOPUB_QUERY_INSTANCES} also accepted).
      */
-    // TODO Available services should be retrieved from a setting, not hard-coded:
-    public static String[] queryApiInstances = new String[]{
-            "https://query.knowledgepixels.com/",
-            "https://query.petapico.org/",
-            "https://query.nanodash.net/"
-    };
+    public static final String QUERY_INSTANCES_PROPERTY = "nanopub.query.instances";
+
+    /**
+     * Environment variable equivalent of {@link #QUERY_INSTANCES_PROPERTY}.
+     */
+    public static final String QUERY_INSTANCES_ENV = "NANOPUB_QUERY_INSTANCES";
 
     private static List<String> checkedApiInstances;
 
     /**
      * Returns the list of available query API instances that are currently accessible.
+     * <p>
+     * Sources, in order of priority:
+     * <ol>
+     *   <li>{@code nanopub.query.instances} system property / {@code NANOPUB_QUERY_INSTANCES} env var
+     *       (whitespace-separated URLs).</li>
+     *   <li>The active {@link org.nanopub.extra.setting.NanopubSetting}'s service intro collection,
+     *       filtered to services of type {@link NPS#NANOPUB_QUERY_1_1}.</li>
+     * </ol>
+     * Each candidate is liveness-checked via an HTTP GET to its root URL.
      *
-     * @return a list of accessible query API instance
+     * @return a list of accessible query API instances
      */
     public static List<String> getApiInstances() throws NotEnoughAPIInstancesException {
         if (checkedApiInstances != null) return checkedApiInstances;
+        List<String> candidates = resolveCandidateInstances();
+        if (candidates.isEmpty()) {
+            throw new NotEnoughAPIInstancesException("No query API instances configured or discoverable");
+        }
         checkedApiInstances = new ArrayList<>();
-        for (String a : queryApiInstances) {
+        for (String a : candidates) {
             try {
                 logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
@@ -90,6 +106,20 @@ public class QueryCall {
             throw new NotEnoughAPIInstancesException("Not enough healthy Nanopub Query instances available");
         }
         return checkedApiInstances;
+    }
+
+    private static List<String> resolveCandidateInstances() {
+        String override = System.getProperty(QUERY_INSTANCES_PROPERTY);
+        if (override == null || override.isEmpty()) override = System.getenv(QUERY_INSTANCES_ENV);
+        if (override != null && !override.trim().isEmpty()) {
+            List<String> list = new ArrayList<>();
+            for (String url : override.trim().split("\\s+")) list.add(url);
+            logger.info("Using {} query API instance(s) from override", list.size());
+            return list;
+        }
+        List<String> fromSetting = ServiceLookup.getServices(NPS.NANOPUB_QUERY_1_1);
+        logger.info("Discovered {} query API instance(s) from setting", fromSetting.size());
+        return new ArrayList<>(fromSetting);
     }
 
     private QueryRef queryRef;
