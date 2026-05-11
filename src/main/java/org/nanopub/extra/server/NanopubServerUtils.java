@@ -1,5 +1,7 @@
 package org.nanopub.extra.server;
 
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -15,8 +17,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Utility class for handling nanopub server-related operations.
@@ -99,6 +105,88 @@ public class NanopubServerUtils {
                 union.size(), bootstrap.size(), discovered.size());
         registryServerList = new ArrayList<>(union);
         return registryServerList;
+    }
+
+    /**
+     * HTTP response header carrying the registry instance's sync state.
+     * See nanopub-registry's {@code Page} / {@code RegistryInfo.status}.
+     */
+    public static final String REGISTRY_STATUS_HEADER = "Nanopub-Registry-Status";
+
+    /**
+     * System property setting the cool-down (in seconds) before a registry
+     * instance evicted for non-ready status is re-considered. Default
+     * {@value #DEFAULT_REGISTRY_EVICTION_COOLDOWN_SECONDS}. Env var
+     * {@code NANOPUB_REGISTRY_EVICTION_COOLDOWN_SECONDS} also accepted.
+     */
+    public static final String REGISTRY_EVICTION_COOLDOWN_PROPERTY = "nanopub.registry.eviction-cooldown-seconds";
+
+    /**
+     * Environment variable equivalent of {@link #REGISTRY_EVICTION_COOLDOWN_PROPERTY}.
+     */
+    public static final String REGISTRY_EVICTION_COOLDOWN_ENV = "NANOPUB_REGISTRY_EVICTION_COOLDOWN_SECONDS";
+
+    private static final int DEFAULT_REGISTRY_EVICTION_COOLDOWN_SECONDS = 300;
+
+    private static final ConcurrentMap<String, Long> evictedRegistriesUntil = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the registry eviction cool-down in milliseconds, resolved from
+     * {@link #REGISTRY_EVICTION_COOLDOWN_PROPERTY}, {@link #REGISTRY_EVICTION_COOLDOWN_ENV},
+     * or the default of {@value #DEFAULT_REGISTRY_EVICTION_COOLDOWN_SECONDS} seconds.
+     */
+    public static long getRegistryEvictionCooldownMillis() {
+        String value = System.getProperty(REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        if (value == null || value.isEmpty()) value = System.getenv(REGISTRY_EVICTION_COOLDOWN_ENV);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                long n = Long.parseLong(value.trim());
+                if (n >= 0) return n * 1000L;
+                logger.warn("Ignoring {}={}: must be >= 0", REGISTRY_EVICTION_COOLDOWN_PROPERTY, value);
+            } catch (NumberFormatException ex) {
+                logger.warn("Ignoring {}={}: not a number", REGISTRY_EVICTION_COOLDOWN_PROPERTY, value);
+            }
+        }
+        return DEFAULT_REGISTRY_EVICTION_COOLDOWN_SECONDS * 1000L;
+    }
+
+    /**
+     * Returns true if the given registry status signals a fully-loaded state
+     * usable for fetching nanopubs ({@code ready}, {@code coreReady},
+     * {@code updating}; case-insensitive). Null/empty is treated as ready
+     * for backwards compatibility with older registry instances that do not
+     * report a status.
+     */
+    public static boolean isReadyRegistryStatus(String status) {
+        if (status == null || status.isEmpty()) return true;
+        String lower = status.toLowerCase(Locale.ROOT);
+        return lower.equals("ready") || lower.equals("coreready") || lower.equals("updating");
+    }
+
+    /**
+     * Returns true if the response's {@link #REGISTRY_STATUS_HEADER} signals a
+     * fully-loaded state. Missing header is treated as ready (older instances).
+     */
+    public static boolean isReadyRegistryStatus(HttpResponse resp) {
+        Header h = resp.getFirstHeader(REGISTRY_STATUS_HEADER);
+        return isReadyRegistryStatus(h == null ? null : h.getValue());
+    }
+
+    /**
+     * Marks the given registry URL as evicted for {@link #getRegistryEvictionCooldownMillis()}.
+     */
+    public static void evictRegistry(String registryUrl, String reason) {
+        long until = System.currentTimeMillis() + getRegistryEvictionCooldownMillis();
+        evictedRegistriesUntil.put(registryUrl, until);
+        logger.warn("Evicting Nanopub Registry {} until {} ({})", registryUrl, new Date(until), reason);
+    }
+
+    /**
+     * Returns true if the given registry URL is currently evicted (cool-down active).
+     */
+    public static boolean isRegistryEvicted(String registryUrl) {
+        Long until = evictedRegistriesUntil.get(registryUrl);
+        return until != null && until > System.currentTimeMillis();
     }
 
     /**

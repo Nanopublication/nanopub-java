@@ -46,9 +46,13 @@ class NanopubServerUtilsTest {
     @AfterEach
     void resetCaches() throws NoSuchFieldException, IllegalAccessException {
         System.clearProperty(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY);
+        System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
         Field f = NanopubServerUtils.class.getDeclaredField("registryServerList");
         f.setAccessible(true);
         f.set(null, null);
+        Field e = NanopubServerUtils.class.getDeclaredField("evictedRegistriesUntil");
+        e.setAccessible(true);
+        ((Map<?, ?>) e.get(null)).clear();
         ServiceLookup.clearCache();
     }
 
@@ -117,6 +121,91 @@ class NanopubServerUtilsTest {
         Field f = ServiceLookup.class.getDeclaredField("cache");
         f.setAccessible(true);
         ((Map<IRI, List<String>>) f.get(null)).put(typeIri, urls);
+    }
+
+    // --- Registry status / eviction ---
+
+    @Test
+    void isReadyRegistryStatusByString() {
+        for (String good : List.of("ready", "Ready", "coreReady", "COREREADY", "updating")) {
+            assertTrue(NanopubServerUtils.isReadyRegistryStatus(good), good + " should be ready");
+        }
+        for (String bad : List.of("launching", "coreLoading", "Loading", "resetting", "unknown")) {
+            assertFalse(NanopubServerUtils.isReadyRegistryStatus(bad), bad + " should not be ready");
+        }
+        // Backwards compatibility: missing/empty status is treated as ready.
+        assertTrue(NanopubServerUtils.isReadyRegistryStatus((String) null));
+        assertTrue(NanopubServerUtils.isReadyRegistryStatus(""));
+    }
+
+    @Test
+    void isReadyRegistryStatusByResponse() {
+        org.apache.http.HttpResponse resp = org.mockito.Mockito.mock(org.apache.http.HttpResponse.class);
+        // Missing header => ready.
+        org.mockito.Mockito.when(resp.getFirstHeader(NanopubServerUtils.REGISTRY_STATUS_HEADER)).thenReturn(null);
+        assertTrue(NanopubServerUtils.isReadyRegistryStatus(resp));
+
+        org.apache.http.Header h = org.mockito.Mockito.mock(org.apache.http.Header.class);
+        org.mockito.Mockito.when(h.getValue()).thenReturn("ready");
+        org.mockito.Mockito.when(resp.getFirstHeader(NanopubServerUtils.REGISTRY_STATUS_HEADER)).thenReturn(h);
+        assertTrue(NanopubServerUtils.isReadyRegistryStatus(resp));
+
+        org.mockito.Mockito.when(h.getValue()).thenReturn("coreLoading");
+        assertFalse(NanopubServerUtils.isReadyRegistryStatus(resp));
+    }
+
+    @Test
+    void getRegistryEvictionCooldownMillisDefault() {
+        System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        assertEquals(300_000L, NanopubServerUtils.getRegistryEvictionCooldownMillis());
+    }
+
+    @Test
+    void getRegistryEvictionCooldownMillisFromProperty() {
+        System.setProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY, "45");
+        try {
+            assertEquals(45_000L, NanopubServerUtils.getRegistryEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        }
+    }
+
+    @Test
+    void getRegistryEvictionCooldownMillisIgnoresInvalidValues() {
+        System.setProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY, "-1");
+        try {
+            assertEquals(300_000L, NanopubServerUtils.getRegistryEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        }
+        System.setProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY, "carrot");
+        try {
+            assertEquals(300_000L, NanopubServerUtils.getRegistryEvictionCooldownMillis());
+        } finally {
+            System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        }
+    }
+
+    @Test
+    void evictRegistryAndCheck() {
+        String url = "https://reg-x.example/";
+        assertFalse(NanopubServerUtils.isRegistryEvicted(url));
+        NanopubServerUtils.evictRegistry(url, "test");
+        assertTrue(NanopubServerUtils.isRegistryEvicted(url));
+    }
+
+    @Test
+    void evictionRespectsCooldown() throws Exception {
+        // Cool-down of 0s — the eviction should immediately be considered expired.
+        System.setProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY, "0");
+        try {
+            String url = "https://reg-y.example/";
+            NanopubServerUtils.evictRegistry(url, "test");
+            assertFalse(NanopubServerUtils.isRegistryEvicted(url),
+                    "0-second cool-down should not keep the registry evicted");
+        } finally {
+            System.clearProperty(NanopubServerUtils.REGISTRY_EVICTION_COOLDOWN_PROPERTY);
+        }
     }
 
 }

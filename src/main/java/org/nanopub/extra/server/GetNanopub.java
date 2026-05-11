@@ -201,6 +201,13 @@ public class GetNanopub extends CliRunner {
                 EntityUtils.consumeQuietly(resp.getEntity());
                 throw new IOException(resp.getStatusLine().toString());
             }
+            if (!NanopubServerUtils.isReadyRegistryStatus(resp)) {
+                org.apache.http.Header h = resp.getFirstHeader(NanopubServerUtils.REGISTRY_STATUS_HEADER);
+                String status = h == null ? "missing" : h.getValue();
+                NanopubServerUtils.evictRegistry(registryInfo.getUrl(), "status " + status);
+                EntityUtils.consumeQuietly(resp.getEntity());
+                throw new IOException("Nanopub Registry not ready (status=" + status + "): " + registryInfo.getUrl());
+            }
             in = resp.getEntity().getContent();
             if (simulateUnreliableConnection) {
                 in = new UnreliableInputStream(in);

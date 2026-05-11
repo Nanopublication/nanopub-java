@@ -101,18 +101,21 @@ public class ServerIterator implements Iterator<RegistryInfo> {
 
     private RegistryInfo getNextServer() {
         if (cachedServers != null) {
-            if (cachedServers.isEmpty()) return null;
-            return cachedServers.removeFirst();
+            while (!cachedServers.isEmpty()) {
+                RegistryInfo info = cachedServers.removeFirst();
+                if (NanopubServerUtils.isRegistryEvicted(info.getUrl())) continue;
+                return info;
+            }
+            return null;
         } else {
             while (!serversToContact.isEmpty()) {
-                if (!serversToContact.isEmpty()) {
-                    String url = serversToContact.removeFirst();
-                    if (serversContacted.containsKey(url)) continue;
-                    serversContacted.put(url, true);
-                    RegistryInfo info = getServerInfo(url);
-                    if (info == null) continue;
-                    return info;
-                }
+                String url = serversToContact.removeFirst();
+                if (serversContacted.containsKey(url)) continue;
+                serversContacted.put(url, true);
+                if (NanopubServerUtils.isRegistryEvicted(url)) continue;
+                RegistryInfo info = getServerInfo(url);
+                if (info == null) continue;
+                return info;
             }
         }
         return null;
@@ -125,7 +128,12 @@ public class ServerIterator implements Iterator<RegistryInfo> {
         }
         if (!serverInfos.containsKey(url)) {
             try {
-                serverInfos.put(url, RegistryInfo.load(url));
+                RegistryInfo info = RegistryInfo.load(url);
+                if (!NanopubServerUtils.isReadyRegistryStatus(info.getStatus())) {
+                    NanopubServerUtils.evictRegistry(url, "status " + info.getStatus());
+                    return null;
+                }
+                serverInfos.put(url, info);
             } catch (RegistryInfoException ex) {
                 // ignore
             }
