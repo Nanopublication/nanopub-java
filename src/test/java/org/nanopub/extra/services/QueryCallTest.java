@@ -69,9 +69,17 @@ public class QueryCallTest {
     }
 
     @Test
-    void getApiInstancesWithOnlyOneInstance() {
+    void getApiInstancesWithOnlyOneInstance() throws NotEnoughAPIInstancesException {
         mockNanopubUtils.setHttpResponseStatusCode(200);
         System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, "https://mocked.instance1.com/");
+        // Single healthy instance is now accepted (with a warning logged); only zero throws.
+        assertEquals(List.of("https://mocked.instance1.com/"), QueryCall.getApiInstances());
+    }
+
+    @Test
+    void getApiInstancesWithZeroHealthyInstances() {
+        // Status 300 => wasSuccessful() returns false for all 3 default instances.
+        mockNanopubUtils.setHttpResponseStatusCode(300);
         assertThrows(NotEnoughAPIInstancesException.class, QueryCall::getApiInstances);
     }
 
@@ -80,6 +88,38 @@ public class QueryCallTest {
         mockNanopubUtils.setHttpResponseStatusCode(200);
         List<String> apiInstances = QueryCall.getApiInstances();
         assertEquals(apiInstances, List.of(DEFAULT_INSTANCES.split(" ")));
+    }
+
+    @Test
+    void getParallelCallCountDefault() {
+        System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
+        assertEquals(2, QueryCall.getParallelCallCount());
+    }
+
+    @Test
+    void getParallelCallCountFromProperty() {
+        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "1");
+        try {
+            assertEquals(1, QueryCall.getParallelCallCount());
+        } finally {
+            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
+        }
+    }
+
+    @Test
+    void getParallelCallCountIgnoresInvalidValues() {
+        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "0");
+        try {
+            assertEquals(2, QueryCall.getParallelCallCount());
+        } finally {
+            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
+        }
+        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "not-a-number");
+        try {
+            assertEquals(2, QueryCall.getParallelCallCount());
+        } finally {
+            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
+        }
     }
 
 }
