@@ -1,3 +1,34 @@
+## [1.88.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.87.1...nanopub-1.88.0) (2026-05-11)
+
+### Features
+
+* **server:** discover registry instances from nanopub setting ([1b64ee9](https://github.com/Nanopublication/nanopub-java/commit/1b64ee956a0a87b5da8d02404e5362bb392621e5)), closes [#78](https://github.com/Nanopublication/nanopub-java/issues/78)
+* **server:** gate registry instances on Nanopub-Registry-Status ([65337ab](https://github.com/Nanopublication/nanopub-java/commit/65337abcc4d2c0176327274acbbbf1cac2ea8360)), closes [#81](https://github.com/Nanopublication/nanopub-java/issues/81)
+* **services:** discover query API instances from nanopub setting ([27cf1e1](https://github.com/Nanopublication/nanopub-java/commit/27cf1e16805c53ae83f85086f78a7e00381d35e9))
+* **services:** gate query instances on Nanopub-Query-Status header ([655bfac](https://github.com/Nanopublication/nanopub-java/commit/655bfac29f5ce504000a4f155e6e76a021ee37fd))
+* **services:** make query parallel-call count configurable; relax instance threshold ([655e088](https://github.com/Nanopublication/nanopub-java/commit/655e088c849cf434bd629f152b8a0c06f35e3413))
+
+### Dependency updates
+
+* **deps:** bump gson from 2.13.2 to 2.14.0 ([52f1f86](https://github.com/Nanopublication/nanopub-java/commit/52f1f866a0dab5f3e35e5a230d9d903d55e81e36))
+
+### Bug Fixes
+
+* **services:** re-check query instances rejected at startup after cool-down ([04abe04](https://github.com/Nanopublication/nanopub-java/commit/04abe0447dcc51625304e428e1961caf6d290028))
+
+### Build and continuous integration
+
+* **release:** automate master branch update after release ([6eea1b5](https://github.com/Nanopublication/nanopub-java/commit/6eea1b533f8f038d9ec881c9d63ef284eaa53a6a))
+
+### General maintenance
+
+* remove old release notes ([62700f5](https://github.com/Nanopublication/nanopub-java/commit/62700f5cecb8de7f7e96a6246d45fc933cde045d))
+* setting next snapshot version [skip ci] ([8035895](https://github.com/Nanopublication/nanopub-java/commit/80358953ddeaf338d71d238058d1190591dee512))
+
+### Refactoring
+
+* **server:** drop coreReady from registry ready-set ([40ef962](https://github.com/Nanopublication/nanopub-java/commit/40ef962654d6f4f0cb2fce7d54eb05c6283ac1a3))
+
 ## [1.87.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.87.0...nanopub-1.87.1) (2026-04-24)
 
 ### Dependency updates
