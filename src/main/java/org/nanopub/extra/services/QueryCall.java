@@ -18,9 +18,45 @@ import java.util.List;
  */
 public class QueryCall {
 
-    private static int parallelCallCount = 2;
+    private static final int DEFAULT_PARALLEL_CALL_COUNT = 2;
+
+    /**
+     * System property setting how many query API instances to call in parallel.
+     * Must be {@code >= 1}; defaults to {@value #DEFAULT_PARALLEL_CALL_COUNT}.
+     * Env var {@code NANOPUB_QUERY_PARALLEL_CALL_COUNT} also accepted.
+     */
+    public static final String PARALLEL_CALL_COUNT_PROPERTY = "nanopub.query.parallel-call-count";
+
+    /**
+     * Environment variable equivalent of {@link #PARALLEL_CALL_COUNT_PROPERTY}.
+     */
+    public static final String PARALLEL_CALL_COUNT_ENV = "NANOPUB_QUERY_PARALLEL_CALL_COUNT";
+
     private static int maxRetryCount = 3;
     private static final Logger logger = LoggerFactory.getLogger(QueryCall.class);
+
+    /**
+     * Returns the number of query API instances to call in parallel, resolved
+     * (in order) from {@link #PARALLEL_CALL_COUNT_PROPERTY},
+     * {@link #PARALLEL_CALL_COUNT_ENV}, or the default of
+     * {@value #DEFAULT_PARALLEL_CALL_COUNT}. Invalid values are ignored.
+     *
+     * @return the parallel call count (always {@code >= 1})
+     */
+    public static int getParallelCallCount() {
+        String value = System.getProperty(PARALLEL_CALL_COUNT_PROPERTY);
+        if (value == null || value.isEmpty()) value = System.getenv(PARALLEL_CALL_COUNT_ENV);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                int n = Integer.parseInt(value.trim());
+                if (n >= 1) return n;
+                logger.warn("Ignoring {}={}: must be >= 1", PARALLEL_CALL_COUNT_PROPERTY, value);
+            } catch (NumberFormatException ex) {
+                logger.warn("Ignoring {}={}: not an integer", PARALLEL_CALL_COUNT_PROPERTY, value);
+            }
+        }
+        return DEFAULT_PARALLEL_CALL_COUNT;
+    }
 
     /**
      * Run a query call with the given query ID and parameters.
@@ -101,9 +137,12 @@ public class QueryCall {
             }
         }
         logger.info("{} accessible Nanopub Query instances", checkedApiInstances.size());
-        if (checkedApiInstances.size() < 2) {
+        if (checkedApiInstances.isEmpty()) {
             checkedApiInstances = null;
-            throw new NotEnoughAPIInstancesException("Not enough healthy Nanopub Query instances available");
+            throw new NotEnoughAPIInstancesException("No healthy Nanopub Query instances available");
+        }
+        if (checkedApiInstances.size() == 1) {
+            logger.warn("Only one healthy Nanopub Query instance available; no failover.");
         }
         return checkedApiInstances;
     }
@@ -135,6 +174,7 @@ public class QueryCall {
 
     private void run() throws NotEnoughAPIInstancesException {
         List<String> apiInstancesToTry = new LinkedList<>(getApiInstances());
+        int parallelCallCount = getParallelCallCount();
         while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
             int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
             String apiUrl = apiInstancesToTry.get(randomIndex);
