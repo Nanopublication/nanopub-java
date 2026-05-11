@@ -193,39 +193,49 @@ public class QueryCall {
      *
      * @return a list of accessible query API instances
      */
-    public static List<String> getApiInstances() throws NotEnoughAPIInstancesException {
-        if (checkedApiInstances != null) return checkedApiInstances;
+    public static synchronized List<String> getApiInstances() throws NotEnoughAPIInstancesException {
         List<String> candidates = resolveCandidateInstances();
         if (candidates.isEmpty()) {
             throw new NotEnoughAPIInstancesException("No query API instances configured or discoverable");
         }
-        checkedApiInstances = new ArrayList<>();
+        if (checkedApiInstances == null) checkedApiInstances = new ArrayList<>();
+        long now = System.currentTimeMillis();
+        boolean anyNewAdmitted = false;
         for (String a : candidates) {
+            if (checkedApiInstances.contains(a)) continue;
+            Long until = evictedUntil.get(a);
+            if (until != null && until > now) continue;
             try {
                 logger.info("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
                 if (!wasSuccessful(resp)) {
                     EntityUtils.consumeQuietly(resp.getEntity());
                     logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
+                    evict(a, "not accessible");
                 } else if (!isReadyStatus(resp)) {
                     Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+                    String status = h == null ? "missing" : h.getValue();
                     EntityUtils.consumeQuietly(resp.getEntity());
-                    logger.error("FAILURE: Nanopub Query instance not ready (status={}): {}", h.getValue(), a);
+                    logger.error("FAILURE: Nanopub Query instance not ready (status={}): {}", status, a);
+                    evict(a, "status " + status);
                 } else {
                     EntityUtils.consumeQuietly(resp.getEntity());
                     logger.info("SUCCESS: Nanopub Query instance is accessible: {}", a);
                     checkedApiInstances.add(a);
+                    anyNewAdmitted = true;
                 }
             } catch (IOException ex) {
                 logger.error("FAILURE: Nanopub Query instance isn't accessible: {}", a);
+                evict(a, "not accessible");
             }
         }
-        logger.info("{} accessible Nanopub Query instances", checkedApiInstances.size());
+        if (anyNewAdmitted) {
+            logger.info("{} accessible Nanopub Query instances", checkedApiInstances.size());
+        }
         if (checkedApiInstances.isEmpty()) {
-            checkedApiInstances = null;
             throw new NotEnoughAPIInstancesException("No healthy Nanopub Query instances available");
         }
-        if (checkedApiInstances.size() == 1) {
+        if (anyNewAdmitted && checkedApiInstances.size() == 1) {
             logger.warn("Only one healthy Nanopub Query instance available; no failover.");
         }
         return checkedApiInstances;
