@@ -2,6 +2,7 @@ package org.nanopub;
 
 import com.beust.jcommander.ParameterException;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -27,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -40,7 +42,7 @@ public class RoHubUpdater extends CliRunner {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    static final String QUERY_ID = "RAFGm6dE-H9M5WgOViQJQrvKrwQofZxViNF2wq2CbAZTA/get-rocrate-nanopubs";
+    static final String QUERY_ID = "RAaQHF8pXj2Y4UeWChdkLxM9g5webS68YaZjYPtAlhe2Q/get-rocrate-nanopubs";
 
     /**
      * Main method to run the RoHubUpdater.
@@ -70,6 +72,8 @@ public class RoHubUpdater extends CliRunner {
         QueryRef query = new QueryRef(QUERY_ID);
         ApiResponse response = QueryAccess.get(query);
 
+        System.out.println("Query response size = " + response.getData().size());
+
         for (int pageNumber = 1; ; pageNumber++) {
             Page currentPage = readRoHubIndexPage(pageNumber);
 
@@ -80,13 +84,16 @@ public class RoHubUpdater extends CliRunner {
                 // modification not newer as Nanopub publication
                 String npToReplace = null;
 
-                Optional<ApiResponseEntry> entry = response.getData().stream().filter(e -> e.get("rocrate").equals("https://w3id.org/ro-id/" + roCrateIdentifier)).findFirst();
+                Optional<ApiResponseEntry> entry = response.getData().stream().filter(
+                        e -> e.get("rocrate").equals("https://w3id.org/ro-id/" + roCrateIdentifier + "/")).findFirst();
+                        // findFirst should work since the query is ordered by desc date
                 if (entry.isPresent()) {
                     // check if entry on RoHub is updated after entry from Nanopub
                     Instant roHubUpdateTime = Instant.parse(currentPage.results[j].modified);
                     Instant npUpdateTime = Instant.parse(entry.get().get("date"));
                     if (npUpdateTime.isAfter(roHubUpdateTime)) {
                         // do not process this result from RO-Hub
+                        System.out.println("Already in NP Network: " + roCrateIdentifier);
                         continue;
                     } else {
                         npToReplace = entry.get().get("np");
@@ -103,7 +110,7 @@ public class RoHubUpdater extends CliRunner {
                             System.out.println("Dry run, not publishing " + roCrateIdentifier);
                             // NanopubUtils.writeToStream(signedNp, System.out, RDFFormat.TRIG);
                         } else {
-                            System.out.println("Publishing " + signedNp.getUri());
+                            System.out.println("Publishing " + roCrateIdentifier);
                             PublishNanopub.publish(signedNp);
                         }
                     } catch (Exception e) {
@@ -125,7 +132,12 @@ public class RoHubUpdater extends CliRunner {
         HttpResponse<InputStream> httpResponse = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
 
         JsonReader reader = new JsonReader(new InputStreamReader(httpResponse.body()));
-        return new Gson().fromJson(reader, Page.class);
+        try {
+            return new Gson().fromJson(reader, Page.class);
+        } catch (JsonSyntaxException e) {
+            System.out.println("Response page status: "+ httpResponse.statusCode());
+            throw e;
+        }
     }
 
     /**

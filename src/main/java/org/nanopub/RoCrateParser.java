@@ -162,7 +162,7 @@ public class RoCrateParser {
                 .filter(st -> st.getPredicate().equals(SCHEMA.NAME))
                 .collect(Collectors.toSet());
         if (nameCandidates.size() != 1) {
-            LOG.info(String.format("This RO-Crate has an invalid number (%n) of names: %s", nameCandidates.size(), subj.stringValue()));
+            LOG.info(String.format("This RO-Crate has an invalid number (%d) of names: %s", nameCandidates.size(), subj.stringValue()));
             nameCandidates.stream().forEach(possibleName -> LOG.debug(possibleName.toString()));
         }
 
