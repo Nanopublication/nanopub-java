@@ -1,14 +1,21 @@
 package org.nanopub.extra.services;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
+import org.nanopub.NanopubCreator;
 import org.nanopub.NanopubImpl;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.vocabulary.KPXL_GRLC;
 
 import java.io.IOException;
 import java.util.List;
@@ -228,6 +235,173 @@ class QueryTemplateTest {
         IRI lic = qt.getLicense();
         assertNotNull(lic);
         assertEquals(LICENSE, lic.stringValue());
+    }
+
+    // Error paths exercised via synthesized nanopubs.
+
+    private static final ValueFactory VF = SimpleValueFactory.getInstance();
+    private static final String FAKE_TRUSTY_URI = "https://w3id.org/np/RAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+    /**
+     * Builds a nanopub with one or more grlc-query subjects. Each entry maps the
+     * full subject IRI to its SPARQL string (or null to omit the sparql triple).
+     */
+    private Nanopub buildGrlcNanopub(String nanopubUri, Map<String, String> queries)
+            throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        NanopubCreator c = new NanopubCreator(nanopubUri);
+        for (Map.Entry<String, String> e : queries.entrySet()) {
+            IRI subj = VF.createIRI(e.getKey());
+            c.addAssertionStatement(subj, RDF.TYPE, KPXL_GRLC.GRLC_QUERY);
+            if (e.getValue() != null) {
+                c.addAssertionStatement(subj, KPXL_GRLC.SPARQL, VF.createLiteral(e.getValue()));
+            }
+        }
+        c.addProvenanceStatement(DCTERMS.CREATOR, VF.createIRI("https://example.org/creator"));
+        c.addPubinfoStatement(DCTERMS.CREATED, VF.createLiteral("2025-01-01"));
+        return c.finalizeNanopub();
+    }
+
+    @Test
+    void getNanopubReturnsNullThrows() {
+        try (MockedStatic<GetNanopub> mock = mockStatic(GetNanopub.class)) {
+            mock.when(() -> GetNanopub.get(any(String.class))).thenReturn(null);
+            assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(QUERY_ID));
+        }
+    }
+
+    @Test
+    void multipleGrlcQueriesThrows() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(
+                        FAKE_TRUSTY_URI + "/q1", "select * where { ?s ?p ?o }",
+                        FAKE_TRUSTY_URI + "/q2", "select * where { ?s ?p ?o }"
+                )
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(np));
+        assertTrue(ex.getMessage().contains("more than one query"));
+    }
+
+    @Test
+    void noGrlcQueryInNanopubThrows() throws Exception {
+        NanopubCreator c = new NanopubCreator(FAKE_TRUSTY_URI);
+        c.addAssertionStatement(VF.createIRI(FAKE_TRUSTY_URI + "/x"), DCTERMS.TITLE, VF.createLiteral("nope"));
+        c.addProvenanceStatement(DCTERMS.CREATOR, VF.createIRI("https://example.org/creator"));
+        c.addPubinfoStatement(DCTERMS.CREATED, VF.createLiteral("2025-01-01"));
+        Nanopub np = c.finalizeNanopub();
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(np));
+        assertTrue(ex.getMessage().contains("No query found"));
+    }
+
+    @Test
+    void queryUriPatternMismatchThrows() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of("http://example.org/not-a-trusty-query", "select * where { ?s ?p ?o }")
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(np));
+        assertTrue(ex.getMessage().contains("does not match expected pattern"));
+    }
+
+    @Test
+    void noSparqlInQueryThrows() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                java.util.Collections.singletonMap(FAKE_TRUSTY_URI + "/q1", null)
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(np));
+        assertTrue(ex.getMessage().contains("no SPARQL"));
+    }
+
+    @Test
+    void malformedSparqlThrows() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1", "this is not valid SPARQL")
+        );
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new QueryTemplate(np));
+        assertTrue(ex.getMessage().contains("Invalid SPARQL"));
+    }
+
+    // expandQuery — multi-placeholder variants
+
+    @Test
+    void expandQueryMultiIriPlaceholder() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?_items_multi_iri {} ?s ?p ?_items_multi_iri }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("items",
+                List.of("https://example.org/a", "https://example.org/b")));
+        assertTrue(expanded.contains("<https://example.org/a>"));
+        assertTrue(expanded.contains("<https://example.org/b>"));
+        assertFalse(expanded.contains("{}"), "VALUES block should have been filled");
+    }
+
+    @Test
+    void expandQueryMultiLiteralPlaceholder() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?_tags_multi {} ?s ?p ?_tags_multi }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("tags", List.of("alpha", "beta")));
+        assertTrue(expanded.contains("\"alpha\""));
+        assertTrue(expanded.contains("\"beta\""));
+    }
+
+    @Test
+    void expandQueryOptionalMultiMissingRemovesValuesBlock() throws Exception {
+        // Reference the placeholder in the body too, so the SPARQL parser picks it
+        // up as a Var (an empty VALUES alone compiles to BindingSetAssignment, which
+        // the Var visitor doesn't traverse).
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?__tags_multi {} . optional { ?s ?p ?__tags_multi } }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        assertTrue(qt.getPlaceholdersList().contains("__tags_multi"),
+                "placeholder should be detected; got " + qt.getPlaceholdersList());
+        String expanded = qt.expandQuery(Map.of());
+        assertFalse(expanded.contains("values ?__tags_multi"),
+                "optional multi placeholder with no value should strip the VALUES block; got: " + expanded);
+    }
+
+    @Test
+    void expandQueryLiteralSingleSubstitution() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1", "select ?s where { ?s rdfs:label ?_label }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("label", List.of("hello \"world\"")));
+        assertTrue(expanded.contains("\"hello \\\"world\\\"\""),
+                "literal should be substituted and embedded quotes escaped; got: " + expanded);
+        assertFalse(expanded.contains("?_label"));
+    }
+
+    @Test
+    void expandQueryWordBoundaryDoesNotMatchPrefix() throws Exception {
+        // Both `?_x` and `?_x_iri` share param name "x" (getParamName strips _iri).
+        // The word-boundary lookahead in the substitution regex must prevent `?_x`
+        // from partially matching `?_x_iri` when replacing the bare placeholder.
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { ?s ?_x ?o . ?s ?_x_iri ?o }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("x", List.of("https://example.org/x")));
+        assertTrue(expanded.contains("<https://example.org/x>"),
+                "iri form should be substituted as IRI; got: " + expanded);
+        assertTrue(expanded.contains("\"https://example.org/x\""),
+                "bare form should be substituted as literal; got: " + expanded);
+        assertFalse(expanded.contains("?_x_iri"),
+                "iri placeholder should have been substituted; got: " + expanded);
     }
 
 }
