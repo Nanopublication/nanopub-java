@@ -1,3 +1,21 @@
+## [1.89.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.88.0...nanopub-1.89.0) (2026-05-24)
+
+### Features
+
+* **services:** add QueryTemplate for grlc-style query nanopubs ([77c6786](https://github.com/Nanopublication/nanopub-java/commit/77c67867a9ba549e2730d521f40a315e59d6175e)), closes [#87](https://github.com/Nanopublication/nanopub-java/issues/87)
+
+### Bug Fixes
+
+* Command 'rocrate' did not handle duplicates correctly ([f41695c](https://github.com/Nanopublication/nanopub-java/commit/f41695c5c355f7273ec663e435beba9a03ed61ea))
+
+### Tests
+
+* **services:** expand QueryTemplate test coverage ([3aa0c96](https://github.com/Nanopublication/nanopub-java/commit/3aa0c96a88c9e3a0498a8120928b50fd3bc432cc))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([09575dd](https://github.com/Nanopublication/nanopub-java/commit/09575dd933a31a971657ac3c5c98948a5c33615d))
+
 ## [1.88.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.87.1...nanopub-1.88.0) (2026-05-11)
 
 ### Features
