@@ -198,6 +198,7 @@ class QueryTemplateTest {
     void isMultiPlaceholder() {
         assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi"));
         assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi_iri"));
+        assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi_val"));
         assertFalse(QueryTemplate.isMultiPlaceholder("foo_iri"));
         assertFalse(QueryTemplate.isMultiPlaceholder("foo"));
     }
@@ -211,6 +212,8 @@ class QueryTemplateTest {
         assertEquals("foo", QueryTemplate.getParamName("_foo_multi"));
         assertEquals("foo", QueryTemplate.getParamName("_foo_multi_iri"));
         assertEquals("foo", QueryTemplate.getParamName("__foo_multi_iri"));
+        assertEquals("foo", QueryTemplate.getParamName("_foo_multi_val"));
+        assertEquals("foo", QueryTemplate.getParamName("__foo_multi_val"));
     }
 
     @Test
@@ -351,6 +354,20 @@ class QueryTemplateTest {
         String expanded = qt.expandQuery(Map.of("tags", List.of("alpha", "beta")));
         assertTrue(expanded.contains("\"alpha\""));
         assertTrue(expanded.contains("\"beta\""));
+    }
+
+    @Test
+    void expandQueryMultiValPlaceholder() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?_tags_multi_val {} ?s ?p ?_tags_multi_val }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("tags", List.of("alpha", "beta")));
+        assertTrue(expanded.contains("\"alpha\""));
+        assertTrue(expanded.contains("\"beta\""));
+        assertFalse(expanded.contains("{}"), "VALUES block should have been filled");
     }
 
     @Test
