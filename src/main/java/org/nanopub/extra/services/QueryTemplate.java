@@ -39,8 +39,8 @@ import java.util.Set;
  *   <li>{@code ?_x} &mdash; mandatory placeholder, substituted as a literal</li>
  *   <li>{@code ?__x} &mdash; optional (leading double underscore)</li>
  *   <li>{@code ?_x_iri} &mdash; substituted as an IRI</li>
- *   <li>{@code ?_x_multi} or {@code ?_x_multi_iri} &mdash; substituted inside a
- *       {@code VALUES ?_x_multi { }} block, allowing multiple values</li>
+ *   <li>{@code ?_x_multi}, {@code ?_x_multi_iri} or {@code ?_x_multi_val} &mdash; substituted
+ *       inside a {@code VALUES ?_x_multi { }} block, allowing multiple values</li>
  * </ul>
  */
 public class QueryTemplate implements Serializable {
@@ -344,10 +344,10 @@ public class QueryTemplate implements Serializable {
 
     /**
      * @param placeholder a placeholder name
-     * @return true if multi-valued (ends with {@code _multi} or {@code _multi_iri})
+     * @return true if multi-valued (ends with {@code _multi}, {@code _multi_iri} or {@code _multi_val})
      */
     public static boolean isMultiPlaceholder(String placeholder) {
-        return placeholder.endsWith("_multi") || placeholder.endsWith("_multi_iri");
+        return placeholder.endsWith("_multi") || placeholder.endsWith("_multi_iri") || placeholder.endsWith("_multi_val");
     }
 
     /**
@@ -359,12 +359,12 @@ public class QueryTemplate implements Serializable {
     }
 
     /**
-     * Strips the placeholder conventions (leading underscores and {@code _iri}/{@code _multi}
-     * suffixes) to yield the simplified parameter name used as a lookup key in
-     * {@link #expandQuery(Map)}.
+     * Strips the placeholder conventions (leading underscores and the
+     * {@code _multi_val}/{@code _iri}/{@code _multi} suffixes) to yield the simplified
+     * parameter name used as a lookup key in {@link #expandQuery(Map)}.
      */
     public static String getParamName(String placeholder) {
-        return placeholder.replaceFirst("^_+", "").replaceFirst("_iri$", "").replaceFirst("_multi$", "");
+        return placeholder.replaceFirst("^_+", "").replaceFirst("_multi_val$", "").replaceFirst("_iri$", "").replaceFirst("_multi$", "");
     }
 
     /** Serializes a string as a SPARQL IRI ({@code <iri>}). */

@@ -12,6 +12,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.NanopubImpl;
+import org.eclipse.rdf4j.query.parser.sparql.SPARQLParser;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
@@ -198,6 +199,7 @@ class QueryTemplateTest {
     void isMultiPlaceholder() {
         assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi"));
         assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi_iri"));
+        assertTrue(QueryTemplate.isMultiPlaceholder("foo_multi_val"));
         assertFalse(QueryTemplate.isMultiPlaceholder("foo_iri"));
         assertFalse(QueryTemplate.isMultiPlaceholder("foo"));
     }
@@ -211,6 +213,8 @@ class QueryTemplateTest {
         assertEquals("foo", QueryTemplate.getParamName("_foo_multi"));
         assertEquals("foo", QueryTemplate.getParamName("_foo_multi_iri"));
         assertEquals("foo", QueryTemplate.getParamName("__foo_multi_iri"));
+        assertEquals("foo", QueryTemplate.getParamName("_foo_multi_val"));
+        assertEquals("foo", QueryTemplate.getParamName("__foo_multi_val"));
     }
 
     @Test
@@ -354,6 +358,20 @@ class QueryTemplateTest {
     }
 
     @Test
+    void expandQueryMultiValPlaceholder() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?_tags_multi_val {} ?s ?p ?_tags_multi_val }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        String expanded = qt.expandQuery(Map.of("tags", List.of("alpha", "beta")));
+        assertTrue(expanded.contains("\"alpha\""));
+        assertTrue(expanded.contains("\"beta\""));
+        assertFalse(expanded.contains("{}"), "VALUES block should have been filled");
+    }
+
+    @Test
     void expandQueryOptionalMultiMissingRemovesValuesBlock() throws Exception {
         // Reference the placeholder in the body too, so the SPARQL parser picks it
         // up as a Var (an empty VALUES alone compiles to BindingSetAssignment, which
@@ -369,6 +387,28 @@ class QueryTemplateTest {
         String expanded = qt.expandQuery(Map.of());
         assertFalse(expanded.contains("values ?__tags_multi"),
                 "optional multi placeholder with no value should strip the VALUES block; got: " + expanded);
+        assertFalse(expanded.contains("{}"),
+                "the empty VALUES block (and its trailing dot) should be fully removed; got: " + expanded);
+        // The removed block was followed by a `.`; the result must still be valid SPARQL.
+        new SPARQLParser().parseQuery(expanded, null);
+    }
+
+    @Test
+    void expandQueryMissingMultiValRemovesValuesBlock() throws Exception {
+        Nanopub np = buildGrlcNanopub(
+                FAKE_TRUSTY_URI,
+                Map.of(FAKE_TRUSTY_URI + "/q1",
+                        "select ?s where { values ?__tags_multi_val {} . optional { ?s ?p ?__tags_multi_val } }")
+        );
+        QueryTemplate qt = new QueryTemplate(np);
+        assertTrue(qt.getPlaceholdersList().contains("__tags_multi_val"),
+                "placeholder should be detected; got " + qt.getPlaceholdersList());
+        String expanded = qt.expandQuery(Map.of());
+        assertFalse(expanded.contains("values ?__tags_multi_val"),
+                "missing _multi_val placeholder should strip the VALUES block; got: " + expanded);
+        assertFalse(expanded.contains("{}"),
+                "the empty VALUES block (and its trailing dot) should be fully removed; got: " + expanded);
+        new SPARQLParser().parseQuery(expanded, null);
     }
 
     @Test
