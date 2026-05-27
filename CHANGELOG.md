@@ -1,3 +1,17 @@
+## [1.90.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.89.0...nanopub-1.90.0) (2026-05-27)
+
+### Features
+
+* **services:** support _multi_val placeholder suffix in QueryTemplate ([f800782](https://github.com/Nanopublication/nanopub-java/commit/f800782de6dea59f1e05b1db39dc56ca2b9d2eb3))
+
+### Tests
+
+* **services:** cover VALUES-block removal, incl. _multi_val and SPARQL validity ([8800558](https://github.com/Nanopublication/nanopub-java/commit/8800558ef1f2f0d9550e498985c4db2575abb6c7))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([72c5b92](https://github.com/Nanopublication/nanopub-java/commit/72c5b92fe35b6535208756a06f5867b0ebfb27b0))
+
 ## [1.89.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.88.0...nanopub-1.89.0) (2026-05-24)
 
 ### Features
