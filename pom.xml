@@ -59,7 +59,7 @@
     <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
     <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
     <build-helper-plugin.version>3.6.0</build-helper-plugin.version>
-    <jacoco-plugin.version>0.8.13</jacoco-plugin.version>
+    <jacoco-plugin.version>0.8.15</jacoco-plugin.version>
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
