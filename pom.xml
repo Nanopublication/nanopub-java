@@ -47,7 +47,7 @@
 
     <!-- Test dependencies -->
     <nanopub-testsuite-connector.version>1.0.0</nanopub-testsuite-connector.version>
-    <junit-jupiter.version>6.1.0</junit-jupiter.version>
+    <junit-jupiter.version>6.1.1</junit-jupiter.version>
     <hamcrest.version>3.0</hamcrest.version>
     <mockito.version>5.23.0</mockito.version>
 
