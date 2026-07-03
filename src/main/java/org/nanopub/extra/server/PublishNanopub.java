@@ -236,6 +236,13 @@ public class PublishNanopub extends CliRunner {
             verbose = true;
         }
 
+        NanopubVerifier verifier = new NanopubVerifier(nanopub);
+        if (verifier.verify()) {
+            logOrSysout(LOG,"Verification of Nanopub done, no issues.");
+        } else {
+            logOrSysout(LOG,"Verification of Nanopub shows some issues: " + verifier.getProblems());
+        }
+
         if (registryInfo == null) {
             if (serverUrl != null) {
                 serverIterator = new ServerIterator(serverUrl);
