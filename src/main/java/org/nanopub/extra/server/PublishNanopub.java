@@ -38,6 +38,9 @@ public class PublishNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "--dry-run", description = "Simulate (no action)")
     private boolean dryRun;
 
+    @com.beust.jcommander.Parameter(names = "--strict", description = "Only publish if validation shows no issues")
+    private boolean strict;
+
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")
     private List<String> serverUrls;
 
@@ -241,6 +244,10 @@ public class PublishNanopub extends CliRunner {
             logOrSysout(LOG,"Verification of Nanopub done, no issues.");
         } else {
             logOrSysout(LOG,"Verification of Nanopub shows some issues: " + verifier.getIssues());
+            if (strict) {
+                logOrSysout(LOG,"Strict mode. Nanopub is not published");
+                return null;
+            }
         }
 
         if (registryInfo == null) {
