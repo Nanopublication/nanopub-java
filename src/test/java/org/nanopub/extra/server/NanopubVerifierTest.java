@@ -55,9 +55,9 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no creation time."));
-        assertFalse(verifier.getProblems().contains("Nanopub creation time is in the future."));
-        assertFalse(verifier.getProblems().contains("Nanopub creation time is older than one hour."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no creation time."));
+        assertFalse(verifier.getIssues().contains("Nanopub creation time is in the future."));
+        assertFalse(verifier.getIssues().contains("Nanopub creation time is older than one hour."));
     }
 
     @Test
@@ -66,7 +66,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no creation time."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no creation time."));
     }
 
     @Test
@@ -77,7 +77,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub creation time is in the future."));
+        assertTrue(verifier.getIssues().contains("Nanopub creation time is in the future."));
     }
 
     @Test
@@ -88,7 +88,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub creation time is older than one hour."));
+        assertTrue(verifier.getIssues().contains("Nanopub creation time is older than one hour."));
     }
 
     // -- checkLabel --
@@ -102,7 +102,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no label."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no label."));
     }
 
     @Test
@@ -113,7 +113,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no label."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no label."));
     }
 
     // -- checkType --
@@ -127,7 +127,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no types."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no types."));
     }
 
     @Test
@@ -140,7 +140,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no types."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no types."));
     }
 
     // -- checkTemplate --
@@ -155,8 +155,8 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no assertion template."));
-        assertFalse(verifier.getProblems().contains("Nanopub has no provenance template."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no assertion template."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no provenance template."));
     }
 
     @Test
@@ -168,8 +168,8 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no assertion template."));
-        assertFalse(verifier.getProblems().contains("Nanopub has no provenance template."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no assertion template."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no provenance template."));
     }
 
     @Test
@@ -181,8 +181,8 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no assertion template."));
-        assertTrue(verifier.getProblems().contains("Nanopub has no provenance template."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no assertion template."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no provenance template."));
     }
 
     @Test
@@ -193,8 +193,8 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no assertion template."));
-        assertTrue(verifier.getProblems().contains("Nanopub has no provenance template."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no assertion template."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no provenance template."));
     }
 
     // -- checkSigner --
@@ -205,7 +205,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("Nanopub has no signature element."));
+        assertTrue(verifier.getIssues().contains("Nanopub has no signature element."));
     }
 
     @Test
@@ -217,9 +217,9 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getProblems().contains("Nanopub has no signer."));
-        assertFalse(verifier.getProblems().contains("The signer is not a creator."));
-        assertFalse(verifier.getProblems().contains("Nanopub has no signature element."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no signer."));
+        assertFalse(verifier.getIssues().contains("The signer is not a creator."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no signature element."));
     }
 
     @Test
@@ -232,7 +232,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().contains("The signer is not a creator."));
+        assertTrue(verifier.getIssues().contains("The signer is not a creator."));
     }
 
     // -- checkGraph --
@@ -244,6 +244,6 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getProblems().stream().noneMatch(p -> p.startsWith("Unexpected graph uri:")));
+        assertTrue(verifier.getIssues().stream().noneMatch(p -> p.startsWith("Unexpected graph uri:")));
     }
 }

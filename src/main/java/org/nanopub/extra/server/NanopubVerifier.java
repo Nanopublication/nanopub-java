@@ -16,15 +16,15 @@ import java.util.*;
  * Verifies if a technically fine nanopublication meets some standards or best practices.
  */
 public class NanopubVerifier {
-    private final List<String> problems = new ArrayList<>();
+    private final List<String> issues = new ArrayList<>();
     private final Nanopub nanopub;
 
     public NanopubVerifier(Nanopub nanopub) {
         this.nanopub = nanopub;
     }
 
-    public List<String> getProblems() {
-        return problems;
+    public List<String> getIssues() {
+        return issues;
     }
 
     /**
@@ -38,7 +38,7 @@ public class NanopubVerifier {
         checkSigner();
         checkGraph();
 
-        return problems.isEmpty();
+        return issues.isEmpty();
     }
 
     /**
@@ -47,26 +47,26 @@ public class NanopubVerifier {
     private void checkTimestamp() {
         Calendar creationTime = nanopub.getCreationTime();
         if (creationTime == null) {
-            problems.add("Nanopub has no creation time.");
+            issues.add("Nanopub has no creation time.");
             return;
         }
         long now = new Date().getTime();
 
         if (creationTime.getTimeInMillis() > now) {
-            problems.add("Nanopub creation time is in the future.");
+            issues.add("Nanopub creation time is in the future.");
             return;
         }
 
         long oneHourBeforeNow = now - (60 * 60 * 1000);
         if (creationTime.getTimeInMillis() < oneHourBeforeNow) {
-            problems.add("Nanopub creation time is older than one hour." );
+            issues.add("Nanopub creation time is older than one hour." );
         }
     }
 
     private void checkHasLabel() {
         String label = NanopubUtils.getLabel(nanopub);
         if  (label == null) {
-            problems.add("Nanopub has no label." );
+            issues.add("Nanopub has no label." );
         }
     }
 
@@ -75,7 +75,7 @@ public class NanopubVerifier {
      */
     private void checkHasType() {
         if (NanopubUtils.getTypes(nanopub).isEmpty()) {
-            problems.add("Nanopub has no types." );
+            issues.add("Nanopub has no types." );
         }
     }
 
@@ -97,10 +97,10 @@ public class NanopubVerifier {
         }
 
         if (!hasAssertionTemplate) {
-            problems.add("Nanopub has no assertion template." );
+            issues.add("Nanopub has no assertion template." );
         }
         if (!hasProvenanceTemplate) {
-            problems.add("Nanopub has no provenance template." );
+            issues.add("Nanopub has no provenance template." );
         }
     }
 
@@ -115,22 +115,22 @@ public class NanopubVerifier {
         try {
             se = SignatureUtils.getSignatureElement(nanopub);
             if (se == null) {
-                problems.add("Nanopub has no signature element.");
+                issues.add("Nanopub has no signature element.");
                 return;
             }
             Set<IRI> signers = se.getSigners();
             if (signers == null || signers.isEmpty()) {
-                problems.add("Nanopub has no signer." );
+                issues.add("Nanopub has no signer." );
             } else if (signers.size() > 1) {
-                problems.add("Nanopub has more than one signer." );
+                issues.add("Nanopub has more than one signer." );
             } else {
                 IRI signer = signers.iterator().next();
                 if (!nanopub.getCreators().contains(signer)) {
-                    problems.add("The signer is not a creator." );
+                    issues.add("The signer is not a creator." );
                 }
             }
         } catch (MalformedCryptoElementException e) {
-            problems.add("Nanopub has no signature element.");
+            issues.add("Nanopub has no signature element.");
         }
     }
 
@@ -146,7 +146,7 @@ public class NanopubVerifier {
                     graphUri.startsWith(sub + "provenance") ||
                     graphUri.startsWith(sub + "pubinfo"))
             ) {
-                problems.add("Unexpected graph uri: " + graphUri);
+                issues.add("Unexpected graph uri: " + graphUri);
             }
         }
     }

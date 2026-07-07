@@ -240,7 +240,7 @@ public class PublishNanopub extends CliRunner {
         if (verifier.verify()) {
             logOrSysout(LOG,"Verification of Nanopub done, no issues.");
         } else {
-            logOrSysout(LOG,"Verification of Nanopub shows some issues: " + verifier.getProblems());
+            logOrSysout(LOG,"Verification of Nanopub shows some issues: " + verifier.getIssues());
         }
 
         if (registryInfo == null) {

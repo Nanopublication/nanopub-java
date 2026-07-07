@@ -11,6 +11,7 @@ import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.server.NanopubVerifier;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
 import java.io.File;
@@ -206,6 +207,11 @@ public class CheckNanopub extends CliRunner {
             }
             report.countNotTrusty();
         }
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        if (!verifier.verify()) {
+            report.countIssues();
+        }
+
         if (verbose) {
             System.out.println("LABEL: " + NanopubUtils.getLabel(np));
             System.out.println("TYPES:");
@@ -224,6 +230,10 @@ public class CheckNanopub extends CliRunner {
             System.out.println("CREATORS:");
             for (IRI creatorIri : SimpleCreatorPattern.getCreators(np)) {
                 System.out.println("- " + creatorIri);
+            }
+            System.out.println("ISSUES:");
+            for (String issue : verifier.getIssues()) {
+                System.out.println("- " + issue);
             }
         }
     }
@@ -258,7 +268,7 @@ public class CheckNanopub extends CliRunner {
      */
     public class Report {
 
-        private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error;
+        private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error, issues;
 
         private Report() {
         }
@@ -304,6 +314,16 @@ public class CheckNanopub extends CliRunner {
 
         private void countNotTrusty() {
             notTrusty++;
+        }
+
+        /**
+         * @return The number of nanopubs having any verification issues
+         */
+        public int getIssuesCount() {
+            return issues;
+        }
+        private void countIssues() {
+            issues++;
         }
 
         /**
@@ -422,6 +442,7 @@ public class CheckNanopub extends CliRunner {
             if (invalidSignature > 0) s += " " + invalidSignature + " invalid signature;";
             if (invalid > 0) s += " " + invalid + " invalid nanopubs;";
             if (error > 0) s += " " + error + " errors;";
+            if (issues > 0) s += " " + issues + " nanopub with issues";
             s = s.replaceFirst("^ ", "");
             return s;
         }
