@@ -82,7 +82,8 @@ Windows PowerShell:
 irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
 ```
 
-This automatically downloads the latest release as a jar file on the first run.
+This automatically downloads the latest release as a jar file on the first run. If an old version is there, it updates 
+np to the newest release. 
 
 ## Usage with Docker
 
@@ -113,6 +114,11 @@ Maven has to be installed to compile the library:
 
 ```bash
 ./mvnw clean package
+```
+
+If you are a developer and want to build the command line jar file (with all the dependencies) by yourself use:
+```bash
+./mvnw clean package -Pcli
 ```
 
 The library features can then be accessed by calling `scripts/run.sh` (with the
