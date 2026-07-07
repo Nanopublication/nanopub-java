@@ -1,3 +1,48 @@
+## [1.91.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.90.0...nanopub-1.91.0) (2026-07-07)
+
+### Features
+
+* cli *check* verifies more issues ([67db829](https://github.com/Nanopublication/nanopub-java/commit/67db8291c585e0d3303e79701d0769b5ca0ccd4e))
+* Show nanopub-java version in cli ([e33ff93](https://github.com/Nanopublication/nanopub-java/commit/e33ff935dc85172f6ed73e30ef7a27a97a330227))
+* Strict mode for publishing nanopubs ([fda62fb](https://github.com/Nanopublication/nanopub-java/commit/fda62fbfa9fad43e134f4bc244e5961c3b3e7f8a))
+* Validate Nanopubs Before Publishing ([0e4d18d](https://github.com/Nanopublication/nanopub-java/commit/0e4d18d6deccf70d64896d645c23775314c38e02))
+
+### Dependency updates
+
+* **core-deps:** replace com.beust:jcommander with relocated org.jcommander:jcommander dependency and update to v1.83 ([be24ca5](https://github.com/Nanopublication/nanopub-java/commit/be24ca51a9da46b851cce08bb6f99a8746b143e0))
+* **core-deps:** update jelly-rdf4j.version to v3.7.3 ([e7d079c](https://github.com/Nanopublication/nanopub-java/commit/e7d079cd727f0a512e6e4b1df389aa221f81ff87))
+* **core-deps:** update rdf4j.version to v5.3.2 ([6deb00c](https://github.com/Nanopublication/nanopub-java/commit/6deb00cbb4b7ac0c6b7bd32c91e2cec124227b4f))
+* **core-deps:** update slf4j.version to v2.0.18 ([eed499e](https://github.com/Nanopublication/nanopub-java/commit/eed499e8275779ce4344e22ff4995bd2b708eba3))
+* **deps:** update central-publishing-plugin.version to v0.11.0 ([3381994](https://github.com/Nanopublication/nanopub-java/commit/3381994f159e1081dc7477d386b2e16634588201))
+* **deps:** update deps for docs ([98bbdf7](https://github.com/Nanopublication/nanopub-java/commit/98bbdf788406e87107b36d379e801e116e7e202c))
+* **deps:** update Maven Wrapper to v3.3.4 and Maven distribution to v3.9.16 ([0db6400](https://github.com/Nanopublication/nanopub-java/commit/0db6400cf395169736818f80998e7d9b91da4b5e))
+
+### Tests
+
+* **deps:** update junit-framework monorepo to v6.1.0 ([a4582f2](https://github.com/Nanopublication/nanopub-java/commit/a4582f234e72d967aeb4d21c346a3a3a05fddb7b))
+* **deps:** update junit-jupiter.version to v6.1.1 ([1b3fd4a](https://github.com/Nanopublication/nanopub-java/commit/1b3fd4a218a93a79674fa71199d6091c573308b8))
+
+### Build and continuous integration
+
+* **deps:** lock file maintenance ([dc3191d](https://github.com/Nanopublication/nanopub-java/commit/dc3191d372d59aa4879b0ef0b31ee22d3ff688f1))
+* **deps:** update actions/checkout action to v6.0.3 ([2b799c9](https://github.com/Nanopublication/nanopub-java/commit/2b799c946560de09bba7ea5a6f5e877de647c34e))
+* **deps:** update actions/setup-java action to v5.2.0 ([a09c19d](https://github.com/Nanopublication/nanopub-java/commit/a09c19d9eaebbe542541c0be2203af41fdbd49cc))
+* **deps:** update build-helper-plugin.version to v3.6.1 ([689aef6](https://github.com/Nanopublication/nanopub-java/commit/689aef6381da3ebcf1c62da05745c105f2a00bbf))
+* **deps:** update jacoco.version to v0.8.15 ([c52eec1](https://github.com/Nanopublication/nanopub-java/commit/c52eec18890fe168106aebc34daa62f76ed14c41))
+* **deps:** update maven-assembly-plugin.version to v3.8.0 ([8c4d2db](https://github.com/Nanopublication/nanopub-java/commit/8c4d2db60ba7ac2a292e41ac9ffb3d318d131ec6))
+* **deps:** update maven-dependency-plugin.version to v3.11.0 ([3bf6caa](https://github.com/Nanopublication/nanopub-java/commit/3bf6caa8d3f365f683636c88e8c93aacd2cd4014))
+* **deps:** update maven-gpg-plugin.version to v3.2.8 ([b09dc9d](https://github.com/Nanopublication/nanopub-java/commit/b09dc9d361ddd6953f4fbc3f41a5be6d4db83841))
+* **deps:** update maven-jar-plugin.version to v3.5.0 ([3c218d5](https://github.com/Nanopublication/nanopub-java/commit/3c218d5c2e0bd3a58728a49be1dd23e474802995))
+* **deps:** update maven-javadoc-plugin.version to v3.12.0 ([81d4188](https://github.com/Nanopublication/nanopub-java/commit/81d4188d8a270a442168a8ca7ddb4c8eea4121d1))
+* **deps:** update maven-source-plugin.version to v3.4.0 ([bf0e3a8](https://github.com/Nanopublication/nanopub-java/commit/bf0e3a8464d382f98ba7eb9810fce45e151193ac))
+* **deps:** update maven.release.plugin.version to v3.3.1 ([f71506f](https://github.com/Nanopublication/nanopub-java/commit/f71506fb35f0715afc52b1600fa1d0a5a28cc327))
+
+### General maintenance
+
+* **doc:** Ad info on how to build cli by yourself ([e4416b2](https://github.com/Nanopublication/nanopub-java/commit/e4416b291ff857bcf0329e40f82cfcc2beac993a))
+* **QueryCall:** improve log messages ([d7c7b7f](https://github.com/Nanopublication/nanopub-java/commit/d7c7b7fe82858ef7a590593630515869ac605b14))
+* setting next snapshot version [skip ci] ([b675a5e](https://github.com/Nanopublication/nanopub-java/commit/b675a5ecee95c958d65458da0d81f50ea8f30c7d))
+
 ## [1.90.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.89.0...nanopub-1.90.0) (2026-05-27)
 
 ### Features
