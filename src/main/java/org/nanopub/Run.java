@@ -23,6 +23,8 @@ import java.util.*;
  */
 public class Run {
 
+    static String nanopub_java_version;
+
     private Run() {
     }  // no instances allowed
 
@@ -89,9 +91,11 @@ public class Run {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void run(String[] command) throws IOException, RDF4JException {
+        nanopub_java_version = ResourceBundle.getBundle("nanopub-java").getString("nanopub-java.version");
         if (command.length == 0) {
             System.err.println("ERROR: missing command");
             System.err.println("Use 'help' to show all available commands.");
+            System.err.println("nanopub-java version: " + nanopub_java_version);
             System.exit(1);
         }
         String cmd = command[0];
@@ -109,6 +113,7 @@ public class Run {
                 System.exit(1);
             }
         } else if (cmd.equals("help")) {
+            System.err.println("Nanopub-java version: " + nanopub_java_version);
             System.err.println("Available commands:");
             for (Class<?> c : runnableClasses) {
                 String s = runnableClassShortcuts.get(c);
