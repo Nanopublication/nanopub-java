@@ -47,3 +47,39 @@ PublishNanopub.publishToTestServer(signedNp);
 ```java
 PublishNanopub.publish(signedNp);
 ```
+
+## Verification of unpublished Nanopublications
+
+Besides strict syntactical requirements a nanopub has to fulfill to be published 
+there are a bunch of best practices, which should be honored. With the command line
+tool you can use 
+
+```bash
+np check myNanopub.trig -v 
+```
+
+to see a list of issues. To ensure you only publish nanopubs that meet all best practices 
+use the flag `--strict` when publishing:
+
+```bash
+np publish --strict myNanopub.trig -v 
+```
+
+In the java API you can use 
+
+```java
+NanopubVerifier verifier = new NanopubVerifier(nanopub);
+verifier.verify();
+verifier.getIssues();
+```
+
+### Best Practices
+
+The best practices that are verified are the following:
+
+- The creation timestamp of the nanopub is not in the future and not older than one hour.
+- The nanopub has a label.
+- The nanopub has a type.
+- The nanopub uses an assertion template and a provenance template.
+- The nanopub has a signer and the signer is also a creator of the nanopub.
+- The nanopub contains the graph uris: ...Head, ...assertion, ...provenance, and ...pubinfo.
