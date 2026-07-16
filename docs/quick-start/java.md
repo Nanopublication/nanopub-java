@@ -83,3 +83,4 @@ The best practices that are verified are the following:
 - The nanopub uses an assertion template and a provenance template.
 - The nanopub has a signer and the signer is also a creator of the nanopub.
 - The nanopub contains the graph uris: ...Head, ...assertion, ...provenance, and ...pubinfo.
+- The nanopub consists of below than 1200 triples and is smaller than 10MB.

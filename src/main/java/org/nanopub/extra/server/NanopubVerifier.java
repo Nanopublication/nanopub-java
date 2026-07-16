@@ -37,8 +37,28 @@ public class NanopubVerifier {
         checkTemplate();
         checkSigner();
         checkGraph();
+        checkTripleCount();
+        checkByteCount();
 
         return issues.isEmpty();
+    }
+
+    /**
+     * Check if the triple size is not greater than 1200
+     */
+    private void checkTripleCount() {
+        if (nanopub.getTripleCount() > 1200) {
+            issues.add("Triple count exceeds maximum of 1200. count = " + nanopub.getTripleCount());
+        }
+    }
+
+    /**
+     * Check if the byte size is not greater than 10 MB
+     */
+    private void checkByteCount() {
+        if (nanopub.getByteCount() > 10*1024*1024) {
+            issues.add("Byte count exceeds maximum of 10MB. count = " + nanopub.getByteCount());
+        }
     }
 
     /**

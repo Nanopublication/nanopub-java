@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.nanopub.*;
 import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.TransformContext;
@@ -246,4 +247,47 @@ class NanopubVerifierTest {
         verifier.verify();
         assertTrue(verifier.getIssues().stream().noneMatch(p -> p.startsWith("Unexpected graph uri:")));
     }
+
+    // -- checkTripleCount --
+
+    @Test
+    void checkTripleCount_withinLimit_noTripleCountProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Triple count exceeds maximum of 1200")));
+    }
+
+    @Test
+    void checkTripleCount_exceedsLimit_reportsProblem() throws Exception {
+        NanopubImpl spy = Mockito.spy((NanopubImpl) baseCreator().finalizeNanopub());
+        Mockito.when(spy.getTripleCount()).thenReturn(1201);
+
+        NanopubVerifier verifier = new NanopubVerifier(spy);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Triple count exceeds maximum of 1200")));
+    }
+
+    // -- checkByteCount --
+
+    @Test
+    void checkByteCount_withinLimit_noByteCountProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
+    }
+
+    @Test
+    void checkByteCount_exceedsLimit_reportsProblem() throws Exception {
+        NanopubImpl spy = Mockito.spy((NanopubImpl) baseCreator().finalizeNanopub());
+        Mockito.when(spy.getByteCount()).thenReturn((long) (10 * 1024 * 1024 + 1));
+
+        NanopubVerifier verifier = new NanopubVerifier(spy);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
+    }
+
 }
