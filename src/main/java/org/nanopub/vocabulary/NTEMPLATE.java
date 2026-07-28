@@ -87,6 +87,11 @@ public class NTEMPLATE {
     public static final IRI LONG_LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LongLiteralPlaceholder");
 
     /**
+     * Represents the class for literal placeholders whose language tag is selected by the user at fill time.
+     */
+    public static final IRI LANGUAGE_TAGGED_LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LanguageTaggedLiteralPlaceholder");
+
+    /**
      * Represents the class for restricted choice placeholders.
      */
     public static final IRI RESTRICTED_CHOICE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "RestrictedChoicePlaceholder");
@@ -158,6 +163,11 @@ public class NTEMPLATE {
      * Predicate indicating possible values from an API.
      */
     public static final IRI POSSIBLE_VALUES_FROM_API = VocabUtils.createIRI(NAMESPACE, "possibleValuesFromApi");
+
+    /**
+     * Predicate restricting the language tags offered by a language-tag picker.
+     */
+    public static final IRI POSSIBLE_LANGUAGE_TAG = VocabUtils.createIRI(NAMESPACE, "possibleLanguageTag");
 
     /**
      * Predicate indicating a datatype for a literal placeholder.
@@ -249,6 +259,9 @@ public class NTEMPLATE {
      */
     public static final IRI SEQUENCE_ELEMENT_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "SequenceElementPlaceholder");
 
+    /**
+     * Represents the class for advanced statements.
+     */
     public static final IRI ADVANCED_STATEMENT = VocabUtils.createIRI(NAMESPACE, "AdvancedStatement");
 
 }
