@@ -1,6 +1,7 @@
 package org.nanopub.extra.server;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
@@ -39,6 +40,7 @@ public class NanopubVerifier {
         checkGraph();
         checkTripleCount();
         checkByteCount();
+        checkUriProtocol();
 
         return issues.isEmpty();
     }
@@ -50,6 +52,32 @@ public class NanopubVerifier {
         if (nanopub.getTripleCount() > 1200) {
             issues.add("Triple count exceeds maximum of 1200. count = " + nanopub.getTripleCount());
         }
+    }
+
+    private void checkUriProtocol() {
+        Set<Statement> allStatements = new HashSet<>();
+        allStatements.addAll(nanopub.getHead());
+        allStatements.addAll(nanopub.getAssertion());
+        allStatements.addAll(nanopub.getProvenance());
+        allStatements.addAll(nanopub.getPubinfo());
+
+        for (Statement st : allStatements) {
+            if (!isHttpOrHttps(st.getSubject())) {
+                issues.add("Invalid URI protocol: " + st.getSubject().stringValue());
+            }
+            if (!isHttpOrHttps(st.getPredicate())) {
+                issues.add("Invalid URI protocol: " + st.getPredicate().stringValue());
+            }
+            if (st.getObject() instanceof IRI) {
+                if (!isHttpOrHttps(((IRI) st.getObject()))) {
+                    issues.add("Invalid URI protocol: " + st.getObject().stringValue());
+                }
+            }
+        }
+    }
+
+    private boolean isHttpOrHttps(Resource uri) {
+        return uri.stringValue().startsWith("https://") || uri.stringValue().startsWith("http://");
     }
 
     /**
