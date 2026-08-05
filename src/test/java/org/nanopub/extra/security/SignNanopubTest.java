@@ -16,7 +16,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardCopyOption;
+import java.security.KeyPair;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -120,6 +124,45 @@ class SignNanopubTest {
                         }
                     });
         }
+    }
+
+    @Test
+    void loadKeyFromPemFiles() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-load-key-pem");
+        SigningKeyPair keySource = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        Path keyPath = tempDir.resolve("id_rsa");
+        Files.writeString(keyPath, toPem(keySource.getPrivateKeyFile(), "PRIVATE KEY"));
+        Files.writeString(tempDir.resolve("id_rsa.pub"), toPem(keySource.getPublicKeyFile(), "PUBLIC KEY"));
+
+        KeyPair fromPem = SignNanopub.loadKey(keyPath.toString(), SignatureAlgorithm.RSA);
+        KeyPair fromPlain = SignNanopub.loadKey(keySource.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
+
+        assertArrayEquals(fromPlain.getPrivate().getEncoded(), fromPem.getPrivate().getEncoded());
+        assertArrayEquals(fromPlain.getPublic().getEncoded(), fromPem.getPublic().getEncoded());
+    }
+
+    @Test
+    void loadKeyWithUnsupportedFormatReportsHelpfulMessage() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-load-key-pkcs1");
+        SigningKeyPair keySource = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        Path keyPath = tempDir.resolve("id_rsa");
+        // a key that cannot be read as PKCS#8, declaring itself to be in PKCS#1 format
+        Files.writeString(keyPath, "-----BEGIN RSA PRIVATE KEY-----\n" +
+                Base64.getEncoder().encodeToString("not a PKCS#8 key".getBytes(StandardCharsets.UTF_8)) +
+                "\n-----END RSA PRIVATE KEY-----\n");
+        Files.writeString(tempDir.resolve("id_rsa.pub"), toPem(keySource.getPublicKeyFile(), "PUBLIC KEY"));
+
+        InvalidKeySpecException e = assertThrows(InvalidKeySpecException.class,
+                () -> SignNanopub.loadKey(keyPath.toString(), SignatureAlgorithm.RSA));
+        assertTrue(e.getMessage().contains(keyPath.toString()), "Error message should name the key file: " + e.getMessage());
+        assertTrue(e.getMessage().contains("PKCS#1"), "Error message should mention the detected format: " + e.getMessage());
+    }
+
+    private String toPem(File keyFile, String label) throws IOException {
+        String base64 = Files.readString(keyFile.toPath()).trim();
+        return "-----BEGIN " + label + "-----\n" +
+                String.join("\n", base64.split("(?<=\\G.{64})")) +
+                "\n-----END " + label + "-----\n";
     }
 
 }
