@@ -3,8 +3,10 @@ package org.nanopub.extra.server;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.nanopub.*;
@@ -288,6 +290,60 @@ class NanopubVerifierTest {
         NanopubVerifier verifier = new NanopubVerifier(spy);
         verifier.verify();
         assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
+    }
+
+    // -- checkLiteralDatatypes --
+
+    @Test
+    void checkLiteralDatatypes_validLiterals_noDatatypeProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addTimestampNow();
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("42", XSD.INTEGER));
+        c.addAssertionStatement(anyIri, RDFS.LABEL, vf.createLiteral("plain string"));
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid value for datatype")));
+    }
+
+    @Test
+    void checkLiteralDatatypes_invalidLiteral_reportsProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addTimestampNow();
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("not-a-number", XSD.INTEGER));
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s ->
+                s.startsWith("Invalid value for datatype " + XSD.INTEGER + ": \"not-a-number\"")));
+    }
+
+    @Test
+    void checkLiteralDatatypes_unknownDatatype_noDatatypeProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addTimestampNow();
+        // not an XML Schema datatype, so its lexical space is unknown to us and not checked
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("anything", vf.createIRI("https://example.org/myDatatype")));
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid value for datatype")));
+    }
+
+    @Test
+    void checkTimestamp_wrongDatatype_reportsDatatypeProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        // the timestamp of issue #12: a dateTime value declared to be an integer
+        c.addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral("2022-06-24T09:36:41+00:00", XSD.INTEGER));
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().contains("Nanopub creation time has datatype " + XSD.INTEGER + " instead of xsd:dateTime."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no creation time."));
     }
 
 }
