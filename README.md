@@ -75,15 +75,17 @@ To use this library on the command line, just run:
 
 macOS, Linux, WSL:
 ```bash
-curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
+curl -LsSf https://nanopublication.github.io/nanopub-java/install.sh | bash
 ```
 Windows PowerShell:
 ```bash
-irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
+irm https://nanopublication.github.io/nanopub-java/install.ps1 | iex
 ```
 
 This automatically downloads the latest release as a jar file on the first run. If an old version is there, it updates 
-np to the newest release. 
+np to the newest release. The jar is fetched from [Maven
+Central](https://central.sonatype.com/artifact/org.nanopub/nanopub), so the installer is not subject to the GitHub API
+rate limit. Set `NANOPUB_VERSION` to install a specific version instead of the latest one.
 
 ## Usage with Docker
 
