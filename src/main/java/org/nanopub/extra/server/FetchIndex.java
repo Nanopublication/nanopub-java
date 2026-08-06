@@ -11,6 +11,8 @@ import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.util.*;
@@ -19,6 +21,8 @@ import java.util.*;
  * Fetches index.
  */
 public class FetchIndex {
+
+    private static final Logger logger = LoggerFactory.getLogger(FetchIndex.class);
 
     /**
      * The maximum number of parallel requests that can be made to a single server.
@@ -73,6 +77,7 @@ public class FetchIndex {
         try {
             ServerIterator.writeCachedServers(registries);
         } catch (Exception ex) {
+            logger.warn("Could not cache the registry list; it will be rebuilt on the next run", ex);
         }
         if (localRegistryUrl != null) {
             try {
@@ -81,7 +86,7 @@ public class FetchIndex {
                 serverLoad.put(localRegistryInfo, new HashSet<>());
                 serverUsage.put(localRegistryInfo, 0);
             } catch (RegistryInfoException ex) {
-                ex.printStackTrace();
+                logger.error("Could not load the local registry {}; aborting index fetch", localRegistryUrl, ex);
                 return;
             }
         }
@@ -103,6 +108,9 @@ public class FetchIndex {
             try {
                 Thread.sleep(5);
             } catch (InterruptedException ex) {
+                logger.debug("Interrupted while fetching index; stopping", ex);
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
@@ -122,7 +130,7 @@ public class FetchIndex {
             }
             if (task.getNanopub() == null) {
                 if (task.getTriedServersCount() == registries.size()) {
-                    System.err.println("Failed to get " + task.getNanopubUri());
+                    logger.warn("Failed to get {} from any of the {} known registries; giving up on it", task.getNanopubUri(), registries.size());
                     fetchTasks.remove(task);
                     continue;
                 }

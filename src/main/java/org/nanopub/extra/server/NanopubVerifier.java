@@ -14,6 +14,8 @@ import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.vocabulary.NTEMPLATE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -21,6 +23,9 @@ import java.util.*;
  * Verifies if a technically fine nanopublication meets some standards or best practices.
  */
 public class NanopubVerifier {
+
+    private static final Logger logger = LoggerFactory.getLogger(NanopubVerifier.class);
+
     private final List<String> issues = new ArrayList<>();
     private final Nanopub nanopub;
 
@@ -47,6 +52,11 @@ public class NanopubVerifier {
         checkUriProtocol();
         checkLiteralDatatypes();
 
+        if (issues.isEmpty()) {
+            logger.debug("Nanopub {} passed verification with no issues", nanopub.getUri());
+        } else {
+            logger.debug("Nanopub {} has {} verification issue(s): {}", nanopub.getUri(), issues.size(), issues);
+        }
         return issues.isEmpty();
     }
 
@@ -219,6 +229,8 @@ public class NanopubVerifier {
                 }
             }
         } catch (MalformedCryptoElementException e) {
+            // Reported to the caller as a missing signature element; the actual cause is only visible here.
+            logger.debug("Signature element of nanopub {} is malformed: {}", nanopub.getUri(), e.getMessage(), e);
             issues.add("Nanopub has no signature element.");
         }
     }

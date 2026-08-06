@@ -2,8 +2,6 @@ package org.nanopub;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Statement;
@@ -24,6 +22,8 @@ import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.KPXL;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.SCHEMA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  */
 public class RoCrateParser {
 
-    private static final Log LOG = LogFactory.getLog(RoCrateParser.class);
+    private static final Logger logger = LoggerFactory.getLogger(RoCrateParser.class);
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
     static final String BASE_ROCRATE_API_URL = "https://api.rohub.org/api/ros/";
 
@@ -128,21 +128,16 @@ public class RoCrateParser {
                 Matcher m = p.matcher(url);
                 if (m.matches()) {
                     String resultingUrl = m.group(1);
-                    if (LOG.isDebugEnabled()) {
-                        try {
-                            String filename = m.group(2);
-                            if (filename.equals("ro-crate-metadata.json") || filename.equals("ro-crate-metadata.jsonld")) {
-                                // standard case, no logging
-                            } else {
-                                LOG.debug("Unexpected filename for RO-Create Metadata: " + filename);
-                                LOG.debug("Stripping the filename anyway and use '" + resultingUrl + "' as RO-Crate base.");
-                            }
-                        } catch (IllegalStateException | IndexOutOfBoundsException e) {
-                            // there was no trailing filename, all good
+                    try {
+                        String filename = m.group(2);
+                        if (!filename.equals("ro-crate-metadata.json") && !filename.equals("ro-crate-metadata.jsonld")) {
+                            logger.debug("Unexpected filename for RO-Crate metadata: {}; stripping it and using {} as RO-Crate base", filename, resultingUrl);
                         }
+                    } catch (IllegalStateException | IndexOutOfBoundsException ex) {
+                        logger.trace("No trailing filename in {}; using {} as RO-Crate base", url, resultingUrl, ex);
                     }
                     if (resultingUrl == null) {
-                        LOG.warn("Could not determine RO-Crate base URL with input url: " + url);
+                        logger.warn("Could not determine RO-Crate base URL from input url: {}", url);
                     }
                     return vf.createIRI(resultingUrl);
                 }
@@ -162,8 +157,8 @@ public class RoCrateParser {
                 .filter(st -> st.getPredicate().equals(SCHEMA.NAME))
                 .collect(Collectors.toSet());
         if (nameCandidates.size() != 1) {
-            LOG.info(String.format("This RO-Crate has an invalid number (%d) of names: %s", nameCandidates.size(), subj.stringValue()));
-            nameCandidates.stream().forEach(possibleName -> LOG.debug(possibleName.toString()));
+            logger.warn("RO-Crate {} has an invalid number ({}) of names; falling back to another label source", subj.stringValue(), nameCandidates.size());
+            nameCandidates.forEach(possibleName -> logger.debug("Name candidate: {}", possibleName));
         }
 
         String name;

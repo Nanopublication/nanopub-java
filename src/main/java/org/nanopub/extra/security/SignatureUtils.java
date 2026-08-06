@@ -119,12 +119,15 @@ public class SignatureUtils {
         PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().name()).generatePublic(publicSpec);
         signature.initVerify(publicKey);
 
-//		System.err.println("SIGNATURE INPUT: ---");
-//		System.err.print(RdfHasher.getDigestString(statements));
-//		System.err.println("---");
+        String digestString = RdfHasher.getDigestString(statements);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Signature input for {}:\n{}", se.getTargetNanopubUri(), digestString);
+        }
 
-        signature.update(RdfHasher.getDigestString(statements).getBytes());
-        return signature.verify(se.getSignature());
+        signature.update(digestString.getBytes());
+        boolean valid = signature.verify(se.getSignature());
+        logger.debug("Signature of nanopub {} is {}", se.getTargetNanopubUri(), valid ? "valid" : "INVALID");
+        return valid;
     }
 
     /**
@@ -341,7 +344,9 @@ public class SignatureUtils {
                 return signatureElement.getPublicKeyString();
             }
         } catch (MalformedCryptoElementException | GeneralSecurityException ex) {
-            logger.error("Error in checking the signature of the nanopub {}", nanopub.getUri());
+            // Returning null is a normal outcome here, so this is not an error for the caller.
+            logger.warn("Could not check the signature of nanopub {}; treating it as unsigned: {}", nanopub.getUri(), ex.getMessage());
+            logger.debug("Signature check of nanopub {} failed", nanopub.getUri(), ex);
         }
         return null;
     }

@@ -13,6 +13,8 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -25,6 +27,8 @@ import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
  * Command line tool to retrieve nanopubs from the server.
  */
 public class GetNanopub extends CliRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(GetNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "nanopub-uris-or-artifact-codes", required = true)
     private List<String> nanopubIds;
@@ -138,9 +142,10 @@ public class GetNanopub extends CliRunner {
                     return np;
                 }
             } catch (IOException | MalformedNanopubException | RDF4JException ex) {
-                // ignore
+                logger.debug("Could not get {} from registry {}; trying the next one", ac, registryInfo.getUrl(), ex);
             }
         }
+        logger.warn("Could not get {} from any of the available registries", ac);
         return null;
     }
 

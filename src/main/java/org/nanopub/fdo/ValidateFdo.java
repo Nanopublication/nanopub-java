@@ -11,6 +11,8 @@ import org.eclipse.rdf4j.model.vocabulary.SHACL;
 import org.nanopub.fdo.rest.gson.ParsedSchemaResponse;
 import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.HDL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,6 +33,8 @@ import static org.nanopub.fdo.FdoUtils.*;
 // TODO class that provides the Op.Validate operations.
 //      See https://fdo-connect.gitlab.io/ap1/architecture-documentation/main/operation-specification/
 public class ValidateFdo {
+
+    private static final Logger logger = LoggerFactory.getLogger(ValidateFdo.class);
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -62,8 +66,7 @@ public class ValidateFdo {
         Set<Statement> shaclShape = createShaclValidationShapeFromJson(httpResponse);
         Set<Statement> data = addTypeStatement(fdoRecord);
 
-        System.out.println("Validating FdoRecord " + fdoRecord.getId());
-        System.out.println("Against Schema " + schemaUrl);
+        logger.debug("Validating FDO record {} against schema {}", fdoRecord.getId(), schemaUrl);
 
         return ShaclValidator.validateShacl(shaclShape, data);
     }

@@ -1,6 +1,8 @@
 package org.nanopub.extra.server;
 
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -9,6 +11,8 @@ import java.util.*;
  * An iterator that provides access to a list of nanopub servers.
  */
 public class ServerIterator implements Iterator<RegistryInfo> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServerIterator.class);
 
     private static Map<String, RegistryInfo> serverInfos = new HashMap<>();
     private static long serverInfoRefreshed = System.currentTimeMillis();
@@ -36,6 +40,7 @@ public class ServerIterator implements Iterator<RegistryInfo> {
             try {
                 loadCachedServers();
             } catch (Exception ex) {
+                logger.warn("Could not read the cached registry list from {}; falling back to the bootstrap list", getServerListFile(), ex);
             }
         }
         if (cachedServers == null) {
@@ -135,7 +140,8 @@ public class ServerIterator implements Iterator<RegistryInfo> {
                 }
                 serverInfos.put(url, info);
             } catch (RegistryInfoException ex) {
-                // ignore
+                logger.warn("Could not load registry info from {}; skipping this registry: {}", url, ex.getMessage());
+                logger.debug("Registry info request to {} failed", url, ex);
             }
         }
         return serverInfos.get(url);
