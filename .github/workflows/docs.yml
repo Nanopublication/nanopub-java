@@ -5,6 +5,8 @@ on:
     branches: [ master, main ]
     paths:
       - 'docs/**'
+      - 'bin/install.sh'
+      - 'bin/install.ps1'
       - 'mkdocs.yml'
       - 'pyproject.toml'
       - 'poetry.lock'
@@ -40,6 +42,11 @@ jobs:
 
       - name: Install the project dependencies
         run: poetry install
+
+      # Served as https://nanopublication.github.io/nanopub-java/install.{sh,ps1} so
+      # the install one-liners do not depend on raw.githubusercontent.com
+      - name: Stage the CLI installers for publishing
+        run: cp bin/install.sh bin/install.ps1 docs/
 
       - name: Deploy MkDocs on GitHub Pages
         env:

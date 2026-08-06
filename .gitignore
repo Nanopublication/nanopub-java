@@ -13,3 +13,7 @@
 site/
 venv/
 node_modules/
+
+# Copied in from bin/ by the docs workflow at build time
+/docs/install.sh
+/docs/install.ps1
