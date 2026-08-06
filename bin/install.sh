@@ -1,11 +1,15 @@
 #!/bin/bash
 # Nanopub CLI installer
-# Usage: curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
+# Usage: curl -LsSf https://nanopublication.github.io/nanopub-java/install.sh | bash
 
 set -e
 
 INSTALL_DIR="${NANOPUB_INSTALL_DIR:-$HOME/.nanopub/bin}"
 JAR_DIR="${NANOPUB_JAR_DIR:-$HOME/.nanopub/lib}"
+
+# Artifacts are fetched from Maven Central rather than the GitHub release API,
+# which is rate limited to 60 requests per hour per IP for anonymous callers.
+MAVEN_BASE="https://repo1.maven.org/maven2/org/nanopub/nanopub"
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -22,38 +26,31 @@ need_cmd() {
 need_cmd curl
 need_cmd java
 
-# ── Resolve latest version + direct download URL via GitHub API ───────────────
+# ── Resolve version + download URL via Maven Central ──────────────────────────
 
-info "Resolving latest nanopub release..."
+if [ -n "$NANOPUB_VERSION" ]; then
+  VERSION="$NANOPUB_VERSION"
+  info "Using pinned version: $VERSION"
+else
+  info "Resolving latest nanopub release..."
 
-# The GitHub API returns JSON with a browser_download_url that is the final,
-# redirect-free URL — avoids the BSD curl / multi-redirect issue on macOS.
-API_RESPONSE=$(
-  curl -fsSL \
-    -H "Accept: application/vnd.github+json" \
-    "https://api.github.com/repos/Nanopublication/nanopub-java/releases/latest"
-) || error "Could not reach GitHub API. Check your internet connection."
+  METADATA=$(curl -fsSL "$MAVEN_BASE/maven-metadata.xml") \
+    || error "Could not reach Maven Central. Check your internet connection."
 
-# Extract version from tag_name (e.g. "nanopub-1.86.2" → "1.86.2")
-VERSION=$(printf '%s' "$API_RESPONSE" \
-  | grep '"tag_name"' \
-  | head -1 \
-  | sed 's/.*"tag_name": *"nanopub-//;s/".*//')
+  # <release> holds the newest non-snapshot version
+  VERSION=$(printf '%s' "$METADATA" \
+    | tr '<' '\n' \
+    | grep '^release>' \
+    | head -1 \
+    | sed 's/^release>//')
 
-[ -z "$VERSION" ] && error "Could not determine latest version from GitHub API."
+  [ -z "$VERSION" ] && error "Could not determine latest version from Maven Central metadata."
 
-info "Latest version: $VERSION"
+  info "Latest version: $VERSION"
+fi
 
 JAR_NAME="nanopub-${VERSION}-jar-with-dependencies.jar"
-
-# Pull the browser_download_url for the jar asset directly — no redirects needed
-JAR_URL=$(printf '%s' "$API_RESPONSE" \
-  | grep '"browser_download_url"' \
-  | grep "$JAR_NAME" \
-  | head -1 \
-  | sed 's/.*"browser_download_url": *"//;s/".*//')
-
-[ -z "$JAR_URL" ] && error "Could not find download URL for $JAR_NAME in the release assets."
+JAR_URL="$MAVEN_BASE/$VERSION/$JAR_NAME"
 
 # ── Download jar ───────────────────────────────────────────────────────────────
 
@@ -76,7 +73,7 @@ else
   if [ "$MAGIC" != "504b" ]; then
     rm -f "$TMP_PATH"
     error "Downloaded file is not a valid jar (bad magic bytes: $MAGIC). \
-This usually means the download URL returned an HTML redirect page instead of the binary. \
+This usually means a proxy returned an HTML page instead of the binary. \
 Try running the installer again, or download manually from: $JAR_URL"
   fi
 
@@ -144,5 +141,6 @@ echo ""
 echo "    np check nanopubfile.trig"
 echo ""
 echo "  Tip: set NANOPUB_INSTALL_DIR or NANOPUB_JAR_DIR before running this"
-echo "  script to customize installation paths."
+echo "  script to customize installation paths, or NANOPUB_VERSION to install"
+echo "  a specific version instead of the latest one."
 echo ""

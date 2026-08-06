@@ -36,12 +36,24 @@ To use this library on the command line, just run:
 
 === "macOS, Linux, WSL"
     ``` bash
-    curl -LsSf https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.sh | bash
+    curl -LsSf https://nanopublication.github.io/nanopub-java/install.sh | bash
     ```
 
 === "Windows PowerShell"
     ``` bash
-    irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
+    irm https://nanopublication.github.io/nanopub-java/install.ps1 | iex
     ```
 
 This automatically downloads the latest release as a jar file on the first run.
+
+The jar is fetched from [Maven Central](https://central.sonatype.com/artifact/org.nanopub/nanopub).
+
+!!! tip "Environment variables"
+
+    Set these before running the installer to change its behaviour:
+
+    | Variable | Purpose |
+    | --- | --- |
+    | `NANOPUB_VERSION` | Install a specific version instead of the latest one |
+    | `NANOPUB_INSTALL_DIR` | Where the `np` launcher is placed (default: `~/.nanopub/bin`) |
+    | `NANOPUB_JAR_DIR` | Where the jar file is saved (default: `~/.nanopub/lib`) |
