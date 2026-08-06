@@ -1,11 +1,15 @@
 package org.nanopub.extra.server;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
+import org.nanopub.SimpleTimestampPattern;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
@@ -41,8 +45,36 @@ public class NanopubVerifier {
         checkTripleCount();
         checkByteCount();
         checkUriProtocol();
+        checkLiteralDatatypes();
 
         return issues.isEmpty();
+    }
+
+    private Set<Statement> getAllStatements() {
+        Set<Statement> allStatements = new HashSet<>();
+        allStatements.addAll(nanopub.getHead());
+        allStatements.addAll(nanopub.getAssertion());
+        allStatements.addAll(nanopub.getProvenance());
+        allStatements.addAll(nanopub.getPubinfo());
+        return allStatements;
+    }
+
+    /**
+     * Check that the value of each literal is valid for the datatype it declares. Nanopubs with
+     * malformed literals can be published, but are rejected by strict RDF stores and therefore end up
+     * being unavailable through the SPARQL endpoint.
+     */
+    private void checkLiteralDatatypes() {
+        for (Statement st : getAllStatements()) {
+            if (!(st.getObject() instanceof Literal l)) continue;
+            IRI datatype = l.getDatatype();
+            // only XML Schema datatypes have a lexical space we can check here
+            if (!XMLDatatypeUtil.isBuiltInDatatype(datatype)) continue;
+            if (!XMLDatatypeUtil.isValidValue(l.getLabel(), datatype)) {
+                issues.add("Invalid value for datatype " + datatype.stringValue() + ": \"" + l.getLabel() +
+                        "\" (as object of " + st.getPredicate().stringValue() + ")");
+            }
+        }
     }
 
     /**
@@ -55,13 +87,7 @@ public class NanopubVerifier {
     }
 
     private void checkUriProtocol() {
-        Set<Statement> allStatements = new HashSet<>();
-        allStatements.addAll(nanopub.getHead());
-        allStatements.addAll(nanopub.getAssertion());
-        allStatements.addAll(nanopub.getProvenance());
-        allStatements.addAll(nanopub.getPubinfo());
-
-        for (Statement st : allStatements) {
+        for (Statement st : getAllStatements()) {
             if (!isHttpOrHttps(st.getSubject())) {
                 issues.add("Invalid URI protocol: " + st.getSubject().stringValue());
             }
@@ -95,7 +121,7 @@ public class NanopubVerifier {
     private void checkTimestamp() {
         Calendar creationTime = nanopub.getCreationTime();
         if (creationTime == null) {
-            issues.add("Nanopub has no creation time.");
+            issues.add(getMissingTimestampIssue());
             return;
         }
         long now = new Date().getTime();
@@ -109,6 +135,21 @@ public class NanopubVerifier {
         if (creationTime.getTimeInMillis() < oneHourBeforeNow) {
             issues.add("Nanopub creation time is older than one hour." );
         }
+    }
+
+    /**
+     * A creation time that does not declare the datatype xsd:dateTime is ignored when the timestamp is
+     * read, and is therefore reported as its own issue rather than as a missing creation time.
+     */
+    private String getMissingTimestampIssue() {
+        for (Statement st : nanopub.getPubinfo()) {
+            if (!st.getSubject().equals(nanopub.getUri())) continue;
+            if (!SimpleTimestampPattern.isCreationTimeProperty(st.getPredicate())) continue;
+            if (st.getObject() instanceof Literal l && !l.getDatatype().equals(XSD.DATETIME)) {
+                return "Nanopub creation time has datatype " + l.getDatatype().stringValue() + " instead of xsd:dateTime.";
+            }
+        }
+        return "Nanopub has no creation time.";
     }
 
     private void checkHasLabel() {
