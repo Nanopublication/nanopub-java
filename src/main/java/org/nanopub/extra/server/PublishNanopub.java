@@ -3,8 +3,6 @@ package org.nanopub.extra.server;
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -14,6 +12,8 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class PublishNanopub extends CliRunner {
 
-    private static final Log LOG = LogFactory.getLog(PublishNanopub.class);
+    private static final Logger logger = LoggerFactory.getLogger(PublishNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "nanopubs", required = true)
     private List<String> nanopubs = new ArrayList<>();
@@ -118,26 +118,32 @@ public class PublishNanopub extends CliRunner {
      */
     public PublishNanopub() {
         super();
-        initLogging();
     }
 
+    /**
+     * No-op retained for backwards compatibility.
+     *
+     * @deprecated This used to reconfigure the JVM-wide logging backend, which is not something a
+     * library may do to its host application. Progress detail is now emitted through SLF4J at DEBUG
+     * level, and additionally to standard error when the {@code -v} command line flag is given.
+     * Configure your logging backend instead of calling this method.
+     */
+    @Deprecated(forRemoval = true)
+    public void initLogging() {
+        // Intentionally empty: see deprecation notice.
+    }
 
     /**
-     * Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
-     * The other way around, we do interpret the command line concept of setting the verbose flag as
-     * activation of debug log.
+     * Reports progress detail that is useful when running interactively but must stay out of an
+     * embedding application's output. On the command line ({@code -v}) it goes to standard error, so
+     * that standard output remains usable for piping; otherwise it is logged at DEBUG level.
      */
-    // TODO Push-Up! This will be useful with other CliTasks that support the verbose flag.
-    public void initLogging() {
-        if (LOG.isDebugEnabled()) {
-            verbose = true;
-        } else if (verbose) {
-            logOrSysout(LOG, "Enabling DEBUG log, since VERBOSE cli flag is enabled.");
-            if (!LOG.isTraceEnabled()) {
-                LogFactory.getFactory().setAttribute(LogFactory.PRIORITY_KEY, "DEBUG");
-            }
+    private void reportProgress(String message) {
+        if (verbose) {
+            System.err.println(message);
+        } else {
+            logger.debug(message);
         }
-        logOrSysout(LOG, "Initialized logging for CLI Runner. Verbose mode: " + verbose);
     }
 
 
@@ -153,9 +159,7 @@ public class PublishNanopub extends CliRunner {
                     }
                     processNanopub(new NanopubImpl(sparqlRepo, SimpleValueFactory.getInstance().createIRI(s)));
                 } else {
-                    if (verbose) {
-                        logOrSysout(LOG, "Reading file: " + s);
-                    }
+                    reportProgress("Reading file: " + s);
                     MultiNanopubRdfHandler.process(new File(s), np -> {
                         if (failed) {
                             return;
@@ -163,35 +167,35 @@ public class PublishNanopub extends CliRunner {
                         processNanopub(np);
                     });
                     if (count == 0) {
-                        String msg = "NO NANOPUB FOUND: " + s;
-                        LOG.info(msg);
-                        System.out.println(msg);
+                        logger.warn("No nanopub found in {}", s);
+                        System.out.println("NO NANOPUB FOUND: " + s);
                         break;
                     }
                 }
             } catch (RDF4JException ex) {
-                logOrSysout(LOG, "RDF ERROR: " + s);
-                ex.printStackTrace(System.err);
+                logger.error("Could not read RDF from {}", s, ex);
+                System.err.println("RDF ERROR: " + s);
                 break;
             } catch (MalformedNanopubException ex) {
-                logOrSysout(LOG, "INVALID NANOPUB: " + s);
-                ex.printStackTrace(System.err);
+                logger.error("Malformed nanopub in {}", s, ex);
+                System.err.println("INVALID NANOPUB: " + s);
                 break;
             }
             if (failed) {
-                logOrSysout(LOG, "FAILED TO PUBLISH NANOPUBS");
+                logger.error("Failed to publish nanopubs from {}", s);
+                System.err.println("FAILED TO PUBLISH NANOPUBS");
                 break;
             }
         }
         for (String s : usedServers.keySet()) {
             int c = usedServers.get(s);
-            logOrSysout(LOG, c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
+            System.out.println(c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
         }
         if (sparqlRepo != null) {
             try {
                 sparqlRepo.shutDown();
             } catch (RepositoryException ex) {
-                ex.printStackTrace();
+                logger.warn("Failed to shut down SPARQL repository {}", sparqlEndpointUrl, ex);
             }
         }
     }
@@ -204,6 +208,7 @@ public class PublishNanopub extends CliRunner {
         try {
             publishNanopub(nanopub);
         } catch (IOException ex) {
+            logger.error("Failed to publish nanopub {}", nanopub.getUri(), ex);
             if (verbose) {
                 System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
                 System.err.println("---");
@@ -232,20 +237,13 @@ public class PublishNanopub extends CliRunner {
      * @throws java.io.IOException if an error occurs during publishing
      */
     public String publishNanopub(Nanopub nanopub, String serverUrl) throws IOException {
-        if (LOG.isDebugEnabled()) {
-            // Little hack: We interpret an enabled DEBUG Log like the command line flag "verbose".
-            // The other way around, we do interpret the command line concept of setting the verbose flag as
-            // activation of debug log.
-            verbose = true;
-        }
-
         NanopubVerifier verifier = new NanopubVerifier(nanopub);
         if (verifier.verify()) {
-            logOrSysout(LOG,"Verification of Nanopub done, no issues.");
+            logger.debug("Verification of nanopub {} done, no issues", nanopub.getUri());
         } else {
-            logOrSysout(LOG,"Verification of Nanopub shows some issues: " + verifier.getIssues());
+            logger.warn("Verification of nanopub {} shows some issues: {}", nanopub.getUri(), verifier.getIssues());
             if (strict) {
-                logOrSysout(LOG,"Strict mode. Nanopub is not published");
+                logger.warn("Strict mode: nanopub {} is not published", nanopub.getUri());
                 return null;
             }
         }
@@ -261,9 +259,7 @@ public class PublishNanopub extends CliRunner {
             registryInfo = serverIterator.next();
         }
         artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
-        if (verbose) {
-            logOrSysout(LOG, "Trying to publish nanopub: " + artifactCode);
-        }
+        reportProgress("Trying to publish nanopub: " + artifactCode);
         if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
             throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
         }
@@ -272,9 +268,7 @@ public class PublishNanopub extends CliRunner {
 
             // TODO Check here whether nanopub type is covered at given registry.
 
-            if (verbose) {
-                logOrSysout(LOG, "Trying server: " + url);
-            }
+            reportProgress("Trying server: " + url);
             try {
                 HttpPost post = preparePost(nanopub);
                 if (!dryRun) {
@@ -284,9 +278,9 @@ public class PublishNanopub extends CliRunner {
                     }
                 }
             } catch (IOException | RDF4JException ex) {
-                if (verbose) {
-                    logOrSysout(LOG, ex.getClass().getName() + ": " + ex.getMessage());
-                }
+                logger.warn("Publishing {} to {} failed, trying next registry — {}: {}", artifactCode, url, ex.getClass().getSimpleName(), ex.getMessage());
+                logger.debug("Publishing {} to {} failed", artifactCode, url, ex);
+                reportProgress(ex.getClass().getName() + ": " + ex.getMessage());
             }
             registryInfo = serverIterator.next();
         }
@@ -319,14 +313,12 @@ public class PublishNanopub extends CliRunner {
                 usedServers.put(url, 1);
             }
             String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
-            if (verbose) {
-                logOrSysout(LOG, "Published: " + nanopubUrl);
-            }
+            logger.debug("Published {} at {}", artifactCode, nanopubUrl);
+            reportProgress("Published: " + nanopubUrl);
             return nanopubUrl;
         } else {
-            if (verbose) {
-                logOrSysout(LOG, "Response: " + code + " " + response.getStatusLine().getReasonPhrase());
-            }
+            logger.warn("Registry {} rejected {} with HTTP {} {}", url, artifactCode, code, response.getStatusLine().getReasonPhrase());
+            reportProgress("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
         }
         return null; // post failed
     }

@@ -18,6 +18,8 @@ import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.RDFG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,8 @@ import java.util.*;
  * @author Tobias Kuhn
  */
 public class NanopubUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(NanopubUtils.class);
 
     private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
     private static final Random random = new Random();
@@ -183,7 +187,7 @@ public class NanopubUtils {
         try {
             NanopubUtils.propagateToHandler(np, writer);
         } catch (RDFHandlerException ex) {
-            ex.printStackTrace();
+            logger.warn("Could not collect the prefixes used by nanopub {}; returning the {} found so far", np.getUri(), usedPrefixes.size(), ex);
             return usedPrefixes;
         }
         return usedPrefixes;
