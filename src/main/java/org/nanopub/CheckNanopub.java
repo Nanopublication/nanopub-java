@@ -4,6 +4,7 @@ import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -142,6 +143,7 @@ public class CheckNanopub extends CliRunner {
     }
 
     private void check(Nanopub np) {
+        List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(np);
         if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
             NanopubSignatureElement se = null;
             NanopubSignatureElement legacySe = null;
@@ -201,6 +203,14 @@ public class CheckNanopub extends CliRunner {
         } else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
             System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
             report.countNotTrusty();
+        } else if (!illTyped.isEmpty()) {
+            // Trusty nanopubs with ill-typed literals exist in the wild and are left alone above, but a
+            // plain one is not fit to be signed and published, and is therefore reported as invalid.
+            System.out.println("INVALID NANOPUB: " + np.getUri());
+            for (Statement st : illTyped) {
+                System.out.println("- " + NanopubUtils.describeIllTypedLiteral(st));
+            }
+            report.countInvalid();
         } else {
             if (verbose) {
                 System.out.println("Valid (but not trusty): " + np.getUri());

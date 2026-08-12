@@ -151,6 +151,11 @@ public class SignatureUtils {
             !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
             throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
         }
+        List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(preNanopub);
+        if (!illTyped.isEmpty()) {
+            throw new MalformedNanopubException("Nanopub has ill-typed literal(s) and cannot be signed: " +
+                    NanopubUtils.describeIllTypedLiteral(illTyped.getFirst()));
+        }
 
         RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
         IRI npUri;
