@@ -222,7 +222,7 @@ public class QueryCall {
                 continue;
             }
             try {
-                logger.info("Checking API instance: {}", a);
+                logger.debug("Checking API instance: {}", a);
                 HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
                 if (!wasSuccessful(resp)) {
                     EntityUtils.consumeQuietly(resp.getEntity());
@@ -236,12 +236,13 @@ public class QueryCall {
                     evict(a, "status " + status);
                 } else {
                     EntityUtils.consumeQuietly(resp.getEntity());
-                    logger.info("Nanopub Query instance admitted: {}", a);
+                    logger.debug("Nanopub Query instance admitted: {}", a);
                     checkedApiInstances.add(a);
                     anyNewAdmitted = true;
                 }
             } catch (IOException ex) {
                 logger.warn("Nanopub Query instance not accessible ({}): {}", ex.getMessage(), a);
+                logger.debug("Health check request to {} failed", a, ex);
                 evict(a, "not accessible");
             }
         }
@@ -265,11 +266,11 @@ public class QueryCall {
         if (override != null && !override.trim().isEmpty()) {
             List<String> list = new ArrayList<>();
             for (String url : override.trim().split("\\s+")) list.add(url);
-            logger.info("Using {} query API instance(s) from override", list.size());
+            logger.debug("Using {} query API instance(s) from override", list.size());
             return list;
         }
         List<String> fromSetting = ServiceLookup.getServices(NPS.NANOPUB_QUERY_1_1);
-        logger.info("Discovered {} query API instance(s) from setting", fromSetting.size());
+        logger.debug("Discovered {} query API instance(s) from setting", fromSetting.size());
         return new ArrayList<>(fromSetting);
     }
 
@@ -297,7 +298,7 @@ public class QueryCall {
             int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
             String apiUrl = apiInstancesToTry.get(randomIndex);
             apisToCall.add(apiUrl);
-            logger.info("Dispatching to instance {}/{}: {}", apisToCall.size(), parallelCallCount, apiUrl);
+            logger.debug("Dispatching to instance {}/{}: {}", apisToCall.size(), parallelCallCount, apiUrl);
             apiInstancesToTry.remove(randomIndex);
         }
         for (String api : apisToCall) {
@@ -314,7 +315,7 @@ public class QueryCall {
         }
         long len = resp.getEntity().getContentLength();
         String sizeStr = len >= 0 ? len + " bytes" : "unknown (chunked/no Content-Length)";
-        logger.info("Response received from {} for query {} ({})", apiUrl, queryRef, sizeStr);
+        logger.debug("Response received from {} for query {} ({})", apiUrl, queryRef, sizeStr);
         this.resp = resp;
 
         for (Call c : calls) {
@@ -375,6 +376,7 @@ public class QueryCall {
                     EntityUtils.consumeQuietly(resp.getEntity());
                 }
                 logger.warn("Request to {} failed for query {} — {}: {}", apiUrl, queryRef, ex.getClass().getSimpleName(), ex.getMessage());
+                logger.debug("Request to {} failed for query {}", apiUrl, queryRef, ex);
             }
             calls.remove(this);
         }

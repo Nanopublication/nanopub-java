@@ -22,6 +22,8 @@ import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.RDFG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -36,6 +38,8 @@ import java.util.*;
  * @author Eelke van der Horst
  */
 public class NanopubImpl implements NanopubWithNs, Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(NanopubImpl.class);
 
     static {
         tryToLoadParserFactory("org.eclipse.rdf4j.rio.trig.TriGParserFactory");
@@ -178,7 +182,8 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
                 }
             }
         } catch (MalformedQueryException | QueryEvaluationException ex) {
-            ex.printStackTrace();
+            // The nanopub is left incomplete here; init() below reports it as malformed.
+            logger.error("Could not retrieve nanopub {} from the repository", nanopubUri, ex);
         }
         init();
     }
@@ -360,6 +365,7 @@ public class NanopubImpl implements NanopubWithNs, Serializable {
         checkProvenance();
         checkPubinfo();
         isValidAndTrusty = TrustyNanopubUtils.isValidTrustyNanopub(this);
+        logger.debug("Loaded nanopub {} with {} statement(s); trusty: {}", nanopubUri, statements.size(), isValidAndTrusty);
     }
 
     private void collectNanopubUri(Collection<Statement> statements) throws MalformedNanopubException {

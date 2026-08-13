@@ -3,12 +3,16 @@ package org.nanopub.extra.security;
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriUtils;
 import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubProfile;
 import org.nanopub.testsuite.*;
+import org.nanopub.utils.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +25,11 @@ import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.security.SignatureException;
 import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.nanopub.utils.TestUtils.anyIri;
 
 class SignNanopubTest {
 
@@ -163,6 +169,20 @@ class SignNanopubTest {
         return "-----BEGIN " + label + "-----\n" +
                 String.join("\n", base64.split("(?<=\\G.{64})")) +
                 "\n-----END " + label + "-----\n";
+    void refusesToSignNanopubWithIllTypedLiteral() throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        Nanopub np = creator.finalizeNanopub();
+
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        KeyPair key = SignNanopub.loadKey(signingKeyPair.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
+        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, key,
+                Values.iri("https://orcid.org/0000-0000-0000-0000"), false, false, false);
+
+        SignatureException ex = assertThrows(SignatureException.class, () -> SignNanopub.signAndTransform(np, context));
+        assertTrue(ex.getMessage().contains("ill-typed literal(s) and cannot be signed"));
     }
 
 }

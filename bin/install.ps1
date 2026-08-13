@@ -1,9 +1,10 @@
 # Nanopub CLI installer for Windows (PowerShell)
-# Usage: irm https://raw.githubusercontent.com/Nanopublication/nanopub-java/master/bin/install.ps1 | iex
+# Usage: irm https://nanopublication.github.io/nanopub-java/install.ps1 | iex
 #
 # Optional environment variable overrides (set before running):
 #   $env:NANOPUB_INSTALL_DIR  — where the np.cmd launcher is placed (default: ~\.nanopub\bin)
 #   $env:NANOPUB_JAR_DIR      — where the jar file is saved       (default: ~\.nanopub\lib)
+#   $env:NANOPUB_VERSION      — install this version instead of the latest one
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -26,6 +27,10 @@ $InstallDir = if ($env:NANOPUB_INSTALL_DIR) { $env:NANOPUB_INSTALL_DIR } `
 $JarDir     = if ($env:NANOPUB_JAR_DIR)     { $env:NANOPUB_JAR_DIR }     `
               else { Join-Path $HOME '.nanopub\lib' }
 
+# Artifacts are fetched from Maven Central rather than the GitHub release API,
+# which is rate limited to 60 requests per hour per IP for anonymous callers.
+$MavenBase = 'https://repo1.maven.org/maven2/org/nanopub/nanopub'
+
 # ── Preflight checks ──────────────────────────────────────────────────────────
 
 Info "Checking prerequisites..."
@@ -40,31 +45,32 @@ if ($PSVersionTable.PSVersion.Major -lt 5) {
     Err "PowerShell 5 or later is required (you have $($PSVersionTable.PSVersion))."
 }
 
-# ── Resolve latest version + direct download URL via GitHub API ───────────────
+# Windows PowerShell 5.1 may still default to TLS 1.0, which Maven Central rejects
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-Info "Resolving latest nanopub release..."
+# ── Resolve version + download URL via Maven Central ──────────────────────────
 
-try {
-    $Release = Invoke-RestMethod `
-        -Uri 'https://api.github.com/repos/Nanopublication/nanopub-java/releases/latest' `
-        -Headers @{ Accept = 'application/vnd.github+json' }
-} catch {
-    Err "Could not reach GitHub API: $_`nCheck your internet connection."
+if ($env:NANOPUB_VERSION) {
+    $Version = $env:NANOPUB_VERSION
+    Info "Using pinned version: $Version"
+} else {
+    Info "Resolving latest nanopub release..."
+
+    try {
+        $Metadata = Invoke-RestMethod -Uri "$MavenBase/maven-metadata.xml"
+    } catch {
+        Err "Could not reach Maven Central: $_`nCheck your internet connection."
+    }
+
+    # <release> holds the newest non-snapshot version
+    $Version = $Metadata.metadata.versioning.release
+    if (-not $Version) { Err "Could not determine latest version from Maven Central metadata." }
+
+    Info "Latest version: $Version"
 }
 
-# tag_name is e.g. "nanopub-1.86.2" → strip the prefix
-$Version = $Release.tag_name -replace '^nanopub-', ''
-if (-not $Version) { Err "Could not determine latest version from GitHub API." }
-
-Info "Latest version: $Version"
-
 $JarName = "nanopub-${Version}-jar-with-dependencies.jar"
-
-# Find the direct browser_download_url for the jar asset
-$Asset = $Release.assets | Where-Object { $_.name -eq $JarName } | Select-Object -First 1
-if (-not $Asset) { Err "Could not find asset '$JarName' in the release. Check the releases page." }
-
-$JarUrl  = $Asset.browser_download_url
+$JarUrl  = "$MavenBase/$Version/$JarName"
 $JarPath = Join-Path $JarDir $JarName
 $TmpPath = "$JarPath.tmp"
 
@@ -90,7 +96,7 @@ if (Test-Path $JarPath) {
     $bytes = [System.IO.File]::ReadAllBytes($TmpPath)
     if ($bytes.Length -lt 2 -or $bytes[0] -ne 0x50 -or $bytes[1] -ne 0x4B) {
         Remove-Item -Force $TmpPath -ErrorAction SilentlyContinue
-        Err "Downloaded file is not a valid jar (bad magic bytes).`nThis usually means the download returned an HTML page instead of the binary.`nTry running the installer again, or download manually from:`n  $JarUrl"
+        Err "Downloaded file is not a valid jar (bad magic bytes).`nThis usually means a proxy returned an HTML page instead of the binary.`nTry running the installer again, or download manually from:`n  $JarUrl"
     }
 
     Move-Item -Path $TmpPath -Destination $JarPath
@@ -145,5 +151,6 @@ Write-Host ""
 Write-Host "    np check nanopubfile.trig"
 Write-Host ""
 Write-Host "  Tip: set `$env:NANOPUB_INSTALL_DIR or `$env:NANOPUB_JAR_DIR before"
-Write-Host "  running this script to customize installation paths."
+Write-Host "  running this script to customize installation paths, or"
+Write-Host "  `$env:NANOPUB_VERSION to install a specific version."
 Write-Host ""

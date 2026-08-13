@@ -8,6 +8,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
@@ -18,6 +19,8 @@ import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.RDFG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +32,8 @@ import java.util.*;
  * @author Tobias Kuhn
  */
 public class NanopubUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(NanopubUtils.class);
 
     private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
     private static final Random random = new Random();
@@ -79,6 +84,42 @@ public class NanopubUtils {
         s.addAll(getSortedList(nanopub.getProvenance()));
         s.addAll(getSortedList(nanopub.getPubinfo()));
         return s;
+    }
+
+    /**
+     * Returns the statements of the given Nanopub whose object is a literal that does not have a valid
+     * value for the datatype it declares, across all four graphs. Only XML Schema datatypes are
+     * considered, as only those have a lexical space we can check here.
+     * <p>
+     * Such literals make a nanopub invalid, but nanopubs carrying them exist in the wild and can still
+     * be loaded and read; only signing them is refused.
+     *
+     * @param nanopub the Nanopub to check
+     * @return the statements with an ill-typed literal, in the order of {@link #getStatements(Nanopub)}
+     */
+    public static List<Statement> getIllTypedLiteralStatements(Nanopub nanopub) {
+        List<Statement> illTyped = new ArrayList<>();
+        for (Statement st : getStatements(nanopub)) {
+            if (!(st.getObject() instanceof Literal l)) continue;
+            IRI datatype = l.getDatatype();
+            if (!XMLDatatypeUtil.isBuiltInDatatype(datatype)) continue;
+            if (!XMLDatatypeUtil.isValidValue(l.getLabel(), datatype)) {
+                illTyped.add(st);
+            }
+        }
+        return illTyped;
+    }
+
+    /**
+     * Describes an ill-typed literal as found by {@link #getIllTypedLiteralStatements(Nanopub)}.
+     *
+     * @param st a statement whose object is an ill-typed literal
+     * @return a human-readable description of the invalid value
+     */
+    public static String describeIllTypedLiteral(Statement st) {
+        Literal l = (Literal) st.getObject();
+        return "Invalid value for datatype " + l.getDatatype().stringValue() + ": \"" + l.getLabel() +
+                "\" (as object of " + st.getPredicate().stringValue() + ")";
     }
 
     private static List<Statement> getSortedList(Set<Statement> s) {
@@ -183,7 +224,7 @@ public class NanopubUtils {
         try {
             NanopubUtils.propagateToHandler(np, writer);
         } catch (RDFHandlerException ex) {
-            ex.printStackTrace();
+            logger.warn("Could not collect the prefixes used by nanopub {}; returning the {} found so far", np.getUri(), usedPrefixes.size(), ex);
             return usedPrefixes;
         }
         return usedPrefixes;

@@ -1,15 +1,20 @@
 package org.nanopub.extra.server;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
+import org.nanopub.SimpleTimestampPattern;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.vocabulary.NTEMPLATE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -17,6 +22,9 @@ import java.util.*;
  * Verifies if a technically fine nanopublication meets some standards or best practices.
  */
 public class NanopubVerifier {
+
+    private static final Logger logger = LoggerFactory.getLogger(NanopubVerifier.class);
+
     private final List<String> issues = new ArrayList<>();
     private final Nanopub nanopub;
 
@@ -41,8 +49,34 @@ public class NanopubVerifier {
         checkTripleCount();
         checkByteCount();
         checkUriProtocol();
+        checkLiteralDatatypes();
 
+        if (issues.isEmpty()) {
+            logger.debug("Nanopub {} passed verification with no issues", nanopub.getUri());
+        } else {
+            logger.debug("Nanopub {} has {} verification issue(s): {}", nanopub.getUri(), issues.size(), issues);
+        }
         return issues.isEmpty();
+    }
+
+    private Set<Statement> getAllStatements() {
+        Set<Statement> allStatements = new HashSet<>();
+        allStatements.addAll(nanopub.getHead());
+        allStatements.addAll(nanopub.getAssertion());
+        allStatements.addAll(nanopub.getProvenance());
+        allStatements.addAll(nanopub.getPubinfo());
+        return allStatements;
+    }
+
+    /**
+     * Check that the value of each literal is valid for the datatype it declares. Such nanopubs are
+     * refused by the signing step, but ones published before that check exist in the wild: they are
+     * rejected by strict RDF stores and therefore end up being unavailable through the SPARQL endpoint.
+     */
+    private void checkLiteralDatatypes() {
+        for (Statement st : NanopubUtils.getIllTypedLiteralStatements(nanopub)) {
+            issues.add(NanopubUtils.describeIllTypedLiteral(st));
+        }
     }
 
     /**
@@ -55,13 +89,7 @@ public class NanopubVerifier {
     }
 
     private void checkUriProtocol() {
-        Set<Statement> allStatements = new HashSet<>();
-        allStatements.addAll(nanopub.getHead());
-        allStatements.addAll(nanopub.getAssertion());
-        allStatements.addAll(nanopub.getProvenance());
-        allStatements.addAll(nanopub.getPubinfo());
-
-        for (Statement st : allStatements) {
+        for (Statement st : getAllStatements()) {
             if (!isHttpOrHttps(st.getSubject())) {
                 issues.add("Invalid URI protocol: " + st.getSubject().stringValue());
             }
@@ -95,7 +123,7 @@ public class NanopubVerifier {
     private void checkTimestamp() {
         Calendar creationTime = nanopub.getCreationTime();
         if (creationTime == null) {
-            issues.add("Nanopub has no creation time.");
+            issues.add(getMissingTimestampIssue());
             return;
         }
         long now = new Date().getTime();
@@ -109,6 +137,21 @@ public class NanopubVerifier {
         if (creationTime.getTimeInMillis() < oneHourBeforeNow) {
             issues.add("Nanopub creation time is older than one hour." );
         }
+    }
+
+    /**
+     * A creation time that does not declare the datatype xsd:dateTime is ignored when the timestamp is
+     * read, and is therefore reported as its own issue rather than as a missing creation time.
+     */
+    private String getMissingTimestampIssue() {
+        for (Statement st : nanopub.getPubinfo()) {
+            if (!st.getSubject().equals(nanopub.getUri())) continue;
+            if (!SimpleTimestampPattern.isCreationTimeProperty(st.getPredicate())) continue;
+            if (st.getObject() instanceof Literal l && !l.getDatatype().equals(XSD.DATETIME)) {
+                return "Nanopub creation time has datatype " + l.getDatatype().stringValue() + " instead of xsd:dateTime.";
+            }
+        }
+        return "Nanopub has no creation time.";
     }
 
     private void checkHasLabel() {
@@ -178,6 +221,8 @@ public class NanopubVerifier {
                 }
             }
         } catch (MalformedCryptoElementException e) {
+            // Reported to the caller as a missing signature element; the actual cause is only visible here.
+            logger.debug("Signature element of nanopub {} is malformed: {}", nanopub.getUri(), e.getMessage(), e);
             issues.add("Nanopub has no signature element.");
         }
     }

@@ -10,6 +10,8 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +29,8 @@ import java.util.zip.GZIPOutputStream;
  * Command line tool to sign nanopubs with a private key.
  */
 public class SignNanopub extends CliRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(SignNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
     private List<File> inputNanopubFiles = new ArrayList<>();
@@ -188,10 +192,15 @@ public class SignNanopub extends CliRunner {
             }
         }
         try {
-            return SignatureUtils.createSignedNanopub(nanopub, c);
+            Nanopub signed = SignatureUtils.createSignedNanopub(nanopub, c);
+            logger.debug("Signed nanopub {} as {}", nanopub.getUri(), signed.getUri());
+            return signed;
+        } catch (MalformedNanopubException ex) {
+            // the nanopub is not fit to be signed; the caller gets the reason rather than a runtime error
+            throw new SignatureException("Could not sign nanopub " + nanopub.getUri() + ": " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            // Not logged here: the cause travels with the exception and is the caller's to report.
+            throw new RuntimeException("Could not sign nanopub " + nanopub.getUri(), ex);
         }
     }
 

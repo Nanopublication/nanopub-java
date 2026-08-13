@@ -33,7 +33,7 @@ public class NanopubDb {
      * @param mongoDbPw       the password for MongoDB authentication (can be null)
      */
     public NanopubDb(String mongoDbHost, int mongoDbPort, String mongoDbName, String mongoDbUsername, String mongoDbPw) {
-        logger.info("Initialize new DB object");
+        logger.debug("Initializing nanopub DB for mongodb://{}:{}/{}", mongoDbHost, mongoDbPort, mongoDbName);
         ServerAddress serverAddress = new ServerAddress(mongoDbHost, mongoDbPort);
 
         if (mongoDbUsername != null) {

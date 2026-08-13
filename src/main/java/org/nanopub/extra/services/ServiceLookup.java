@@ -73,6 +73,7 @@ public class ServiceLookup {
                     if (url != null) urls.add(url);
                 } catch (Exception ex) {
                     logger.warn("Failed to process service intro {}: {}", elementIri, ex.getMessage());
+                    logger.debug("Failed to process service intro {}", elementIri, ex);
                 }
             }
         } catch (Exception ex) {

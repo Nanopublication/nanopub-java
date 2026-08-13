@@ -8,6 +8,7 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.DC;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFParser;
@@ -69,6 +70,33 @@ public class NanopubUtilsTest {
 
         // there are 4 header statements, we do not check them here
         assertEquals(7, NanopubUtils.getStatements(nanopub).size());
+    }
+
+    @Test
+    void getIllTypedLiteralStatementsFindsThemInEveryGraph() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, vf.createLiteral("two", XSD.INTEGER));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, vf.createLiteral("of course", XSD.BOOLEAN));
+        creator.addPubinfoStatement(anyIri, vf.createLiteral("2019-02-26", XSD.DATETIME));
+        Nanopub nanopub = creator.finalizeNanopub();
+
+        List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(nanopub);
+
+        assertEquals(3, illTyped.size());
+        assertTrue(NanopubUtils.describeIllTypedLiteral(illTyped.getFirst()).startsWith("Invalid value for datatype "));
+    }
+
+    @Test
+    void getIllTypedLiteralStatementsIgnoresNonSchemaDatatypes() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, vf.createLiteral("42", XSD.INTEGER));
+        creator.addAssertionStatement(anyIri, anyIri, vf.createLiteral("plain string"));
+        // not an XML Schema datatype, so its lexical space is unknown to us and not checked
+        creator.addAssertionStatement(anyIri, anyIri, vf.createLiteral("anything", vf.createIRI("https://example.org/myDatatype")));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+
+        assertTrue(NanopubUtils.getIllTypedLiteralStatements(creator.finalizeNanopub()).isEmpty());
     }
 
     @Test
