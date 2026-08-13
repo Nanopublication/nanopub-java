@@ -1,35 +1,46 @@
 package org.nanopub.extra.security;
 
-import com.beust.jcommander.ParameterException;
-import net.trustyuri.TrustyUriUtils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.KeyPair;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
+import java.util.Comparator;
+
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubProfile;
-import org.nanopub.testsuite.*;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
+import org.nanopub.testsuite.TransformTestCase;
 import org.nanopub.utils.TestUtils;
+import static org.nanopub.utils.TestUtils.anyIri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardCopyOption;
-import java.security.KeyPair;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
-import java.security.SignatureException;
-import java.util.Comparator;
+import com.beust.jcommander.ParameterException;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.nanopub.utils.TestUtils.anyIri;
+import net.trustyuri.TrustyUriUtils;
 
 class SignNanopubTest {
 
@@ -62,10 +73,10 @@ class SignNanopubTest {
 
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
-                    testFile.getPath(),
-                    "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
-                    "-s ", signerOrcid,
-                    "-o ", outFile.getPath(),});
+                testFile.getPath(),
+                "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
+                "-s ", signerOrcid,
+                "-o ", outFile.getPath(),});
             c.run();
 
             // read nanopub from file
@@ -102,9 +113,9 @@ class SignNanopubTest {
 
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
-                    testFile.getPath(),
-                    "--profile ", profileFile,
-                    "-o ", outFile.getPath(),});
+                testFile.getPath(),
+                "--profile ", profileFile,
+                "-o ", outFile.getPath(),});
             c.run();
 
             // read nanopub from file
@@ -153,9 +164,9 @@ class SignNanopubTest {
         SigningKeyPair keySource = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
         Path keyPath = tempDir.resolve("id_rsa");
         // a key that cannot be read as PKCS#8, declaring itself to be in PKCS#1 format
-        Files.writeString(keyPath, "-----BEGIN RSA PRIVATE KEY-----\n" +
-                Base64.getEncoder().encodeToString("not a PKCS#8 key".getBytes(StandardCharsets.UTF_8)) +
-                "\n-----END RSA PRIVATE KEY-----\n");
+        Files.writeString(keyPath, "-----BEGIN RSA PRIVATE KEY-----\n"
+                + Base64.getEncoder().encodeToString("not a PKCS#8 key".getBytes(StandardCharsets.UTF_8))
+                + "\n-----END RSA PRIVATE KEY-----\n");
         Files.writeString(tempDir.resolve("id_rsa.pub"), toPem(keySource.getPublicKeyFile(), "PUBLIC KEY"));
 
         InvalidKeySpecException e = assertThrows(InvalidKeySpecException.class,
@@ -166,9 +177,12 @@ class SignNanopubTest {
 
     private String toPem(File keyFile, String label) throws IOException {
         String base64 = Files.readString(keyFile.toPath()).trim();
-        return "-----BEGIN " + label + "-----\n" +
-                String.join("\n", base64.split("(?<=\\G.{64})")) +
-                "\n-----END " + label + "-----\n";
+        return "-----BEGIN " + label + "-----\n"
+                + String.join("\n", base64.split("(?<=\\G.{64})"))
+                + "\n-----END " + label + "-----\n";
+
+    }
+
     void refusesToSignNanopubWithIllTypedLiteral() throws Exception {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
