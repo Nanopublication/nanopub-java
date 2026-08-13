@@ -1,19 +1,25 @@
 package org.nanopub;
 
+import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.nanopub.utils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.nanopub.utils.TestUtils.anyIri;
 
 public class CheckNanopubTest {
 
@@ -85,6 +91,28 @@ public class CheckNanopubTest {
 
         assertEquals(1, r.getInvalidCount());
         assertFalse(r.areAllValid());
+    }
+
+    @Test
+    void check_withIllTypedLiteralInTrustyNanopub_staysTrustyButWarns(@TempDir Path tmp) throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        File file = tmp.resolve("trusty_illtyped.trig").toFile();
+        try (OutputStream out = new FileOutputStream(file)) {
+            NanopubUtils.writeToStream(creator.finalizeTrustyNanopub(), out, RDFFormat.TRIG);
+        }
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(log));
+
+        CheckNanopub.Report r = checker.check();
+
+        assertTrue(r.areAllTrusty());
+        assertTrue(log.toString().contains("TRUSTY NANOPUB WITH ILL-TYPED LITERAL(S)"));
+        assertTrue(log.toString().contains("Invalid value for datatype "));
     }
 
     @Test
