@@ -72,8 +72,7 @@ public class Reuse extends CliRunner {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
-        int status = execute(args);
-        if (status != 0) System.exit(status);
+        CliSupport.exitWith(execute(args));
     }
 
     /**
@@ -84,17 +83,11 @@ public class Reuse extends CliRunner {
      * @return 0 if the run completed, 1 if it failed
      */
     static int execute(String[] args) {
-        try {
+        return CliSupport.execute(() -> {
             Reuse obj = CliRunner.initJc(new Reuse(), args);
             obj.init();
             obj.run();
-            return 0;
-        } catch (ParameterException ex) {
-            return 1;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return 1;
-        }
+        });
     }
 
     private static final String multipleNanopubs = "MULTI";

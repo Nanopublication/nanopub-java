@@ -1,6 +1,5 @@
 package org.nanopub.op;
 
-import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -54,8 +53,7 @@ public class Extract extends CliRunner {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
-        int status = execute(args);
-        if (status != 0) System.exit(status);
+        CliSupport.exitWith(execute(args));
     }
 
     /**
@@ -66,16 +64,7 @@ public class Extract extends CliRunner {
      * @return 0 if the run completed, 1 if it failed
      */
     static int execute(String[] args) {
-        try {
-            Extract obj = CliRunner.initJc(new Extract(), args);
-            obj.run();
-            return 0;
-        } catch (ParameterException ex) {
-            return 1;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return 1;
-        }
+        return CliSupport.execute(() -> CliRunner.initJc(new Extract(), args).run());
     }
 
     private RDFFormat rdfInFormat, rdfOutFormat;

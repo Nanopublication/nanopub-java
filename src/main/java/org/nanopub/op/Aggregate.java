@@ -46,8 +46,7 @@ public class Aggregate extends CliRunner {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        int status = execute(args);
-        if (status != 0) System.exit(status);
+        CliSupport.exitWith(execute(args));
     }
 
     /**
@@ -58,16 +57,7 @@ public class Aggregate extends CliRunner {
      * @return 0 if the run completed, 1 if it failed
      */
     static int execute(String[] args) {
-        try {
-            Aggregate obj = CliRunner.initJc(new Aggregate(), args);
-            obj.run();
-            return 0;
-        } catch (ParameterException ex) {
-            return 1;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return 1;
-        }
+        return CliSupport.execute(() -> CliRunner.initJc(new Aggregate(), args).run());
     }
 
     /**

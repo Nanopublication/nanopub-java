@@ -49,8 +49,7 @@ public class Import extends CliRunner {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
-        int status = execute(args);
-        if (status != 0) System.exit(status);
+        CliSupport.exitWith(execute(args));
     }
 
     /**
@@ -61,20 +60,14 @@ public class Import extends CliRunner {
      * @return 0 if the run completed, 1 if it failed
      */
     static int execute(String[] args) {
-        try {
+        return CliSupport.execute(() -> {
             Import obj = CliRunner.initJc(new Import(), args);
             if (obj.inputFiles.size() != 1) {
                 obj.getJc().usage();
-                return 1;
+                throw new ParameterException("Exactly one input file is expected");
             }
             obj.run();
-            return 0;
-        } catch (ParameterException ex) {
-            return 1;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return 1;
-        }
+        });
     }
 
     private RDFFormat rdfInFormat, rdfOutFormat;
