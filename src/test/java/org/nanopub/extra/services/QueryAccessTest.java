@@ -86,4 +86,104 @@ public class QueryAccessTest {
         }
     }
 
+    @Test
+    void treatsAMissingContentTypeAsCsv() throws Exception {
+        HttpResponse resp = mock(HttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(resp.getStatusLine()).thenReturn(statusLine);
+        HttpEntity entity = mock(HttpEntity.class);
+        when(entity.getContent()).thenReturn(new ByteArrayInputStream("a,b\n1,2\n".getBytes(StandardCharsets.UTF_8)));
+        when(resp.getEntity()).thenReturn(entity);
+        when(resp.getFirstHeader("Content-Type")).thenReturn(null);
+
+        try (MockedStatic<QueryCall> mockedQueryCall = mockStatic(QueryCall.class)) {
+            mockedQueryCall.when(() -> QueryCall.run(any(QueryRef.class))).thenReturn(resp);
+
+            ApiResponse response = QueryAccess.get(new QueryRef(QUERY_ID));
+
+            assertEquals(1, response.size());
+            assertEquals("1", response.getData().getFirst().get("a"));
+        }
+    }
+
+    @Test
+    void reportsAFailureWhileReadingTheResponse() throws Exception {
+        HttpResponse resp = mock(HttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(resp.getStatusLine()).thenReturn(statusLine);
+        HttpEntity entity = mock(HttpEntity.class);
+        when(entity.getContent()).thenThrow(new java.io.IOException("connection reset"));
+        when(resp.getEntity()).thenReturn(entity);
+        Header contentTypeHeader = mock(Header.class);
+        when(contentTypeHeader.getValue()).thenReturn("text/csv");
+        when(resp.getFirstHeader("Content-Type")).thenReturn(contentTypeHeader);
+
+        try (MockedStatic<QueryCall> mockedQueryCall = mockStatic(QueryCall.class)) {
+            mockedQueryCall.when(() -> QueryCall.run(any(QueryRef.class))).thenReturn(resp);
+
+            assertThrows(FailedApiCallException.class, () -> QueryAccess.get(new QueryRef(QUERY_ID)));
+        }
+    }
+
+    @Test
+    void reportsAFailureWhileReadingAnRdfResponse() throws Exception {
+        HttpResponse resp = mock(HttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(resp.getStatusLine()).thenReturn(statusLine);
+        HttpEntity entity = mock(HttpEntity.class);
+        when(entity.getContent()).thenThrow(new java.io.IOException("connection reset"));
+        when(resp.getEntity()).thenReturn(entity);
+        Header contentTypeHeader = mock(Header.class);
+        when(contentTypeHeader.getValue()).thenReturn("text/turtle");
+        when(resp.getFirstHeader("Content-Type")).thenReturn(contentTypeHeader);
+
+        try (MockedStatic<QueryCall> mockedQueryCall = mockStatic(QueryCall.class)) {
+            mockedQueryCall.when(() -> QueryCall.run(any(QueryRef.class))).thenReturn(resp);
+
+            assertThrows(FailedApiCallException.class, () -> QueryAccess.get(new QueryRef(QUERY_ID)));
+        }
+    }
+
+    @Test
+    void printCvsResponseWritesTheRowsToTheGivenWriter() throws Exception {
+        String csv = "np,label\nhttps://example.org/np1,Label 1\n";
+        HttpResponse resp = mockResponse(csv, "text/csv");
+        java.io.StringWriter out = new java.io.StringWriter();
+
+        try (MockedStatic<QueryCall> mockedQueryCall = mockStatic(QueryCall.class)) {
+            mockedQueryCall.when(() -> QueryCall.run(any(QueryRef.class))).thenReturn(resp);
+
+            QueryAccess.printCvsResponse(new QueryRef(QUERY_ID), out);
+        }
+
+        String written = out.toString();
+        assertTrue(written.contains("np"), written);
+        assertTrue(written.contains("https://example.org/np1"), written);
+    }
+
+    @Test
+    void theDefaultRdfHandlerDoesNothing() throws Exception {
+        String turtle = "@prefix ex: <http://example.org/> .\nex:s ex:p ex:o .\n";
+        HttpResponse resp = mockResponse(turtle, "text/turtle");
+        QueryAccess access = new QueryAccess() {
+            @Override
+            protected void processHeader(String[] line) {
+            }
+
+            @Override
+            protected void processLine(String[] line) {
+            }
+        };
+
+        try (MockedStatic<QueryCall> mockedQueryCall = mockStatic(QueryCall.class)) {
+            mockedQueryCall.when(() -> QueryCall.run(any(QueryRef.class))).thenReturn(resp);
+
+            // the base implementation of processRdfContent simply drops the model
+            assertDoesNotThrow(() -> access.call(new QueryRef(QUERY_ID)));
+        }
+    }
+
 }

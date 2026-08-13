@@ -1,8 +1,10 @@
 package org.nanopub.extra.security;
 
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
 import org.nanopub.NanopubImpl;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.TestSuiteEntry;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.KeyPairGenerator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,6 +78,41 @@ class DigitalSignaturePatternTest {
                 .getByNanopubUri(npUri)
                 .getFirst();
         return new NanopubImpl(entry.toFile());
+    }
+
+    @Test
+    void getName() {
+        assertEquals("Digitally signed nanopublication", pattern.getName());
+    }
+
+    @Test
+    void testValidLegacySignature() throws Exception {
+        Nanopub signed = legacySignedNanopub();
+
+        assertTrue(pattern.appliesTo(signed));
+        assertTrue(pattern.isCorrectlyUsedBy(signed));
+        assertEquals("Valid digital signature (LEGACY)", pattern.getDescriptionFor(signed));
+    }
+
+    @Test
+    void testNanopubWithoutAnySignature() throws Exception {
+        Nanopub plain = org.nanopub.utils.TestUtils.createNanopub();
+
+        assertFalse(pattern.appliesTo(plain));
+        assertFalse(pattern.isCorrectlyUsedBy(plain));
+        assertEquals("Digital signature is not valid", pattern.getDescriptionFor(plain));
+    }
+
+    private static Nanopub legacySignedNanopub() throws Exception {
+        NanopubCreator creator = new NanopubCreator(true);
+        creator.addAssertionStatement(org.nanopub.utils.TestUtils.anyIri, RDFS.LABEL,
+                org.nanopub.utils.TestUtils.vf.createLiteral("an assertion"));
+        creator.addProvenanceStatement(org.nanopub.utils.TestUtils.anyIri, org.nanopub.utils.TestUtils.anyIri);
+        creator.addPubinfoStatement(org.nanopub.utils.TestUtils.anyIri, org.nanopub.utils.TestUtils.anyIri);
+
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("DSA");
+        generator.initialize(1024);
+        return LegacySignatureUtils.createSignedNanopub(creator.finalizeNanopub(), generator.generateKeyPair(), null);
     }
 
 }

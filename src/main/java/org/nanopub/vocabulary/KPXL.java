@@ -4,6 +4,9 @@ import org.eclipse.rdf4j.model.IRI;
 
 public final class KPXL {
 
+    private KPXL() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/kpxl/gen/terms/";
 
     /**

@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class NPX {
 
+    private NPX() {
+    }
+
     public static final String NAMESPACE = "http://purl.org/nanopub/x/";
 
     public static final String PREFIX = "npx";

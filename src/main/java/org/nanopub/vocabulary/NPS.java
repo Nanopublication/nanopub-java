@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class NPS {
 
+    private NPS() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/np/o/service/terms/";
 
     public static final String PREFIX = "nps";

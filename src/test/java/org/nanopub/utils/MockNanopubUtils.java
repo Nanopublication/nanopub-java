@@ -9,7 +9,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.mockito.MockedStatic;
 import org.nanopub.NanopubUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -19,6 +21,8 @@ public class MockNanopubUtils implements AutoCloseable {
     private final MockedStatic<NanopubUtils> mockedStatic;
     private final StatusLine mockStatusLine = mock(StatusLine.class);
     private volatile String nanopubQueryStatusValue = null;
+    private volatile String responseBody = null;
+    private volatile String contentType = null;
 
     public MockNanopubUtils() throws IOException {
         this.mockedStatic = mockStatic(NanopubUtils.class);
@@ -29,7 +33,12 @@ public class MockNanopubUtils implements AutoCloseable {
         when(mockHttpClient.execute(any(HttpGet.class))).thenAnswer(invocation -> {
             CloseableHttpResponse response = mock(CloseableHttpResponse.class);
             when(response.getStatusLine()).thenReturn(mockStatusLine);
-            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            HttpEntity entity = mock(HttpEntity.class);
+            // Each call gets its own stream, so a response can be consumed more than once
+            // over the lifetime of the mock.
+            when(entity.getContent()).thenAnswer(inv -> new ByteArrayInputStream(
+                    (responseBody == null ? "" : responseBody).getBytes(StandardCharsets.UTF_8)));
+            when(response.getEntity()).thenReturn(entity);
             // By default getFirstHeader returns null (Mockito default).
             // When a status value is set, stub it via the read-side field.
             when(response.getFirstHeader(anyString())).thenAnswer(inv -> {
@@ -39,10 +48,29 @@ public class MockNanopubUtils implements AutoCloseable {
                     when(h.getValue()).thenReturn(nanopubQueryStatusValue);
                     return h;
                 }
+                if ("Content-Type".equalsIgnoreCase(name) && contentType != null) {
+                    Header h = mock(Header.class);
+                    when(h.getValue()).thenReturn(contentType);
+                    return h;
+                }
                 return null;
             });
             return response;
         });
+    }
+
+    /**
+     * Sets the body that every mocked response serves. Pass {@code null} for an empty body.
+     */
+    public void setResponseBody(String responseBody) {
+        this.responseBody = responseBody;
+    }
+
+    /**
+     * Sets the {@code Content-Type} header of every mocked response. Pass {@code null} to omit it.
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public void setHttpResponseStatusCode(int statusCode) {

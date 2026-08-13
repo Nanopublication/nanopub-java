@@ -28,6 +28,9 @@ import java.util.stream.Stream;
  */
 public class JellyUtils {
 
+    private JellyUtils() {
+    }
+
     /**
      * Options for Jelly RDF streams that are written to the database.
      */

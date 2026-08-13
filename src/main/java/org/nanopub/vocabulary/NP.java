@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class NP {
 
+    private NP() {
+    }
+
     public static final String NAMESPACE = "http://www.nanopub.org/nschema#";
 
     public static final String PREFIX = "np";
