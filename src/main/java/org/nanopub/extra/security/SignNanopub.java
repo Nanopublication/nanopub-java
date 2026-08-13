@@ -194,6 +194,9 @@ public class SignNanopub extends CliRunner {
             Nanopub signed = SignatureUtils.createSignedNanopub(nanopub, c);
             logger.debug("Signed nanopub {} as {}", nanopub.getUri(), signed.getUri());
             return signed;
+        } catch (MalformedNanopubException ex) {
+            // the nanopub is not fit to be signed; the caller gets the reason rather than a runtime error
+            throw new SignatureException("Could not sign nanopub " + nanopub.getUri() + ": " + ex.getMessage(), ex);
         } catch (Exception ex) {
             // Not logged here: the cause travels with the exception and is the caller's to report.
             throw new RuntimeException("Could not sign nanopub " + nanopub.getUri(), ex);

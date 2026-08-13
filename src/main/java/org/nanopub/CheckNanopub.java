@@ -1,9 +1,15 @@
 package org.nanopub;
 
-import com.beust.jcommander.ParameterException;
-import net.trustyuri.TrustyUriUtils;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -14,12 +20,9 @@ import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.server.NanopubVerifier;
 import org.nanopub.trusty.TrustyNanopubUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
+import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriUtils;
 
 /**
  * Command line tool to check nanopubs for validity and trustiness.
@@ -60,14 +63,15 @@ public class CheckNanopub extends CliRunner {
     private PrintStream logOut;
 
     /**
-     * Default constructor for CheckNanopub.
-     * Initializes the CliRunner with the command line parameters.
+     * Default constructor for CheckNanopub. Initializes the CliRunner with the
+     * command line parameters.
      */
     public CheckNanopub() {
     }
 
     /**
-     * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+     * This constructor does not initialize the CliRunner as usual. It's for
+     * testing purposes.
      *
      * @param inputNanopubFiles a list of nanopub files to check
      */
@@ -76,10 +80,12 @@ public class CheckNanopub extends CliRunner {
     }
 
     /**
-     * This constructor does not initialize the CliRunner as usual. It's for testing purposes.
+     * This constructor does not initialize the CliRunner as usual. It's for
+     * testing purposes.
      *
-     * @param sparqlEndpointUrl the SPARQL endpoint URL to use for checking nanopubs
-     * @param inputNanopubIds   a list of nanopub IDs to check
+     * @param sparqlEndpointUrl the SPARQL endpoint URL to use for checking
+     * nanopubs
+     * @param inputNanopubIds a list of nanopub IDs to check
      */
     public CheckNanopub(String sparqlEndpointUrl, List<String> inputNanopubIds) {
         super();
@@ -123,11 +129,15 @@ public class CheckNanopub extends CliRunner {
                 }
             } catch (RDF4JException ex) {
                 log("RDF ERROR: " + s + "\n");
-                if (logOut != null) ex.printStackTrace(logOut);
+                if (logOut != null) {
+                    ex.printStackTrace(logOut);
+                }
                 report.countError();
             } catch (MalformedNanopubException ex) {
                 log("INVALID NANOPUB: " + s + "\n");
-                if (logOut != null) ex.printStackTrace(logOut);
+                if (logOut != null) {
+                    ex.printStackTrace(logOut);
+                }
                 report.countInvalid();
             }
         }
@@ -142,12 +152,21 @@ public class CheckNanopub extends CliRunner {
     }
 
     private void check(Nanopub np) {
+        List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(np);
         if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
+            if (!illTyped.isEmpty()) {
+                log("WARNING: TRUSTY NANOPUB WITH ILL-TYPED LITERAL(S): " + np.getUri() + "\n");
+                for (Statement st : illTyped) {
+                    log("- " + NanopubUtils.describeIllTypedLiteral(st) + "\n");
+                }
+            }
             NanopubSignatureElement se = null;
             NanopubSignatureElement legacySe = null;
             try {
                 se = SignatureUtils.getSignatureElement(np);
-                if (se == null) legacySe = LegacySignatureUtils.getSignatureElement(np);
+                if (se == null) {
+                    legacySe = LegacySignatureUtils.getSignatureElement(np);
+                }
             } catch (MalformedCryptoElementException ex) {
                 System.out.println("SIGNATURE IS NOT WELL-FORMED (" + ex.getMessage() + "): " + np.getUri());
                 report.countInvalidSignature();
@@ -201,6 +220,14 @@ public class CheckNanopub extends CliRunner {
         } else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
             System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
             report.countNotTrusty();
+        } else if (!illTyped.isEmpty()) {
+            // Trusty nanopubs with ill-typed literals are only warned about above, but a plain one is not
+            // fit to be signed and published, and is therefore reported as invalid.
+            System.out.println("INVALID NANOPUB: " + np.getUri());
+            for (Statement st : illTyped) {
+                System.out.println("- " + NanopubUtils.describeIllTypedLiteral(st));
+            }
+            report.countInvalid();
         } else {
             if (verbose) {
                 System.out.println("Valid (but not trusty): " + np.getUri());
@@ -256,7 +283,6 @@ public class CheckNanopub extends CliRunner {
         this.verbose = verbose;
     }
 
-
     private void log(String message) {
         if (logOut != null) {
             logOut.print(message);
@@ -291,7 +317,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the count of nanopubs that are signed with a legacy signature.
+         * Returns the count of nanopubs that are signed with a legacy
+         * signature.
          *
          * @return the number of legacy signed nanopubs
          */
@@ -322,12 +349,14 @@ public class CheckNanopub extends CliRunner {
         public int getIssuesCount() {
             return issues;
         }
+
         private void countIssues() {
             issues++;
         }
 
         /**
-         * Returns the count of nanopubs that are valid but not considered trusty.
+         * Returns the count of nanopubs that are valid but not considered
+         * trusty.
          *
          * @return the number of valid but not trusty nanopubs
          */
@@ -366,7 +395,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the count of nanopubs that encountered an error during processing.
+         * Returns the count of nanopubs that encountered an error during
+         * processing.
          *
          * @return the number of nanopubs with errors
          */
@@ -375,7 +405,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the total count of all valid nanopubs (signed, legacy signed, trusty, and not trusty).
+         * Returns the total count of all valid nanopubs (signed, legacy signed,
+         * trusty, and not trusty).
          *
          * @return the total count of valid nanopubs
          */
@@ -384,7 +415,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the total count of all invalid nanopubs (invalid signature, invalid, and error).
+         * Returns the total count of all invalid nanopubs (invalid signature,
+         * invalid, and error).
          *
          * @return the total count of invalid nanopubs
          */
@@ -393,7 +425,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the total count of all nanopubs processed (both valid and invalid).
+         * Returns the total count of all nanopubs processed (both valid and
+         * invalid).
          *
          * @return the total count of all nanopubs
          */
@@ -402,7 +435,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the total count of all nanopubs processed (both valid and invalid).
+         * Returns the total count of all nanopubs processed (both valid and
+         * invalid).
          *
          * @return the total count of all nanopubs
          */
@@ -411,7 +445,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns whether all nanopubs are considered trusty (including those with legacy signatures).
+         * Returns whether all nanopubs are considered trusty (including those
+         * with legacy signatures).
          *
          * @return true if all nanopubs are trusty, false otherwise
          */
@@ -420,7 +455,8 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns whether all nanopubs are signed (including those with legacy signatures).
+         * Returns whether all nanopubs are signed (including those with legacy
+         * signatures).
          *
          * @return true if all nanopubs are signed, false otherwise
          */
@@ -435,14 +471,30 @@ public class CheckNanopub extends CliRunner {
          */
         public String getSummary() {
             String s = "";
-            if (signed > 0) s += " " + signed + " trusty with signature;";
-            if (legacySigned > 0) s += " " + legacySigned + " trusty with legacy signature;";
-            if (trusty > 0) s += " " + trusty + " trusty (without signature);";
-            if (notTrusty > 0) s += " " + notTrusty + " valid (not trusty);";
-            if (invalidSignature > 0) s += " " + invalidSignature + " invalid signature;";
-            if (invalid > 0) s += " " + invalid + " invalid nanopubs;";
-            if (error > 0) s += " " + error + " errors;";
-            if (issues > 0) s += " " + issues + " nanopub with issues";
+            if (signed > 0) {
+                s += " " + signed + " trusty with signature;";
+            }
+            if (legacySigned > 0) {
+                s += " " + legacySigned + " trusty with legacy signature;";
+            }
+            if (trusty > 0) {
+                s += " " + trusty + " trusty (without signature);";
+            }
+            if (notTrusty > 0) {
+                s += " " + notTrusty + " valid (not trusty);";
+            }
+            if (invalidSignature > 0) {
+                s += " " + invalidSignature + " invalid signature;";
+            }
+            if (invalid > 0) {
+                s += " " + invalid + " invalid nanopubs;";
+            }
+            if (error > 0) {
+                s += " " + error + " errors;";
+            }
+            if (issues > 0) {
+                s += " " + issues + " nanopub with issues";
+            }
             s = s.replaceFirst("^ ", "");
             return s;
         }

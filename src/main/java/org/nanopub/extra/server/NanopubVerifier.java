@@ -4,7 +4,6 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
@@ -70,20 +69,13 @@ public class NanopubVerifier {
     }
 
     /**
-     * Check that the value of each literal is valid for the datatype it declares. Nanopubs with
-     * malformed literals can be published, but are rejected by strict RDF stores and therefore end up
-     * being unavailable through the SPARQL endpoint.
+     * Check that the value of each literal is valid for the datatype it declares. Such nanopubs are
+     * refused by the signing step, but ones published before that check exist in the wild: they are
+     * rejected by strict RDF stores and therefore end up being unavailable through the SPARQL endpoint.
      */
     private void checkLiteralDatatypes() {
-        for (Statement st : getAllStatements()) {
-            if (!(st.getObject() instanceof Literal l)) continue;
-            IRI datatype = l.getDatatype();
-            // only XML Schema datatypes have a lexical space we can check here
-            if (!XMLDatatypeUtil.isBuiltInDatatype(datatype)) continue;
-            if (!XMLDatatypeUtil.isValidValue(l.getLabel(), datatype)) {
-                issues.add("Invalid value for datatype " + datatype.stringValue() + ": \"" + l.getLabel() +
-                        "\" (as object of " + st.getPredicate().stringValue() + ")");
-            }
+        for (Statement st : NanopubUtils.getIllTypedLiteralStatements(nanopub)) {
+            issues.add(NanopubUtils.describeIllTypedLiteral(st));
         }
     }
 

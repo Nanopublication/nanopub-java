@@ -1,19 +1,25 @@
 package org.nanopub;
 
+import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.nanopub.utils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.nanopub.utils.TestUtils.anyIri;
 
 public class CheckNanopubTest {
 
@@ -72,6 +78,71 @@ public class CheckNanopubTest {
         assertEquals(1, r.getErrorCount());
         assertTrue(log.toString().contains("NO NANOPUB FOUND"));
     }
+
+    @Test
+    void check_withIllTypedLiteralInPlainNanopub_countsAsInvalid(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("illtyped.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"two\"^^xsd:integer"));
+
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+
+        CheckNanopub.Report r = checker.check();
+
+        assertEquals(1, r.getInvalidCount());
+        assertFalse(r.areAllValid());
+    }
+
+    @Test
+    void check_withIllTypedLiteralInTrustyNanopub_staysTrustyButWarns(@TempDir Path tmp) throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        File file = tmp.resolve("trusty_illtyped.trig").toFile();
+        try (OutputStream out = new FileOutputStream(file)) {
+            NanopubUtils.writeToStream(creator.finalizeTrustyNanopub(), out, RDFFormat.TRIG);
+        }
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(log));
+
+        CheckNanopub.Report r = checker.check();
+
+        assertTrue(r.areAllTrusty());
+        assertTrue(log.toString().contains("TRUSTY NANOPUB WITH ILL-TYPED LITERAL(S)"));
+        assertTrue(log.toString().contains("Invalid value for datatype "));
+    }
+
+    @Test
+    void check_withWellTypedLiteralInPlainNanopub_countsAsValid(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("welltyped.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
+
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+
+        assertTrue(checker.check().areAllValid());
+    }
+
+    private static final String PLAIN_NANOPUB = """
+            @prefix this: <http://example.org/np1#> .
+            @prefix ex: <http://example.org/> .
+            @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+            @prefix prov: <http://www.w3.org/ns/prov#> .
+            @prefix np: <http://www.nanopub.org/nschema#> .
+
+            this:Head {
+                this: np:hasAssertion this:assertion ;
+                    np:hasProvenance this:provenance ;
+                    np:hasPublicationInfo this:pubinfo ;
+                    a np:Nanopublication .
+            }
+            this:assertion { ex:s ex:p @OBJECT@ . }
+            this:provenance { this:assertion prov:wasDerivedFrom ex:source . }
+            this:pubinfo { this: ex:p ex:o . }
+            """;
 
     @Nested
     class CheckNanopubReportTest {
