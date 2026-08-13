@@ -20,7 +20,7 @@ public class NPA {
     /**
      * IRI for the predicate that indicates that a hash value is associated with an object.
      */
-    public static final IRI IS_HASH_OF = VocabUtils.createIRI(NAMESPACE, "http://purl.org/nanopub/admin/isHashOf");
+    public static final IRI IS_HASH_OF = VocabUtils.createIRI(NAMESPACE, "isHashOf");
 
     /**
      * Prefix for the hash values stored in the admin graph.
