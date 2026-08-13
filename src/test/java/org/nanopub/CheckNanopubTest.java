@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -124,6 +125,87 @@ public class CheckNanopubTest {
         checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
 
         assertTrue(checker.check().areAllValid());
+    }
+
+    /**
+     * Runs the given action with {@code System.out} captured, and returns what was printed.
+     */
+    private static String captureStandardOutput(Runnable action) {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        try {
+            System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
+            action.run();
+        } finally {
+            System.setOut(originalOut);
+        }
+        return captured.toString(StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void check_inVerboseMode_describesTheNanopub(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("verbose.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setVerbose(true);
+        checker.setLogPrintStream(new PrintStream(log, true, StandardCharsets.UTF_8));
+
+        String printed = captureStandardOutput(() -> assertDoesNotThrow(checker::check));
+
+        assertTrue(log.toString(StandardCharsets.UTF_8).contains("Reading file: "), log.toString());
+        assertTrue(printed.contains("Valid (but not trusty): "), printed);
+        assertTrue(printed.contains("TYPES:"), printed);
+        assertTrue(printed.contains("AUTHORS:"), printed);
+        assertTrue(printed.contains("AUTHOR LIST:"), printed);
+        assertTrue(printed.contains("CREATORS:"), printed);
+        assertTrue(printed.contains("ISSUES:"), printed);
+    }
+
+    @Test
+    void check_logsProgressEveryHundredNanopubs(@TempDir Path tmp) throws Exception {
+        StringBuilder manyNanopubs = new StringBuilder();
+        for (int i = 0; i < 101; i++) {
+            manyNanopubs.append(TestUtils.createNanopub("https://example.org/np" + i + "#").writeToString(RDFFormat.TRIG));
+        }
+        File file = tmp.resolve("many.trig").toFile();
+        Files.writeString(file.toPath(), manyNanopubs.toString());
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(log, true, StandardCharsets.UTF_8));
+
+        CheckNanopub.Report report = checker.check();
+
+        assertEquals(101, report.getAllCount());
+        assertTrue(log.toString(StandardCharsets.UTF_8).contains("100 nanopubs..."), log.toString());
+    }
+
+    @Test
+    void check_withAnUnreachableSparqlEndpoint_recordsProblem() throws IOException {
+        // nothing listens on port 1, so the lookup fails immediately
+        CheckNanopub checker = new CheckNanopub("http://localhost:1/sparql", List.of("https://example.org/np1"));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+
+        CheckNanopub.Report report = checker.check();
+
+        assertFalse(report.areAllValid());
+    }
+
+    @Test
+    void getIssuesCount_startsAtZero() throws IOException {
+        assertEquals(0, new CheckNanopub(List.of()).check().getIssuesCount());
+    }
+
+    @Test
+    void main_printsASummary(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("main.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
+
+        String printed = captureStandardOutput(() -> CheckNanopub.main(new String[]{file.getAbsolutePath()}));
+
+        assertTrue(printed.contains("Summary: "), printed);
     }
 
     private static final String PLAIN_NANOPUB = """
