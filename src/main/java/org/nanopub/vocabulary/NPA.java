@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class NPA {
 
+    private NPA() {
+    }
+
     public static final String NAMESPACE = "http://purl.org/nanopub/admin/";
 
     public static final String PREFIX = "npa";

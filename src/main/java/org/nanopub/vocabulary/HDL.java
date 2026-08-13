@@ -7,6 +7,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class HDL {
 
+    private HDL() {
+    }
+
     public static final String NAMESPACE = "https://hdl.handle.net/";
 
     public static final String PREFIX = "hdl";
