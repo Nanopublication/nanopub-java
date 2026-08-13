@@ -36,6 +36,17 @@
             "semanticCommitScope": "deps"
         },
         {
+            "description": "The JUnit BOM is imported in dependencyManagement, so Renovate gives it depType 'import' instead of 'test'; tag it as 'test(deps)' anyway",
+            "matchFileNames": [
+              "pom.xml"
+            ],
+            "matchPackageNames": [
+              "/^org\\.junit(\\.|:)/"
+            ],
+            "semanticCommitType": "test",
+            "semanticCommitScope": "deps"
+        },
+        {
             "description": "Updates to the dependencies under the pyproject.toml file should be tagged as 'chore(deps)'",
             "matchFileNames": [
                 "pyproject.toml"
