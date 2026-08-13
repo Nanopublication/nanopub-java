@@ -43,6 +43,8 @@ class FdoRecordTest {
     private static final String TEST_KEY_NAME = "id";
     private static final String testKeysDirPath = SignatureUtils.getFullFilePath(TEST_KEY_PATH);
 
+    private static MockedStatic<TransformContext> transformContextMock;
+
     @BeforeAll
     static void setUp() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         File testKeysDir = new File(testKeysDirPath);
@@ -55,7 +57,7 @@ class FdoRecordTest {
         KeyPair key = SignNanopub.loadKey(TEST_KEY_PATH + "/id_rsa", RSA);
 
         TransformContext testTC = new TransformContext(RSA, key, null, false, false, false);
-        MockedStatic<TransformContext> transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
+        transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
         transformContextMock
                 .when(TransformContext::makeDefault)
                 .thenAnswer(invocation -> testTC);
@@ -64,6 +66,11 @@ class FdoRecordTest {
 
     @AfterAll
     static void tearDown() throws IOException {
+        if (transformContextMock != null) {
+            transformContextMock.close();
+            transformContextMock = null;
+        }
+
         File testKeysDir = new File(testKeysDirPath);
         FileUtils.deleteDirectory(testKeysDir);
         assertFalse(testKeysDir.exists());
