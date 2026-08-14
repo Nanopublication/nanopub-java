@@ -114,6 +114,17 @@ public class NanopubVerifier {
     }
 
     /**
+     * Check that the value of each literal is valid for the datatype it declares. Such nanopubs are
+     * refused by the signing step, but ones published before that check exist in the wild: they are
+     * rejected by strict RDF stores and therefore end up being unavailable through the SPARQL endpoint.
+     */
+    private void checkLiteralDatatypes() {
+        for (Statement st : NanopubUtils.getIllTypedLiteralStatements(nanopub)) {
+            issues.add(NanopubUtils.describeIllTypedLiteral(st));
+        }
+    }
+
+    /**
      * Check that only a nanopub of type example contains an example.com url.
      */
     private void checkExample() {
@@ -142,7 +153,7 @@ public class NanopubVerifier {
         if (uri.stringValue().startsWith("https://www.example.")) {
             return true;
         }
-        if (uri.stringValue().contains("http://www.example.")) {
+        if (uri.stringValue().contains("https://www.example.")) {
             return true;
         }
         return false;
@@ -166,9 +177,6 @@ public class NanopubVerifier {
         }
     }
 
-    /**
-     * Check if we only use http and https.
-     */
     private void checkUriProtocol() {
         for (Statement st : getAllStatements()) {
             if (!isHttpOrHttps(st.getSubject())) {

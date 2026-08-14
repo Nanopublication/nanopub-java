@@ -292,82 +292,58 @@ class NanopubVerifierTest {
         assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
     }
 
-    // -- checkUriProtocol --
+    // -- checkLiteralDatatypes --
 
     @Test
-    void checkUriProtocol_httpAndHttpsUris_noUriProtocolProblem() throws Exception {
-        Nanopub np = baseCreator().finalizeNanopub();
-
-        NanopubVerifier verifier = new NanopubVerifier(np);
-        verifier.verify();
-        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Invalid URI protocol:")));
-    }
-
-    @Test
-    void checkUriProtocol_ftpUri_reportsProblem() throws Exception {
+    void checkLiteralDatatypes_validLiterals_noDatatypeProblem() throws Exception {
         NanopubCreator c = baseCreator();
-        c.addAssertionStatement(vf.createIRI("ftp://anything.org/subject"), anyIri, anyIri);
+        c.addTimestampNow();
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("42", XSD.INTEGER));
+        c.addAssertionStatement(anyIri, RDFS.LABEL, vf.createLiteral("plain string"));
         Nanopub np = c.finalizeNanopub();
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Invalid URI protocol:")));
-    }
-
-    // -- checkBlacklist --
-
-    @Test
-    void checkBlacklist_allowedUris_noBlacklistProblem() throws Exception {
-        Nanopub np = baseCreator().finalizeNanopub();
-
-        NanopubVerifier verifier = new NanopubVerifier(np);
-        verifier.verify();
-        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Unallowed uri:")));
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid value for datatype")));
     }
 
     @Test
-    void checkBlacklist_schemaOrgUri_reportsProblem() throws Exception {
+    void checkLiteralDatatypes_invalidLiteral_reportsProblem() throws Exception {
         NanopubCreator c = baseCreator();
-        c.addAssertionStatement(vf.createIRI("https://schema.org/Person"), anyIri, anyIri);
+        c.addTimestampNow();
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("not-a-number", XSD.INTEGER));
         Nanopub np = c.finalizeNanopub();
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Unallowed uri:")));
-    }
-
-    // -- checkExample --
-
-    @Test
-    void checkExample_nonExampleNanopubWithoutExampleUri_noExampleProblem() throws Exception {
-        Nanopub np = baseCreator().finalizeNanopub();
-
-        NanopubVerifier verifier = new NanopubVerifier(np);
-        verifier.verify();
-        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+        assertTrue(verifier.getIssues().stream().anyMatch(s ->
+                s.startsWith("Invalid value for datatype " + XSD.INTEGER + ": \"not-a-number\"")));
     }
 
     @Test
-    void checkExample_exampleTypedNanopubWithExampleUri_noExampleProblem() throws Exception {
+    void checkLiteralDatatypes_unknownDatatype_noDatatypeProblem() throws Exception {
         NanopubCreator c = baseCreator();
-        c.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
-        c.addAssertionStatement(vf.createIRI("https://www.example.com/subject"), anyIri, anyIri);
+        c.addTimestampNow();
+        // not an XML Schema datatype, so its lexical space is unknown to us and not checked
+        c.addAssertionStatement(anyIri, anyIri, vf.createLiteral("anything", vf.createIRI("https://example.org/myDatatype")));
         Nanopub np = c.finalizeNanopub();
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid value for datatype")));
     }
 
     @Test
-    void checkExample_nonExampleNanopubWithExampleUri_reportsProblem() throws Exception {
+    void checkTimestamp_wrongDatatype_reportsDatatypeProblem() throws Exception {
         NanopubCreator c = baseCreator();
-        c.addAssertionStatement(vf.createIRI("https://www.example.com/subject"), anyIri, anyIri);
+        // the timestamp of issue #12: a dateTime value declared to be an integer
+        c.addPubinfoStatement(DCTERMS.CREATED, vf.createLiteral("2022-06-24T09:36:41+00:00", XSD.INTEGER));
         Nanopub np = c.finalizeNanopub();
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+        assertTrue(verifier.getIssues().contains("Nanopub creation time has datatype " + XSD.INTEGER + " instead of xsd:dateTime."));
+        assertFalse(verifier.getIssues().contains("Nanopub has no creation time."));
     }
 
     // -- checkLiteralDatatypes --

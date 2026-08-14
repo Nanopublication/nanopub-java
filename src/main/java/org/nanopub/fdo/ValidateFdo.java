@@ -107,7 +107,7 @@ public class ValidateFdo {
 
         Set<Statement> shaclShape = new HashSet<>();
         IRI nodeShape = vf.createIRI(subjPrefix + "nodeShape");
-        List<String> reqired = Arrays.asList(r.required);
+        final List<String> reqired = Arrays.asList(r.required);
         int i = 0;
         for (String s : r.properties.keySet()) {
             i++;
