@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.jspecify.annotations.NonNull;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
@@ -17,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+
+import static org.nanopub.vocabulary.NPX.EXAMPLE_NANOPUB;
 
 /**
  * Verifies if a technically fine nanopublication meets some standards or best practices.
@@ -49,6 +52,8 @@ public class NanopubVerifier {
         checkTripleCount();
         checkByteCount();
         checkUriProtocol();
+        checkExample();
+        checkBlacklist();
         checkLiteralDatatypes();
 
         if (issues.isEmpty()) {
@@ -57,15 +62,6 @@ public class NanopubVerifier {
             logger.debug("Nanopub {} has {} verification issue(s): {}", nanopub.getUri(), issues.size(), issues);
         }
         return issues.isEmpty();
-    }
-
-    private Set<Statement> getAllStatements() {
-        Set<Statement> allStatements = new HashSet<>();
-        allStatements.addAll(nanopub.getHead());
-        allStatements.addAll(nanopub.getAssertion());
-        allStatements.addAll(nanopub.getProvenance());
-        allStatements.addAll(nanopub.getPubinfo());
-        return allStatements;
     }
 
     /**
@@ -80,6 +76,88 @@ public class NanopubVerifier {
     }
 
     /**
+     * Check that no uri start with:
+     * - https://schema.org
+     * - http://orcid.org
+     */
+    private void checkBlacklist() {
+        Set<Statement> allStatements = getAllStatements();
+
+        for (Statement st : allStatements) {
+            if (uriIsOnBlacklist(st.getSubject())) {
+                issues.add("Unallowed uri: " + st.getSubject().stringValue());
+            }
+            if (uriIsOnBlacklist(st.getPredicate())) {
+                issues.add("Unallowed uri: " + st.getPredicate().stringValue());
+            }
+            if (st.getObject() instanceof IRI) {
+                if (uriIsOnBlacklist(((IRI) st.getObject()))) {
+                    issues.add("Unallowed uri: " + st.getObject().stringValue());
+                }
+            }
+        }
+    }
+
+    private boolean uriIsOnBlacklist(Resource uri) {
+        final List<String> BLACKLIST = Arrays.asList(
+                "https://schema.org",
+                "http://orcid.org",
+                "https://www.wikidata.org/entity/",
+                "https://www.wikidata.org/wiki/",
+                "http://www.wikidata.org/wiki/");
+        for (String forbiddenUrl : BLACKLIST) {
+            if (uri.stringValue().startsWith(forbiddenUrl)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check that only a nanopub of type example contains an example.com url.
+     */
+    private void checkExample() {
+        boolean isExample = checkIsExampleNanopub();
+
+        if (!isExample) {
+            Set<Statement> allStatements = getAllStatements();
+
+            for (Statement st : allStatements) {
+                if (uriContainsExample(st.getSubject())) {
+                    issues.add("Only Nanopubs of type 'example' should contain example uri: " + st.getSubject().stringValue());
+                }
+                if (uriContainsExample(st.getPredicate())) {
+                    issues.add("Only Nanopubs of type 'example' should contain example uri: " + st.getPredicate().stringValue());
+                }
+                if (st.getObject() instanceof IRI) {
+                    if (uriContainsExample(((IRI) st.getObject()))) {
+                        issues.add("Only Nanopubs of type 'example' should contain example uri: " + st.getObject().stringValue());
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean uriContainsExample(Resource uri) {
+        if (uri.stringValue().startsWith("https://www.example.")) {
+            return true;
+        }
+        if (uri.stringValue().contains("http://www.example.")) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkIsExampleNanopub() {
+        for (IRI npType: NanopubUtils.getTypes(nanopub)) {
+            if (npType.equals(EXAMPLE_NANOPUB)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check if the triple size is not greater than 1200
      */
     private void checkTripleCount() {
@@ -88,6 +166,9 @@ public class NanopubVerifier {
         }
     }
 
+    /**
+     * Check if we only use http and https.
+     */
     private void checkUriProtocol() {
         for (Statement st : getAllStatements()) {
             if (!isHttpOrHttps(st.getSubject())) {
@@ -102,6 +183,15 @@ public class NanopubVerifier {
                 }
             }
         }
+    }
+
+    private @NonNull Set<Statement> getAllStatements() {
+        Set<Statement> allStatements = new HashSet<>();
+        allStatements.addAll(nanopub.getHead());
+        allStatements.addAll(nanopub.getAssertion());
+        allStatements.addAll(nanopub.getProvenance());
+        allStatements.addAll(nanopub.getPubinfo());
+        return allStatements;
     }
 
     private boolean isHttpOrHttps(Resource uri) {

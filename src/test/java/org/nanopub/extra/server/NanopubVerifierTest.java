@@ -292,6 +292,84 @@ class NanopubVerifierTest {
         assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
     }
 
+    // -- checkUriProtocol --
+
+    @Test
+    void checkUriProtocol_httpAndHttpsUris_noUriProtocolProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Invalid URI protocol:")));
+    }
+
+    @Test
+    void checkUriProtocol_ftpUri_reportsProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(vf.createIRI("ftp://anything.org/subject"), anyIri, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Invalid URI protocol:")));
+    }
+
+    // -- checkBlacklist --
+
+    @Test
+    void checkBlacklist_allowedUris_noBlacklistProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Unallowed uri:")));
+    }
+
+    @Test
+    void checkBlacklist_schemaOrgUri_reportsProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(vf.createIRI("https://schema.org/Person"), anyIri, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Unallowed uri:")));
+    }
+
+    // -- checkExample --
+
+    @Test
+    void checkExample_nonExampleNanopubWithoutExampleUri_noExampleProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+    }
+
+    @Test
+    void checkExample_exampleTypedNanopubWithExampleUri_noExampleProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addPubinfoStatement(RDF.TYPE, NPX.EXAMPLE_NANOPUB);
+        c.addAssertionStatement(vf.createIRI("https://www.example.com/subject"), anyIri, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertFalse(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+    }
+
+    @Test
+    void checkExample_nonExampleNanopubWithExampleUri_reportsProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(vf.createIRI("https://www.example.com/subject"), anyIri, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Only Nanopubs of type 'example'")));
+    }
+
     // -- checkLiteralDatatypes --
 
     @Test
