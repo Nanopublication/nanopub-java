@@ -65,17 +65,6 @@ public class NanopubVerifier {
     }
 
     /**
-     * Check that the value of each literal is valid for the datatype it declares. Such nanopubs are
-     * refused by the signing step, but ones published before that check exist in the wild: they are
-     * rejected by strict RDF stores and therefore end up being unavailable through the SPARQL endpoint.
-     */
-    private void checkLiteralDatatypes() {
-        for (Statement st : NanopubUtils.getIllTypedLiteralStatements(nanopub)) {
-            issues.add(NanopubUtils.describeIllTypedLiteral(st));
-        }
-    }
-
-    /**
      * Check that no uri start with:
      * - https://schema.org
      * - http://orcid.org
