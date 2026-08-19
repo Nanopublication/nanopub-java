@@ -52,7 +52,7 @@ public class SignNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
     private boolean resolveCrossRefsPrefixBased = false;
 
-    @com.beust.jcommander.Parameter(names = "-s", description = "The orcid IRI of the signer")
+    @com.beust.jcommander.Parameter(names = "-s", description = "The IRI of the signer, typically an ORCID IRI. It can also be a sub-IRI of the nanopub being signed, given under its temporary URI (e.g. http://purl.org/nanopub/temp/np001/my-bot), which lets an agent self-sign its own introduction")
     private String signer;
 
     @com.beust.jcommander.Parameter(names = "--profile", description = "Profile file for signer iri and key files, " + "defaults to ~/.nanopub/profile.yaml")
