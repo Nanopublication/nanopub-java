@@ -22,6 +22,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -267,6 +268,12 @@ public class SignNanopub extends CliRunner {
 
     /**
      * Loads a key pair from the specified key file.
+     * <p>
+     * The private key is read from the given file and the public key from the same file name with the
+     * suffix {@code .pub}. Both are expected to be base64-encoded, the private one in PKCS#8 and the
+     * public one in X.509/SubjectPublicKeyInfo format. PEM header and footer lines (such as
+     * {@code -----BEGIN PRIVATE KEY-----}) and line breaks are accepted and ignored, so plain PEM files
+     * can be used as they are produced by tools like OpenSSL.
      *
      * @param keyFilename the path to the key file
      * @param algorithm   the signature algorithm used for the key
@@ -278,13 +285,60 @@ public class SignNanopub extends CliRunner {
     public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);
         KeyFactory kf = KeyFactory.getInstance(algorithm.name());
-        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), StandardCharsets.UTF_8));
-        KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        PrivateKey privateKey = kf.generatePrivate(privateSpec);
-        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), StandardCharsets.UTF_8));
-        KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
-        PublicKey publicKey = kf.generatePublic(publicSpec);
+        String publicKeyFilename = keyFilename + ".pub";
+        String privateKeyString = readKeyFile(keyFilename);
+        String publicKeyString = readKeyFile(publicKeyFilename);
+        PrivateKey privateKey;
+        try {
+            KeySpec privateSpec = new PKCS8EncodedKeySpec(decodeKey(privateKeyString));
+            privateKey = kf.generatePrivate(privateSpec);
+        } catch (IllegalArgumentException | InvalidKeySpecException ex) {
+            throw new InvalidKeySpecException(getKeyErrorMessage(keyFilename, privateKeyString, true), ex);
+        }
+        PublicKey publicKey;
+        try {
+            KeySpec publicSpec = new X509EncodedKeySpec(decodeKey(publicKeyString));
+            publicKey = kf.generatePublic(publicSpec);
+        } catch (IllegalArgumentException | InvalidKeySpecException ex) {
+            throw new InvalidKeySpecException(getKeyErrorMessage(publicKeyFilename, publicKeyString, false), ex);
+        }
         return new KeyPair(publicKey, privateKey);
+    }
+
+    private static final Pattern pemArmorPattern = Pattern.compile("-----(BEGIN|END)[^-]*-----");
+
+    private static String readKeyFile(String keyFilename) throws IOException {
+        try (InputStream in = new FileInputStream(keyFilename)) {
+            return IOUtils.toString(in, StandardCharsets.UTF_8);
+        }
+    }
+
+    /**
+     * Decodes a base64-encoded key, ignoring PEM header/footer lines and line breaks if present.
+     */
+    private static byte[] decodeKey(String keyString) {
+        return DatatypeConverter.parseBase64Binary(pemArmorPattern.matcher(keyString).replaceAll(""));
+    }
+
+    private static String getKeyErrorMessage(String keyFilename, String keyString, boolean isPrivateKey) {
+        String hint;
+        if (keyString.contains("BEGIN ENCRYPTED PRIVATE KEY")) {
+            hint = "The key seems to be protected by a passphrase, which is not supported. Decrypt it first and " +
+                    "use the decrypted key, e.g. with: openssl pkcs8 -topk8 -nocrypt -in " + keyFilename + " -out " + keyFilename + ".pkcs8";
+        } else if (keyString.contains("BEGIN RSA PRIVATE KEY")) {
+            hint = "The key seems to be in PKCS#1 format, which is not supported. Convert it to PKCS#8 and " +
+                    "use the converted key, e.g. with: openssl pkcs8 -topk8 -nocrypt -in " + keyFilename + " -out " + keyFilename + ".pkcs8";
+        } else if (keyString.contains("BEGIN RSA PUBLIC KEY")) {
+            hint = "The key seems to be in PKCS#1 format, which is not supported. Convert it to X.509 and " +
+                    "use the converted key, e.g. with: openssl rsa -RSAPublicKey_in -in " + keyFilename + " -pubout -out " + keyFilename + ".x509";
+        } else if (keyString.contains("BEGIN OPENSSH PRIVATE KEY") || keyString.startsWith("ssh-")) {
+            hint = "The key seems to be in OpenSSH format, which is not supported. Convert it to PKCS#8, " +
+                    "e.g. with: ssh-keygen -p -m PKCS8 -f " + keyFilename;
+        } else {
+            hint = "Expected a base64-encoded " + (isPrivateKey ? "PKCS#8 private key" : "X.509 public key") +
+                    ", with or without PEM header/footer lines.";
+        }
+        return "Could not read the " + (isPrivateKey ? "private" : "public") + " key from file " + keyFilename + ". " + hint;
     }
 
 }

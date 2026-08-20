@@ -1,21 +1,5 @@
 package org.nanopub.extra.security;
 
-import com.beust.jcommander.ParameterException;
-import net.trustyuri.TrustyUriUtils;
-import org.eclipse.rdf4j.model.util.Values;
-import org.eclipse.rdf4j.model.vocabulary.XSD;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.junit.jupiter.api.Test;
-import org.nanopub.CliRunner;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubImpl;
-import org.nanopub.NanopubProfile;
-import org.nanopub.testsuite.*;
-import org.nanopub.utils.TestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,10 +10,40 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Comparator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.eclipse.rdf4j.model.util.Values;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.nanopub.CliRunner;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubCreator;
+import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubProfile;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
+import org.nanopub.testsuite.TestSuiteEntry;
+import org.nanopub.testsuite.TestSuiteSubfolder;
+import org.nanopub.testsuite.TransformTestCase;
+import org.nanopub.utils.TestUtils;
 import static org.nanopub.utils.TestUtils.anyIri;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.ParameterException;
+
+import net.trustyuri.TrustyUriUtils;
 
 class SignNanopubTest {
 
@@ -62,10 +76,10 @@ class SignNanopubTest {
 
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
-                    testFile.getPath(),
-                    "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
-                    "-s ", signerOrcid,
-                    "-o ", outFile.getPath(),});
+                testFile.getPath(),
+                "-k ", signingKeyPair.getPrivateKeyFile().getPath(),
+                "-s ", signerOrcid,
+                "-o ", outFile.getPath(),});
             c.run();
 
             // read nanopub from file
@@ -102,9 +116,9 @@ class SignNanopubTest {
 
             // create signed nanopub file
             SignNanopub c = CliRunner.initJc(new SignNanopub(), new String[]{
-                    testFile.getPath(),
-                    "--profile ", profileFile,
-                    "-o ", outFile.getPath(),});
+                testFile.getPath(),
+                "--profile ", profileFile,
+                "-o ", outFile.getPath(),});
             c.run();
 
             // read nanopub from file
@@ -133,6 +147,46 @@ class SignNanopubTest {
     }
 
     @Test
+    void loadKeyFromPemFiles() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-load-key-pem");
+        SigningKeyPair keySource = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        Path keyPath = tempDir.resolve("id_rsa");
+        Files.writeString(keyPath, toPem(keySource.getPrivateKeyFile(), "PRIVATE KEY"));
+        Files.writeString(tempDir.resolve("id_rsa.pub"), toPem(keySource.getPublicKeyFile(), "PUBLIC KEY"));
+
+        KeyPair fromPem = SignNanopub.loadKey(keyPath.toString(), SignatureAlgorithm.RSA);
+        KeyPair fromPlain = SignNanopub.loadKey(keySource.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
+
+        assertArrayEquals(fromPlain.getPrivate().getEncoded(), fromPem.getPrivate().getEncoded());
+        assertArrayEquals(fromPlain.getPublic().getEncoded(), fromPem.getPublic().getEncoded());
+    }
+
+    @Test
+    void loadKeyWithUnsupportedFormatReportsHelpfulMessage() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-load-key-pkcs1");
+        SigningKeyPair keySource = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
+        Path keyPath = tempDir.resolve("id_rsa");
+        // a key that cannot be read as PKCS#8, declaring itself to be in PKCS#1 format
+        Files.writeString(keyPath, "-----BEGIN RSA PRIVATE KEY-----\n"
+                + Base64.getEncoder().encodeToString("not a PKCS#8 key".getBytes(StandardCharsets.UTF_8))
+                + "\n-----END RSA PRIVATE KEY-----\n");
+        Files.writeString(tempDir.resolve("id_rsa.pub"), toPem(keySource.getPublicKeyFile(), "PUBLIC KEY"));
+
+        InvalidKeySpecException e = assertThrows(InvalidKeySpecException.class,
+                () -> SignNanopub.loadKey(keyPath.toString(), SignatureAlgorithm.RSA));
+        assertTrue(e.getMessage().contains(keyPath.toString()), "Error message should name the key file: " + e.getMessage());
+        assertTrue(e.getMessage().contains("PKCS#1"), "Error message should mention the detected format: " + e.getMessage());
+    }
+
+    private String toPem(File keyFile, String label) throws IOException {
+        String base64 = Files.readString(keyFile.toPath()).trim();
+        return "-----BEGIN " + label + "-----\n"
+                + String.join("\n", base64.split("(?<=\\G.{64})"))
+                + "\n-----END " + label + "-----\n";
+
+    }
+
+    @Test
     void refusesToSignNanopubWithIllTypedLiteral() throws Exception {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
@@ -150,7 +204,6 @@ class SignNanopubTest {
     }
 
     // --------------------------------------------------------------- helpers
-
     private static TransformContext transformContext(boolean ignoreSigned) throws Exception {
         SigningKeyPair keyPair = NanopubTestSuite.getLatest().getSigningKey("rsa-key1");
         KeyPair key = SignNanopub.loadKey(keyPair.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
@@ -169,7 +222,9 @@ class SignNanopubTest {
 
     private static File writeToFile(File directory, String name, Nanopub... nanopubs) throws Exception {
         StringBuilder trig = new StringBuilder();
-        for (Nanopub np : nanopubs) trig.append(np.writeToString(RDFFormat.TRIG));
+        for (Nanopub np : nanopubs) {
+            trig.append(np.writeToString(RDFFormat.TRIG));
+        }
         File file = new File(directory, name);
         Files.writeString(file.toPath(), trig.toString());
         return file;
@@ -180,7 +235,6 @@ class SignNanopubTest {
     }
 
     // ------------------------------------------------------- signAndTransform
-
     @Test
     void signAndTransformProducesAVerifiableSignature() throws Exception {
         Nanopub signed = SignNanopub.signAndTransform(preNanopub(), transformContext(false));
@@ -206,7 +260,6 @@ class SignNanopubTest {
     }
 
     // ------------------------------------------- signAndTransformMultiNanopub
-
     @Test
     void signAndTransformMultiNanopubFromAStream() throws Exception {
         String trig = preNanopub().writeToString(RDFFormat.TRIG);
@@ -230,14 +283,13 @@ class SignNanopubTest {
     }
 
     // ------------------------------------------------------------------- CLI
-
     @Test
     void writesNextToTheInputWhenNoOutputFileIsGiven() throws Exception {
         Path tempDir = Files.createTempDirectory("test-sign-default-output");
         File input = writeToFile(tempDir.toFile(), "input.trig", preNanopub());
 
         CliRunner.initJc(new SignNanopub(), new String[]{
-                "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()}).run();
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()}).run();
 
         File output = new File(tempDir.toFile(), "signed.input.trig");
         assertTrue(output.exists());
@@ -251,8 +303,8 @@ class SignNanopubTest {
         File output = new File(tempDir.toFile(), "out.trig.gz");
 
         CliRunner.initJc(new SignNanopub(), new String[]{
-                "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
-                "-o", output.getPath(), input.getPath()}).run();
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), input.getPath()}).run();
 
         assertTrue(output.exists());
         try (java.io.InputStream in = new java.util.zip.GZIPInputStream(new java.io.FileInputStream(output))) {
@@ -270,7 +322,7 @@ class SignNanopubTest {
         }
 
         CliRunner.initJc(new SignNanopub(), new String[]{
-                "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()}).run();
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()}).run();
 
         File output = new File(tempDir.toFile(), "signed.input.trig.gz");
         assertTrue(output.exists());
@@ -299,7 +351,7 @@ class SignNanopubTest {
         File input = writeToFile(tempDir.toFile(), "input.trig", preNanopub());
 
         SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
-                "-k", tempDir + "/missing_dsa", "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()});
+            "-k", tempDir + "/missing_dsa", "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()});
 
         // the key cannot be read, but the file name has already selected the DSA algorithm
         assertThrows(Exception.class, signer::run);
@@ -312,7 +364,7 @@ class SignNanopubTest {
         File output = new File(tempDir.toFile(), "out.trig");
 
         SignNanopub.main(new String[]{"-v", "-k", privateKeyPath(),
-                "-s", "https://orcid.org/0000-0000-0000-0000", "-o", output.getPath(), input.getPath()});
+            "-s", "https://orcid.org/0000-0000-0000-0000", "-o", output.getPath(), input.getPath()});
 
         assertTrue(output.exists());
         assertTrue(TrustyUriUtils.isPotentialTrustyUri(new NanopubImpl(output, RDFFormat.TRIG).getUri()));
