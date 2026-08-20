@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class QueryCallTest {
 
@@ -275,6 +274,39 @@ public class QueryCallTest {
         } finally {
             System.clearProperty(QueryCall.EVICTION_COOLDOWN_PROPERTY);
         }
+    }
+
+    // --- Dispatching an actual call ---
+    //
+    // QueryCall dispatches each request on its own thread, and Mockito's static mocks are
+    // thread-local, so MockNanopubUtils does not reach those threads. Only the checks that
+    // happen before dispatch can be exercised here; covering the dispatch itself would need
+    // the HTTP client to be injectable rather than fetched from a static.
+
+    private static final QueryRef QUERY_REF =
+            new QueryRef("RAapc3jbJ3GkDy0ncKx3pok_zEKqwrT6-Z5TkCP1k96II/test-query");
+
+
+
+
+    @Test
+    void runRefusesToDispatchWhenEveryInstanceIsEvicted() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        List<String> instances = QueryCall.getApiInstances();
+        long farFuture = System.currentTimeMillis() + 600_000L;
+        for (String instance : instances) {
+            getEvictedUntil().put(instance, farFuture);
+        }
+
+        assertThrows(NotEnoughAPIInstancesException.class, () -> QueryCall.run(QUERY_REF));
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private static java.util.Map<String, Long> getEvictedUntil() throws NoSuchFieldException, IllegalAccessException {
+        Field field = QueryCall.class.getDeclaredField("evictedUntil");
+        field.setAccessible(true);
+        return (java.util.Map<String, Long>) field.get(null);
     }
 
 }

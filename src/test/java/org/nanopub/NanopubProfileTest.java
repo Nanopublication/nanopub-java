@@ -1,12 +1,18 @@
 package org.nanopub;
 
-import org.junit.jupiter.api.Test;
-import org.nanopub.testsuite.NanopubTestSuite;
-
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.nanopub.testsuite.NanopubTestSuite;
 
 class NanopubProfileTest {
 
@@ -24,6 +30,18 @@ class NanopubProfileTest {
     void constructorWithInvalidYamlFile() {
         String profileFileName = Objects.requireNonNull(this.getClass().getResource("/invalid-profile.yaml")).getPath();
         assertThrows(RuntimeException.class, () -> new NanopubProfile(profileFileName));
+    }
+
+    @Test
+    void constructorWithUnreadableProfileFile(@TempDir File tempDir) {
+        // A directory passes the exists() check but cannot be opened as a stream,
+        // so the IOException branch of the constructor is taken.
+        File directoryPosingAsProfile = new File(tempDir, "profile.yaml");
+        assertTrue(directoryPosingAsProfile.mkdir());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> new NanopubProfile(directoryPosingAsProfile.getPath()));
+        assertInstanceOf(IOException.class, ex.getCause());
     }
 
     @Test

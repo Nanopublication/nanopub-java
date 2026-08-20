@@ -14,6 +14,9 @@ import java.util.Collection;
  */
 public class JellyMetadataUtil {
 
+    private JellyMetadataUtil() {
+    }
+
     /**
      * Key for the counter in the metadata map.
      */

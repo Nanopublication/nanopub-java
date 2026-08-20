@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class FDOF {
 
+    private FDOF() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/fdof/ontology#";
 
     public static final String PREFIX = "fdof";

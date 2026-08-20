@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class FIP {
 
+    private FIP() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/fair/fip/terms/";
 
     public static final String PREFIX = "fip";

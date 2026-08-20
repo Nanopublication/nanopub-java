@@ -144,12 +144,12 @@ public class SignatureUtils {
     public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
             throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 
-        String u = preNanopub.getUri().stringValue();
-        if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||
-            !preNanopub.getAssertionUri().stringValue().startsWith(u) ||
-            !preNanopub.getProvenanceUri().stringValue().startsWith(u) ||
-            !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
-            throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
+        String preNanopubUri = preNanopub.getUri().stringValue();
+        if (!preNanopub.getHeadUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getAssertionUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getProvenanceUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getPubinfoUri().stringValue().startsWith(preNanopubUri)) {
+            throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + preNanopubUri + "...");
         }
         List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(preNanopub);
         if (!illTyped.isEmpty()) {
@@ -159,11 +159,20 @@ public class SignatureUtils {
 
         RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
         IRI npUri;
+        IRI signer = c.getSigner();
         Map<Resource, IRI> tempUriReplacerMap = null;
         if (TempUriReplacer.hasTempUri(preNanopub)) {
             npUri = vf.createIRI(TempUriReplacer.normUri);
             tempUriReplacerMap = new HashMap<>();
             NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, tempUriReplacerMap));
+            // The signer statement is added further below and therefore bypasses the replacement above.
+            // If the signer is introduced by this very nanopub (self-signed introduction of an agent),
+            // its temporary URI has to be replaced here too:
+            if (signer != null && signer.stringValue().startsWith(preNanopubUri)) {
+                IRI replacedSigner = vf.createIRI(signer.stringValue().replace(preNanopubUri, TempUriReplacer.normUri));
+                tempUriReplacerMap.put(signer, replacedSigner);
+                signer = replacedSigner;
+            }
         } else {
             npUri = preNanopub.getUri();
             NanopubUtils.propagateToHandler(preNanopub, r);
@@ -203,8 +212,8 @@ public class SignatureUtils {
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
         Literal algorithmLiteral = vf.createLiteral(c.getSignatureAlgorithm().name());
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_ALGORITHM, algorithmLiteral, piUri));
-        if (c.getSigner() != null) {
-            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, c.getSigner(), piUri));
+        if (signer != null) {
+            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, signer, piUri));
         }
 
         // Preprocess statements that are covered by signature:

@@ -7,6 +7,9 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.nanopub.extra.security.SignNanopub;
+import org.nanopub.extra.security.TransformContext;
+import org.nanopub.extra.server.PublishNanopub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +103,71 @@ public class RoCrateImporterTest {
         Nanopub createdNanopub = new NanopubImpl(out, RDFFormat.TRIG);
         Nanopub expectedNanopub = new NanopubImpl(new File(Objects.requireNonNull(RoCrateImporterTest.class.getResource("/" + RO_CRATE_ID + ".trig")).getPath()));
         assertTrue(NanopubEquality.unsignedNanopubsAreEqual(createdNanopub, expectedNanopub));
+    }
+
+    /**
+     * Runs the given action with {@code System.out} captured, and returns what was printed.
+     */
+    private static String captureStandardOutput(ThrowingRunnable action) throws Exception {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        try {
+            System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
+            action.run();
+        } finally {
+            System.out.flush();
+            System.setOut(originalOut);
+        }
+        return captured.toString(StandardCharsets.UTF_8);
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
+    }
+
+    @Test
+    void mainWritesTheUnsignedNanopubToStandardOutput() throws Exception {
+        String out = captureStandardOutput(() -> RoCrateImporter.main(new String[]{
+                "-u", "-f", RO_CRATE_METADATA_PATH, RO_CRATE_URL}));
+
+        assertFalse(out.isBlank());
+        assertNotNull(new NanopubImpl(out, RDFFormat.TRIG).getUri());
+    }
+
+    @Test
+    void writesTheSignedNanopubToStandardOutputByDefault() throws Exception {
+        Nanopub signed = new NanopubImpl(new File(Objects.requireNonNull(
+                RoCrateImporterTest.class.getResource("/" + RO_CRATE_ID + ".trig")).getPath()));
+
+        try (MockedStatic<TransformContext> contextMock = Mockito.mockStatic(TransformContext.class);
+             MockedStatic<SignNanopub> signMock = Mockito.mockStatic(SignNanopub.class)) {
+            contextMock.when(TransformContext::makeDefault).thenReturn(Mockito.mock(TransformContext.class));
+            signMock.when(() -> SignNanopub.signAndTransform(Mockito.any(), Mockito.any())).thenReturn(signed);
+
+            String out = captureStandardOutput(() -> CliRunner.initJc(new RoCrateImporter(), new String[]{
+                    "-f", RO_CRATE_METADATA_PATH, RO_CRATE_URL}).run());
+
+            assertTrue(out.contains(signed.getUri().toString()), out);
+        }
+    }
+
+    @Test
+    void publishesTheSignedNanopubWhenAsked() throws Exception {
+        Nanopub signed = new NanopubImpl(new File(Objects.requireNonNull(
+                RoCrateImporterTest.class.getResource("/" + RO_CRATE_ID + ".trig")).getPath()));
+
+        try (MockedStatic<TransformContext> contextMock = Mockito.mockStatic(TransformContext.class);
+             MockedStatic<SignNanopub> signMock = Mockito.mockStatic(SignNanopub.class);
+             MockedStatic<PublishNanopub> publishMock = Mockito.mockStatic(PublishNanopub.class)) {
+            contextMock.when(TransformContext::makeDefault).thenReturn(Mockito.mock(TransformContext.class));
+            signMock.when(() -> SignNanopub.signAndTransform(Mockito.any(), Mockito.any())).thenReturn(signed);
+            publishMock.when(() -> PublishNanopub.publish(signed)).thenReturn("published");
+
+            CliRunner.initJc(new RoCrateImporter(), new String[]{
+                    "-p", "-f", RO_CRATE_METADATA_PATH, RO_CRATE_URL}).run();
+
+            publishMock.verify(() -> PublishNanopub.publish(signed));
+        }
     }
 
 }

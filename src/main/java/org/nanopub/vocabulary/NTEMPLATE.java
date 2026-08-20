@@ -5,6 +5,9 @@ import org.eclipse.rdf4j.model.Namespace;
 
 public class NTEMPLATE {
 
+    private NTEMPLATE() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/np/o/ntemplate/";
 
     public static final String PREFIX = "ntemplate";

@@ -8,6 +8,9 @@ import org.eclipse.rdf4j.model.Namespace;
  */
 public class PAV {
 
+    private PAV() {
+    }
+
     public static final String NAMESPACE = "http://purl.org/pav/";
 
     public static final String PREFIX = "pav";
