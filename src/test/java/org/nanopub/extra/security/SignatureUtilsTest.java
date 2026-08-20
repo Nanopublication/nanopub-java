@@ -2,12 +2,15 @@ package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
 import org.nanopub.testsuite.NanopubTestSuite;
 import org.nanopub.testsuite.SigningKeyPair;
+import org.nanopub.trusty.TempUriReplacer;
+import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NPX;
 
 import java.security.KeyPair;
@@ -288,6 +291,45 @@ class SignatureUtilsTest {
         NanopubSignatureElement element = SignatureUtils.getSignatureElement(signedNanopub());
 
         assertTrue(SignatureUtils.hasValidSignature(element));
+    }
+
+    // ------------------------------------------------- self-signed introduction
+
+    /**
+     * An agent introducing itself signs with a signer IRI that is a sub-IRI of the very nanopub being
+     * signed, so the signer only becomes known once the artifact code is computed. The temporary URI
+     * therefore has to be replaced in the signer just like everywhere else.
+     */
+    @Test
+    void createSignedNanopubResolvesASignerUnderTheTempUri() throws Exception {
+        IRI npUri = vf.createIRI(TempUriReplacer.tempUri + "np001/");
+        IRI tempSigner = vf.createIRI(npUri + "my-bot");
+        NanopubCreator creator = new NanopubCreator(npUri);
+        creator.addAssertionStatement(tempSigner, RDFS.LABEL, vf.createLiteral("my bot"));
+        creator.addProvenanceStatement(anyIri, anyIri);
+        creator.addPubinfoStatement(DCTERMS.CREATOR, tempSigner);
+        TransformContext c = new TransformContext(SignatureAlgorithm.RSA, transformContext().getKey(),
+                tempSigner, false, false, false);
+
+        Nanopub signed = SignNanopub.signAndTransform(creator.finalizeNanopub(), c);
+
+        IRI resolvedSigner = vf.createIRI(signed.getUri() + "/my-bot");
+        assertEquals(Set.of(resolvedSigner), SignatureUtils.getSignatureElement(signed).getSigners());
+        // the signer is now the same IRI as the creator, and the signature covers it
+        assertTrue(signed.getPubinfo().contains(
+                vf.createStatement(signed.getUri(), DCTERMS.CREATOR, resolvedSigner, signed.getPubinfoUri())));
+        assertTrue(SignatureUtils.hasValidSignature(SignatureUtils.getSignatureElement(signed)));
+        assertTrue(TrustyNanopubUtils.isValidTrustyNanopub(signed));
+    }
+
+    /**
+     * A signer that is not a sub-IRI of the nanopub being signed stays untouched.
+     */
+    @Test
+    void createSignedNanopubLeavesAnExternalSignerAlone() throws Exception {
+        IRI signer = vf.createIRI("https://orcid.org/0000-0000-0000-0000");
+
+        assertEquals(Set.of(signer), SignatureUtils.getSignatureElement(signedNanopub()).getSigners());
     }
 
 }
