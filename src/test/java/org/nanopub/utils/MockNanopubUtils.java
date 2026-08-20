@@ -39,6 +39,8 @@ public class MockNanopubUtils implements AutoCloseable {
             when(entity.getContent()).thenAnswer(inv -> new ByteArrayInputStream(
                     (responseBody == null ? "" : responseBody).getBytes(StandardCharsets.UTF_8)));
             when(response.getEntity()).thenReturn(entity);
+            // Mockito's default for array-returning methods is null, not an empty array.
+            when(response.getHeaders(anyString())).thenReturn(new Header[0]);
             // By default getFirstHeader returns null (Mockito default).
             // When a status value is set, stub it via the read-side field.
             when(response.getFirstHeader(anyString())).thenAnswer(inv -> {

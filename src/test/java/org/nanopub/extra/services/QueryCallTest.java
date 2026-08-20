@@ -98,38 +98,6 @@ public class QueryCallTest {
         assertEquals(apiInstances, List.of(DEFAULT_INSTANCES.split(" ")));
     }
 
-    @Test
-    void getParallelCallCountDefault() {
-        System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
-        assertEquals(2, QueryCall.getParallelCallCount());
-    }
-
-    @Test
-    void getParallelCallCountFromProperty() {
-        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "1");
-        try {
-            assertEquals(1, QueryCall.getParallelCallCount());
-        } finally {
-            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
-        }
-    }
-
-    @Test
-    void getParallelCallCountIgnoresInvalidValues() {
-        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "0");
-        try {
-            assertEquals(2, QueryCall.getParallelCallCount());
-        } finally {
-            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
-        }
-        System.setProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY, "not-a-number");
-        try {
-            assertEquals(2, QueryCall.getParallelCallCount());
-        } finally {
-            System.clearProperty(QueryCall.PARALLEL_CALL_COUNT_PROPERTY);
-        }
-    }
-
     // --- Status-header gate ---
 
     @Test
@@ -278,16 +246,52 @@ public class QueryCallTest {
 
     // --- Dispatching an actual call ---
     //
-    // QueryCall dispatches each request on its own thread, and Mockito's static mocks are
-    // thread-local, so MockNanopubUtils does not reach those threads. Only the checks that
-    // happen before dispatch can be exercised here; covering the dispatch itself would need
-    // the HTTP client to be injectable rather than fetched from a static.
+    // Calls are dispatched sequentially on the caller thread, so MockNanopubUtils
+    // covers the dispatch too. The mock serves the same response for every
+    // instance, so per-instance fallback ordering cannot be distinguished here.
 
     private static final QueryRef QUERY_REF =
             new QueryRef("RAapc3jbJ3GkDy0ncKx3pok_zEKqwrT6-Z5TkCP1k96II/test-query");
 
+    @Test
+    void runReturnsResponseFromHealthyInstance() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("READY");
+        mockNanopubUtils.setResponseBody("a,b\n1,2\n");
 
+        org.apache.http.HttpResponse resp = QueryCall.run(QUERY_REF);
+        assertNotNull(resp);
+        assertNotNull(resp.getEntity());
+    }
 
+    @Test
+    void runEvictsInstancesTurningNonReadyAfterAdmission() throws Exception {
+        // Admit all instances as READY first...
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("READY");
+        List<String> instances = QueryCall.getApiInstances();
+
+        // ...then have them report RESETTING at query time: each attempt evicts
+        // its instance, and once every instance is evicted, run() gives up.
+        mockNanopubUtils.setNanopubQueryStatus("RESETTING");
+        assertThrows(NotEnoughAPIInstancesException.class, () -> QueryCall.run(QUERY_REF));
+        for (String url : instances) {
+            assertEquals(true, getEvictedUntil().containsKey(url),
+                    "Non-ready instance should be evicted: " + url);
+        }
+    }
+
+    @Test
+    void runGivesUpAfterRetriesWhenAllRequestsFail() throws Exception {
+        // Admit all instances as healthy first...
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        QueryCall.getApiInstances();
+
+        // ...then fail every query request (HTTP 500). Failed requests do not
+        // evict, so run() retries and eventually gives up.
+        mockNanopubUtils.setHttpResponseStatusCode(500);
+        assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+    }
 
     @Test
     void runRefusesToDispatchWhenEveryInstanceIsEvicted() throws Exception {
