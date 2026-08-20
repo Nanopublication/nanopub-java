@@ -19,48 +19,10 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class QueryCall {
 
-    private static final int DEFAULT_PARALLEL_CALL_COUNT = 2;
-
-    /**
-     * System property setting how many query API instances to call in parallel.
-     * Must be {@code >= 1}; defaults to {@value #DEFAULT_PARALLEL_CALL_COUNT}.
-     * Env var {@code NANOPUB_QUERY_PARALLEL_CALL_COUNT} also accepted.
-     */
-    public static final String PARALLEL_CALL_COUNT_PROPERTY = "nanopub.query.parallel-call-count";
-
-    /**
-     * Environment variable equivalent of {@link #PARALLEL_CALL_COUNT_PROPERTY}.
-     */
-    public static final String PARALLEL_CALL_COUNT_ENV = "NANOPUB_QUERY_PARALLEL_CALL_COUNT";
-
     private static int maxRetryCount = 3;
     private static final Logger logger = LoggerFactory.getLogger(QueryCall.class);
 
-    /**
-     * Returns the number of query API instances to call in parallel, resolved
-     * (in order) from {@link #PARALLEL_CALL_COUNT_PROPERTY},
-     * {@link #PARALLEL_CALL_COUNT_ENV}, or the default of
-     * {@value #DEFAULT_PARALLEL_CALL_COUNT}. Invalid values are ignored.
-     *
-     * @return the parallel call count (always {@code >= 1})
-     */
-    public static int getParallelCallCount() {
-        String value = System.getProperty(PARALLEL_CALL_COUNT_PROPERTY);
-        if (value == null || value.isEmpty()) {
-            value = System.getenv(PARALLEL_CALL_COUNT_ENV);
-        }
-        if (value != null && !value.trim().isEmpty()) {
-            try {
-                int n = Integer.parseInt(value.trim());
-                if (n >= 1) {
-                    return n;
-                }
-                logger.warn("Ignoring {}={}: must be >= 1; falling back to {}", PARALLEL_CALL_COUNT_PROPERTY, value, DEFAULT_PARALLEL_CALL_COUNT);
-            } catch (NumberFormatException ex) {
-                logger.warn("Ignoring {}={}: not an integer", PARALLEL_CALL_COUNT_PROPERTY, value);
-            }
-        }
-        return DEFAULT_PARALLEL_CALL_COUNT;
+    private QueryCall() {
     }
 
     /**
@@ -149,6 +111,11 @@ public class QueryCall {
 
     /**
      * Run a query call with the given query ID and parameters.
+     * <p>
+     * The available query API instances are tried sequentially in random order,
+     * returning the first successful response. Instances reporting a non-ready
+     * status are evicted for a cool-down period (see
+     * {@link #EVICTION_COOLDOWN_PROPERTY}).
      *
      * @param queryRef the reference to the query to run
      * @return the HTTP response from the query API
@@ -156,23 +123,55 @@ public class QueryCall {
      * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public static HttpResponse run(QueryRef queryRef) throws APINotReachableException, NotEnoughAPIInstancesException {
+        logger.debug("Preparing query call: {}", queryRef);
         int retryCount = 0;
         while (retryCount < maxRetryCount) {
-            QueryCall apiCall = new QueryCall(queryRef);
-            apiCall.run();
-            while (!apiCall.calls.isEmpty() && apiCall.resp == null) {
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
+            List<String> candidates = filterEvicted(getApiInstances());
+            if (candidates.isEmpty()) {
+                logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", getApiInstances().size(), queryRef.getQueryId());
+                throw new NotEnoughAPIInstancesException(
+                        "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
             }
-            if (apiCall.resp != null) {
-                return apiCall.resp;
+            Collections.shuffle(candidates);
+            for (String apiUrl : candidates) {
+                HttpResponse resp = tryInstance(apiUrl, queryRef);
+                if (resp != null) {
+                    return resp;
+                }
             }
             retryCount = retryCount + 1;
         }
         throw new APINotReachableException("Giving up contacting API: " + queryRef.getQueryId());
+    }
+
+    private static HttpResponse tryInstance(String apiUrl, QueryRef queryRef) {
+        HttpGet get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
+        get.setHeader("Accept", "text/csv, text/turtle;q=0.9, application/ld+json;q=0.8");
+        HttpResponse resp = null;
+        try {
+            resp = NanopubUtils.getHttpClient().execute(get);
+            if (!wasSuccessfulNonempty(resp)) {
+                throw new IOException(resp.getStatusLine().toString());
+            }
+            if (!isReadyStatus(resp)) {
+                Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+                String status = h == null ? "missing" : h.getValue();
+                evict(apiUrl, "status " + status);
+                EntityUtils.consumeQuietly(resp.getEntity());
+                return null;
+            }
+            long len = resp.getEntity().getContentLength();
+            String sizeStr = len >= 0 ? len + " bytes" : "unknown (chunked/no Content-Length)";
+            logger.debug("Response received from {} for query {} ({})", apiUrl, queryRef, sizeStr);
+            return resp;
+        } catch (Exception ex) {
+            if (resp != null) {
+                EntityUtils.consumeQuietly(resp.getEntity());
+            }
+            logger.warn("Request to {} failed for query {} — {}: {}", apiUrl, queryRef, ex.getClass().getSimpleName(), ex.getMessage());
+            logger.debug("Request to {} failed for query {}", apiUrl, queryRef, ex);
+            return null;
+        }
     }
 
     /**
@@ -274,57 +273,6 @@ public class QueryCall {
         return new ArrayList<>(fromSetting);
     }
 
-    private QueryRef queryRef;
-    private List<String> apisToCall = new ArrayList<>();
-    private List<Call> calls = new ArrayList<>();
-
-    private HttpResponse resp;
-
-    private QueryCall(QueryRef queryRef) {
-        this.queryRef = queryRef;
-        logger.debug("Preparing query call: {}", queryRef);
-    }
-
-    private void run() throws NotEnoughAPIInstancesException {
-        List<String> candidates = filterEvicted(getApiInstances());
-        if (candidates.isEmpty()) {
-            logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", getApiInstances().size(), queryRef.getQueryId());
-            throw new NotEnoughAPIInstancesException(
-                    "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
-        }
-        List<String> apiInstancesToTry = new LinkedList<>(candidates);
-        int parallelCallCount = getParallelCallCount();
-        while (!apiInstancesToTry.isEmpty() && apisToCall.size() < parallelCallCount) {
-            int randomIndex = (int) ((Math.random() * apiInstancesToTry.size()));
-            String apiUrl = apiInstancesToTry.get(randomIndex);
-            apisToCall.add(apiUrl);
-            logger.debug("Dispatching to instance {}/{}: {}", apisToCall.size(), parallelCallCount, apiUrl);
-            apiInstancesToTry.remove(randomIndex);
-        }
-        for (String api : apisToCall) {
-            Call call = new Call(api);
-            calls.add(call);
-            new Thread(call).start();
-        }
-    }
-
-    private synchronized void finished(Call call, HttpResponse resp, String apiUrl) {
-        if (this.resp != null) { // result already in
-            EntityUtils.consumeQuietly(resp.getEntity());
-            return;
-        }
-        long len = resp.getEntity().getContentLength();
-        String sizeStr = len >= 0 ? len + " bytes" : "unknown (chunked/no Content-Length)";
-        logger.debug("Response received from {} for query {} ({})", apiUrl, queryRef, sizeStr);
-        this.resp = resp;
-
-        for (Call c : calls) {
-            if (c != call) {
-                c.abort();
-            }
-        }
-    }
-
     private static boolean wasSuccessful(HttpResponse resp) {
         if (resp == null || resp.getEntity() == null) {
             return false;
@@ -342,55 +290,6 @@ public class QueryCall {
             return false;
         }
         return true;
-    }
-
-
-    private class Call implements Runnable {
-
-        private String apiUrl;
-        private HttpGet get;
-
-        public Call(String apiUrl) {
-            this.apiUrl = apiUrl;
-        }
-
-        public void run() {
-            get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
-            get.setHeader("Accept", "text/csv, text/turtle;q=0.9, application/ld+json;q=0.8");
-            HttpResponse resp = null;
-            try {
-                resp = NanopubUtils.getHttpClient().execute(get);
-                if (!wasSuccessfulNonempty(resp)) {
-                    throw new IOException(resp.getStatusLine().toString());
-                }
-                if (!isReadyStatus(resp)) {
-                    Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
-                    String status = h == null ? "missing" : h.getValue();
-                    evict(apiUrl, "status " + status);
-                    EntityUtils.consumeQuietly(resp.getEntity());
-                } else {
-                    finished(this, resp, apiUrl);
-                }
-            } catch (Exception ex) {
-                if (resp != null) {
-                    EntityUtils.consumeQuietly(resp.getEntity());
-                }
-                logger.warn("Request to {} failed for query {} — {}: {}", apiUrl, queryRef, ex.getClass().getSimpleName(), ex.getMessage());
-                logger.debug("Request to {} failed for query {}", apiUrl, queryRef, ex);
-            }
-            calls.remove(this);
-        }
-
-        private void abort() {
-            if (get == null) {
-                return;
-            }
-            if (get.isAborted()) {
-                return;
-            }
-            get.abort();
-        }
-
     }
 
 }
