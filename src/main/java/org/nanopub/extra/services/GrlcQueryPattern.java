@@ -65,7 +65,7 @@ public class GrlcQueryPattern implements NanopubPattern {
      */
     @Override
     public URL getPatternInfoUrl() throws MalformedURLException, URISyntaxException {
-        return new URI("https://w3id.org/kpxl/grlc/").toURL();
+        return new URI(KPXL_GRLC.NAMESPACE).toURL();
     }
 
 }
