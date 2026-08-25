@@ -37,6 +37,7 @@ import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.testsuite.TestSuiteSubfolder;
 import org.nanopub.testsuite.TransformTestCase;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.KPXL_GRLC;
 import static org.nanopub.utils.TestUtils.anyIri;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,6 +202,33 @@ class SignNanopubTest {
 
         SignatureException ex = assertThrows(SignatureException.class, () -> SignNanopub.signAndTransform(np, context));
         assertTrue(ex.getMessage().contains("ill-typed literal(s) and cannot be signed"));
+    }
+
+    @Test
+    void refusesToSignNanopubWithInvalidSparql() throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, TestUtils.vf.createLiteral("SELECT ?x WHERE {\u00A0?x ?y ?z }"));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        Nanopub np = creator.finalizeNanopub();
+
+        SignatureException ex = assertThrows(SignatureException.class,
+                () -> SignNanopub.signAndTransform(np, transformContext(false)));
+
+        assertTrue(ex.getMessage().contains("invalid SPARQL and cannot be signed"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("U+00A0 (NO-BREAK SPACE)"), ex.getMessage());
+    }
+
+    @Test
+    void signsNanopubWithValidSparql() throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, TestUtils.vf.createLiteral("SELECT ?x WHERE { ?x ?y ?z }"));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+
+        Nanopub signed = SignNanopub.signAndTransform(creator.finalizeNanopub(), transformContext(false));
+
+        assertTrue(TrustyUriUtils.isPotentialTrustyUri(signed.getUri()));
     }
 
     // --------------------------------------------------------------- helpers

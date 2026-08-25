@@ -37,6 +37,7 @@ import static org.mockito.Mockito.when;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.KPXL_GRLC;
 import static org.nanopub.utils.TestUtils.anyIri;
 import static org.nanopub.utils.TestUtils.vf;
 import org.nanopub.vocabulary.NPX;
@@ -111,6 +112,34 @@ public class NanopubUtilsTest {
         creator.addPubinfoStatement(anyIri, anyIri);
 
         assertTrue(NanopubUtils.getIllTypedLiteralStatements(creator.finalizeNanopub()).isEmpty());
+    }
+
+    @Test
+    void getInvalidSparqlStatementsFindsOnlyTheBrokenQueries() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, vf.createLiteral("SELECT ?x WHERE { ?x ?y ?z }"));
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, vf.createLiteral("SELECT ?x WHERE { ?x ?y }"));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        Nanopub nanopub = creator.finalizeNanopub();
+
+        List<Statement> invalid = NanopubUtils.getInvalidSparqlStatements(nanopub);
+
+        assertEquals(1, invalid.size());
+        assertTrue(NanopubUtils.describeInvalidSparql(invalid.getFirst())
+                .startsWith("Invalid SPARQL as object of " + KPXL_GRLC.SPARQL.stringValue()));
+    }
+
+    @Test
+    void getInvalidSparqlStatementsIgnoresOtherPredicatesAndNonLiterals() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        // the same broken query text under a predicate that does not declare it as SPARQL
+        creator.addAssertionStatement(anyIri, anyIri, vf.createLiteral("SELECT ?x WHERE { ?x ?y }"));
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, anyIri);
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+
+        assertTrue(NanopubUtils.getInvalidSparqlStatements(creator.finalizeNanopub()).isEmpty());
     }
 
     @Test

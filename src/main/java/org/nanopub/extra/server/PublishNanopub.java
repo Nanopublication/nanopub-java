@@ -7,6 +7,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
@@ -246,6 +247,15 @@ public class PublishNanopub extends CliRunner {
                 logger.warn("Strict mode: nanopub {} is not published", nanopub.getUri());
                 return null;
             }
+        }
+
+        List<Statement> invalidSparql = NanopubUtils.getInvalidSparqlStatements(nanopub);
+        if (!invalidSparql.isEmpty()) {
+            // A nanopub cannot be edited after the fact, so a query published with broken SPARQL can
+            // never run: publishing it is refused rather than warned about. This happens before any
+            // server is contacted.
+            throw new RuntimeException("Can't publish nanopublication with invalid SPARQL: " + nanopub.getUri() +
+                    ". " + NanopubUtils.describeInvalidSparql(invalidSparql.getFirst()));
         }
 
         if (registryInfo == null) {

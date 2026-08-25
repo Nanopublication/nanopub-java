@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.nanopub.utils.TestUtils;
+import org.nanopub.vocabulary.KPXL_GRLC;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -114,6 +115,63 @@ public class CheckNanopubTest {
         assertTrue(r.areAllTrusty());
         assertTrue(log.toString().contains("TRUSTY NANOPUB WITH ILL-TYPED LITERAL(S)"));
         assertTrue(log.toString().contains("Invalid value for datatype "));
+    }
+
+    @Test
+    void check_withInvalidSparqlInPlainNanopub_countsAsInvalid(@TempDir Path tmp) throws Exception {
+        File file = tmp.resolve("badsparql.trig").toFile();
+        writeNanopub(file, grlcQueryCreator("SELECT ?x WHERE {\u00A0?x ?y ?z }").finalizeNanopub());
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(log));
+
+        CheckNanopub.Report r = checker.check();
+
+        assertEquals(1, r.getInvalidCount());
+        assertFalse(r.areAllValid());
+    }
+
+    @Test
+    void check_withInvalidSparqlInTrustyNanopub_staysTrustyButWarns(@TempDir Path tmp) throws Exception {
+        // nanopubs like this exist in the wild: they cannot be edited, so they must still load
+        File file = tmp.resolve("trusty_badsparql.trig").toFile();
+        writeNanopub(file, grlcQueryCreator("SELECT ?x WHERE {\u00A0?x ?y ?z }").finalizeTrustyNanopub());
+
+        ByteArrayOutputStream log = new ByteArrayOutputStream();
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(log));
+
+        CheckNanopub.Report r = checker.check();
+
+        assertTrue(r.areAllTrusty());
+        assertTrue(log.toString().contains("TRUSTY NANOPUB WITH INVALID SPARQL"));
+        assertTrue(log.toString().contains("U+00A0 (NO-BREAK SPACE)"));
+    }
+
+    @Test
+    void check_withValidSparqlInPlainNanopub_countsAsValid(@TempDir Path tmp) throws Exception {
+        File file = tmp.resolve("goodsparql.trig").toFile();
+        writeNanopub(file, grlcQueryCreator("SELECT ?x WHERE { ?x ?y ?z }").finalizeNanopub());
+
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+
+        assertTrue(checker.check().areAllValid());
+    }
+
+    private static NanopubCreator grlcQueryCreator(String sparql) throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, KPXL_GRLC.SPARQL, TestUtils.vf.createLiteral(sparql));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        return creator;
+    }
+
+    private static void writeNanopub(File file, Nanopub np) throws IOException {
+        try (OutputStream out = new FileOutputStream(file)) {
+            NanopubUtils.writeToStream(np, out, RDFFormat.TRIG);
+        }
     }
 
     @Test
