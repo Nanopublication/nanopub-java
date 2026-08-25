@@ -3,7 +3,7 @@ package org.nanopub.extra.security;
 import com.beust.jcommander.ParameterException;
 import jakarta.xml.bind.DatatypeConverter;
 import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -22,6 +22,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
@@ -126,48 +127,136 @@ public class SignNanopub extends CliRunner {
         }
         final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
-        final OutputStream singleOut;
-        if (singleOutputFile != null) {
-            if (singleOutputFile.getName().matches(".*\\.(gz|gzip)")) {
-                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));
-            } else {
-                singleOut = new FileOutputStream(singleOutputFile);
+        // The output files are opened lazily, so that a run that fails before anything is signed does
+        // not truncate an existing file or leave an empty one behind (see issue #129).
+        final LazyFileOutputStream singleOut = singleOutputFile == null ? null : new LazyFileOutputStream(singleOutputFile);
+        try {
+            for (File inputFile : inputNanopubFiles) {
+                final File outputFile;
+                final LazyFileOutputStream out;
+                if (singleOut == null) {
+                    outputFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
+                    out = new LazyFileOutputStream(outputFile);
+                } else {
+                    outputFile = singleOutputFile;
+                    out = singleOut;
+                }
+                final RDFFormat inFormat = getFormat(inputFile, RDFFormat.TRIG);
+                final RDFFormat outFormat = getFormat(outputFile, RDFFormat.TRIG);
+                try {
+                    MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                        try {
+                            np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
+                            if (verbose) {
+                                System.out.println("Nanopub URI: " + np.getUri());
+                            }
+                        } catch (RDFHandlerException | SignatureException | InvalidKeyException |
+                                 TrustyUriException ex) {
+                            ex.printStackTrace();
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                    if (out != singleOut) {
+                        // this input was processed without error, so an input without nanopubs still
+                        // gets its (empty) output file, as it did before
+                        out.createIfNotWrittenTo();
+                    }
+                } finally {
+                    if (out != singleOut) {
+                        out.close();
+                    }
+                }
             }
-        } else {
-            singleOut = null;
+            if (singleOut != null) {
+                singleOut.createIfNotWrittenTo();
+            }
+        } finally {
+            if (singleOut != null) {
+                singleOut.close();
+            }
+        }
+    }
+
+    /**
+     * Determines the RDF format of a file from its name alone.
+     * <p>
+     * This derives the format the same way {@code TrustyUriResource.getFormat(RDFFormat)} does, but
+     * without opening the file: the output file does not exist yet at this point, as it is only created
+     * once there is something to write to it.
+     *
+     * @param file          the file whose format to determine
+     * @param defaultFormat the format to fall back to if the name does not identify one
+     * @return the RDF format of the file
+     */
+    private static RDFFormat getFormat(File file, RDFFormat defaultFormat) {
+        String mimetype = TrustyUriUtils.getMimetype(file.toString());
+        Optional<RDFFormat> format = mimetype == null ? Optional.empty() : Rio.getParserFormatForMIMEType(mimetype);
+        if (format.isEmpty()) {
+            format = Rio.getParserFormatForFileName(file.toString());
+        }
+        return format.orElse(defaultFormat);
+    }
+
+    /**
+     * An output stream to a file that is only created once something is actually written to it.
+     * <p>
+     * Opening a {@link java.io.FileOutputStream} truncates its target, and signing can fail before the
+     * first nanopub is written. Delaying the open until the first write keeps a failed run from
+     * destroying an existing file or leaving an empty one behind, while preserving the streaming
+     * behaviour for files with several nanopubs.
+     */
+    private static class LazyFileOutputStream extends OutputStream {
+
+        private final File file;
+        private OutputStream out;
+
+        LazyFileOutputStream(File file) {
+            this.file = file;
         }
 
-        for (File inputFile : inputNanopubFiles) {
-            File outputFile;
-            final OutputStream out;
-            if (singleOutputFile == null) {
-                outputFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
-                if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
-                    out = new GZIPOutputStream(new FileOutputStream(outputFile));
+        private OutputStream open() throws IOException {
+            if (out == null) {
+                if (file.getName().matches(".*\\.(gz|gzip)")) {
+                    out = new GZIPOutputStream(new FileOutputStream(file));
                 } else {
-                    out = new FileOutputStream(outputFile);
+                    out = new FileOutputStream(file);
                 }
-            } else {
-                outputFile = singleOutputFile;
-                out = singleOut;
             }
-            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
-            try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
-                    try {
-                        np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
-                        if (verbose) {
-                            System.out.println("Nanopub URI: " + np.getUri());
-                        }
-                    } catch (RDFHandlerException | SignatureException | InvalidKeyException |
-                             TrustyUriException ex) {
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
-                    }
-                });
+            return out;
+        }
+
+        /**
+         * Creates the file even though nothing was written to it. To be called only once the run has
+         * succeeded, never on the failure path.
+         */
+        void createIfNotWrittenTo() throws IOException {
+            open();
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            open().write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            open().write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if (out != null) {
+                out.flush();
             }
         }
+
+        @Override
+        public void close() throws IOException {
+            if (out != null) {
+                out.close();
+            }
+        }
+
     }
 
     /**
