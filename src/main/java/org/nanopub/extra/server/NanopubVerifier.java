@@ -66,7 +66,7 @@ public class NanopubVerifier {
 
     /**
      * Check that no uri start with:
-     * - https://schema.org
+     * - http://schema.org/
      * - http://orcid.org
      */
     private void checkBlacklist() {
@@ -89,7 +89,7 @@ public class NanopubVerifier {
 
     private boolean uriIsOnBlacklist(Resource uri) {
         final List<String> BLACKLIST = Arrays.asList(
-                "https://schema.org",
+                "http://schema.org/",
                 "http://orcid.org",
                 "https://www.wikidata.org/entity/",
                 "https://www.wikidata.org/wiki/",
