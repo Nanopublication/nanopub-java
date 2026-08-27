@@ -1,7 +1,6 @@
 package org.nanopub;
 
 import org.junit.jupiter.api.Test;
-import org.nanopub.UriSchemes.Position;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,15 +64,13 @@ class UriSchemesTest {
     // -- isAllowedUriScheme --
 
     @Test
-    void isAllowedUriScheme_httpUri_allowedEverywhere() {
-        for (Position position : Position.values()) {
-            assertTrue(UriSchemes.isAllowedUriScheme("https://example.org/thing", position), position.name());
-            assertTrue(UriSchemes.isAllowedUriScheme("http://example.org/thing", position), position.name());
-        }
+    void isAllowedUriScheme_httpUri_isAllowed() {
+        assertTrue(UriSchemes.isAllowedUriScheme("https://example.org/thing"));
+        assertTrue(UriSchemes.isAllowedUriScheme("http://example.org/thing"));
     }
 
     @Test
-    void isAllowedUriScheme_decentralizedUri_allowedForSubjectAndObject() {
+    void isAllowedUriScheme_decentralizedUri_isAllowed() {
         for (String uri : new String[]{
                 "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
                 "ipns://k51qzi5uqu5dlvj2baxnqndepeb86cbk3ng7n3i46uzyxzyqj2xjonzllnv0v8",
@@ -82,48 +79,35 @@ class UriSchemesTest {
                 "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
                 "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3juvq5gxvgt2b",
         }) {
-            assertTrue(UriSchemes.isAllowedUriScheme(uri, Position.SUBJECT), uri);
-            assertTrue(UriSchemes.isAllowedUriScheme(uri, Position.OBJECT), uri);
-            assertFalse(UriSchemes.isAllowedUriScheme(uri, Position.PREDICATE), uri);
-            assertFalse(UriSchemes.isAllowedUriScheme(uri, Position.NANOPUB_URI), uri);
+            assertTrue(UriSchemes.isAllowedUriScheme(uri), uri);
         }
     }
 
     @Test
-    void isAllowedUriScheme_unknownScheme_notAllowedAnywhere() {
-        for (Position position : Position.values()) {
-            assertFalse(UriSchemes.isAllowedUriScheme("ftp://example.org/thing", position), position.name());
-            assertFalse(UriSchemes.isAllowedUriScheme("urn:uuid:1b0e6d5c-1e5b-4a2f-9f4a-3f4e9a5b6c7d", position), position.name());
-        }
+    void isAllowedUriScheme_schemeIsCaseInsensitive_isAllowed() {
+        assertTrue(UriSchemes.isAllowedUriScheme("DID:plc:ewvi7nxzyoun6zhxrhs64oiz"));
     }
 
     @Test
-    void isAllowedUriScheme_relativeUri_notAllowedAnywhere() {
-        for (Position position : Position.values()) {
-            assertFalse(UriSchemes.isAllowedUriScheme("example.org/thing", position), position.name());
-        }
+    void isAllowedUriScheme_unknownScheme_isNotAllowed() {
+        assertFalse(UriSchemes.isAllowedUriScheme("ftp://example.org/thing"));
+        assertFalse(UriSchemes.isAllowedUriScheme("urn:uuid:1b0e6d5c-1e5b-4a2f-9f4a-3f4e9a5b6c7d"));
     }
 
     @Test
-    void isAllowedUriScheme_null_notAllowedAnywhere() {
-        for (Position position : Position.values()) {
-            assertFalse(UriSchemes.isAllowedUriScheme(null, position), position.name());
-        }
-    }
-
-    // -- getAllowedSchemes --
-
-    @Test
-    void getAllowedSchemes_predicateAndNanopubUri_areHttpOnly() {
-        assertEquals(UriSchemes.HTTP_SCHEMES, UriSchemes.getAllowedSchemes(Position.PREDICATE));
-        assertEquals(UriSchemes.HTTP_SCHEMES, UriSchemes.getAllowedSchemes(Position.NANOPUB_URI));
+    void isAllowedUriScheme_schemeLookalike_isNotAllowed() {
+        // must not be treated as a "did:" URI by prefix matching
+        assertFalse(UriSchemes.isAllowedUriScheme("didsomething://example.org/thing"));
     }
 
     @Test
-    void getAllowedSchemes_subjectAndObject_areTheWiderSet() {
-        assertEquals(UriSchemes.RESOURCE_SCHEMES, UriSchemes.getAllowedSchemes(Position.SUBJECT));
-        assertEquals(UriSchemes.RESOURCE_SCHEMES, UriSchemes.getAllowedSchemes(Position.OBJECT));
-        assertTrue(UriSchemes.RESOURCE_SCHEMES.containsAll(UriSchemes.HTTP_SCHEMES));
+    void isAllowedUriScheme_relativeUri_isNotAllowed() {
+        assertFalse(UriSchemes.isAllowedUriScheme("example.org/thing"));
+    }
+
+    @Test
+    void isAllowedUriScheme_null_isNotAllowed() {
+        assertFalse(UriSchemes.isAllowedUriScheme(null));
     }
 
 }

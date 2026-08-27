@@ -319,7 +319,7 @@ class NanopubVerifierTest {
     }
 
     @Test
-    void checkUriProtocol_decentralizedPredicate_reportsProblem() throws Exception {
+    void checkUriProtocol_decentralizedPredicate_noProtocolProblem() throws Exception {
         IRI did = vf.createIRI("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
         NanopubCreator c = baseCreator();
         c.addAssertionStatement(anyIri, did, anyIri);
@@ -327,7 +327,7 @@ class NanopubVerifierTest {
 
         NanopubVerifier verifier = new NanopubVerifier(np);
         verifier.verify();
-        assertTrue(verifier.getIssues().contains("Invalid URI protocol: " + did.stringValue()));
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid URI protocol:")));
     }
 
     @Test
@@ -343,8 +343,8 @@ class NanopubVerifierTest {
     }
 
     @Test
-    void checkUriProtocol_nonHttpNanopubUri_reportsProblem() throws Exception {
-        String uri = "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
+    void checkUriProtocol_unknownSchemeNanopubUri_reportsProblem() throws Exception {
+        String uri = "ftp://example.org/nanopub";
         NanopubCreator c = new NanopubCreator(vf.createIRI(uri));
         c.addAssertionStatement(anyIri, anyIri, anyIri);
         c.addProvenanceStatement(anyIri, anyIri);

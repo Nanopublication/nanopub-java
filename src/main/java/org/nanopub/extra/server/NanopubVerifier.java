@@ -12,7 +12,6 @@ import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.nanopub.SimpleTimestampPattern;
 import org.nanopub.UriSchemes;
-import org.nanopub.UriSchemes.Position;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
@@ -170,27 +169,25 @@ public class NanopubVerifier {
     }
 
     /**
-     * Check that every URI uses a scheme that is allowed at the position it occupies. Subjects and
-     * objects may use content-addressed and decentralized identifier schemes next to http(s), while
-     * predicates and the nanopublication's own URI are restricted to http(s). See
-     * {@link UriSchemes}.
+     * Check that every URI uses one of the allowed schemes, which next to http(s) include the
+     * content-addressed and decentralized identifier schemes. See {@link UriSchemes}.
      */
     private void checkUriProtocol() {
-        checkUriScheme(nanopub.getUri(), Position.NANOPUB_URI);
+        checkUriScheme(nanopub.getUri());
         for (IRI graphUri : nanopub.getGraphUris()) {
-            checkUriScheme(graphUri, Position.NANOPUB_URI);
+            checkUriScheme(graphUri);
         }
         for (Statement st : getAllStatements()) {
-            checkUriScheme(st.getSubject(), Position.SUBJECT);
-            checkUriScheme(st.getPredicate(), Position.PREDICATE);
-            checkUriScheme(st.getObject(), Position.OBJECT);
+            checkUriScheme(st.getSubject());
+            checkUriScheme(st.getPredicate());
+            checkUriScheme(st.getObject());
         }
     }
 
-    private void checkUriScheme(Value value, Position position) {
+    private void checkUriScheme(Value value) {
         // Blank nodes have no scheme to check:
         if (!(value instanceof IRI)) return;
-        if (!UriSchemes.isAllowedUriScheme(value.stringValue(), position)) {
+        if (!UriSchemes.isAllowedUriScheme(value.stringValue())) {
             issues.add("Invalid URI protocol: " + value.stringValue());
         }
     }

@@ -4,14 +4,13 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Defines which URI schemes are allowed at which position in a nanopublication.
+ * Defines which URI schemes are allowed in a nanopublication.
  * <p>
  * Nanopublications have historically been restricted to http(s) URIs by tooling convention, but the
  * nanopublication guidelines do not mandate this. Content-addressed and decentralized identifiers
- * ({@code ipfs:}, {@code ipns:}, {@code did:}, {@code at:}) are valid IRIs and are useful as
- * subjects and objects of assertions. They are meaningless as predicates, however, and the
- * nanopublication's own URI has to remain http(s) because that is what the trusty URI scheme
- * assumes.
+ * ({@code ipfs:}, {@code ipns:}, {@code did:}, {@code at:}) are valid IRIs and are useful to refer
+ * to from within a nanopublication. Allowing them is not an endorsement: it only means that
+ * nanopublications using them are not flagged as problematic.
  * <p>
  * This class is the single place where that policy is stated, so that downstream tools do not each
  * have to re-invent an ad-hoc {@code matches("https?://.+")} test.
@@ -21,68 +20,22 @@ import java.util.Set;
 public class UriSchemes {
 
     /**
-     * The position a URI occupies in a nanopublication, which determines the schemes allowed for it.
+     * The URI schemes allowed in a nanopublication, in any position.
      */
-    public enum Position {
-
-        /**
-         * The subject of a triple, in any of the four graphs.
-         */
-        SUBJECT,
-
-        /**
-         * The predicate of a triple, in any of the four graphs.
-         */
-        PREDICATE,
-
-        /**
-         * The object of a triple, in any of the four graphs. Only applies if the object is a URI.
-         */
-        OBJECT,
-
-        /**
-         * The nanopublication's own URI, or one of its four graph URIs.
-         */
-        NANOPUB_URI
-
-    }
-
-    /**
-     * The schemes allowed for predicates and for the nanopublication's own URI.
-     */
-    public static final Set<String> HTTP_SCHEMES = Set.of("http", "https");
-
-    /**
-     * The schemes allowed for subjects and objects.
-     */
-    public static final Set<String> RESOURCE_SCHEMES = Set.of("http", "https", "ipfs", "ipns", "did", "at");
+    public static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https", "ipfs", "ipns", "did", "at");
 
     private UriSchemes() {
     }  // no instances allowed
 
     /**
-     * Returns the schemes that are allowed at the given position.
+     * Checks whether the given URI uses one of the allowed schemes.
      *
-     * @param position the position the URI occupies
-     * @return an unmodifiable set of lower-case scheme names
+     * @param uri the URI to check
+     * @return true if the URI is absolute and its scheme is allowed
      */
-    public static Set<String> getAllowedSchemes(Position position) {
-        return switch (position) {
-            case SUBJECT, OBJECT -> RESOURCE_SCHEMES;
-            case PREDICATE, NANOPUB_URI -> HTTP_SCHEMES;
-        };
-    }
-
-    /**
-     * Checks whether the given URI uses a scheme that is allowed at the given position.
-     *
-     * @param uri      the URI to check
-     * @param position the position the URI occupies
-     * @return true if the URI is absolute and its scheme is allowed at that position
-     */
-    public static boolean isAllowedUriScheme(String uri, Position position) {
+    public static boolean isAllowedUriScheme(String uri) {
         String scheme = getScheme(uri);
-        return scheme != null && getAllowedSchemes(position).contains(scheme);
+        return scheme != null && ALLOWED_SCHEMES.contains(scheme);
     }
 
     /**
