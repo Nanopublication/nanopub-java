@@ -1,3 +1,25 @@
+## [1.93.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.92.0...nanopub-1.93.0) (2026-08-27)
+
+### Features
+
+* allow ipfs:, ipns:, did: and at: URIs as subjects and objects ([f312493](https://github.com/Nanopublication/nanopub-java/commit/f312493c37cab0d6d33d88439410eac42fcafbf3)), closes [#138](https://github.com/Nanopublication/nanopub-java/issues/138)
+
+### Bug Fixes
+
+* blacklist http://schema.org/ instead of https://schema.org/ ([8d40caf](https://github.com/Nanopublication/nanopub-java/commit/8d40caf8415856696d3bb524784b09603da4ea26)), closes [#136](https://github.com/Nanopublication/nanopub-java/issues/136)
+
+### Build and continuous integration
+
+* **deps:** update actions/setup-java action to v6 ([06a82a3](https://github.com/Nanopublication/nanopub-java/commit/06a82a33eca2bf6c2d33a56daed171ecf63115d2))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([1ab7c5a](https://github.com/Nanopublication/nanopub-java/commit/1ab7c5ada4cf00e677819cfa0e935c60dfa66935))
+
+### Refactoring
+
+* allow the wider scheme set in every position ([97219e1](https://github.com/Nanopublication/nanopub-java/commit/97219e156d71bc4ae8fa117e1b229979b9350943))
+
 ## [1.92.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.91.0...nanopub-1.92.0) (2026-08-20)
 
 ### Features
