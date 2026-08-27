@@ -292,6 +292,70 @@ class NanopubVerifierTest {
         assertTrue(verifier.getIssues().stream().anyMatch(s -> s.startsWith("Byte count exceeds maximum of 10MB")));
     }
 
+    // -- checkUriProtocol --
+
+    @Test
+    void checkUriProtocol_httpUris_noProtocolProblem() throws Exception {
+        Nanopub np = baseCreator().finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid URI protocol:")));
+    }
+
+    @Test
+    void checkUriProtocol_decentralizedSubjectsAndObjects_noProtocolProblem() throws Exception {
+        IRI cid = vf.createIRI("ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi");
+        IRI did = vf.createIRI("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
+        IRI atUri = vf.createIRI("at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.feed.post/3juvq5gxvgt2b");
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(cid, anyIri, did);
+        c.addAssertionStatement(did, anyIri, atUri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid URI protocol:")));
+    }
+
+    @Test
+    void checkUriProtocol_decentralizedPredicate_noProtocolProblem() throws Exception {
+        IRI did = vf.createIRI("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(anyIri, did, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(s -> s.startsWith("Invalid URI protocol:")));
+    }
+
+    @Test
+    void checkUriProtocol_unknownSchemeObject_reportsProblem() throws Exception {
+        IRI ftpUri = vf.createIRI("ftp://example.org/data.zip");
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(anyIri, anyIri, ftpUri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().contains("Invalid URI protocol: " + ftpUri.stringValue()));
+    }
+
+    @Test
+    void checkUriProtocol_unknownSchemeNanopubUri_reportsProblem() throws Exception {
+        String uri = "ftp://example.org/nanopub";
+        NanopubCreator c = new NanopubCreator(vf.createIRI(uri));
+        c.addAssertionStatement(anyIri, anyIri, anyIri);
+        c.addProvenanceStatement(anyIri, anyIri);
+        c.addPubinfoStatement(anyIri, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().contains("Invalid URI protocol: " + uri));
+    }
+
     // -- checkLiteralDatatypes --
 
     @Test

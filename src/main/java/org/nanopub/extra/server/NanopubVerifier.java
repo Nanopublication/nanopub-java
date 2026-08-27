@@ -4,12 +4,14 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.jspecify.annotations.NonNull;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
 import org.nanopub.SimpleTimestampPattern;
+import org.nanopub.UriSchemes;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
@@ -166,19 +168,27 @@ public class NanopubVerifier {
         }
     }
 
+    /**
+     * Check that every URI uses one of the allowed schemes, which next to http(s) include the
+     * content-addressed and decentralized identifier schemes. See {@link UriSchemes}.
+     */
     private void checkUriProtocol() {
+        checkUriScheme(nanopub.getUri());
+        for (IRI graphUri : nanopub.getGraphUris()) {
+            checkUriScheme(graphUri);
+        }
         for (Statement st : getAllStatements()) {
-            if (!isHttpOrHttps(st.getSubject())) {
-                issues.add("Invalid URI protocol: " + st.getSubject().stringValue());
-            }
-            if (!isHttpOrHttps(st.getPredicate())) {
-                issues.add("Invalid URI protocol: " + st.getPredicate().stringValue());
-            }
-            if (st.getObject() instanceof IRI) {
-                if (!isHttpOrHttps(((IRI) st.getObject()))) {
-                    issues.add("Invalid URI protocol: " + st.getObject().stringValue());
-                }
-            }
+            checkUriScheme(st.getSubject());
+            checkUriScheme(st.getPredicate());
+            checkUriScheme(st.getObject());
+        }
+    }
+
+    private void checkUriScheme(Value value) {
+        // Blank nodes have no scheme to check:
+        if (!(value instanceof IRI)) return;
+        if (!UriSchemes.isAllowedUriScheme(value.stringValue())) {
+            issues.add("Invalid URI protocol: " + value.stringValue());
         }
     }
 
@@ -189,10 +199,6 @@ public class NanopubVerifier {
         allStatements.addAll(nanopub.getProvenance());
         allStatements.addAll(nanopub.getPubinfo());
         return allStatements;
-    }
-
-    private boolean isHttpOrHttps(Resource uri) {
-        return uri.stringValue().startsWith("https://") || uri.stringValue().startsWith("http://");
     }
 
     /**
