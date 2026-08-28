@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubProfile;
 import org.nanopub.testsuite.NanopubTestSuite;
@@ -240,9 +241,13 @@ class SignNanopubTest {
     }
 
     private static Nanopub preNanopub() throws Exception {
+        return preNanopub("an assertion");
+    }
+
+    private static Nanopub preNanopub(String label) throws Exception {
         NanopubCreator creator = new NanopubCreator(true);
         creator.addAssertionStatement(anyIri, org.eclipse.rdf4j.model.vocabulary.RDFS.LABEL,
-                TestUtils.vf.createLiteral("an assertion"));
+                TestUtils.vf.createLiteral(label));
         creator.addProvenanceStatement(anyIri, anyIri);
         creator.addPubinfoStatement(anyIri, anyIri);
         return creator.finalizeNanopub();
@@ -383,6 +388,100 @@ class SignNanopubTest {
 
         // the key cannot be read, but the file name has already selected the DSA algorithm
         assertThrows(Exception.class, signer::run);
+    }
+
+    // --------------------------------------------- output file integrity (#129)
+    @Test
+    void aFailedRunLeavesAnExistingOutputFileUntouched() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-failed-single-output");
+        // an already signed nanopub is refused, so the run fails before anything is written
+        File input = writeToFile(tempDir.toFile(), "input.trig",
+                SignNanopub.signAndTransform(preNanopub(), transformContext(false)));
+        File output = new File(tempDir.toFile(), "out.trig");
+        Files.writeString(output.toPath(), "IMPORTANT EXISTING CONTENT\n");
+
+        SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), input.getPath()});
+
+        assertThrows(Exception.class, signer::run);
+        assertEquals("IMPORTANT EXISTING CONTENT\n", Files.readString(output.toPath()));
+    }
+
+    @Test
+    void aRunRefusingAnIllTypedLiteralLeavesTheOutputFileUntouched() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-ill-typed-output");
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(anyIri, anyIri, TestUtils.vf.createLiteral("two", XSD.INTEGER));
+        creator.addProvenanceStatement(creator.getAssertionUri(), anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+        File input = writeToFile(tempDir.toFile(), "input.trig", creator.finalizeNanopub());
+        File output = new File(tempDir.toFile(), "out.trig");
+        Files.writeString(output.toPath(), "IMPORTANT EXISTING CONTENT\n");
+
+        SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), input.getPath()});
+
+        assertThrows(Exception.class, signer::run);
+        assertEquals("IMPORTANT EXISTING CONTENT\n", Files.readString(output.toPath()));
+    }
+
+    @Test
+    void aFailedRunDoesNotCreateTheDefaultOutputFile() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-failed-default-output");
+        File input = writeToFile(tempDir.toFile(), "input.trig",
+                SignNanopub.signAndTransform(preNanopub(), transformContext(false)));
+
+        SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()});
+
+        assertThrows(Exception.class, signer::run);
+        assertFalse(new File(tempDir.toFile(), "signed.input.trig").exists());
+    }
+
+    @Test
+    void aFailedRunDoesNotCreateAGzippedOutputFile() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-failed-gz-output");
+        File input = writeToFile(tempDir.toFile(), "input.trig",
+                SignNanopub.signAndTransform(preNanopub(), transformContext(false)));
+        File output = new File(tempDir.toFile(), "out.trig.gz");
+
+        SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), input.getPath()});
+
+        assertThrows(Exception.class, signer::run);
+        assertFalse(output.exists());
+    }
+
+    @Test
+    void writesAnEmptyOutputFileForAnInputWithoutNanopubs() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-empty-input");
+        File input = writeToFile(tempDir.toFile(), "input.trig");
+
+        CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", input.getPath()}).run();
+
+        File output = new File(tempDir.toFile(), "signed.input.trig");
+        assertTrue(output.exists());
+        assertEquals(0, Files.size(output.toPath()));
+    }
+
+    @Test
+    void writesAllInputFilesToTheSingleOutputFile() throws Exception {
+        Path tempDir = Files.createTempDirectory("test-sign-several-inputs");
+        File first = writeToFile(tempDir.toFile(), "first.trig", preNanopub("the first assertion"));
+        File second = writeToFile(tempDir.toFile(), "second.trig", preNanopub("the second assertion"));
+        File output = new File(tempDir.toFile(), "out.trig");
+
+        CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), first.getPath(), second.getPath()}).run();
+
+        int[] count = new int[1];
+        MultiNanopubRdfHandler.process(RDFFormat.TRIG, output, np -> count[0]++);
+        assertEquals(2, count[0]);
     }
 
     @Test
