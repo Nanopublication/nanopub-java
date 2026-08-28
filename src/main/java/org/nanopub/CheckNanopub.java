@@ -153,11 +153,18 @@ public class CheckNanopub extends CliRunner {
 
     private void check(Nanopub np) {
         List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(np);
+        List<Statement> invalidSparql = NanopubUtils.getInvalidSparqlStatements(np);
         if (TrustyNanopubUtils.isValidTrustyNanopub(np)) {
             if (!illTyped.isEmpty()) {
                 log("WARNING: TRUSTY NANOPUB WITH ILL-TYPED LITERAL(S): " + np.getUri() + "\n");
                 for (Statement st : illTyped) {
                     log("- " + NanopubUtils.describeIllTypedLiteral(st) + "\n");
+                }
+            }
+            if (!invalidSparql.isEmpty()) {
+                log("WARNING: TRUSTY NANOPUB WITH INVALID SPARQL: " + np.getUri() + "\n");
+                for (Statement st : invalidSparql) {
+                    log("- " + NanopubUtils.describeInvalidSparql(st) + "\n");
                 }
             }
             NanopubSignatureElement se = null;
@@ -220,12 +227,15 @@ public class CheckNanopub extends CliRunner {
         } else if (TrustyUriUtils.isPotentialTrustyUri(np.getUri())) {
             System.out.println("Looks like a trusty nanopub BUT VERIFICATION FAILED: " + np.getUri());
             report.countNotTrusty();
-        } else if (!illTyped.isEmpty()) {
-            // Trusty nanopubs with ill-typed literals are only warned about above, but a plain one is not
+        } else if (!illTyped.isEmpty() || !invalidSparql.isEmpty()) {
+            // Trusty nanopubs with these problems are only warned about above, but a plain one is not
             // fit to be signed and published, and is therefore reported as invalid.
             System.out.println("INVALID NANOPUB: " + np.getUri());
             for (Statement st : illTyped) {
                 System.out.println("- " + NanopubUtils.describeIllTypedLiteral(st));
+            }
+            for (Statement st : invalidSparql) {
+                System.out.println("- " + NanopubUtils.describeInvalidSparql(st));
             }
             report.countInvalid();
         } else {

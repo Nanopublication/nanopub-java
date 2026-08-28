@@ -57,6 +57,7 @@ public class NanopubVerifier {
         checkExample();
         checkBlacklist();
         checkLiteralDatatypes();
+        checkSparqlSyntax();
 
         if (issues.isEmpty()) {
             logger.debug("Nanopub {} passed verification with no issues", nanopub.getUri());
@@ -112,6 +113,17 @@ public class NanopubVerifier {
     private void checkLiteralDatatypes() {
         for (Statement st : NanopubUtils.getIllTypedLiteralStatements(nanopub)) {
             issues.add(NanopubUtils.describeIllTypedLiteral(st));
+        }
+    }
+
+    /**
+     * Check that the SPARQL of a grlc query nanopub parses. Such nanopubs are refused by the signing
+     * and publishing steps, but ones published before that check exist in the wild: they can never be
+     * run, and the only remedy is publishing a corrected version.
+     */
+    private void checkSparqlSyntax() {
+        for (Statement st : NanopubUtils.getInvalidSparqlStatements(nanopub)) {
+            issues.add(NanopubUtils.describeInvalidSparql(st));
         }
     }
 

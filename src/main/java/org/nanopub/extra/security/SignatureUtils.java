@@ -156,6 +156,11 @@ public class SignatureUtils {
             throw new MalformedNanopubException("Nanopub has ill-typed literal(s) and cannot be signed: " +
                     NanopubUtils.describeIllTypedLiteral(illTyped.getFirst()));
         }
+        List<Statement> invalidSparql = NanopubUtils.getInvalidSparqlStatements(preNanopub);
+        if (!invalidSparql.isEmpty()) {
+            throw new MalformedNanopubException("Nanopub has invalid SPARQL and cannot be signed: " +
+                    NanopubUtils.describeInvalidSparql(invalidSparql.getFirst()));
+        }
 
         RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
         IRI npUri;

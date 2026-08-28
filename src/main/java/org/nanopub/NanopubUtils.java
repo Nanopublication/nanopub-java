@@ -13,8 +13,10 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.nanopub.extra.services.SparqlSyntax;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.KPXL_GRLC;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
@@ -120,6 +122,42 @@ public class NanopubUtils {
         Literal l = (Literal) st.getObject();
         return "Invalid value for datatype " + l.getDatatype().stringValue() + ": \"" + l.getLabel() +
                 "\" (as object of " + st.getPredicate().stringValue() + ")";
+    }
+
+    /**
+     * Returns the statements of the given Nanopub whose object is a SPARQL query, declared with
+     * {@link org.nanopub.vocabulary.KPXL_GRLC#SPARQL}, that does not parse, across all four graphs.
+     * <p>
+     * A nanopub cannot be edited after the fact, so a grlc query nanopub whose SPARQL is broken is
+     * broken permanently: it can never run. Such nanopubs are therefore refused by the signing and
+     * publishing steps, but ones published before that check exist in the wild and can still be loaded
+     * and read.
+     *
+     * @param nanopub the Nanopub to check
+     * @return the statements with an unparseable SPARQL query, in the order of {@link #getStatements(Nanopub)}
+     */
+    public static List<Statement> getInvalidSparqlStatements(Nanopub nanopub) {
+        List<Statement> invalid = new ArrayList<>();
+        for (Statement st : getStatements(nanopub)) {
+            if (!st.getPredicate().equals(KPXL_GRLC.SPARQL)) continue;
+            if (!(st.getObject() instanceof Literal l)) continue;
+            if (!SparqlSyntax.isValid(l.getLabel())) {
+                invalid.add(st);
+            }
+        }
+        return invalid;
+    }
+
+    /**
+     * Describes an unparseable SPARQL query as found by {@link #getInvalidSparqlStatements(Nanopub)}.
+     *
+     * @param st a statement whose object is a SPARQL query that does not parse
+     * @return a human-readable description of the syntax error
+     */
+    public static String describeInvalidSparql(Statement st) {
+        Literal l = (Literal) st.getObject();
+        return "Invalid SPARQL as object of " + st.getPredicate().stringValue() + ": " +
+                SparqlSyntax.getSyntaxError(l.getLabel());
     }
 
     private static List<Statement> getSortedList(Set<Statement> s) {
