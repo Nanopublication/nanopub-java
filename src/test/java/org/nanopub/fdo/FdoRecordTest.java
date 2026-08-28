@@ -1,6 +1,5 @@
 package org.nanopub.fdo;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.Values;
@@ -11,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 import org.nanopub.*;
 import org.nanopub.extra.security.*;
@@ -21,8 +21,9 @@ import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -39,22 +40,28 @@ import static org.nanopub.utils.TestUtils.vf;
 
 class FdoRecordTest {
 
-    private static final String TEST_KEY_PATH = "~/.nanopub/testkey/";
     private static final String TEST_KEY_NAME = "id";
-    private static final String testKeysDirPath = SignatureUtils.getFullFilePath(TEST_KEY_PATH);
+
+    /**
+     * Where this test's keys are made. A directory of its own, per run: ~/.nanopub is
+     * where the person running the tests keeps their own signing key and profile, and a
+     * test suite has no business writing there.
+     */
+    @TempDir
+    private static Path testKeysDir;
 
     private static MockedStatic<TransformContext> transformContextMock;
 
     @BeforeAll
     static void setUp() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        File testKeysDir = new File(testKeysDirPath);
-        testKeysDir.mkdirs();
-        MakeKeys.make(testKeysDirPath + TEST_KEY_NAME, SignatureAlgorithm.RSA);
-        assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase()).exists());
-        assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase() + ".pub").exists());
+        String keyFilePrefix = testKeysDir.resolve(TEST_KEY_NAME).toString();
+        MakeKeys.make(keyFilePrefix, RSA);
+        String privateKeyFile = keyFilePrefix + "_" + RSA.name().toLowerCase();
+        assertTrue(Files.exists(Path.of(privateKeyFile)));
+        assertTrue(Files.exists(Path.of(privateKeyFile + ".pub")));
 
         // mock TransformContext.makeDefault() to get test keys
-        KeyPair key = SignNanopub.loadKey(TEST_KEY_PATH + "/id_rsa", RSA);
+        KeyPair key = SignNanopub.loadKey(privateKeyFile, RSA);
 
         TransformContext testTC = new TransformContext(RSA, key, null, false, false, false);
         transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
@@ -65,15 +72,11 @@ class FdoRecordTest {
     }
 
     @AfterAll
-    static void tearDown() throws IOException {
+    static void tearDown() {
         if (transformContextMock != null) {
             transformContextMock.close();
             transformContextMock = null;
         }
-
-        File testKeysDir = new File(testKeysDirPath);
-        FileUtils.deleteDirectory(testKeysDir);
-        assertFalse(testKeysDir.exists());
     }
 
 
