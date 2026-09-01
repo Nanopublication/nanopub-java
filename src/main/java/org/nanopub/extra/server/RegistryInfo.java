@@ -15,6 +15,13 @@ import java.nio.charset.StandardCharsets;
 public class RegistryInfo implements Serializable {
 
     /**
+     * Pinned to the value the JVM computed for this class before the
+     * isLocalInstance/isTestInstance/registryVersion fields were added, so that
+     * registry lists cached by earlier versions remain readable.
+     */
+    private static final long serialVersionUID = -8285437338229536648L;
+
+    /**
      * Exception class for handling errors related to loading registry information.
      */
     public static class RegistryInfoException extends Exception {
@@ -88,6 +95,11 @@ public class RegistryInfo implements Serializable {
     protected Long accountCount;
     protected Long nanopubCount;
     protected Long loadCounter;
+    protected String registryVersion;
+    protected Boolean isLocalInstance;
+    protected Boolean isTestInstance;
+    protected Boolean optionalLoadEnabled;
+    protected Boolean trustCalculationEnabled;
 
     /**
      * Returns the URL of the nanopub registry server.
@@ -222,6 +234,56 @@ public class RegistryInfo implements Serializable {
      */
     public Long getLoadCounter() {
         return loadCounter;
+    }
+
+    /**
+     * Returns the version of the registry software the server is running.
+     *
+     * @return the registry version, or null if the server does not report one
+     */
+    public String getRegistryVersion() {
+        return registryVersion;
+    }
+
+    /**
+     * Returns whether the registry declares itself a local instance. Local instances accept
+     * protected nanopublications, whereas public registries reject them.
+     *
+     * @return true if the registry reports itself as a local instance; false also if the server
+     * does not report the field at all, as is the case for registries older than version 1.12.0
+     */
+    public boolean isLocalInstance() {
+        return Boolean.TRUE.equals(isLocalInstance);
+    }
+
+    /**
+     * Returns whether the registry declares itself a test instance.
+     *
+     * @return true if the registry reports itself as a test instance; false also if the server
+     * does not report the field at all
+     */
+    public boolean isTestInstance() {
+        return Boolean.TRUE.equals(isTestInstance);
+    }
+
+    /**
+     * Returns whether the registry has optional loading enabled.
+     *
+     * @return true if the registry reports optional loading as enabled; false also if the server
+     * does not report the field at all
+     */
+    public boolean isOptionalLoadEnabled() {
+        return Boolean.TRUE.equals(optionalLoadEnabled);
+    }
+
+    /**
+     * Returns whether the registry has trust calculation enabled.
+     *
+     * @return true if the registry reports trust calculation as enabled; false also if the server
+     * does not report the field at all
+     */
+    public boolean isTrustCalculationEnabled() {
+        return Boolean.TRUE.equals(trustCalculationEnabled);
     }
 
     /**

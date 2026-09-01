@@ -35,31 +35,38 @@ class RegistryInfoTest {
     private static final int ACCOUNT_COUNT = 513;
     private static final int NANOPUB_COUNT = 63963;
     private static final int LOAD_COUNTER = 63963;
+    private static final String REGISTRY_VERSION = "1.12.1";
 
     private static final String registryInfoJsonString = String.format(
-            "{\"setupId\":%d,\"trustStateCounter\":%d,\"lastTrustStateUpdate\":\"%s\",\"trustStateHash\":\"%s\",\"status\":\"%s\",\"coverageTypes\":\"%s\",\"coverageAgents\":\"%s\",\"currentSetting\":\"%s\",\"originalSetting\":\"%s\",\"agentCount\":%d,\"accountCount\":%d,\"nanopubCount\":%d,\"loadCounter\":%d}",
-            SETUP_ID, TRUST_STATE_COUNTER, LAST_TRUST_STATE_UPDATE, TRUST_STATE_HASH, STATUS, COVERAGE_TYPES, COVERAGE_AGENTS, CURRENT_SETTING, ORIGINAL_SETTING, AGENT_COUNT, ACCOUNT_COUNT, NANOPUB_COUNT, LOAD_COUNTER
+            "{\"setupId\":%d,\"trustStateCounter\":%d,\"lastTrustStateUpdate\":\"%s\",\"trustStateHash\":\"%s\",\"status\":\"%s\",\"coverageTypes\":\"%s\",\"coverageAgents\":\"%s\",\"currentSetting\":\"%s\",\"originalSetting\":\"%s\",\"agentCount\":%d,\"accountCount\":%d,\"nanopubCount\":%d,\"loadCounter\":%d,\"registryVersion\":\"%s\",\"isLocalInstance\":true,\"isTestInstance\":false,\"optionalLoadEnabled\":true,\"trustCalculationEnabled\":false}",
+            SETUP_ID, TRUST_STATE_COUNTER, LAST_TRUST_STATE_UPDATE, TRUST_STATE_HASH, STATUS, COVERAGE_TYPES, COVERAGE_AGENTS, CURRENT_SETTING, ORIGINAL_SETTING, AGENT_COUNT, ACCOUNT_COUNT, NANOPUB_COUNT, LOAD_COUNTER, REGISTRY_VERSION
     );
+
+    // As reported by registries older than 1.12.0, which know none of the fields added for #144:
+    private static final String legacyRegistryInfoJsonString = String.format("{\"setupId\":%d,\"status\":\"%s\"}", SETUP_ID, STATUS);
 
     private final String validUrl = "https://registry.nanodash.net/";
     private final String invalidUrl = "https://invalid.registry.url/";
 
     MockedStatic<NanopubUtils> mockStatic = mockStatic(NanopubUtils.class);
+    private HttpEntity mockEntity;
     private RegistryInfo registryInfo;
 
     @BeforeEach
     void setUp() throws IOException, RegistryInfo.RegistryInfoException {
-        InputStream mockInputStream = new ByteArrayInputStream(registryInfoJsonString.getBytes(StandardCharsets.UTF_8));
-
         CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
         CloseableHttpResponse mockResponse = mock(CloseableHttpResponse.class);
-        HttpEntity mockEntity = mock(HttpEntity.class);
+        mockEntity = mock(HttpEntity.class);
         when(mockHttpClient.execute(any(HttpGet.class))).thenReturn(mockResponse);
         when(mockResponse.getEntity()).thenReturn(mockEntity);
-        when(mockEntity.getContent()).thenReturn(mockInputStream);
         mockStatic.when(NanopubUtils::getHttpClient).thenReturn(mockHttpClient);
 
-        registryInfo = RegistryInfo.load(validUrl);
+        registryInfo = loadRegistryInfo(registryInfoJsonString);
+    }
+
+    private RegistryInfo loadRegistryInfo(String json) throws IOException, RegistryInfo.RegistryInfoException {
+        when(mockEntity.getContent()).thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+        return RegistryInfo.load(validUrl);
     }
 
     @AfterEach
@@ -146,6 +153,30 @@ class RegistryInfoTest {
     @Test
     void getLoadCounter() {
         assertEquals(LOAD_COUNTER, registryInfo.getLoadCounter());
+    }
+
+    @Test
+    void getRegistryVersion() {
+        assertEquals(REGISTRY_VERSION, registryInfo.getRegistryVersion());
+    }
+
+    @Test
+    void getInstanceFlags() {
+        assertTrue(registryInfo.isLocalInstance());
+        assertFalse(registryInfo.isTestInstance());
+        assertTrue(registryInfo.isOptionalLoadEnabled());
+        assertFalse(registryInfo.isTrustCalculationEnabled());
+    }
+
+    @Test
+    void flagsDefaultToFalseForLegacyRegistries() throws Exception {
+        RegistryInfo legacy = loadRegistryInfo(legacyRegistryInfoJsonString);
+
+        assertNull(legacy.getRegistryVersion());
+        assertFalse(legacy.isLocalInstance());
+        assertFalse(legacy.isTestInstance());
+        assertFalse(legacy.isOptionalLoadEnabled());
+        assertFalse(legacy.isTrustCalculationEnabled());
     }
 
     @Test
