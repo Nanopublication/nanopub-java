@@ -71,6 +71,23 @@ public class NanopubServerUtils {
     }
 
     /**
+     * Returns the registry instance list configured via {@link #REGISTRY_INSTANCES_PROPERTY} or
+     * {@link #REGISTRY_INSTANCES_ENV}, or null when no override is configured.
+     * <p>
+     * Unlike {@link #getRegistryServerList()} this performs no bootstrap loading or service
+     * discovery and memoizes nothing, so it is safe to call merely to find out whether the caller
+     * is running against an explicitly configured set of registries.
+     *
+     * @return the overriding registry server URLs, or null if the override is unset or blank
+     */
+    public static List<String> getRegistryInstancesOverride() {
+        String override = System.getProperty(REGISTRY_INSTANCES_PROPERTY);
+        if (override == null || override.isEmpty()) override = System.getenv(REGISTRY_INSTANCES_ENV);
+        if (override == null || override.trim().isEmpty()) return null;
+        return List.of(override.trim().split("\\s+"));
+    }
+
+    /**
      * Returns the list of registry server URLs to seed a {@link ServerIterator}.
      * <p>
      * Sources, in order of priority:
@@ -88,13 +105,10 @@ public class NanopubServerUtils {
      */
     public static synchronized List<String> getRegistryServerList() {
         if (registryServerList != null) return registryServerList;
-        String override = System.getProperty(REGISTRY_INSTANCES_PROPERTY);
-        if (override == null || override.isEmpty()) override = System.getenv(REGISTRY_INSTANCES_ENV);
-        if (override != null && !override.trim().isEmpty()) {
-            List<String> list = new ArrayList<>();
-            for (String url : override.trim().split("\\s+")) list.add(url);
-            logger.info("Using {} registry instance(s) from override", list.size());
-            registryServerList = list;
+        List<String> override = getRegistryInstancesOverride();
+        if (override != null) {
+            logger.info("Using {} registry instance(s) from override", override.size());
+            registryServerList = override;
             return registryServerList;
         }
         List<String> bootstrap = getBootstrapServerList();

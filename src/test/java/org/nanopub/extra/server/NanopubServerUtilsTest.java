@@ -22,6 +22,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NanopubServerUtilsTest {
@@ -79,6 +80,23 @@ class NanopubServerUtilsTest {
         assertEquals(
                 List.of("https://reg-a.example/", "https://reg-b.example/"),
                 NanopubServerUtils.getRegistryServerList());
+    }
+
+    @Test
+    void getRegistryInstancesOverrideReturnsNullWhenUnsetOrBlank() {
+        assertNull(NanopubServerUtils.getRegistryInstancesOverride());
+
+        System.setProperty(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY, "   ");
+        assertNull(NanopubServerUtils.getRegistryInstancesOverride());
+    }
+
+    @Test
+    void getRegistryInstancesOverrideSplitsOnWhitespace() {
+        System.setProperty(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY,
+                "  https://reg-a.example/ \t https://reg-b.example/\n");
+        assertEquals(
+                List.of("https://reg-a.example/", "https://reg-b.example/"),
+                NanopubServerUtils.getRegistryInstancesOverride());
     }
 
     @Test
