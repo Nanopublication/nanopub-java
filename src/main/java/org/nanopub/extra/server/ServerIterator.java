@@ -39,15 +39,17 @@ public class ServerIterator implements Iterator<RegistryInfo> {
         // An explicitly configured instance list replaces bootstrap and discovery, so it has to
         // replace the cache as well: a cache written by an earlier run against the public network
         // would otherwise keep sending lookups there, silently, for up to 24 hours.
-        boolean hasOverride = NanopubServerUtils.getRegistryInstancesOverride() != null;
-        if (!forceServerReload && !hasOverride) {
-            try {
-                loadCachedServers();
-            } catch (Exception ex) {
-                logger.warn("Could not read the cached registry list from {}; falling back to the bootstrap list", getServerListFile(), ex);
+        if (!forceServerReload) {
+            String overrideSource = NanopubServerUtils.getRegistryInstancesOverrideSource();
+            if (overrideSource != null) {
+                logger.debug("Ignoring the cached registry list: {} is set", overrideSource);
+            } else {
+                try {
+                    loadCachedServers();
+                } catch (Exception ex) {
+                    logger.warn("Could not read the cached registry list from {}; falling back to the bootstrap list", getServerListFile(), ex);
+                }
             }
-        } else if (hasOverride) {
-            logger.debug("Ignoring the cached registry list: {} is set", NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY);
         }
         if (cachedServers == null) {
             serversToContact.addAll(NanopubServerUtils.getRegistryServerList());
@@ -175,11 +177,12 @@ public class ServerIterator implements Iterator<RegistryInfo> {
      * @throws java.io.IOException if an I/O error occurs
      */
     public static void writeCachedServers(List<RegistryInfo> cachedServers) throws IOException {
-        if (NanopubServerUtils.getRegistryInstancesOverride() != null) {
+        String overrideSource = NanopubServerUtils.getRegistryInstancesOverrideSource();
+        if (overrideSource != null) {
             // The list was gathered under an instance-list override; persisting it would leak that
             // private view into the shared cache file, which every JVM using this home directory
             // reads, including ones running without the override.
-            logger.debug("Not caching the registry list: {} is set", NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY);
+            logger.debug("Not caching the registry list: {} is set", overrideSource);
             return;
         }
         if (cachedServers.size() < 5) return;

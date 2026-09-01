@@ -100,6 +100,20 @@ class NanopubServerUtilsTest {
     }
 
     @Test
+    void getRegistryInstancesOverrideSourceNamesTheConfiguredSource() {
+        assertNull(NanopubServerUtils.getRegistryInstancesOverrideSource());
+
+        System.setProperty(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY, "https://reg-a.example/");
+        assertEquals(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY,
+                NanopubServerUtils.getRegistryInstancesOverrideSource());
+
+        // A blank value is not an override, so neither accessor reports one.
+        System.setProperty(NanopubServerUtils.REGISTRY_INSTANCES_PROPERTY, "   ");
+        assertNull(NanopubServerUtils.getRegistryInstancesOverrideSource());
+        assertNull(NanopubServerUtils.getRegistryInstancesOverride());
+    }
+
+    @Test
     void getRegistryServerListUnionsBootstrapAndDiscovered() throws Exception {
         List<String> bootstrap = NanopubServerUtils.getBootstrapServerList();
         // Pick one real bootstrap URL to verify dedupe, plus a fresh URL to verify appending.

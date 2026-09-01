@@ -81,10 +81,39 @@ public class NanopubServerUtils {
      * @return the overriding registry server URLs, or null if the override is unset or blank
      */
     public static List<String> getRegistryInstancesOverride() {
+        InstancesOverride override = resolveRegistryInstancesOverride();
+        return override == null ? null : override.urls();
+    }
+
+    /**
+     * Returns the name of the configuration source that supplied the instance-list override
+     * ({@link #REGISTRY_INSTANCES_PROPERTY} or {@link #REGISTRY_INSTANCES_ENV}), or null when no
+     * override is configured. Intended for log messages, where naming the source the operator
+     * actually set is more useful than naming the one that happens to be checked first.
+     *
+     * @return the name of the property or environment variable in effect, or null if unset
+     */
+    static String getRegistryInstancesOverrideSource() {
+        InstancesOverride override = resolveRegistryInstancesOverride();
+        return override == null ? null : override.source();
+    }
+
+    private record InstancesOverride(String source, List<String> urls) {
+    }
+
+    /**
+     * Single resolution point for the instance-list override, so that the URLs and the name of the
+     * source they came from cannot drift apart.
+     */
+    private static InstancesOverride resolveRegistryInstancesOverride() {
+        String source = REGISTRY_INSTANCES_PROPERTY;
         String override = System.getProperty(REGISTRY_INSTANCES_PROPERTY);
-        if (override == null || override.isEmpty()) override = System.getenv(REGISTRY_INSTANCES_ENV);
+        if (override == null || override.isEmpty()) {
+            source = REGISTRY_INSTANCES_ENV;
+            override = System.getenv(REGISTRY_INSTANCES_ENV);
+        }
         if (override == null || override.trim().isEmpty()) return null;
-        return List.of(override.trim().split("\\s+"));
+        return new InstancesOverride(source, List.of(override.trim().split("\\s+")));
     }
 
     /**
