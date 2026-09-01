@@ -4,6 +4,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.nanopub.extra.services.ServiceLookup;
+import org.nanopub.vocabulary.NPS;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -57,6 +59,18 @@ class ServerIteratorTest {
         Field serverInfos = ServerIterator.class.getDeclaredField("serverInfos");
         serverInfos.setAccessible(true);
         ((Map<?, ?>) serverInfos.get(null)).clear();
+        ServiceLookup.clearCache();
+    }
+
+    /**
+     * Pre-populates the discovery cache so that the no-override fallback path resolves its server
+     * list without contacting the network.
+     */
+    @SuppressWarnings("unchecked")
+    private void seedServiceLookupCache(List<String> urls) throws Exception {
+        Field f = ServiceLookup.class.getDeclaredField("cache");
+        f.setAccessible(true);
+        ((Map<org.eclipse.rdf4j.model.IRI, List<String>>) f.get(null)).put(NPS.NANOPUB_REGISTRY_1_0, urls);
     }
 
     private File cacheFile() {
@@ -120,6 +134,17 @@ class ServerIteratorTest {
 
         assertNull(cachedServers(iterator), "The cache must be ignored when an override is configured");
         assertEquals(List.of(OVERRIDE_URL), serversToContact(iterator));
+    }
+
+    @Test
+    void forcedReloadSkipsTheCacheWithoutAnOverride() throws Exception {
+        writeCacheFile(publicRegistries());
+        seedServiceLookupCache(List.of("https://discovered.example/"));
+
+        ServerIterator iterator = new ServerIterator(true);
+
+        assertNull(cachedServers(iterator), "forceServerReload must bypass the cache on its own");
+        assertTrue(serversToContact(iterator).contains("https://discovered.example/"));
     }
 
     @Test
