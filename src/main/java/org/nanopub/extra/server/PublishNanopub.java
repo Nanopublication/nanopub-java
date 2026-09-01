@@ -270,13 +270,21 @@ public class PublishNanopub extends CliRunner {
         }
         artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
         reportProgress("Trying to publish nanopub: " + artifactCode);
-        if (NanopubServerUtils.isProtectedNanopub(nanopub)) {
-            throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode);
-        }
+        boolean isProtected = NanopubServerUtils.isProtectedNanopub(nanopub);
+        boolean foundEligibleRegistry = false;
         while (registryInfo != null) {
             String url = registryInfo.getUrl();
 
             // TODO Check here whether nanopub type is covered at given registry.
+
+            if (isProtected && !registryInfo.isLocalInstance()) {
+                // Only local instances accept protected nanopubs; public registries would reject this.
+                logger.debug("Skipping {} for protected nanopub {}: not a local instance", url, artifactCode);
+                reportProgress("Skipping server (not a local instance): " + url);
+                registryInfo = serverIterator.next();
+                continue;
+            }
+            foundEligibleRegistry = true;
 
             reportProgress("Trying server: " + url);
             try {
@@ -295,6 +303,11 @@ public class PublishNanopub extends CliRunner {
             registryInfo = serverIterator.next();
         }
         registryInfo = null;
+        if (isProtected && !foundEligibleRegistry) {
+            throw new RuntimeException("Can't publish protected nanopublication: " + artifactCode +
+                                       ". None of the available registries is a local instance, " +
+                                       "and only local instances accept protected nanopublications.");
+        }
         if (dryRun) {
             System.out.println("Nanopub NOT published: --dry-run, np-uri=" + nanopub.getUri());
             return null;
