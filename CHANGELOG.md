@@ -1,3 +1,29 @@
+## [1.94.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.93.0...nanopub-1.94.0) (2026-09-01)
+
+### Features
+
+* **publish:** allow protected nanopubs on local registry instances ([f06396a](https://github.com/Nanopublication/nanopub-java/commit/f06396aaf4698411f7e7dcca7cf02c6b1ab1fbc2)), closes [#143](https://github.com/Nanopublication/nanopub-java/issues/143)
+* **registry:** expose isLocalInstance, isTestInstance and registryVersion ([5e78d4b](https://github.com/Nanopublication/nanopub-java/commit/5e78d4bb210d8c0bc54c25faf2e8261be493442e)), closes [#144](https://github.com/Nanopublication/nanopub-java/issues/144)
+* reject grlc query nanopublications whose SPARQL doesn't parse ([ca07695](https://github.com/Nanopublication/nanopub-java/commit/ca07695e60ce3f13f5f2a44661d1c288ae7c01b6)), closes [#132](https://github.com/Nanopublication/nanopub-java/issues/132)
+
+### Bug Fixes
+
+* do not create or truncate the sign output file before signing ([e422d56](https://github.com/Nanopublication/nanopub-java/commit/e422d56032f9782c1627fd991adc7ab0e0be824c)), closes [#129](https://github.com/Nanopublication/nanopub-java/issues/129)
+* **registry:** let the instance-list override win over the cached list ([9b4ef5b](https://github.com/Nanopublication/nanopub-java/commit/9b4ef5bcf937f031d08247eff58e9bd14c9478e6)), closes [#145](https://github.com/Nanopublication/nanopub-java/issues/145)
+* **registry:** name the actual override source in the cache log lines ([207b2a6](https://github.com/Nanopublication/nanopub-java/commit/207b2a6cc10d4d2d080f3f5a204e147c6500896f)), closes [#147](https://github.com/Nanopublication/nanopub-java/issues/147)
+
+### Tests
+
+* **fdo:** make the test keys in a temp dir, not in ~/.nanopub ([e72cec0](https://github.com/Nanopublication/nanopub-java/commit/e72cec0c87a033100ffa0e1d4e2d049e6d504caf)), closes [#140](https://github.com/Nanopublication/nanopub-java/issues/140)
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([16f103c](https://github.com/Nanopublication/nanopub-java/commit/16f103cd6020e23e703798cd50b35e567f77a26e))
+
+### Refactoring
+
+* **GrlcQueryPattern:** use constant for grlc pattern info URL ([b2b1edc](https://github.com/Nanopublication/nanopub-java/commit/b2b1edcdfc2ae81a93d71e46a1b92366bce78261))
+
 ## [1.93.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.92.0...nanopub-1.93.0) (2026-08-27)
 
 ### Features
