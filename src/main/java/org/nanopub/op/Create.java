@@ -1,6 +1,5 @@
 package org.nanopub.op;
 
-import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -35,15 +34,18 @@ public class Create extends CliRunner {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
-        try {
-            Create obj = CliRunner.initJc(new Create(), args);
-            obj.run();
-        } catch (ParameterException ex) {
-            System.exit(1);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+        CliSupport.exitWith(execute(args));
+    }
+
+    /**
+     * Runs the tool and returns the process exit code, rather than ending the JVM itself,
+     * so that callers (including tests) can check the outcome.
+     *
+     * @param args command-line arguments
+     * @return 0 if the run completed, 1 if it failed
+     */
+    static int execute(String[] args) {
+        return CliSupport.execute(() -> CliRunner.initJc(new Create(), args).run());
     }
 
     private RDFFormat rdfOutFormat;
