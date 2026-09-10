@@ -1,6 +1,5 @@
 package org.nanopub.op;
 
-import com.beust.jcommander.ParameterException;
 import net.trustyuri.TrustyUriException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.IRI;
@@ -48,15 +47,18 @@ public class Build extends CliRunner {
      * @param args Command-line arguments
      */
     public static void main(String[] args) {
-        try {
-            Build obj = CliRunner.initJc(new Build(), args);
-            obj.run();
-        } catch (ParameterException ex) {
-            System.exit(1);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+        CliSupport.exitWith(execute(args));
+    }
+
+    /**
+     * Runs the tool and returns the process exit code, rather than ending the JVM itself,
+     * so that callers (including tests) can check the outcome.
+     *
+     * @param args command-line arguments
+     * @return 0 if the run completed, 1 if it failed
+     */
+    static int execute(String[] args) {
+        return CliSupport.execute(() -> CliRunner.initJc(new Build(), args).run());
     }
 
     private RDFFormat rdfInFormat, rdfOutFormat;
