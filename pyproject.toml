@@ -12,7 +12,7 @@ python = "^3.9"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.6.15"
 mkdocs-autorefs = "^1.4.2"
-mkdocstrings-python = "^1.16.12"
+mkdocstrings-python = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core"]
