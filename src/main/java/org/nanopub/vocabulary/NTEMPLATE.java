@@ -35,6 +35,13 @@ public class NTEMPLATE {
     public static final IRI UNLISTED_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "UnlistedTemplate");
 
     /**
+     * Represents the class for transient templates, whose filled content applies only to the
+     * nanopublication it was published with and is not carried over when that nanopublication
+     * is superseded, overridden, derived from, or otherwise used as a fill source.
+     */
+    public static final IRI TRANSIENT_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "TransientTemplate");
+
+    /**
      * Predicate indicating a statement in the template.
      */
     public static final IRI HAS_STATEMENT = VocabUtils.createIRI(NAMESPACE, "hasStatement");
@@ -78,6 +85,17 @@ public class NTEMPLATE {
      * Represents the class for trusty URI placeholders.
      */
     public static final IRI TRUSTY_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "TrustyUriPlaceholder");
+
+    /**
+     * Marks a URI placeholder whose value names a resource that does not exist yet, applied
+     * alongside the placeholder's own type. An identifier a form mints this way carries no
+     * artifact code, so nothing makes it unique, and a tool filling the template can check it
+     * against the identifiers already in use before publishing.
+     * <p>
+     * This says more than {@link #INTRODUCED_RESOURCE}, which a template also attaches when
+     * the value is the URI of a resource that already exists.
+     */
+    public static final IRI NEW_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "NewUriPlaceholder");
 
     /**
      * Represents the class for literal placeholders.
