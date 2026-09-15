@@ -87,6 +87,33 @@ public_key: /Users/name/.nanopub/id_rsa.pub
 private_key: /Users/name/.nanopub/id_rsa
 ```
 
+### Checking the key against the network
+
+Signing with a key that no introduction declares for your ORCID produces a nanopublication that is
+cryptographically valid and publishes normally, but that nobody can attribute to you: the registry
+has nothing tying the key to the person, so it shows up under an unapproved agent. A nanopublication
+cannot be edited afterwards, so the only remedy is publishing it again under a declared key and
+retracting the first.
+
+`sign` and `publish` therefore ask the network about the key first, and warn:
+
+```text
+WARNING: https://orcid.org/0000-... is introduced on the network, but by a different key than the
+one about to sign. Nanopublications signed with this key cannot be attributed, and will show as
+coming from an unapproved agent. Publish an introduction declaring this key, or sign with the
+declared one.
+```
+
+Add `--strict` to refuse rather than warn:
+
+```bash
+np sign --strict nanopub.trig
+np publish --strict signed.nanopub.trig
+```
+
+The check reads the network, so it fails open: when the query service cannot be reached, nothing is
+reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal.
+
 ## Shacl Validation
 
 ```
