@@ -48,6 +48,9 @@ public class SignNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
     private boolean verbose = false;
 
+    @com.beust.jcommander.Parameter(names = "--strict", description = "Only sign if the network knows the signer by this key")
+    private boolean strict = false;
+
     @com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
     private boolean resolveCrossRefs = false;
 
@@ -93,6 +96,29 @@ public class SignNanopub extends CliRunner {
     }
 
     /**
+     * Reports whether the network knows the signer by the key about to sign (issue #150).
+     * <p>
+     * A signature made with an undeclared key is valid but cannot be attributed, and a
+     * nanopublication cannot be corrected once published, so the warning comes before anything is
+     * signed. It stays a warning unless {@code --strict} is given: the check reads the network, and
+     * an unreachable query service is no reason to stop someone signing.
+     *
+     * @param signerIri the signer the nanopubs will be signed for
+     * @throws java.lang.Exception in strict mode, if the network does not know the signer by this key
+     */
+    private void checkKeyAgainstNetwork(IRI signerIri) throws Exception {
+        ProfileKeyCheck.Result result = ProfileKeyCheck.check(signerIri, SignatureUtils.encodePublicKey(key.getPublic()));
+        if (!result.isAcceptable()) {
+            System.err.println("WARNING: " + result.message());
+            if (strict) {
+                throw new Exception("Strict mode: nothing was signed. " + result.message());
+            }
+        } else if (verbose) {
+            System.out.println(result.message());
+        }
+    }
+
+    /**
      * Runs the signing process for the nanopubs.
      *
      * @throws java.lang.Exception if an error occurs during signing
@@ -125,6 +151,8 @@ public class SignNanopub extends CliRunner {
             String msg = "No valid signer specified. Use either: -s or --profile !";
             throw new Exception(msg);
         }
+        checkKeyAgainstNetwork(signerIri);
+
         final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
         // The output files are opened lazily, so that a run that fails before anything is signed does
