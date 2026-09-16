@@ -40,7 +40,7 @@ public class PublishNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "--dry-run", description = "Simulate (no action)")
     private boolean dryRun;
 
-    @com.beust.jcommander.Parameter(names = "--strict", description = "Only publish if validation shows no issues")
+    @com.beust.jcommander.Parameter(names = "--strict", description = "Only publish if verification and the signing-key check show no issues")
     private boolean strict;
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")

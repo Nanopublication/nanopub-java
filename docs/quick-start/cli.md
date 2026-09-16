@@ -104,15 +104,26 @@ coming from an unapproved agent. Publish an introduction declaring this key, or 
 declared one.
 ```
 
-Add `--strict` to refuse rather than warn:
+#### `--strict`
+
+Refuse rather than warn:
 
 ```bash
 np sign --strict nanopub.trig
 np publish --strict signed.nanopub.trig
 ```
 
+| Command | `--strict` | Without it |
+| --- | --- | --- |
+| `sign` | Signs nothing, and exits with an error naming the problem | Warns on stderr and signs anyway |
+| `publish` | Leaves the offending nanopublication unpublished, and carries on with the rest | Warns and publishes anyway |
+
+On `publish` the flag is not new: it already refused nanopublications that fail verification, and it
+now covers the signing-key check as well.
+
 The check reads the network, so it fails open: when the query service cannot be reached, nothing is
-reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal.
+reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal, on
+the grounds that a check which could not be made is not evidence of a problem.
 
 ## Shacl Validation
 
