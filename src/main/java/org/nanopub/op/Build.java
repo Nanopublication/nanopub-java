@@ -174,7 +174,7 @@ public class Build extends CliRunner {
     private void initNanopub() throws NanopubAlreadyFinalizedException {
         String npUriString = TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/";
         nanopubIri = vf.createIRI(npUriString);
-        assertionIri = vf.createIRI(npUriString + "assertion");
+        assertionIri = vf.createIRI(npUriString + NanopubUtils.ASSERTION_SUFFIX);
         if (creators.isEmpty()) creators.add(npUriString + "creator");
         npCreator = new NanopubCreator(nanopubIri);
         npCreator.setAssertionUri(assertionIri);
