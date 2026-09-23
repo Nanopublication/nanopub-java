@@ -133,7 +133,7 @@ public class LegacySignatureUtils {
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         RdfFileContent signatureContent = new RdfFileContent(RDFFormat.TRIG);
-        IRI signatureElUri = vf.createIRI(preNanopub.getUri() + "sig");
+        IRI signatureElUri = vf.createIRI(preNanopub.getUri() + NanopubUtils.SIGNATURE_SUFFIX);
         signatureContent.startRDF();
         signatureContent.handleNamespace(NPX.PREFIX, NPX.NAMESPACE);
         IRI npUri = preNanopub.getUri();
