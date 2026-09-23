@@ -339,10 +339,10 @@ public class NanopubVerifier {
         String sub = nanopub.getUri() + "/";
         for (IRI st : nanopub.getGraphUris()) {
             String graphUri = st.stringValue();
-            if (!(graphUri.startsWith(sub + "Head") ||
-                    graphUri.startsWith(sub + "assertion") ||
-                    graphUri.startsWith(sub + "provenance") ||
-                    graphUri.startsWith(sub + "pubinfo"))
+            if (!(graphUri.startsWith(sub + NanopubUtils.HEAD_SUFFIX) ||
+                    graphUri.startsWith(sub + NanopubUtils.ASSERTION_SUFFIX) ||
+                    graphUri.startsWith(sub + NanopubUtils.PROVENANCE_SUFFIX) ||
+                    graphUri.startsWith(sub + NanopubUtils.PUBINFO_SUFFIX))
             ) {
                 issues.add("Unexpected graph uri: " + graphUri);
             }

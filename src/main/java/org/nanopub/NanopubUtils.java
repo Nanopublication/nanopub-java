@@ -47,6 +47,51 @@ public class NanopubUtils {
      */
     public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
 
+    /**
+     * The local name of a nanopublication's head graph, below its own URI.
+     */
+    public static final String HEAD_SUFFIX = "Head";
+
+    /**
+     * The local name of a nanopublication's assertion graph, below its own URI.
+     */
+    public static final String ASSERTION_SUFFIX = "assertion";
+
+    /**
+     * The local name of a nanopublication's provenance graph, below its own URI.
+     */
+    public static final String PROVENANCE_SUFFIX = "provenance";
+
+    /**
+     * The local name of a nanopublication's publication info graph, below its own URI.
+     */
+    public static final String PUBINFO_SUFFIX = "pubinfo";
+
+    /**
+     * The local name of the signature element a signed nanopublication carries, below its own
+     * URI.
+     */
+    public static final String SIGNATURE_SUFFIX = "sig";
+
+    /**
+     * The local names a nanopublication uses for its own parts: its four graphs and its
+     * signature element. A resource minted under one of these names below the same URI is not
+     * a resource of its own but the part whose name it took, so tools that mint identifiers
+     * within a nanopublication have to keep clear of them.
+     */
+    public static final Set<String> RESERVED_LOCAL_NAMES =
+            Set.of(HEAD_SUFFIX, ASSERTION_SUFFIX, PROVENANCE_SUFFIX, PUBINFO_SUFFIX, SIGNATURE_SUFFIX);
+
+    /**
+     * Whether the given local name is one a nanopublication uses for one of its own parts.
+     *
+     * @param localName the local name to check, as it appears below a nanopublication's URI
+     * @return true if a resource of that name would be one of the nanopublication's own parts
+     */
+    public static boolean isReservedLocalName(String localName) {
+        return RESERVED_LOCAL_NAMES.contains(localName);
+    }
+
     private NanopubUtils() {
     }  // no instances allowed
 

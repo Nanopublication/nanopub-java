@@ -206,9 +206,9 @@ public class Import extends CliRunner {
 
             npCreator = new NanopubCreator(npIri);
             addNamespaces();
-            npCreator.setAssertionUri(npIriString + "assertion");
-            npCreator.setProvenanceUri(npIriString + "provenance");
-            npCreator.setPubinfoUri(npIriString + "pubinfo");
+            npCreator.setAssertionUri(npIriString + NanopubUtils.ASSERTION_SUFFIX);
+            npCreator.setProvenanceUri(npIriString + NanopubUtils.PROVENANCE_SUFFIX);
+            npCreator.setPubinfoUri(npIriString + NanopubUtils.PUBINFO_SUFFIX);
 
             npCreator.addPubinfoStatement(vf.createIRI("https://repo.metadatacenter.org/template-instances/" + cedarId), DCTERMS.HAS_VERSION, npIri);
 
