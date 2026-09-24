@@ -704,6 +704,19 @@ public class NanopubUtilsTest {
     }
 
     @Test
+    void getTypesAcceptsABlankNodeSubjectInTheAssertion() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        IRI type = vf.createIRI("https://example.org/Thing");
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(vf.createBNode("thing"), RDF.TYPE, type);
+        creator.addAssertionStatement(vf.createBNode("thing"), RDFS.LABEL, literal("a thing"));
+        creator.addProvenanceStatement(anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+
+        // A single subject in the assertion lends its types to the nanopub, also when it is a blank node:
+        assertEquals(Set.of(type), NanopubUtils.getTypes(creator.finalizeNanopub()));
+    }
+
+    @Test
     void getIntroducedIriIds() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Set<String> introduced = NanopubUtils.getIntroducedIriIds(createRichNanopub());
 

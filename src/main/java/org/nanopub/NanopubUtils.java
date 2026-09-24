@@ -446,13 +446,13 @@ public class NanopubUtils {
                 types.add((IRI) obj);
             }
         }
-        IRI onlySubjectInAssertion = null;
+        Resource onlySubjectInAssertion = null;
         List<IRI> allTypes = new ArrayList<>();
         boolean hasOnlySubjectInAssertion = true;
         IRI onlyPredicateInAssertion = null;
         boolean hasOnlyPredicateInAssertion = true;
         for (Statement st : np.getAssertion()) {
-            final IRI subj = (IRI) st.getSubject();
+            final Resource subj = st.getSubject();
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (pred.equals(RDF.TYPE) && obj instanceof IRI) {
