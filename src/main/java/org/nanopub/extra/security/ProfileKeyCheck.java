@@ -1,6 +1,7 @@
 package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.util.Values;
 import org.nanopub.Nanopub;
 import org.nanopub.extra.services.ApiResponse;
 import org.nanopub.extra.services.ApiResponseEntry;
@@ -9,6 +10,9 @@ import org.nanopub.extra.services.QueryRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,13 +46,16 @@ public class ProfileKeyCheck {
      */
     public enum Status {
 
-        /** An introduction signed with authority declares this key for this signer. */
+        /**
+         * An introduction declares this key for this signer and is signed by one of the keys it
+         * declares.
+         */
         DECLARED(true),
 
         /**
-         * An introduction declares this key for this signer, but none that carries authority.
-         * Anyone can publish an introduction naming someone else, so such a declaration does not
-         * establish that the key is theirs, and the registry need not treat it as approved.
+         * An introduction declares this key for this signer, but none that is signed by a key it
+         * declares. Anyone can publish an introduction naming someone else, so such a declaration
+         * does not establish that the key is theirs, and the registry need not treat it as approved.
          */
         DECLARED_WITHOUT_AUTHORITY(false),
 
@@ -79,10 +86,22 @@ public class ProfileKeyCheck {
     /**
      * The outcome of a check, with a description written for whoever is about to sign.
      *
-     * @param status  what the network says
-     * @param message the description to show
+     * @param status        what the network says
+     * @param message       the description to show
+     * @param introductions the introductions declaring this key for this signer, empty when there
+     *                      are none
      */
-    public record Result(Status status, String message) {
+    public record Result(Status status, String message, List<IRI> introductions) {
+
+        /**
+         * A result about nothing the network was asked, so about no introduction.
+         *
+         * @param status  what the network says
+         * @param message the description to show
+         */
+        public Result(Status status, String message) {
+            this(status, message, List.of());
+        }
 
         /**
          * @return true if signing may proceed without complaint
@@ -91,6 +110,16 @@ public class ProfileKeyCheck {
             return status.isAcceptable();
         }
 
+    }
+
+    /**
+     * What the introductions say about a signer and a key: the status, and the introductions that
+     * declare the key for that signer.
+     *
+     * @param status        what the introductions establish
+     * @param introductions the introductions declaring the key, empty when none does
+     */
+    record Classification(Status status, List<IRI> introductions) {
     }
 
     /**
@@ -143,6 +172,18 @@ public class ProfileKeyCheck {
         return check(signers.iterator().next(), signature.getPublicKeyString());
     }
 
+    /**
+     * Asks the network whether an introduction it accepts declares this key for this signer.
+     *
+     * @param signer          the signer IRI, typically an ORCID IRI
+     * @param publicKeyString the base64 public key of the key pair that will sign
+     * @return true only when an introduction signed with a key it declares declares this key, so a
+     * signer the network could not be asked about answers false
+     */
+    public static boolean hasValidIntroduction(IRI signer, String publicKeyString) {
+        return check(signer, publicKeyString).status() == Status.DECLARED;
+    }
+
     // How long a fetched list of introductions is reused. Publishing a file of nanopublications asks
     // the same question once per nanopublication, and the answer does not change between them; a few
     // minutes also keeps a newly published introduction from staying invisible for long.
@@ -177,31 +218,74 @@ public class ProfileKeyCheck {
      * @param introductions   the response of {@link #GET_ALL_USER_INTROS}
      * @param signer          the signer IRI
      * @param publicKeyString the base64 public key that will sign
-     * @return the status
+     * @return what the introductions establish, and the ones declaring the key
      */
-    static Status classify(ApiResponse introductions, IRI signer, String publicKeyString) {
-        if (introductions == null) return Status.NOT_CHECKED;
-        boolean signerIsIntroduced = false;
-        boolean keyIsDeclared = false;
-        for (ApiResponseEntry introduction : introductions.getData()) {
-            if (!signer.stringValue().equals(introduction.get("user"))) continue;
-            signerIsIntroduced = true;
-            if (!publicKeyString.equals(introduction.get("pubkey"))) continue;
-            keyIsDeclared = true;
-            if ("true".equalsIgnoreCase(introduction.get("authoritative"))) return Status.DECLARED;
-        }
-        if (keyIsDeclared) return Status.DECLARED_WITHOUT_AUTHORITY;
-        if (signerIsIntroduced) return Status.KEY_NOT_DECLARED;
-        return Status.SIGNER_NOT_INTRODUCED;
+    static Classification classify(ApiResponse introductions, IRI signer, String publicKeyString) {
+        if (introductions == null) return new Classification(Status.NOT_CHECKED, List.of());
+        List<ApiResponseEntry> declarations = declarationsFor(introductions, signer);
+        if (declarations.isEmpty()) return new Classification(Status.SIGNER_NOT_INTRODUCED, List.of());
+        List<ApiResponseEntry> declaringTheKey = declarations.stream()
+                .filter(declaration -> publicKeyString.equals(declaration.get("pubkey")))
+                .toList();
+        if (declaringTheKey.isEmpty()) return new Classification(Status.KEY_NOT_DECLARED, List.of());
+        Set<String> withAuthority = introductionsDeclaringTheirOwnSigningKey(declarations);
+        Status status = declaringTheKey.stream().anyMatch(declaration -> withAuthority.contains(declaration.get("intronp")))
+                ? Status.DECLARED
+                : Status.DECLARED_WITHOUT_AUTHORITY;
+        return new Classification(status, introductionsOf(declaringTheKey));
     }
 
-    private static Result describe(Status status, IRI signer) {
-        return new Result(status, switch (status) {
-            case DECLARED -> "The signing key is the one the network knows " + signer + " by.";
+    private static List<ApiResponseEntry> declarationsFor(ApiResponse introductions, IRI signer) {
+        return introductions.getData().stream()
+                .filter(declaration -> signer.stringValue().equals(declaration.get("user")))
+                .toList();
+    }
+
+    /**
+     * Picks out the introductions that carry authority: an introduction is signed by one key, and it
+     * carries authority when it declares that key for the signer. The first introduction of a signer
+     * is signed by the key it declares, and one adding a further key is signed by a key the signer
+     * already has and restates alongside the new one. An introduction anyone could have published
+     * for somebody else declares neither the key that signed it nor, therefore, anything at all.
+     *
+     * @param declarations the declarations made for one signer
+     * @return the IRIs of the introductions among them that declare the key they are signed with
+     */
+    private static Set<String> introductionsDeclaringTheirOwnSigningKey(List<ApiResponseEntry> declarations) {
+        Set<String> withAuthority = new LinkedHashSet<>();
+        for (ApiResponseEntry declaration : declarations) {
+            if ("true".equalsIgnoreCase(declaration.get("authoritative"))) {
+                withAuthority.add(declaration.get("intronp"));
+            }
+        }
+        return withAuthority;
+    }
+
+    private static List<IRI> introductionsOf(List<ApiResponseEntry> declarations) {
+        Set<String> introductionIris = new LinkedHashSet<>();
+        for (ApiResponseEntry declaration : declarations) {
+            String introduction = declaration.get("intronp");
+            if (introduction != null && !introduction.isEmpty()) introductionIris.add(introduction);
+        }
+        List<IRI> introductions = new ArrayList<>();
+        for (String introduction : introductionIris) {
+            introductions.add(Values.iri(introduction));
+        }
+        return introductions;
+    }
+
+    private static Result describe(Classification classification, IRI signer) {
+        Status status = classification.status();
+        return new Result(status, message(status, signer), classification.introductions());
+    }
+
+    private static String message(Status status, IRI signer) {
+        return switch (status) {
+            case DECLARED -> "The signing key is one the network knows " + signer + " by.";
             case DECLARED_WITHOUT_AUTHORITY -> "The signing key is declared for " + signer
-                    + ", but by an introduction that carries no authority, which anyone could have"
-                    + " published. Nanopublications signed with it may show as coming from an"
-                    + " unapproved agent.";
+                    + ", but only by an introduction that is not signed with a key it declares."
+                    + " Nanopublications signed with it may show as coming from an unapproved"
+                    + " agent.";
             case KEY_NOT_DECLARED -> signer + " is introduced on the network, but by a different key"
                     + " than the one about to sign. Nanopublications signed with this key cannot be"
                     + " attributed, and will show as coming from an unapproved agent. Publish an"
@@ -210,7 +294,7 @@ public class ProfileKeyCheck {
                     + " Nanopublications signed for them cannot be attributed, and will show as"
                     + " coming from an unapproved agent. Publish an introduction first.";
             case NOT_CHECKED -> "The signing key was not checked against the network.";
-        });
+        };
     }
 
 }

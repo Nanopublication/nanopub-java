@@ -104,6 +104,12 @@ coming from an unapproved agent. Publish an introduction declaring this key, or 
 declared one.
 ```
 
+An introduction counts only when it is signed by one of the keys it declares. The first
+introduction of a signer is signed with the key it declares; one adding a further key is signed with
+a key the signer already has, and restates that key alongside the new one. An introduction that
+anyone could have published for somebody else declares no key it is signed with, so it establishes
+nothing and the warning still comes.
+
 #### `--strict`
 
 Refuse rather than warn:
