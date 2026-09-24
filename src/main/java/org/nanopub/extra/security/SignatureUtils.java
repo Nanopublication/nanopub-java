@@ -210,7 +210,7 @@ public class SignatureUtils {
         }
 
         // Adding signature element:
-        IRI signatureElUri = vf.createIRI(npUri + "sig");
+        IRI signatureElUri = vf.createIRI(npUri + NanopubUtils.SIGNATURE_SUFFIX);
         String publicKeyString = encodePublicKey(c.getKey().getPublic());
         Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE_TARGET, npUri, piUri));

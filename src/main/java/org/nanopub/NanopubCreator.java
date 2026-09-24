@@ -33,10 +33,6 @@ public class NanopubCreator {
 
     private ValueFactory vf = SimpleValueFactory.getInstance();
 
-    private static final String headSuffix = "Head";
-    private static final String assertionSuffix = "assertion";
-    private static final String provenanceSuffix = "provenance";
-    private static final String pubinfoSuffix = "pubinfo";
 
     /**
      * Creates a new NanopubCreator with an empty nanopub URI.
@@ -101,10 +97,10 @@ public class NanopubCreator {
             throw new RuntimeException("Cannot change nanopublication URI anymore: has already been used");
         }
         this.nanopubUri = nanopubUri;
-        if (headUri == null) headUri = vf.createIRI(nanopubUri + headSuffix);
-        if (assertionUri == null) assertionUri = vf.createIRI(nanopubUri + assertionSuffix);
-        if (provenanceUri == null) provenanceUri = vf.createIRI(nanopubUri + provenanceSuffix);
-        if (pubinfoUri == null) pubinfoUri = vf.createIRI(nanopubUri + pubinfoSuffix);
+        if (headUri == null) headUri = vf.createIRI(nanopubUri + NanopubUtils.HEAD_SUFFIX);
+        if (assertionUri == null) assertionUri = vf.createIRI(nanopubUri + NanopubUtils.ASSERTION_SUFFIX);
+        if (provenanceUri == null) provenanceUri = vf.createIRI(nanopubUri + NanopubUtils.PROVENANCE_SUFFIX);
+        if (pubinfoUri == null) pubinfoUri = vf.createIRI(nanopubUri + NanopubUtils.PUBINFO_SUFFIX);
     }
 
     /**

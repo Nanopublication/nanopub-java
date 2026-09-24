@@ -47,6 +47,39 @@ import net.trustyuri.TrustyUriUtils;
 public class NanopubUtilsTest {
 
     @Test
+    void theReservedLocalNamesAreTheOnesANanopubActuallyUses() throws Exception {
+        // The constants are only worth reusing if they say what a nanopublication does, so
+        // they are checked against one rather than against themselves.
+        NanopubCreator creator = new NanopubCreator(TestUtils.NANOPUB_URI);
+        creator.addAssertionStatement(TestUtils.anyIri, RDFS.LABEL, literal("something"));
+        creator.addProvenanceStatement(RDFS.SEEALSO, TestUtils.anyIri);
+        creator.addPubinfoStatement(RDFS.SEEALSO, TestUtils.anyIri);
+        Nanopub np = creator.finalizeNanopub();
+
+        String namespace = np.getUri().stringValue();
+        assertEquals(namespace + NanopubUtils.HEAD_SUFFIX, np.getHeadUri().stringValue());
+        assertEquals(namespace + NanopubUtils.ASSERTION_SUFFIX, np.getAssertionUri().stringValue());
+        assertEquals(namespace + NanopubUtils.PROVENANCE_SUFFIX, np.getProvenanceUri().stringValue());
+        assertEquals(namespace + NanopubUtils.PUBINFO_SUFFIX, np.getPubinfoUri().stringValue());
+    }
+
+    @Test
+    void everyPartOfANanopubIsReserved() {
+        assertEquals(Set.of("Head", "assertion", "provenance", "pubinfo", "sig"),
+                NanopubUtils.RESERVED_LOCAL_NAMES);
+        for (String localName : NanopubUtils.RESERVED_LOCAL_NAMES) {
+            assertTrue(NanopubUtils.isReservedLocalName(localName));
+        }
+    }
+
+    @Test
+    void aNameThatOnlyLooksLikeOneIsNotReserved() {
+        assertFalse(NanopubUtils.isReservedLocalName("assertions"));
+        assertFalse(NanopubUtils.isReservedLocalName("Assertion"));
+        assertFalse(NanopubUtils.isReservedLocalName(""));
+    }
+
+    @Test
     void getDefaultNamespaces() {
         assertFalse(NanopubUtils.getDefaultNamespaces().isEmpty());
     }
@@ -701,6 +734,19 @@ public class NanopubUtilsTest {
         assertTrue(types.contains(vf.createIRI("https://example.org/AssertionType")));
         assertTrue(types.contains(vf.createIRI("https://example.org/IntroType")));
         assertTrue(types.contains(NPX.DECLARED_BY));
+    }
+
+    @Test
+    void getTypesAcceptsABlankNodeSubjectInTheAssertion() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
+        IRI type = vf.createIRI("https://example.org/Thing");
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(vf.createBNode("thing"), RDF.TYPE, type);
+        creator.addAssertionStatement(vf.createBNode("thing"), RDFS.LABEL, literal("a thing"));
+        creator.addProvenanceStatement(anyIri, anyIri);
+        creator.addPubinfoStatement(anyIri, anyIri);
+
+        // A single subject in the assertion lends its types to the nanopub, also when it is a blank node:
+        assertEquals(Set.of(type), NanopubUtils.getTypes(creator.finalizeNanopub()));
     }
 
     @Test

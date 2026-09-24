@@ -147,6 +147,16 @@ class NanopubVerifierTest {
         assertTrue(verifier.getIssues().contains("Nanopub has no types."));
     }
 
+    @Test
+    void checkType_blankNodeSubject_noException() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(vf.createBNode(), RDF.TYPE, anyIri);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        assertDoesNotThrow(verifier::verify);
+    }
+
     // -- checkTemplate --
 
     @Test

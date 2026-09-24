@@ -14,6 +14,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.Comparator;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.Values;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -25,7 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
 import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubCreator;
@@ -50,6 +57,27 @@ import net.trustyuri.TrustyUriUtils;
 class SignNanopubTest {
 
     private final Logger logger = LoggerFactory.getLogger(SignNanopubTest.class);
+
+    // Signing checks the key against the network first (issue #150). Nothing here is about what the
+    // network says, so the check is answered locally: asking the query services would make every run
+    // wait for them, up to a minute and a half each when they are slow.
+    private MockedStatic<ProfileKeyCheck> profileKeyCheck;
+
+    @BeforeEach
+    void answerTheKeyCheckLocally() {
+        profileKeyCheck = mockStatic(ProfileKeyCheck.class);
+        answerTheKeyCheckWith(ProfileKeyCheck.Status.NOT_CHECKED);
+    }
+
+    @AfterEach
+    void stopAnsweringTheKeyCheck() {
+        profileKeyCheck.close();
+    }
+
+    private void answerTheKeyCheckWith(ProfileKeyCheck.Status status) {
+        profileKeyCheck.when(() -> ProfileKeyCheck.check(any(IRI.class), anyString()))
+                .thenReturn(new ProfileKeyCheck.Result(status, "Key check answered by the test: " + status));
+    }
 
     @Test
     void initWithoutArgs() {
@@ -376,6 +404,36 @@ class SignNanopubTest {
 
         Exception ex = assertThrows(Exception.class, signer::run);
         assertTrue(ex.getMessage().contains("No valid signer specified"), ex.getMessage());
+    }
+
+    @Test
+    void strictModeSignsNothingWhenTheNetworkDoesNotKnowTheKey() throws Exception {
+        answerTheKeyCheckWith(ProfileKeyCheck.Status.KEY_NOT_DECLARED);
+        Path tempDir = Files.createTempDirectory("test-sign-strict");
+        File input = writeToFile(tempDir.toFile(), "input.trig", preNanopub());
+        File output = new File(tempDir.toFile(), "output.trig");
+
+        SignNanopub signer = CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000", "--strict",
+            "-o", output.getPath(), input.getPath()});
+
+        Exception ex = assertThrows(Exception.class, signer::run);
+        assertTrue(ex.getMessage().startsWith("Strict mode: nothing was signed."), ex.getMessage());
+        assertFalse(output.exists());
+    }
+
+    @Test
+    void signsDespiteAnUnknownKeyWithoutStrictMode() throws Exception {
+        answerTheKeyCheckWith(ProfileKeyCheck.Status.KEY_NOT_DECLARED);
+        Path tempDir = Files.createTempDirectory("test-sign-not-strict");
+        File input = writeToFile(tempDir.toFile(), "input.trig", preNanopub());
+        File output = new File(tempDir.toFile(), "output.trig");
+
+        CliRunner.initJc(new SignNanopub(), new String[]{
+            "-k", privateKeyPath(), "-s", "https://orcid.org/0000-0000-0000-0000",
+            "-o", output.getPath(), input.getPath()}).run();
+
+        assertTrue(TrustyUriUtils.isPotentialTrustyUri(new NanopubImpl(output, RDFFormat.TRIG).getUri()));
     }
 
     @Test
