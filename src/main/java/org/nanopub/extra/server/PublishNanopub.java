@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.*;
+import org.nanopub.extra.security.ProfileKeyCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,7 @@ public class PublishNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "--dry-run", description = "Simulate (no action)")
     private boolean dryRun;
 
-    @com.beust.jcommander.Parameter(names = "--strict", description = "Only publish if validation shows no issues")
+    @com.beust.jcommander.Parameter(names = "--strict", description = "Only publish if verification and the signing-key check show no issues")
     private boolean strict;
 
     @com.beust.jcommander.Parameter(names = "-u", description = "Use the given nanopub server URLs")
@@ -243,6 +244,19 @@ public class PublishNanopub extends CliRunner {
             logger.debug("Verification of nanopub {} done, no issues", nanopub.getUri());
         } else {
             logger.warn("Verification of nanopub {} shows some issues: {}", nanopub.getUri(), verifier.getIssues());
+            if (strict) {
+                logger.warn("Strict mode: nanopub {} is not published", nanopub.getUri());
+                return null;
+            }
+        }
+
+        // A signature made with a key no introduction declares is valid, so the verifier above has
+        // nothing to say about it, but the registry has nothing tying the key to its signer and the
+        // nanopub shows up under an unapproved agent. Publishing cannot be undone, so it is worth
+        // saying so first (issue #150).
+        ProfileKeyCheck.Result keyCheck = ProfileKeyCheck.check(nanopub);
+        if (!keyCheck.isAcceptable()) {
+            logger.warn("Signing key of nanopub {}: {}", nanopub.getUri(), keyCheck.message());
             if (strict) {
                 logger.warn("Strict mode: nanopub {} is not published", nanopub.getUri());
                 return null;
