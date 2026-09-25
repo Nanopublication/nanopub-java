@@ -8,10 +8,12 @@ import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.FOAF;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler;
@@ -20,6 +22,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubUtils;
 import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
+import org.nanopub.extra.security.SignatureUtils;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.vocabulary.NPX;
 import org.slf4j.Logger;
@@ -29,9 +32,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents an Intro Nanopub, which is a nanopublication that contains the introduction of a user.
@@ -119,7 +125,10 @@ public class IntroNanopub implements Serializable {
     private Nanopub nanopub;
     private IRI user;
     private String name;
+    private Set<IRI> alternativeIds = new LinkedHashSet<>();
     private Map<IRI, KeyDeclaration> keyDeclarations = new HashMap<>();
+    private String signingKey;
+    private boolean signingKeyChecked = false;
 
     /**
      * Constructor for IntroNanopub.
@@ -140,8 +149,8 @@ public class IntroNanopub implements Serializable {
         this.nanopub = nanopub;
         this.user = user;
         for (Statement st : nanopub.getAssertion()) {
+            if (!(st.getSubject() instanceof IRI subj)) continue;
             if (!(st.getObject() instanceof IRI obj)) continue;
-            IRI subj = (IRI) st.getSubject();
             IRI pred = st.getPredicate();
             if (pred.equals(NPX.DECLARED_BY) || pred.equals(NPX.HAS_KEY_LOCATION)) {
                 KeyDeclaration d;
@@ -161,9 +170,14 @@ public class IntroNanopub implements Serializable {
             }
         }
         for (Statement st : nanopub.getAssertion()) {
-            IRI subj = (IRI) st.getSubject();
+            Resource subj = st.getSubject();
             if (subj.equals(this.user) && st.getPredicate().equals(FOAF.NAME)) {
                 this.name = st.getObject().stringValue();
+            } else if (subj.equals(this.user) && st.getPredicate().equals(OWL.SAMEAS)) {
+                // Alternative IDs are only read in this direction, with the main ID as the subject:
+                if (st.getObject() instanceof IRI alternativeId && !alternativeId.equals(this.user)) {
+                    alternativeIds.add(alternativeId);
+                }
             } else if (keyDeclarations.containsKey(subj)) {
                 KeyDeclaration d = keyDeclarations.get(subj);
                 IRI pred = st.getPredicate();
@@ -210,6 +224,16 @@ public class IntroNanopub implements Serializable {
     }
 
     /**
+     * Get the alternative IDs of the user. They are stated as {@code <main> owl:sameAs <alternative>},
+     * where the main ID is the one returned by {@link #getUser()}. The main ID itself is never among them.
+     *
+     * @return the alternative IDs in the order they were read, empty if there are none
+     */
+    public Set<IRI> getAlternativeIds() {
+        return Collections.unmodifiableSet(alternativeIds);
+    }
+
+    /**
      * Get the name of the user.
      *
      * @return the name of the user, or null if not set
@@ -225,6 +249,31 @@ public class IntroNanopub implements Serializable {
      */
     public List<KeyDeclaration> getKeyDeclarations() {
         return new ArrayList<>(keyDeclarations.values());
+    }
+
+    /**
+     * Check whether a key declaration of this IntroNanopub is authoritative, which means that the
+     * introduction is signed by the declared key and the signature is valid. Only this shows that the
+     * user holds the key: declaring a key without signing with it proves nothing.
+     *
+     * @param keyDeclaration one of the key declarations returned by {@link #getKeyDeclarations()}
+     * @return true if the declaration is authoritative, false otherwise or if it is not a key declaration of this IntroNanopub
+     */
+    public boolean isAuthoritative(KeyDeclaration keyDeclaration) {
+        if (!keyDeclarations.containsValue(keyDeclaration)) return false;
+        return keyDeclaration.getPublicKeyString().equals(getSigningKey());
+    }
+
+    /**
+     * The public key this introduction is signed with, if the signature is valid. Checking the signature
+     * takes time and most callers do not need it, so it is only done when first asked for.
+     */
+    private synchronized String getSigningKey() {
+        if (!signingKeyChecked) {
+            signingKey = SignatureUtils.getPubKey(nanopub);
+            signingKeyChecked = true;
+        }
+        return signingKey;
     }
 
 
