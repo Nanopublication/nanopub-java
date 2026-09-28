@@ -2,6 +2,8 @@ package org.nanopub.jelly;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class JellyWriterRDFHandlerTest {
 
     @Test
@@ -10,9 +12,9 @@ public class JellyWriterRDFHandlerTest {
                 JellyUtils.jellyOptionsForDB
         );
         var frame = handler.getFrame();
-        assert frame.getRows().isEmpty();
-        assert frame.getMetadata() != null;
-        assert frame.getMetadata().isEmpty();
+        assertTrue(frame.getRows().isEmpty());
+        assertNotNull(frame.getMetadata());
+        assertTrue(frame.getMetadata().isEmpty());
     }
 
     @Test
@@ -21,10 +23,10 @@ public class JellyWriterRDFHandlerTest {
                 JellyUtils.jellyOptionsForDB
         );
         var frame = handler.getFrame(42);
-        assert frame.getRows().isEmpty();
-        assert frame.getMetadata() != null;
-        assert frame.getMetadata().size() == 1;
+        assertTrue(frame.getRows().isEmpty());
+        assertNotNull(frame.getMetadata());
+        assertEquals(1, frame.getMetadata().size());
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(frame.getMetadata());
-        assert counter == 42;
+        assertEquals(42, counter);
     }
 }

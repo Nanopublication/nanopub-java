@@ -22,6 +22,8 @@ import org.nanopub.extra.security.KeyDeclaration;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.vocabulary.NPX;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +37,8 @@ import java.util.Map;
  * This class represents an Intro Nanopub, which is a nanopublication that contains the introduction of a user.
  */
 public class IntroNanopub implements Serializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(IntroNanopub.class);
 
     /**
      * Get the IntroNanopub for a userId.
@@ -168,13 +172,13 @@ public class IntroNanopub implements Serializable {
                     try {
                         d.setAlgorithm((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {
-                        //ex.printStackTrace();
+                        logger.warn("Ignoring malformed algorithm {} in key declaration {}: {}", obj, subj, ex.getMessage());
                     }
                 } else if (pred.equals(NPX.HAS_PUBLIC_KEY) && obj instanceof Literal) {
                     try {
                         d.setPublicKeyLiteral((Literal) obj);
                     } catch (MalformedCryptoElementException ex) {
-                        //ex.printStackTrace();
+                        logger.warn("Ignoring malformed public key in key declaration {}: {}", subj, ex.getMessage());
                     }
                 }
             }

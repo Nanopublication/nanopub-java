@@ -5,7 +5,7 @@ import org.nanopub.Nanopub;
 /**
  * Simple wrapper around the Nanopub class that can also hold an exception.
  * <p>
- * This is basically the same as Try<Nanopub> in Scala.
+ * This is basically the same as Try<{@link Nanopub}> in Scala.
  */
 public class MaybeNanopub {
     private final boolean success;

@@ -1,6 +1,7 @@
 package org.nanopub.extra.server;
 
 import com.beust.jcommander.ParameterException;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.rdf.RdfModule;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -12,6 +13,8 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.*;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -24,6 +27,8 @@ import static org.nanopub.extra.server.NanopubStatus.extractArtifactCode;
  * Command line tool to retrieve nanopubs from the server.
  */
 public class GetNanopub extends CliRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(GetNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "nanopub-uris-or-artifact-codes", required = true)
     private List<String> nanopubIds;
@@ -106,22 +111,41 @@ public class GetNanopub extends CliRunner {
      * @return the Nanopub object, or null if not found
      */
     public static Nanopub get(String uriOrArtifactCode, HttpClient httpClient) {
-        ServerIterator serverIterator = new ServerIterator();
-        String ac = getArtifactCode(uriOrArtifactCode);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
-            throw new IllegalArgumentException("Not a trusty URI of type RA");
+        return getWithIterator(uriOrArtifactCode, new ServerIterator(), httpClient);
+    }
+
+    /**
+     * Get a nanopub using an explicit seed list of registry URLs, bypassing the
+     * default registry-discovery path. The seed list is used directly by a
+     * fresh {@link ServerIterator}, which still crawls outward to find more
+     * registries. Intended for callers that need to break out of registry
+     * discovery (e.g. {@link org.nanopub.extra.services.ServiceLookup}).
+     *
+     * @param uriOrArtifactCode the URI or artifact code of the nanopub
+     * @param seedServers       the seed registry URLs
+     * @return the Nanopub object, or null if not found
+     */
+    public static Nanopub get(String uriOrArtifactCode, List<String> seedServers) {
+        return getWithIterator(uriOrArtifactCode, new ServerIterator(seedServers), NanopubUtils.getHttpClient());
+    }
+
+    private static Nanopub getWithIterator(String uriOrArtifactCode, ServerIterator serverIterator, HttpClient httpClient) {
+        ArtifactCode ac = getArtifactCode(uriOrArtifactCode);
+        if (!ac.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
+            throw new IllegalArgumentException("Not a trusty URI of type " + RdfModule.MODULE_ID);
         }
         while (serverIterator.hasNext()) {
             RegistryInfo registryInfo = serverIterator.next();
             try {
-                Nanopub np = get(ac, registryInfo, httpClient);
+                Nanopub np = get(ac.toString(), registryInfo, httpClient);
                 if (np != null) {
                     return np;
                 }
             } catch (IOException | MalformedNanopubException | RDF4JException ex) {
-                // ignore
+                logger.debug("Could not get {} from registry {}; trying the next one", ac, registryInfo.getUrl(), ex);
             }
         }
+        logger.warn("Could not get {} from any of the available registries", ac);
         return null;
     }
 
@@ -133,11 +157,11 @@ public class GetNanopub extends CliRunner {
      * @return the Nanopub object, or null if not found
      */
     public static Nanopub get(String uriOrArtifactCode, NanopubDb db) {
-        String ac = getArtifactCode(uriOrArtifactCode);
-        if (!ac.startsWith(RdfModule.MODULE_ID)) {
-            throw new IllegalArgumentException("Not a trusty URI of type RA");
+        ArtifactCode ac = getArtifactCode(uriOrArtifactCode);
+        if (!ac.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
+            throw new IllegalArgumentException("Not a trusty URI of type " + RdfModule.MODULE_ID);
         }
-        return db.getNanopub(ac);
+        return db.getNanopub(ac.toString());
     }
 
     /**
@@ -182,6 +206,13 @@ public class GetNanopub extends CliRunner {
                 EntityUtils.consumeQuietly(resp.getEntity());
                 throw new IOException(resp.getStatusLine().toString());
             }
+            if (!NanopubServerUtils.isReadyRegistryStatus(resp)) {
+                org.apache.http.Header h = resp.getFirstHeader(NanopubServerUtils.REGISTRY_STATUS_HEADER);
+                String status = h == null ? "missing" : h.getValue();
+                NanopubServerUtils.evictRegistry(registryInfo.getUrl(), "status " + status);
+                EntityUtils.consumeQuietly(resp.getEntity());
+                throw new IOException("Nanopub Registry not ready (status=" + status + "): " + registryInfo.getUrl());
+            }
             in = resp.getEntity().getContent();
             if (simulateUnreliableConnection) {
                 in = new UnreliableInputStream(in);
@@ -192,7 +223,9 @@ public class GetNanopub extends CliRunner {
             }
             return nanopub;
         } finally {
-            if (in != null) in.close();
+            if (in != null) {
+                in.close();
+            }
         }
     }
 
@@ -202,7 +235,7 @@ public class GetNanopub extends CliRunner {
      * @param uriOrArtifactCode the URI or artifact code of the nanopub
      * @return the artifact code
      */
-    public static String getArtifactCode(String uriOrArtifactCode) {
+    public static ArtifactCode getArtifactCode(String uriOrArtifactCode) {
         return extractArtifactCode(uriOrArtifactCode);
     }
 
@@ -268,7 +301,7 @@ public class GetNanopub extends CliRunner {
                         }
 
                         @Override
-                        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode) {
+                        public void exceptionHappened(Exception ex, RegistryInfo r, ArtifactCode artifactCode) {
                             if (showReport) {
                                 exceptions.add(ex);
                             }
@@ -295,8 +328,12 @@ public class GetNanopub extends CliRunner {
                 System.err.println(count + " nanopubs retrieved and saved in " + outputFile);
             }
         } finally {
-            if (outputStream != System.out) outputStream.close();
-            if (errorStream != null) errorStream.close();
+            if (outputStream != System.out) {
+                outputStream.close();
+            }
+            if (errorStream != null) {
+                errorStream.close();
+            }
         }
         if (showReport && fetchIndex != null) {
             System.err.println("Number of retries: " + exceptions.size());
@@ -306,7 +343,9 @@ public class GetNanopub extends CliRunner {
             usedServers.sort((o1, o2) -> fi.getServerUsage(o2) - fi.getServerUsage(o1));
             int usedServerCount = 0;
             for (RegistryInfo si : usedServers) {
-                if (fetchIndex.getServerUsage(si) > 0) usedServerCount++;
+                if (fetchIndex.getServerUsage(si) > 0) {
+                    usedServerCount++;
+                }
                 System.err.format("%8d %s%n", fetchIndex.getServerUsage(si), si.getUrl());
             }
             System.err.format("Number of servers used: " + usedServerCount);

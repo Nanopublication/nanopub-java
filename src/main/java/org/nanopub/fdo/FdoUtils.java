@@ -33,6 +33,11 @@ public final class FdoUtils {
     public static final String PROFILE_HANDLE = "21.T11966/FdoProfile";
 
     /**
+     * The handle for the FDO profile (lowercase variant used by some handle services).
+     */
+    public static final String PROFILE_HANDLE_3 = "fdoProfile";
+
+    /**
      * The handle for the FDO data reference.
      */
     public static final String DATA_REF_HANDLE = "21.T11966/06a6c27e3e2ef27779ec";
@@ -96,6 +101,27 @@ public final class FdoUtils {
      */
     public static boolean looksLikeUrl(String potentialUrl) {
         return potentialUrl.matches("http(s)?://\\S+\\.[a-z]{2,}.*");
+    }
+
+    /**
+     * Strip a known prefix (hdl.handle.net, doi.org) from the given input and return the bare
+     * handle id, or return the input unchanged if it already looks like a handle.
+     *
+     * @param input a handle, a handle URL, or a DOI URL
+     * @return the bare handle id, or null if the input is not a recognisable handle
+     */
+    public static String extractHandleId(String input) {
+        if (input == null) return null;
+        String[] prefixes = {
+                "https://hdl.handle.net/",
+                "http://hdl.handle.net/",
+                "https://doi.org/",
+                "http://doi.org/"
+        };
+        for (String p : prefixes) {
+            if (input.startsWith(p)) return input.substring(p.length());
+        }
+        return looksLikeHandle(input) ? input : null;
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.nanopub.utils;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -8,14 +9,20 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.mockito.MockedStatic;
 import org.nanopub.NanopubUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class MockNanopubUtils implements AutoCloseable {
 
     private final MockedStatic<NanopubUtils> mockedStatic;
     private final StatusLine mockStatusLine = mock(StatusLine.class);
+    private volatile String nanopubQueryStatusValue = null;
+    private volatile String responseBody = null;
+    private volatile String contentType = null;
 
     public MockNanopubUtils() throws IOException {
         this.mockedStatic = mockStatic(NanopubUtils.class);
@@ -26,13 +33,59 @@ public class MockNanopubUtils implements AutoCloseable {
         when(mockHttpClient.execute(any(HttpGet.class))).thenAnswer(invocation -> {
             CloseableHttpResponse response = mock(CloseableHttpResponse.class);
             when(response.getStatusLine()).thenReturn(mockStatusLine);
-            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            HttpEntity entity = mock(HttpEntity.class);
+            // Each call gets its own stream, so a response can be consumed more than once
+            // over the lifetime of the mock.
+            when(entity.getContent()).thenAnswer(inv -> new ByteArrayInputStream(
+                    (responseBody == null ? "" : responseBody).getBytes(StandardCharsets.UTF_8)));
+            when(response.getEntity()).thenReturn(entity);
+            // Mockito's default for array-returning methods is null, not an empty array.
+            when(response.getHeaders(anyString())).thenReturn(new Header[0]);
+            // By default getFirstHeader returns null (Mockito default).
+            // When a status value is set, stub it via the read-side field.
+            when(response.getFirstHeader(anyString())).thenAnswer(inv -> {
+                String name = inv.getArgument(0);
+                if ("Nanopub-Query-Status".equalsIgnoreCase(name) && nanopubQueryStatusValue != null) {
+                    Header h = mock(Header.class);
+                    when(h.getValue()).thenReturn(nanopubQueryStatusValue);
+                    return h;
+                }
+                if ("Content-Type".equalsIgnoreCase(name) && contentType != null) {
+                    Header h = mock(Header.class);
+                    when(h.getValue()).thenReturn(contentType);
+                    return h;
+                }
+                return null;
+            });
             return response;
         });
     }
 
+    /**
+     * Sets the body that every mocked response serves. Pass {@code null} for an empty body.
+     */
+    public void setResponseBody(String responseBody) {
+        this.responseBody = responseBody;
+    }
+
+    /**
+     * Sets the {@code Content-Type} header of every mocked response. Pass {@code null} to omit it.
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
     public void setHttpResponseStatusCode(int statusCode) {
         when(mockStatusLine.getStatusCode()).thenReturn(statusCode);
+    }
+
+    /**
+     * Sets the value of the {@code Nanopub-Query-Status} header returned on
+     * every mocked response. Pass {@code null} to omit the header entirely
+     * (simulating an older instance with no status reporting).
+     */
+    public void setNanopubQueryStatus(String status) {
+        this.nanopubQueryStatusValue = status;
     }
 
     @Override

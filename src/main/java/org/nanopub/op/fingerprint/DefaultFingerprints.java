@@ -1,5 +1,6 @@
 package org.nanopub.op.fingerprint;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import org.eclipse.rdf4j.model.*;
@@ -50,8 +51,8 @@ public class DefaultFingerprints implements FingerprintHandler {
     @Override
     public String getFingerprint(Nanopub np) {
         List<Statement> statements = getNormalizedStatements(np);
-        String fingerprint = RdfHasher.makeArtifactCode(statements);
-        return fingerprint.substring(2);
+        ArtifactCode fingerprint = RdfHasher.makeArtifactCode(statements);
+        return fingerprint.toString().substring(2);
     }
 
     /**
@@ -66,21 +67,41 @@ public class DefaultFingerprints implements FingerprintHandler {
         String ac = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());
         for (Statement st : statements) {
             boolean isInHead = st.getContext().equals(np.getHeadUri());
-            if (isInHead && ignoreHead) continue;
+            if (isInHead && ignoreHead) {
+                continue;
+            }
             boolean isInProv = st.getContext().equals(np.getProvenanceUri());
-            if (isInProv && ignoreProv) continue;
+            if (isInProv && ignoreProv) {
+                continue;
+            }
             boolean isInPubInfo = st.getContext().equals(np.getPubinfoUri());
-            if (isInPubInfo && ignorePubinfo) continue;
+            if (isInPubInfo && ignorePubinfo) {
+                continue;
+            }
             Resource subj = st.getSubject();
             IRI pred = st.getPredicate();
             if (isInPubInfo) {
-                if (subj.equals(np.getUri()) && isCreationTimeProperty(pred)) continue;
-                if (subj.equals(np.getUri()) && pred.equals(NPX.SUPERSEDES)) continue;
-                if (pred.equals(NPX.HAS_SIGNATURE)) continue;
-                if (pred.equals(NPX.HAS_ALGORITHM)) continue;
-                if (pred.equals(NPX.HAS_PUBLIC_KEY)) continue;
-                if (pred.equals(NPX.HAS_SIGNATURE_TARGET)) continue;
-                if (pred.equals(NPX.SIGNED_BY)) continue;
+                if (subj.equals(np.getUri()) && isCreationTimeProperty(pred)) {
+                    continue;
+                }
+                if (subj.equals(np.getUri()) && pred.equals(NPX.SUPERSEDES)) {
+                    continue;
+                }
+                if (pred.equals(NPX.HAS_SIGNATURE)) {
+                    continue;
+                }
+                if (pred.equals(NPX.HAS_ALGORITHM)) {
+                    continue;
+                }
+                if (pred.equals(NPX.HAS_PUBLIC_KEY)) {
+                    continue;
+                }
+                if (pred.equals(NPX.HAS_SIGNATURE_TARGET)) {
+                    continue;
+                }
+                if (pred.equals(NPX.SIGNED_BY)) {
+                    continue;
+                }
             }
             Statement newSt = transform(st, np.getUri().stringValue(), ac);
             n.add(newSt);
@@ -102,9 +123,13 @@ public class DefaultFingerprints implements FingerprintHandler {
         // Should hardly ever be a problem with bona fide changes, but we should probably issue warnings or so.
         // TODO Add documentation/warnings for this.
 
-        if (v instanceof Literal) return v;
+        if (v instanceof Literal) {
+            return v;
+        }
         // Treating all blank nodes as the same, so fingerprinting will miss rearranged blank nodes:
-        if (v instanceof BNode) return vf.createIRI(buri + "  blank-node");
+        if (v instanceof BNode) {
+            return vf.createIRI(buri + "  blank-node");
+        }
         // Removing slashes and hashes around artifact code position to make pre-trusty nanopub match with already-trusty ones:
         if (ac != null && v.stringValue().contains(ac)) {
             String s = v.stringValue().replace(ac, " ").replaceFirst("[/#]+ ", " ").replaceFirst(" [/#]+", " ");

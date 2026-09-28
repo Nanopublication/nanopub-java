@@ -10,6 +10,7 @@ import org.nanopub.extra.server.NanopubStatus;
 import org.nanopub.extra.server.PublishNanopub;
 import org.nanopub.extra.services.RunQuery;
 import org.nanopub.extra.setting.ShowSetting;
+import org.nanopub.fdo.FdoCreate;
 import org.nanopub.fdo.ShaclValidator;
 import org.nanopub.trusty.FixTrustyNanopub;
 import org.nanopub.trusty.MakeTrustyNanopub;
@@ -22,6 +23,8 @@ import java.util.*;
  */
 public class Run {
 
+    static String nanopub_java_version;
+
     private Run() {
     }  // no instances allowed
 
@@ -33,6 +36,7 @@ public class Run {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void main(String[] args) throws IOException, RDF4JException {
+        // TODO is this really what we want here, INFO seems better
         System.setProperty("slf4j.internal.verbosity", "WARN");
         NanopubImpl.ensureLoaded();
         run(args);
@@ -73,7 +77,9 @@ public class Run {
         addRunnableClass(TimestampUpdater.class, "udtime");
         addRunnableClass(StripDown.class, "strip");
         addRunnableClass(ShaclValidator.class, "shacl");
+        addRunnableClass(FdoCreate.class, "fdo");
         addRunnableClass(RoCrateImporter.class, "rocrate");
+        addRunnableClass(RoHubUpdater.class, "roupdate");
         addRunnableClass(NanopubRetractorCli.class, "retract");
     }
 
@@ -85,9 +91,11 @@ public class Run {
      * @throws org.eclipse.rdf4j.common.exception.RDF4JException if an RDF4J error occurs
      */
     public static void run(String[] command) throws IOException, RDF4JException {
+        nanopub_java_version = ResourceBundle.getBundle("nanopub-java").getString("nanopub-java.version");
         if (command.length == 0) {
             System.err.println("ERROR: missing command");
             System.err.println("Use 'help' to show all available commands.");
+            System.err.println("nanopub-java version: " + nanopub_java_version);
             System.exit(1);
         }
         String cmd = command[0];
@@ -105,6 +113,7 @@ public class Run {
                 System.exit(1);
             }
         } else if (cmd.equals("help")) {
+            System.err.println("Nanopub-java version: " + nanopub_java_version);
             System.err.println("Available commands:");
             for (Class<?> c : runnableClasses) {
                 String s = runnableClassShortcuts.get(c);

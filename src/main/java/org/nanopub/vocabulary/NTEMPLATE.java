@@ -5,240 +5,284 @@ import org.eclipse.rdf4j.model.Namespace;
 
 public class NTEMPLATE {
 
+    private NTEMPLATE() {
+    }
+
     public static final String NAMESPACE = "https://w3id.org/np/o/ntemplate/";
 
     public static final String PREFIX = "ntemplate";
 
-    public static final Namespace NS = Utils.createNamespace(PREFIX, NAMESPACE);
+    public static final Namespace NS = VocabUtils.createNamespace(PREFIX, NAMESPACE);
 
     /**
      * Represents the class for assertion templates.
      */
-    public static final IRI ASSERTION_TEMPLATE = Utils.createIRI(NAMESPACE, "AssertionTemplate");
+    public static final IRI ASSERTION_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "AssertionTemplate");
 
     /**
      * Represents the class for provenance templates.
      */
-    public static final IRI PROVENANCE_TEMPLATE = Utils.createIRI(NAMESPACE, "ProvenanceTemplate");
+    public static final IRI PROVENANCE_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "ProvenanceTemplate");
 
     /**
      * Represents the class for publication information templates.
      */
-    public static final IRI PUBINFO_TEMPLATE = Utils.createIRI(NAMESPACE, "PubinfoTemplate");
+    public static final IRI PUBINFO_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "PubinfoTemplate");
 
     /**
      * Represents the class for unlisted templates.
      */
-    public static final IRI UNLISTED_TEMPLATE = Utils.createIRI(NAMESPACE, "UnlistedTemplate");
+    public static final IRI UNLISTED_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "UnlistedTemplate");
+
+    /**
+     * Represents the class for transient templates, whose filled content applies only to the
+     * nanopublication it was published with and is not carried over when that nanopublication
+     * is superseded, overridden, derived from, or otherwise used as a fill source.
+     */
+    public static final IRI TRANSIENT_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "TransientTemplate");
 
     /**
      * Predicate indicating a statement in the template.
      */
-    public static final IRI HAS_STATEMENT = Utils.createIRI(NAMESPACE, "hasStatement");
+    public static final IRI HAS_STATEMENT = VocabUtils.createIRI(NAMESPACE, "hasStatement");
 
     /**
      * Represents the class for local resources.
      */
-    public static final IRI LOCAL_RESOURCE = Utils.createIRI(NAMESPACE, "LocalResource");
+    public static final IRI LOCAL_RESOURCE = VocabUtils.createIRI(NAMESPACE, "LocalResource");
 
     /**
      * Represents the class for introduced resources.
      */
-    public static final IRI INTRODUCED_RESOURCE = Utils.createIRI(NAMESPACE, "IntroducedResource");
+    public static final IRI INTRODUCED_RESOURCE = VocabUtils.createIRI(NAMESPACE, "IntroducedResource");
 
     /**
      * Represents the class for embedded resources.
      */
-    public static final IRI EMBEDDED_RESOURCE = Utils.createIRI(NAMESPACE, "EmbeddedResource");
+    public static final IRI EMBEDDED_RESOURCE = VocabUtils.createIRI(NAMESPACE, "EmbeddedResource");
 
     /**
      * Represents the class for value placeholders.
      */
-    public static final IRI VALUE_PLACEHOLDER = Utils.createIRI(NAMESPACE, "ValuePlaceholder");
+    public static final IRI VALUE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "ValuePlaceholder");
 
     /**
      * Represents the class for URI placeholders.
      */
-    public static final IRI URI_PLACEHOLDER = Utils.createIRI(NAMESPACE, "UriPlaceholder");
+    public static final IRI URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "UriPlaceholder");
 
     /**
      * Represents the class for auto-escaped URI placeholders.
      */
-    public static final IRI AUTO_ESCAPE_URI_PLACEHOLDER = Utils.createIRI(NAMESPACE, "AutoEscapeUriPlaceholder");
+    public static final IRI AUTO_ESCAPE_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "AutoEscapeUriPlaceholder");
 
     /**
      * Represents the class for external URI placeholders.
      */
-    public static final IRI EXTERNAL_URI_PLACEHOLDER = Utils.createIRI(NAMESPACE, "ExternalUriPlaceholder");
+    public static final IRI EXTERNAL_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "ExternalUriPlaceholder");
 
     /**
      * Represents the class for trusty URI placeholders.
      */
-    public static final IRI TRUSTY_URI_PLACEHOLDER = Utils.createIRI(NAMESPACE, "TrustyUriPlaceholder");
+    public static final IRI TRUSTY_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "TrustyUriPlaceholder");
+
+    /**
+     * Marks a URI placeholder whose value names a resource that does not exist yet, applied
+     * alongside the placeholder's own type. An identifier a form mints this way carries no
+     * artifact code, so nothing makes it unique, and a tool filling the template can check it
+     * against the identifiers already in use before publishing.
+     * <p>
+     * This says more than {@link #INTRODUCED_RESOURCE}, which a template also attaches when
+     * the value is the URI of a resource that already exists.
+     */
+    public static final IRI NEW_URI_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "NewUriPlaceholder");
 
     /**
      * Represents the class for literal placeholders.
      */
-    public static final IRI LITERAL_PLACEHOLDER = Utils.createIRI(NAMESPACE, "LiteralPlaceholder");
+    public static final IRI LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LiteralPlaceholder");
 
     /**
      * Represents the class for long literal placeholders.
      */
-    public static final IRI LONG_LITERAL_PLACEHOLDER = Utils.createIRI(NAMESPACE, "LongLiteralPlaceholder");
+    public static final IRI LONG_LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LongLiteralPlaceholder");
+
+    /**
+     * Represents the class for literal placeholders whose language tag is selected by the user at fill time.
+     */
+    public static final IRI LANGUAGE_TAGGED_LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LanguageTaggedLiteralPlaceholder");
 
     /**
      * Represents the class for restricted choice placeholders.
      */
-    public static final IRI RESTRICTED_CHOICE_PLACEHOLDER = Utils.createIRI(NAMESPACE, "RestrictedChoicePlaceholder");
+    public static final IRI RESTRICTED_CHOICE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "RestrictedChoicePlaceholder");
 
     /**
      * Represents the class for guided choice placeholders.
      */
-    public static final IRI GUIDED_CHOICE_PLACEHOLDER = Utils.createIRI(NAMESPACE, "GuidedChoicePlaceholder");
+    public static final IRI GUIDED_CHOICE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "GuidedChoicePlaceholder");
 
     /**
      * Represents the class for agent placeholders.
      */
-    public static final IRI AGENT_PLACEHOLDER = Utils.createIRI(NAMESPACE, "AgentPlaceholder");
+    public static final IRI AGENT_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "AgentPlaceholder");
+
+    /**
+     * Represents the class for root nanopub placeholders. Placeholders of this type
+     * preserve their existing value on supersede/derive actions, and otherwise take
+     * the URI of the current nanopublication. Their value is fixed and not editable
+     * by the user.
+     */
+    public static final IRI ROOT_NANOPUB_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "RootNanopubPlaceholder");
 
     /**
      * Represents the placeholder for the creator.
      */
-    public static final IRI CREATOR_PLACEHOLDER = Utils.createIRI(NAMESPACE, "CREATOR");
+    public static final IRI CREATOR_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "CREATOR");
 
     /**
      * Represents the placeholder for assertions.
      */
-    public static final IRI ASSERTION_PLACEHOLDER = Utils.createIRI(NAMESPACE, "ASSERTION");
+    public static final IRI ASSERTION_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "ASSERTION");
 
     /**
      * Represents the placeholder for nanopublications.
      */
-    public static final IRI NANOPUB_PLACEHOLDER = Utils.createIRI(NAMESPACE, "NANOPUB");
+    public static final IRI NANOPUB_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "NANOPUB");
 
     /**
      * Predicate indicating creation from a template.
      */
-    public static final IRI WAS_CREATED_FROM_TEMPLATE = Utils.createIRI(NAMESPACE, "wasCreatedFromTemplate");
+    public static final IRI WAS_CREATED_FROM_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "wasCreatedFromTemplate");
 
     /**
      * Predicate indicating creation from a provenance template.
      */
-    public static final IRI WAS_CREATED_FROM_PROVENANCE_TEMPLATE = Utils.createIRI(NAMESPACE, "wasCreatedFromProvenanceTemplate");
+    public static final IRI WAS_CREATED_FROM_PROVENANCE_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "wasCreatedFromProvenanceTemplate");
 
     /**
      * Predicate indicating creation from a pubinfo template.
      */
-    public static final IRI WAS_CREATED_FROM_PUBINFO_TEMPLATE = Utils.createIRI(NAMESPACE, "wasCreatedFromPubinfoTemplate");
+    public static final IRI WAS_CREATED_FROM_PUBINFO_TEMPLATE = VocabUtils.createIRI(NAMESPACE, "wasCreatedFromPubinfoTemplate");
 
     /**
      * Predicate indicating the order of statements.
      */
-    public static final IRI STATEMENT_ORDER = Utils.createIRI(NAMESPACE, "statementOrder");
+    public static final IRI STATEMENT_ORDER = VocabUtils.createIRI(NAMESPACE, "statementOrder");
 
     /**
      * Predicate indicating possible values.
      */
-    public static final IRI POSSIBLE_VALUE = Utils.createIRI(NAMESPACE, "possibleValue");
+    public static final IRI POSSIBLE_VALUE = VocabUtils.createIRI(NAMESPACE, "possibleValue");
 
     /**
      * Predicate indicating the source of possible values.
      */
-    public static final IRI POSSIBLE_VALUES_FROM = Utils.createIRI(NAMESPACE, "possibleValuesFrom");
+    public static final IRI POSSIBLE_VALUES_FROM = VocabUtils.createIRI(NAMESPACE, "possibleValuesFrom");
 
     /**
      * Predicate indicating possible values from an API.
      */
-    public static final IRI POSSIBLE_VALUES_FROM_API = Utils.createIRI(NAMESPACE, "possibleValuesFromApi");
+    public static final IRI POSSIBLE_VALUES_FROM_API = VocabUtils.createIRI(NAMESPACE, "possibleValuesFromApi");
+
+    /**
+     * Predicate restricting the language tags offered by a language-tag picker.
+     */
+    public static final IRI POSSIBLE_LANGUAGE_TAG = VocabUtils.createIRI(NAMESPACE, "possibleLanguageTag");
 
     /**
      * Predicate indicating a datatype for a literal placeholder.
      */
-    public static final IRI HAS_DATATYPE = Utils.createIRI(NAMESPACE, "hasDatatype");
+    public static final IRI HAS_DATATYPE = VocabUtils.createIRI(NAMESPACE, "hasDatatype");
 
     /**
      * Predicate indicating the language attribute for a literal placeholder.
      */
-    public static final IRI HAS_LANGUAGE_TAG = Utils.createIRI(NAMESPACE, "hasLanguageTag");
+    public static final IRI HAS_LANGUAGE_TAG = VocabUtils.createIRI(NAMESPACE, "hasLanguageTag");
 
     /**
      * Predicate indicating the language attribute for a literal placeholder.
      */
-    public static final IRI HAS_LANGUAGE_ATTRIBUTE = Utils.createIRI(NAMESPACE, "hasLanguageAttribute");
+    public static final IRI HAS_LANGUAGE_ATTRIBUTE = VocabUtils.createIRI(NAMESPACE, "hasLanguageAttribute");
 
     /**
      * Predicate indicating a prefix.
      */
-    public static final IRI HAS_PREFIX = Utils.createIRI(NAMESPACE, "hasPrefix");
+    public static final IRI HAS_PREFIX = VocabUtils.createIRI(NAMESPACE, "hasPrefix");
 
     /**
      * Predicate indicating a regular expression.
      */
-    public static final IRI HAS_REGEX = Utils.createIRI(NAMESPACE, "hasRegex");
+    public static final IRI HAS_REGEX = VocabUtils.createIRI(NAMESPACE, "hasRegex");
 
     /**
      * Predicate indicating a prefix label.
      */
-    public static final IRI HAS_PREFIX_LABEL = Utils.createIRI(NAMESPACE, "hasPrefixLabel");
+    public static final IRI HAS_PREFIX_LABEL = VocabUtils.createIRI(NAMESPACE, "hasPrefixLabel");
 
     /**
      * Represents the class for optional statements.
      */
-    public static final IRI OPTIONAL_STATEMENT = Utils.createIRI(NAMESPACE, "OptionalStatement");
+    public static final IRI OPTIONAL_STATEMENT = VocabUtils.createIRI(NAMESPACE, "OptionalStatement");
 
     /**
      * Represents the class for grouped statements.
      */
-    public static final IRI GROUPED_STATEMENT = Utils.createIRI(NAMESPACE, "GroupedStatement");
+    public static final IRI GROUPED_STATEMENT = VocabUtils.createIRI(NAMESPACE, "GroupedStatement");
 
     /**
      * Represents the class for repeatable statements.
      */
-    public static final IRI REPEATABLE_STATEMENT = Utils.createIRI(NAMESPACE, "RepeatableStatement");
+    public static final IRI REPEATABLE_STATEMENT = VocabUtils.createIRI(NAMESPACE, "RepeatableStatement");
 
     /**
      * Predicate indicating default provenance.
      */
-    public static final IRI HAS_DEFAULT_PROVENANCE = Utils.createIRI(NAMESPACE, "hasDefaultProvenance");
+    public static final IRI HAS_DEFAULT_PROVENANCE = VocabUtils.createIRI(NAMESPACE, "hasDefaultProvenance");
 
     /**
      * Predicate indicating required pubinfo elements.
      */
-    public static final IRI HAS_REQUIRED_PUBINFO_ELEMENT = Utils.createIRI(NAMESPACE, "hasRequiredPubinfoElement");
+    public static final IRI HAS_REQUIRED_PUBINFO_ELEMENT = VocabUtils.createIRI(NAMESPACE, "hasRequiredPubinfoElement");
 
     /**
      * Predicate indicating a tag.
      */
-    public static final IRI HAS_TAG = Utils.createIRI(NAMESPACE, "hasTag");
+    public static final IRI HAS_TAG = VocabUtils.createIRI(NAMESPACE, "hasTag");
 
     /**
      * Predicate indicating a label from an API.
      */
-    public static final IRI HAS_LABEL_FROM_API = Utils.createIRI(NAMESPACE, "hasLabelFromApi");
+    public static final IRI HAS_LABEL_FROM_API = VocabUtils.createIRI(NAMESPACE, "hasLabelFromApi");
 
     /**
      * Predicate indicating a default value.
      */
-    public static final IRI HAS_DEFAULT_VALUE = Utils.createIRI(NAMESPACE, "hasDefaultValue");
+    public static final IRI HAS_DEFAULT_VALUE = VocabUtils.createIRI(NAMESPACE, "hasDefaultValue");
 
     /**
      * Predicate indicating a target namespace.
      */
-    public static final IRI HAS_TARGET_NAMESPACE = Utils.createIRI(NAMESPACE, "hasTargetNamespace");
+    public static final IRI HAS_TARGET_NAMESPACE = VocabUtils.createIRI(NAMESPACE, "hasTargetNamespace");
 
     /**
      * Predicate indicating a nanopublication label pattern.
      */
-    public static final IRI HAS_NANOPUB_LABEL_PATTERN = Utils.createIRI(NAMESPACE, "hasNanopubLabelPattern");
+    public static final IRI HAS_NANOPUB_LABEL_PATTERN = VocabUtils.createIRI(NAMESPACE, "hasNanopubLabelPattern");
 
     /**
      * Predicate indicating a target nanopublication type.
      */
-    public static final IRI HAS_TARGET_NANOPUB_TYPE = Utils.createIRI(NAMESPACE, "hasTargetNanopubType");
+    public static final IRI HAS_TARGET_NANOPUB_TYPE = VocabUtils.createIRI(NAMESPACE, "hasTargetNanopubType");
 
     /**
      * Represents the placeholder for sequence elements.
      */
-    public static final IRI SEQUENCE_ELEMENT_PLACEHOLDER = Utils.createIRI(NAMESPACE, "SequenceElementPlaceholder");
+    public static final IRI SEQUENCE_ELEMENT_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "SequenceElementPlaceholder");
+
+    /**
+     * Represents the class for advanced statements.
+     */
+    public static final IRI ADVANCED_STATEMENT = VocabUtils.createIRI(NAMESPACE, "AdvancedStatement");
 
 }

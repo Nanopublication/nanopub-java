@@ -4,6 +4,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 
@@ -16,7 +17,7 @@ class DefaultTopicsTest {
     private final IRI anotherIri = vf.createIRI("http://knowledgepixels.com/nanopubIri#anotherIri");
 
     @Test
-    void getTopicWithOneAssertion() throws MalformedNanopubException {
+    void getTopicWithOneAssertion() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub nanopub = TestUtils.createNanopub();
         DefaultTopics handler = new DefaultTopics(null);
         String topic = handler.getTopic(nanopub);
@@ -24,7 +25,7 @@ class DefaultTopicsTest {
     }
 
     @Test
-    void getTopicWithMoreAssertions() throws MalformedNanopubException {
+    void getTopicWithMoreAssertions() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, anyIri, anyIri),
@@ -41,7 +42,7 @@ class DefaultTopicsTest {
     }
 
     @Test
-    void getTopicWithEqualNumberOfAssertions() throws MalformedNanopubException {
+    void getTopicWithEqualNumberOfAssertions() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(
                 vf.createStatement(anyIri, anyIri, anyIri),
@@ -57,7 +58,7 @@ class DefaultTopicsTest {
     }
 
     @Test
-    void getTopicWithIgnoredProperties() throws MalformedNanopubException {
+    void getTopicWithIgnoredProperties() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         IRI ignoredProperty = vf.createIRI("http://knowledgepixels.com/nanopubIri#ignoredProperty");
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatements(

@@ -58,8 +58,8 @@ public class JellyWriterRDFHandler extends AbstractRDFHandler {
      * Call this at the end of a nanopub.
      * This flushes the buffer and returns the RdfStreamFrame corresponding to one nanopub.
      *
-     * @param counter The counter value to store in the frame metadata. If < 0, no metadata is added.
-     * @return RdfStreamFrame
+     * @param counter The counter value to store in the frame metadata. If {@code counter < 0}, no metadata is added.
+     * @return RdfStreamFrame with the nanopub data.
      */
     public RdfStreamFrame getFrame(long counter) {
         var rows = rowBuffer.getRows();

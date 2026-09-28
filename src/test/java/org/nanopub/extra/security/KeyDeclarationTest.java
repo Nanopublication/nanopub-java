@@ -61,7 +61,7 @@ class KeyDeclarationTest {
     @Test
     void getDeclarersReturnsSetWithAddedDeclarers() {
         IRI declarer1 = iri(TestUtils.ORCID);
-        IRI declarer2 = iri("https://orcid.org/0000-0000-0000-0001");
+        IRI declarer2 = iri("https://orcid.org/0000-0000-0000-0002");
 
         keyDeclaration.addDeclarer(declarer1);
         keyDeclaration.addDeclarer(declarer2);

@@ -1,5 +1,6 @@
 package org.nanopub.extra.server;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.eclipse.rdf4j.model.IRI;
@@ -10,6 +11,8 @@ import org.nanopub.NanopubUtils;
 import org.nanopub.extra.index.IndexUtils;
 import org.nanopub.extra.index.NanopubIndex;
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.OutputStream;
 import java.util.*;
@@ -18,6 +21,8 @@ import java.util.*;
  * Fetches index.
  */
 public class FetchIndex {
+
+    private static final Logger logger = LoggerFactory.getLogger(FetchIndex.class);
 
     /**
      * The maximum number of parallel requests that can be made to a single server.
@@ -72,6 +77,7 @@ public class FetchIndex {
         try {
             ServerIterator.writeCachedServers(registries);
         } catch (Exception ex) {
+            logger.warn("Could not cache the registry list; it will be rebuilt on the next run", ex);
         }
         if (localRegistryUrl != null) {
             try {
@@ -80,7 +86,7 @@ public class FetchIndex {
                 serverLoad.put(localRegistryInfo, new HashSet<>());
                 serverUsage.put(localRegistryInfo, 0);
             } catch (RegistryInfoException ex) {
-                ex.printStackTrace();
+                logger.error("Could not load the local registry {}; aborting index fetch", localRegistryUrl, ex);
                 return;
             }
         }
@@ -92,7 +98,9 @@ public class FetchIndex {
      */
     public void run() {
         synchronized (this) {
-            if (running) return;
+            if (running) {
+                return;
+            }
             running = true;
         }
         while (!fetchTasks.isEmpty()) {
@@ -100,13 +108,18 @@ public class FetchIndex {
             try {
                 Thread.sleep(5);
             } catch (InterruptedException ex) {
+                logger.debug("Interrupted while fetching index; stopping", ex);
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
 
     private void checkTasks() {
         for (FetchNanopubTask task : new ArrayList<>(fetchTasks)) {
-            if (task.isRunning()) continue;
+            if (task.isRunning()) {
+                continue;
+            }
             if (task.isCancelled()) {
                 fetchTasks.remove(task);
                 serverLoad.get(task.getLastRegistry()).remove(task);
@@ -117,7 +130,7 @@ public class FetchIndex {
             }
             if (task.getNanopub() == null) {
                 if (task.getTriedServersCount() == registries.size()) {
-                    System.err.println("Failed to get " + task.getNanopubUri());
+                    logger.warn("Failed to get {} from any of the {} known registries; giving up on it", task.getNanopubUri(), registries.size());
                     fetchTasks.remove(task);
                     continue;
                 }
@@ -128,7 +141,9 @@ public class FetchIndex {
                 List<RegistryInfo> shuffledServers = new ArrayList<>(registries);
                 Collections.shuffle(shuffledServers);
                 for (RegistryInfo registryInfo : shuffledServers) {
-                    if (task.hasServerBeenTried(registryInfo)) continue;
+                    if (task.hasServerBeenTried(registryInfo)) {
+                        continue;
+                    }
                     int load = serverLoad.get(registryInfo).size();
                     if (load >= maxParallelRequestsPerServer) {
                         continue;
@@ -364,7 +379,9 @@ public class FetchIndex {
                 serverTried = false;
                 // too many connection attempts; try again later
             } catch (Exception ex) {
-                if (listener != null) listener.exceptionHappened(ex, r, TrustyUriUtils.getArtifactCode(npUri));
+                if (listener != null) {
+                    listener.exceptionHappened(ex, r, ArtifactCode.of(TrustyUriUtils.getArtifactCode(npUri)));
+                }
             } finally {
                 running = false;
                 if (serverTried) {
@@ -404,7 +421,7 @@ public class FetchIndex {
          * @param r            the registry info of the server where the exception occurred
          * @param artifactCode the artifact code of the nanopub that caused the exception
          */
-        public void exceptionHappened(Exception ex, RegistryInfo r, String artifactCode);
+        public void exceptionHappened(Exception ex, RegistryInfo r, ArtifactCode artifactCode);
 
     }
 

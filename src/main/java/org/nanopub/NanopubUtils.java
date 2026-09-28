@@ -8,16 +8,21 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.*;
 import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
+import org.nanopub.extra.services.SparqlSyntax;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
+import org.nanopub.vocabulary.KPXL_GRLC;
 import org.nanopub.vocabulary.NP;
 import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.PAV;
 import org.nanopub.vocabulary.RDFG;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +35,8 @@ import java.util.*;
  */
 public class NanopubUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(NanopubUtils.class);
+
     private static final List<Pair<String, String>> defaultNamespaces = new ArrayList<>();
     private static final Random random = new Random();
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
@@ -39,6 +46,51 @@ public class NanopubUtils {
      * The initial checksum for a Nanopub, which is a base64-encoded 32-byte zero array.
      */
     public static final String INIT_CHECKSUM = TrustyUriUtils.getBase64(new byte[32]);
+
+    /**
+     * The local name of a nanopublication's head graph, below its own URI.
+     */
+    public static final String HEAD_SUFFIX = "Head";
+
+    /**
+     * The local name of a nanopublication's assertion graph, below its own URI.
+     */
+    public static final String ASSERTION_SUFFIX = "assertion";
+
+    /**
+     * The local name of a nanopublication's provenance graph, below its own URI.
+     */
+    public static final String PROVENANCE_SUFFIX = "provenance";
+
+    /**
+     * The local name of a nanopublication's publication info graph, below its own URI.
+     */
+    public static final String PUBINFO_SUFFIX = "pubinfo";
+
+    /**
+     * The local name of the signature element a signed nanopublication carries, below its own
+     * URI.
+     */
+    public static final String SIGNATURE_SUFFIX = "sig";
+
+    /**
+     * The local names a nanopublication uses for its own parts: its four graphs and its
+     * signature element. A resource minted under one of these names below the same URI is not
+     * a resource of its own but the part whose name it took, so tools that mint identifiers
+     * within a nanopublication have to keep clear of them.
+     */
+    public static final Set<String> RESERVED_LOCAL_NAMES =
+            Set.of(HEAD_SUFFIX, ASSERTION_SUFFIX, PROVENANCE_SUFFIX, PUBINFO_SUFFIX, SIGNATURE_SUFFIX);
+
+    /**
+     * Whether the given local name is one a nanopublication uses for one of its own parts.
+     *
+     * @param localName the local name to check, as it appears below a nanopublication's URI
+     * @return true if a resource of that name would be one of the nanopublication's own parts
+     */
+    public static boolean isReservedLocalName(String localName) {
+        return RESERVED_LOCAL_NAMES.contains(localName);
+    }
 
     private NanopubUtils() {
     }  // no instances allowed
@@ -79,6 +131,78 @@ public class NanopubUtils {
         s.addAll(getSortedList(nanopub.getProvenance()));
         s.addAll(getSortedList(nanopub.getPubinfo()));
         return s;
+    }
+
+    /**
+     * Returns the statements of the given Nanopub whose object is a literal that does not have a valid
+     * value for the datatype it declares, across all four graphs. Only XML Schema datatypes are
+     * considered, as only those have a lexical space we can check here.
+     * <p>
+     * Such literals make a nanopub invalid, but nanopubs carrying them exist in the wild and can still
+     * be loaded and read; only signing them is refused.
+     *
+     * @param nanopub the Nanopub to check
+     * @return the statements with an ill-typed literal, in the order of {@link #getStatements(Nanopub)}
+     */
+    public static List<Statement> getIllTypedLiteralStatements(Nanopub nanopub) {
+        List<Statement> illTyped = new ArrayList<>();
+        for (Statement st : getStatements(nanopub)) {
+            if (!(st.getObject() instanceof Literal l)) continue;
+            IRI datatype = l.getDatatype();
+            if (!XMLDatatypeUtil.isBuiltInDatatype(datatype)) continue;
+            if (!XMLDatatypeUtil.isValidValue(l.getLabel(), datatype)) {
+                illTyped.add(st);
+            }
+        }
+        return illTyped;
+    }
+
+    /**
+     * Describes an ill-typed literal as found by {@link #getIllTypedLiteralStatements(Nanopub)}.
+     *
+     * @param st a statement whose object is an ill-typed literal
+     * @return a human-readable description of the invalid value
+     */
+    public static String describeIllTypedLiteral(Statement st) {
+        Literal l = (Literal) st.getObject();
+        return "Invalid value for datatype " + l.getDatatype().stringValue() + ": \"" + l.getLabel() +
+                "\" (as object of " + st.getPredicate().stringValue() + ")";
+    }
+
+    /**
+     * Returns the statements of the given Nanopub whose object is a SPARQL query, declared with
+     * {@link org.nanopub.vocabulary.KPXL_GRLC#SPARQL}, that does not parse, across all four graphs.
+     * <p>
+     * A nanopub cannot be edited after the fact, so a grlc query nanopub whose SPARQL is broken is
+     * broken permanently: it can never run. Such nanopubs are therefore refused by the signing and
+     * publishing steps, but ones published before that check exist in the wild and can still be loaded
+     * and read.
+     *
+     * @param nanopub the Nanopub to check
+     * @return the statements with an unparseable SPARQL query, in the order of {@link #getStatements(Nanopub)}
+     */
+    public static List<Statement> getInvalidSparqlStatements(Nanopub nanopub) {
+        List<Statement> invalid = new ArrayList<>();
+        for (Statement st : getStatements(nanopub)) {
+            if (!st.getPredicate().equals(KPXL_GRLC.SPARQL)) continue;
+            if (!(st.getObject() instanceof Literal l)) continue;
+            if (!SparqlSyntax.isValid(l.getLabel())) {
+                invalid.add(st);
+            }
+        }
+        return invalid;
+    }
+
+    /**
+     * Describes an unparseable SPARQL query as found by {@link #getInvalidSparqlStatements(Nanopub)}.
+     *
+     * @param st a statement whose object is a SPARQL query that does not parse
+     * @return a human-readable description of the syntax error
+     */
+    public static String describeInvalidSparql(Statement st) {
+        Literal l = (Literal) st.getObject();
+        return "Invalid SPARQL as object of " + st.getPredicate().stringValue() + ": " +
+                SparqlSyntax.getSyntaxError(l.getLabel());
     }
 
     private static List<Statement> getSortedList(Set<Statement> s) {
@@ -183,7 +307,7 @@ public class NanopubUtils {
         try {
             NanopubUtils.propagateToHandler(np, writer);
         } catch (RDFHandlerException ex) {
-            ex.printStackTrace();
+            logger.warn("Could not collect the prefixes used by nanopub {}; returning the {} found so far", np.getUri(), usedPrefixes.size(), ex);
             return usedPrefixes;
         }
         return usedPrefixes;
@@ -367,13 +491,13 @@ public class NanopubUtils {
                 types.add((IRI) obj);
             }
         }
-        IRI onlySubjectInAssertion = null;
+        Resource onlySubjectInAssertion = null;
         List<IRI> allTypes = new ArrayList<>();
         boolean hasOnlySubjectInAssertion = true;
         IRI onlyPredicateInAssertion = null;
         boolean hasOnlyPredicateInAssertion = true;
         for (Statement st : np.getAssertion()) {
-            final IRI subj = (IRI) st.getSubject();
+            final Resource subj = st.getSubject();
             final IRI pred = st.getPredicate();
             final Value obj = st.getObject();
             if (pred.equals(RDF.TYPE) && obj instanceof IRI) {
@@ -428,10 +552,10 @@ public class NanopubUtils {
      */
     public static CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
-            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(500).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
+            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000).setConnectionRequestTimeout(10000).setSocketTimeout(10000).setCookieSpec(CookieSpecs.STANDARD).build();
             PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
-            connManager.setDefaultMaxPerRoute(10);
-            connManager.setMaxTotal(100);
+            connManager.setDefaultMaxPerRoute(200);
+            connManager.setMaxTotal(400);
             httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).setConnectionManager(connManager).build();
         }
         return httpClient;
@@ -444,6 +568,51 @@ public class NanopubUtils {
      */
     public static IRI createTempNanopubIri() {
         return vf.createIRI(TempUriReplacer.tempUri + Math.abs(random.nextInt()) + "/");
+    }
+
+    /**
+     * Retrieves a set of introduced IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract introduced IRI IDs
+     * @return a set of introduced IRI IDs
+     */
+    public static Set<String> getIntroducedIriIds(Nanopub np) {
+        Set<String> introducedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            IRI p = st.getPredicate();
+            if (!p.equals(NPX.INTRODUCES) && !p.equals(NPX.DESCRIBES) && !p.equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                introducedIriIds.add(obj.stringValue());
+            }
+        }
+        return introducedIriIds;
+    }
+
+    /**
+     * Retrieves a set of embedded IRI IDs from the nanopublication.
+     *
+     * @param np the nanopublication from which to extract embedded IRI IDs
+     * @return a set of embedded IRI IDs
+     */
+    public static Set<String> getEmbeddedIriIds(Nanopub np) {
+        Set<String> embeddedIriIds = new HashSet<>();
+        for (Statement st : np.getPubinfo()) {
+            if (!st.getSubject().equals(np.getUri())) {
+                continue;
+            }
+            if (!st.getPredicate().equals(NPX.EMBEDS)) {
+                continue;
+            }
+            if (st.getObject() instanceof IRI obj) {
+                embeddedIriIds.add(obj.stringValue());
+            }
+        }
+        return embeddedIriIds;
     }
 
 }

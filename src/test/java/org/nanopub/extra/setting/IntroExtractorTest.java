@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.extra.server.GetNanopub;
 import org.nanopub.utils.MockTrustyUriUtils;
 import org.nanopub.utils.TestUtils;
@@ -28,7 +29,7 @@ class IntroExtractorTest {
     }
 
     @Test
-    void handleStatementSetsIntroNanopubWhenTrustyUriFound() throws RDFHandlerException, MalformedNanopubException {
+    void handleStatementSetsIntroNanopubWhenTrustyUriFound() throws RDFHandlerException, MalformedNanopubException, NanopubAlreadyFinalizedException {
         String trustyUri = "https://knowledgepixels.com/trustyUri";
         String userId = "https://knowledgepixels.com/userId";
         Statement statement = SimpleValueFactory.getInstance().createStatement(

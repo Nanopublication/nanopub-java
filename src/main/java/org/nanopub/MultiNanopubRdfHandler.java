@@ -79,7 +79,7 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
             p.parse(is, "");
         } catch (RuntimeException ex) {
             if ("wrapped MalformedNanopubException".equals(ex.getMessage()) &&
-                    ex.getCause() instanceof MalformedNanopubException) {
+                ex.getCause() instanceof MalformedNanopubException) {
                 throw (MalformedNanopubException) ex.getCause();
             } else {
                 throw ex;
@@ -173,6 +173,8 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
             } else {
                 throwMalformed(ex);
             }
+        } catch (NanopubAlreadyFinalizedException e) {
+            throw new RuntimeException(e);
         }
         clearAll();
     }
@@ -197,8 +199,9 @@ public class MultiNanopubRdfHandler extends AbstractRDFHandler {
          * Handles a nanopub.
          *
          * @param np The nanopub to handle.
+         * @throws NanopubAlreadyFinalizedException If the nanopub is already finalized.
          */
-        public void handleNanopub(Nanopub np);
+        void handleNanopub(Nanopub np) throws NanopubAlreadyFinalizedException;
 
     }
 

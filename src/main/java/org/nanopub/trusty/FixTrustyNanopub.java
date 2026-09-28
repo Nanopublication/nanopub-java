@@ -1,6 +1,7 @@
 package org.nanopub.trusty;
 
 import com.beust.jcommander.ParameterException;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriResource;
 import net.trustyuri.TrustyUriUtils;
@@ -95,7 +96,7 @@ public class FixTrustyNanopub extends CliRunner {
             if (!TrustyUriUtils.isPotentialTrustyUri(nanopub.getUri())) {
                 throw new TrustyUriException("Not a (broken) trusty URI: " + nanopub.getUri());
             }
-            String oldArtifactCode = TrustyUriUtils.getArtifactCode(nanopub.getUri().toString());
+            ArtifactCode oldArtifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
             RdfUtils.fixTrustyRdf(r, oldArtifactCode, h);
             np = h.getNanopub();
         } catch (RDFHandlerException | MalformedNanopubException ex) {

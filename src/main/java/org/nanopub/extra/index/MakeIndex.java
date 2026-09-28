@@ -4,10 +4,7 @@ import com.beust.jcommander.ParameterException;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-import org.nanopub.CliRunner;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.MultiNanopubRdfHandler;
-import org.nanopub.NanopubUtils;
+import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 
 import java.io.*;
@@ -25,15 +22,15 @@ public class MakeIndex extends CliRunner {
     private List<File> inputFiles = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-fs", description = "Add index nanopubs from input files " +
-            "as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")
+                                                                 "as sub-indexes (instead of elements); has no effect if input file is plain-text list of URIs")
     private boolean useSubindexes = false;
 
     @com.beust.jcommander.Parameter(names = "-e", description = "Add given URIs as elements " +
-            "(in addition to the ones from the input files)")
+                                                                "(in addition to the ones from the input files)")
     private List<String> elements = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-s", description = "Add given URIs as sub-indexes " +
-            "(in addition to the ones from the input files, if given)")
+                                                                "(in addition to the ones from the input files, if given)")
     private List<String> subindexes = new ArrayList<>();
 
     @com.beust.jcommander.Parameter(names = "-x", description = "Set given URI as superseded index")
@@ -63,15 +60,6 @@ public class MakeIndex extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-p", description = "Make plain (non-trusty) index nanopublications")
     private boolean plainNanopub;
 
-//	@com.beust.jcommander.Parameter(names = "--sig", description = "Path and file name of key files")
-//	private boolean useSignature;
-//
-//	@com.beust.jcommander.Parameter(names = "--sig-key-file", description = "Path and file name of key files")
-//	private String keyFilename;
-//
-//	@com.beust.jcommander.Parameter(names = "--sig-algorithm", description = "Signature algorithm: either RSA or DSA")
-//	private SignatureAlgorithm algorithm;
-
     /**
      * Main method to run the MakeIndex tool.
      *
@@ -97,7 +85,6 @@ public class MakeIndex extends CliRunner {
     private OutputStreamWriter writer;
     private RDFFormat outFormat;
     private int count;
-//	private KeyPair key;
 
     private void init() throws IOException {
         count = 0;
@@ -152,25 +139,6 @@ public class MakeIndex extends CliRunner {
     private void run() throws Exception {
         init();
 
-//		if (useSignature) {
-//			if (algorithm == null) {
-//				if (keyFilename == null) {
-//					keyFilename = "~/.nanopub/id_rsa";
-//					algorithm = SignatureAlgorithm.RSA;
-//				} else if (keyFilename.endsWith("_rsa")) {
-//					algorithm = SignatureAlgorithm.RSA;
-//				} else if (keyFilename.endsWith("_dsa")) {
-//					algorithm = SignatureAlgorithm.DSA;
-//				} else {
-//					// Assuming RSA if not other information is available
-//					algorithm = SignatureAlgorithm.RSA;
-//				}
-//			} else if (keyFilename == null) {
-//				keyFilename = "~/.nanopub/id_" + algorithm.name().toLowerCase();
-//			}
-//			key = SignNanopub.loadKey(keyFilename, algorithm);
-//		}
-
         try {
             for (File f : inputFiles) {
                 if (f.getName().endsWith(".txt")) {
@@ -190,7 +158,7 @@ public class MakeIndex extends CliRunner {
                         if (useSubindexes && IndexUtils.isIndex(np)) {
                             try {
                                 indexCreator.addSubIndex(IndexUtils.castToIndex(np));
-                            } catch (MalformedNanopubException ex) {
+                            } catch (MalformedNanopubException | NanopubAlreadyFinalizedException ex) {
                                 throw new RuntimeException(ex);
                             }
                         } else {

@@ -13,6 +13,7 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.vocabulary.NPX;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -26,6 +27,44 @@ import java.util.Set;
 public class NanopubSetting implements Serializable {
 
     private static ValueFactory vf = SimpleValueFactory.getInstance();
+
+    /**
+     * System property naming a TriG file with a custom setting nanopub. Overrides the
+     * bundled default setting when set (env var {@code NANOPUB_SETTING_FILE} also accepted).
+     */
+    public static final String SETTING_FILE_PROPERTY = "nanopub.setting.file";
+
+    /**
+     * Environment variable equivalent of {@link #SETTING_FILE_PROPERTY}.
+     */
+    public static final String SETTING_FILE_ENV = "NANOPUB_SETTING_FILE";
+
+    private static volatile NanopubSetting defaultSetting;
+
+    /**
+     * Retrieves the default nanopub setting, honoring the {@code nanopub.setting.file}
+     * system property and the {@code NANOPUB_SETTING_FILE} environment variable as
+     * overrides. When neither is set, falls back to {@link #getLocalSetting()}.
+     *
+     * @return the default NanopubSetting object
+     * @throws org.eclipse.rdf4j.common.exception.RDF4JException if there is an error with RDF4J operations.
+     * @throws org.nanopub.MalformedNanopubException             if the nanopub is malformed.
+     * @throws java.io.IOException                               if there is an error reading the input stream.
+     */
+    public static NanopubSetting getDefaultSetting() throws RDF4JException, MalformedNanopubException, IOException {
+        if (defaultSetting != null) return defaultSetting;
+        synchronized (NanopubSetting.class) {
+            if (defaultSetting != null) return defaultSetting;
+            String path = System.getProperty(SETTING_FILE_PROPERTY);
+            if (path == null || path.isEmpty()) path = System.getenv(SETTING_FILE_ENV);
+            if (path != null && !path.isEmpty()) {
+                defaultSetting = new NanopubSetting(new NanopubImpl(new File(path)));
+            } else {
+                defaultSetting = getLocalSetting();
+            }
+            return defaultSetting;
+        }
+    }
 
     /**
      * Retrieves the default local nanopub setting.

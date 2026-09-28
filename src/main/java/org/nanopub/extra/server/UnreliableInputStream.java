@@ -35,6 +35,7 @@ public class UnreliableInputStream extends InputStream {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
             }
             throw new SimulatedIOException("Simulated IO Problem");
         }
@@ -55,6 +56,7 @@ public class UnreliableInputStream extends InputStream {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
             }
             throw new SimulatedIOException("Simulated IO Problem");
         }
@@ -76,6 +78,7 @@ public class UnreliableInputStream extends InputStream {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
             }
             throw new SimulatedIOException("Simulated IO Problem");
         }

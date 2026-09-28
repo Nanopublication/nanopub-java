@@ -1,5 +1,6 @@
 package org.nanopub.op.fingerprint;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
@@ -35,8 +36,8 @@ public class DisgenetFingerprints implements FingerprintHandler {
         }
         List<Statement> statements = getNormalizedStatements(np);
         statements = RdfPreprocessor.run(statements, artifactCode);
-        String fingerprint = RdfHasher.makeArtifactCode(statements);
-        return fingerprint.substring(2);
+        ArtifactCode fingerprint = RdfHasher.makeArtifactCode(statements);
+        return fingerprint.toString().substring(2);
     }
 
     private List<Statement> getNormalizedStatements(Nanopub np) {
@@ -45,7 +46,9 @@ public class DisgenetFingerprints implements FingerprintHandler {
         for (Statement st : statements) {
             boolean isInAssertion = st.getContext().equals(np.getAssertionUri());
             boolean isInProvenance = st.getContext().equals(np.getProvenanceUri());
-            if (!isInProvenance && !isInAssertion) continue;
+            if (!isInProvenance && !isInAssertion) {
+                continue;
+            }
             IRI graphURI;
             if (isInAssertion) {
                 graphURI = assertionUriPlaceholder;
@@ -58,7 +61,7 @@ public class DisgenetFingerprints implements FingerprintHandler {
             if (isInAssertion) {
                 String subjS = subj.stringValue();
                 if (subjS.startsWith("http://rdf.disgenet.org/resource/gda/DGN") ||
-                        subjS.startsWith("http://rdf.disgenet.org/gene-disease-association.ttl#DGN")) {
+                    subjS.startsWith("http://rdf.disgenet.org/gene-disease-association.ttl#DGN")) {
                     subj = disgenetGdaPlaceholder;
                 }
             } else if (isInProvenance) {

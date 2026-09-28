@@ -1,15 +1,5 @@
 package org.nanopub.fdo;
 
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.util.Values;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.extra.server.GetNanopub;
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.ApiResponseEntry;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -17,9 +7,21 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.util.Values;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
+import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.extra.services.APINotReachableException;
+import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.ApiResponseEntry;
+import org.nanopub.extra.services.FailedApiCallException;
+import org.nanopub.extra.services.NotEnoughAPIInstancesException;
+import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.QueryRef;
 
 /**
  * Retrieve FDOs (FDO Records) from the nanopub network or handle system.
@@ -67,10 +69,8 @@ public class RetrieveFdo {
      * @return the Nanopub corresponding to the IRI or handle, or null if not found
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails
      */
-    public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException {
-        Map<String, String> params = new HashMap<>();
-        params.put("fdoid", iriOrHandle);
-        ApiResponse apiResponse = QueryAccess.get(GET_FDO_QUERY_ID, params);
+    public static Nanopub resolveInNanopubNetwork(String iriOrHandle) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        ApiResponse apiResponse = QueryAccess.get(new QueryRef(GET_FDO_QUERY_ID, "fdoid", iriOrHandle));
         List<ApiResponseEntry> data = apiResponse.getData();
         if (data.isEmpty()) {
             return null;
@@ -89,7 +89,7 @@ public class RetrieveFdo {
      * @throws java.io.IOException                   if an I/O error occurs
      * @throws java.lang.InterruptedException        if the operation is interrupted
      */
-    public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException {
+    public static FdoRecord resolveInHandleSystem(String handle) throws MalformedNanopubException, URISyntaxException, IOException, InterruptedException, NanopubAlreadyFinalizedException {
         Nanopub np = FdoNanopubCreator.createFromHandleSystem(handle);
         return new FdoRecord(np);
     }

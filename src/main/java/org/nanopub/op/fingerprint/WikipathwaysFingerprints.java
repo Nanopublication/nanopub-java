@@ -1,5 +1,6 @@
 package org.nanopub.op.fingerprint;
 
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfHasher;
 import net.trustyuri.rdf.RdfPreprocessor;
@@ -33,8 +34,8 @@ public class WikipathwaysFingerprints implements FingerprintHandler {
         }
         List<Statement> statements = getNormalizedStatements(np);
         statements = RdfPreprocessor.run(statements, artifactCode);
-        String fingerprint = RdfHasher.makeArtifactCode(statements);
-        return fingerprint.substring(2);
+        ArtifactCode fingerprint = RdfHasher.makeArtifactCode(statements);
+        return fingerprint.toString().substring(2);
     }
 
     private List<Statement> getNormalizedStatements(Nanopub np) {
@@ -44,7 +45,9 @@ public class WikipathwaysFingerprints implements FingerprintHandler {
             boolean isInAssertion = st.getContext().equals(np.getAssertionUri());
             boolean isInProvenance = st.getContext().equals(np.getProvenanceUri());
             boolean isInPubinfo = st.getContext().equals(np.getPubinfoUri());
-            if (!isInProvenance && !isInAssertion && !isInPubinfo) continue;
+            if (!isInProvenance && !isInAssertion && !isInPubinfo) {
+                continue;
+            }
             IRI graphURI;
             if (isInAssertion) {
                 graphURI = assertionUriPlaceholder;

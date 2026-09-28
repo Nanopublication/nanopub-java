@@ -9,7 +9,7 @@ This is the documentation of the java cli of nanopub.java.
 
 You can get the list of commands by typing:
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar```
+```np help```
 
 In the following list you can see the short command first, followed by the classname
 implementing that command.
@@ -34,7 +34,8 @@ implementing that command.
 - shacl / ShaclValidator
 - rocrate / RoCrateImporter
 
-Some commands are grouped as subcommands of the `op` command.
+Some commands are grouped as subcommands of the `op` command. You can list those by running:
+```np op help```
 
 - filter / Filter
 - extract / Extract
@@ -56,7 +57,7 @@ Some commands are grouped as subcommands of the `op` command.
 
 To get more information on the usage of a command just type it in. E.g.
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar check```
+```np check```
 
 will output:
 
@@ -74,16 +75,61 @@ Usage: <main class> [options] input-nanopubs
 
 Some commands use the keys in `~/.nanopub/`. To generate the key pair use:
 
-```java -jar nanopub-<version>-jar-with-dependencies.jar mkkeys```
+```np mkkeys```
 
 The command `sign` takes a profile file in yaml format:
 
 #### profile.yaml
+
 ```yaml
 orcid_id: https://orcid.org/0009-0008-3635-347X
 public_key: /Users/name/.nanopub/id_rsa.pub
 private_key: /Users/name/.nanopub/id_rsa
 ```
+
+### Checking the key against the network
+
+Signing with a key that no introduction declares for your ORCID produces a nanopublication that is
+cryptographically valid and publishes normally, but that nobody can attribute to you: the registry
+has nothing tying the key to the person, so it shows up under an unapproved agent. A nanopublication
+cannot be edited afterwards, so the only remedy is publishing it again under a declared key and
+retracting the first.
+
+`sign` and `publish` therefore ask the network about the key first, and warn:
+
+```text
+WARNING: https://orcid.org/0000-... is introduced on the network, but by a different key than the
+one about to sign. Nanopublications signed with this key cannot be attributed, and will show as
+coming from an unapproved agent. Publish an introduction declaring this key, or sign with the
+declared one.
+```
+
+An introduction counts only when it is signed by one of the keys it declares. The first
+introduction of a signer is signed with the key it declares; one adding a further key is signed with
+a key the signer already has, and restates that key alongside the new one. An introduction that
+anyone could have published for somebody else declares no key it is signed with, so it establishes
+nothing and the warning still comes.
+
+#### `--strict`
+
+Refuse rather than warn:
+
+```bash
+np sign --strict nanopub.trig
+np publish --strict signed.nanopub.trig
+```
+
+| Command | `--strict` | Without it |
+| --- | --- | --- |
+| `sign` | Signs nothing, and exits with an error naming the problem | Warns on stderr and signs anyway |
+| `publish` | Leaves the offending nanopublication unpublished, and carries on with the rest | Warns and publishes anyway |
+
+On `publish` the flag is not new: it already refused nanopublications that fail verification, and it
+now covers the signing-key check as well.
+
+The check reads the network, so it fails open: when the query service cannot be reached, nothing is
+reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal, on
+the grounds that a check which could not be made is not evidence of a problem.
 
 ## Shacl Validation
 

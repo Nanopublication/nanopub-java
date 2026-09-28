@@ -12,6 +12,9 @@ import org.eclipse.rdf4j.rio.turtle.TurtleUtil;
 import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +28,8 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * An RDF writer that outputs RDF in HTML format, suitable for displaying.
  */
 public class HtmlWriter extends TurtleWriter {
+
+    private static final Logger logger = LoggerFactory.getLogger(HtmlWriter.class);
 
     private boolean inActiveContext;
     private Resource currentContext;
@@ -404,13 +409,14 @@ public class HtmlWriter extends TurtleWriter {
 
         if (getWriterConfig().get(BasicWriterSettings.PRETTY_PRINT)) {
             if (XSD.INTEGER.equals(datatype) || XSD.DECIMAL.equals(datatype)
-                    || XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype)) {
+                || XSD.DOUBLE.equals(datatype) || XSD.BOOLEAN.equals(datatype)) {
                 try {
                     writer.write(escapeHtml4(XMLDatatypeUtil.normalize(label, datatype)));
                     return; // done
                 } catch (IllegalArgumentException e) {
                     // not a valid numeric typed literal. ignore error and write as
                     // quoted string instead.
+                    logger.debug("Literal \"{}\" is not a valid {}; writing it as a quoted string", label, datatype);
                 }
             }
         }

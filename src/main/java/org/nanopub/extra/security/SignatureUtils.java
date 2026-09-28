@@ -1,6 +1,7 @@
 package org.nanopub.extra.security;
 
 import jakarta.xml.bind.DatatypeConverter;
+import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriException;
 import net.trustyuri.TrustyUriUtils;
 import net.trustyuri.rdf.RdfFileContent;
@@ -15,6 +16,8 @@ import org.nanopub.*;
 import org.nanopub.trusty.TempUriReplacer;
 import org.nanopub.trusty.TrustyNanopubUtils;
 import org.nanopub.vocabulary.NPX;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -32,7 +35,8 @@ import java.util.Map;
  */
 public class SignatureUtils {
 
-    private static ValueFactory vf = SimpleValueFactory.getInstance();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
+    private static final Logger logger = LoggerFactory.getLogger(SignatureUtils.class);
 
     private SignatureUtils() {
     }  // no instances allowed
@@ -46,7 +50,9 @@ public class SignatureUtils {
      */
     public static NanopubSignatureElement getSignatureElement(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureUri = getSignatureElementUri(nanopub);
-        if (signatureUri == null) return null;
+        if (signatureUri == null) {
+            return null;
+        }
         NanopubSignatureElement se = new NanopubSignatureElement(nanopub.getUri(), signatureUri);
 
         for (Statement st : nanopub.getHead()) se.addTargetStatement(st);
@@ -113,12 +119,15 @@ public class SignatureUtils {
         PublicKey publicKey = KeyFactory.getInstance(se.getAlgorithm().name()).generatePublic(publicSpec);
         signature.initVerify(publicKey);
 
-//		System.err.println("SIGNATURE INPUT: ---");
-//		System.err.print(RdfHasher.getDigestString(statements));
-//		System.err.println("---");
+        String digestString = RdfHasher.getDigestString(statements);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Signature input for {}:\n{}", se.getTargetNanopubUri(), digestString);
+        }
 
-        signature.update(RdfHasher.getDigestString(statements).getBytes());
-        return signature.verify(se.getSignature());
+        signature.update(digestString.getBytes());
+        boolean valid = signature.verify(se.getSignature());
+        logger.debug("Signature of nanopub {} is {}", se.getTargetNanopubUri(), valid ? "valid" : "INVALID");
+        return valid;
     }
 
     /**
@@ -135,21 +144,40 @@ public class SignatureUtils {
     public static Nanopub createSignedNanopub(Nanopub preNanopub, TransformContext c)
             throws GeneralSecurityException, RDFHandlerException, TrustyUriException, MalformedNanopubException {
 
-        String u = preNanopub.getUri().stringValue();
-        if (!preNanopub.getHeadUri().stringValue().startsWith(u) ||
-                !preNanopub.getAssertionUri().stringValue().startsWith(u) ||
-                !preNanopub.getProvenanceUri().stringValue().startsWith(u) ||
-                !preNanopub.getPubinfoUri().stringValue().startsWith(u)) {
-            throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + u + "...");
+        String preNanopubUri = preNanopub.getUri().stringValue();
+        if (!preNanopub.getHeadUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getAssertionUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getProvenanceUri().stringValue().startsWith(preNanopubUri) ||
+            !preNanopub.getPubinfoUri().stringValue().startsWith(preNanopubUri)) {
+            throw new TrustyUriException("Graph URIs need have the nanopub URI as prefix: " + preNanopubUri + "...");
+        }
+        List<Statement> illTyped = NanopubUtils.getIllTypedLiteralStatements(preNanopub);
+        if (!illTyped.isEmpty()) {
+            throw new MalformedNanopubException("Nanopub has ill-typed literal(s) and cannot be signed: " +
+                    NanopubUtils.describeIllTypedLiteral(illTyped.getFirst()));
+        }
+        List<Statement> invalidSparql = NanopubUtils.getInvalidSparqlStatements(preNanopub);
+        if (!invalidSparql.isEmpty()) {
+            throw new MalformedNanopubException("Nanopub has invalid SPARQL and cannot be signed: " +
+                    NanopubUtils.describeInvalidSparql(invalidSparql.getFirst()));
         }
 
         RdfFileContent r = new RdfFileContent(RDFFormat.TRIG);
         IRI npUri;
+        IRI signer = c.getSigner();
         Map<Resource, IRI> tempUriReplacerMap = null;
         if (TempUriReplacer.hasTempUri(preNanopub)) {
             npUri = vf.createIRI(TempUriReplacer.normUri);
             tempUriReplacerMap = new HashMap<>();
             NanopubUtils.propagateToHandler(preNanopub, new TempUriReplacer(preNanopub, r, tempUriReplacerMap));
+            // The signer statement is added further below and therefore bypasses the replacement above.
+            // If the signer is introduced by this very nanopub (self-signed introduction of an agent),
+            // its temporary URI has to be replaced here too:
+            if (signer != null && signer.stringValue().startsWith(preNanopubUri)) {
+                IRI replacedSigner = vf.createIRI(signer.stringValue().replace(preNanopubUri, TempUriReplacer.normUri));
+                tempUriReplacerMap.put(signer, replacedSigner);
+                signer = replacedSigner;
+            }
         } else {
             npUri = preNanopub.getUri();
             NanopubUtils.propagateToHandler(preNanopub, r);
@@ -173,24 +201,24 @@ public class SignatureUtils {
         // Removing trusty URI if one is already present:
         if (TrustyNanopubUtils.isValidTrustyNanopub(preNanopub)) {
             String ac = TrustyUriUtils.getArtifactCode(preNanopub.getUri().toString());
-            preStatements = removeArtifactCode(preStatements, ac);
-            npUri = (IRI) removeArtifactCode(npUri, ac);
-            piUri = (IRI) removeArtifactCode(piUri, ac);
+            preStatements = ArtifactCodeUtils.removeArtifactCode(preStatements, ac);
+            npUri = (IRI) ArtifactCodeUtils.removeArtifactCode(npUri, ac);
+            piUri = (IRI) ArtifactCodeUtils.removeArtifactCode(piUri, ac);
             for (String prefix : nsMap.keySet()) {
-                nsMap.put(prefix, removeArtifactCode(nsMap.get(prefix), ac));
+                nsMap.put(prefix, ArtifactCodeUtils.removeArtifactCode(nsMap.get(prefix), ac));
             }
         }
 
         // Adding signature element:
-        IRI signatureElUri = vf.createIRI(npUri + "sig");
+        IRI signatureElUri = vf.createIRI(npUri + NanopubUtils.SIGNATURE_SUFFIX);
         String publicKeyString = encodePublicKey(c.getKey().getPublic());
         Literal publicKeyLiteral = vf.createLiteral(publicKeyString);
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_SIGNATURE_TARGET, npUri, piUri));
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_PUBLIC_KEY, publicKeyLiteral, piUri));
         Literal algorithmLiteral = vf.createLiteral(c.getSignatureAlgorithm().name());
         preStatements.add(vf.createStatement(signatureElUri, NPX.HAS_ALGORITHM, algorithmLiteral, piUri));
-        if (c.getSigner() != null) {
-            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, c.getSigner(), piUri));
+        if (signer != null) {
+            preStatements.add(vf.createStatement(signatureElUri, NPX.SIGNED_BY, signer, piUri));
         }
 
         // Preprocess statements that are covered by signature:
@@ -201,7 +229,7 @@ public class SignatureUtils {
         RdfFileContent preprocessedContent = new RdfFileContent(RDFFormat.TRIG);
         RdfPreprocessor rp = new RdfPreprocessor(preprocessedContent, npUri, TrustyNanopubUtils.transformRdfSetting);
 
-        // TODO Why do we do this?
+        // Required preprocessing for RdfHasher:
         try {
             preContent.propagate(rp);
         } catch (RDFHandlerException ex) {
@@ -234,7 +262,7 @@ public class SignatureUtils {
         // Create nanopub object:
         NanopubRdfHandler nanopubHandler = new NanopubRdfHandler();
         IRI trustyUri = TransformRdf.transformPreprocessed(signedContent, npUri, nanopubHandler, TrustyNanopubUtils.transformRdfSetting);
-        Map<Resource, IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), TrustyUriUtils.getArtifactCode(trustyUri.toString()));
+        Map<Resource, IRI> transformMap = TransformRdf.finalizeTransformMap(rp.getTransformMap(), ArtifactCode.of(TrustyUriUtils.getArtifactCode(trustyUri.toString())));
         c.mergeTransformMap(transformMap);
         return nanopubHandler.getNanopub();
     }
@@ -249,41 +277,15 @@ public class SignatureUtils {
         return DatatypeConverter.printBase64Binary(publicKey.getEncoded()).replaceAll("\\s", "");
     }
 
-    // ----------
-    // TODO: Move this into separate class?
-
-    private static List<Statement> removeArtifactCode(List<Statement> in, String ac) {
-        List<Statement> out = new ArrayList<>();
-        for (Statement st : in) {
-            out.add(removeArtifactCode(st, ac));
-        }
-        return out;
-    }
-
-    private static Statement removeArtifactCode(Statement st, String ac) {
-        return vf.createStatement((Resource) removeArtifactCode(st.getSubject(), ac), (IRI) removeArtifactCode(st.getPredicate(), ac),
-                removeArtifactCode(st.getObject(), ac), (Resource) removeArtifactCode(st.getContext(), ac));
-    }
-
-    private static Value removeArtifactCode(Value v, String ac) {
-        if (v instanceof IRI) {
-            return vf.createIRI(removeArtifactCode(v.stringValue(), ac));
-        } else {
-            return v;
-        }
-    }
-
-    private static String removeArtifactCode(String s, String ac) {
-        return s.replaceAll(ac + "[#/]?", "");
-    }
-
-    // ----------
-
     private static IRI getSignatureElementUri(Nanopub nanopub) throws MalformedCryptoElementException {
         IRI signatureElementUri = null;
         for (Statement st : nanopub.getPubinfo()) {
-            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) continue;
-            if (!st.getObject().equals(nanopub.getUri())) continue;
+            if (!st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) {
+                continue;
+            }
+            if (!st.getObject().equals(nanopub.getUri())) {
+                continue;
+            }
             if (!(st.getSubject() instanceof IRI)) {
                 throw new MalformedCryptoElementException("Signature element must be identified by URI");
             }
@@ -303,10 +305,18 @@ public class SignatureUtils {
      */
     public static boolean seemsToHaveSignature(Nanopub nanopub) {
         for (Statement st : nanopub.getPubinfo()) {
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) return true;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) return true;
-            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) return true;
-            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) return true;
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_ELEMENT)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE_TARGET)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_SIGNATURE)) {
+                return true;
+            }
+            if (st.getPredicate().equals(NPX.HAS_PUBLIC_KEY)) {
+                return true;
+            }
         }
         return false;
     }
@@ -337,6 +347,27 @@ public class SignatureUtils {
         if (!oldPubKey.equals(newPubKey)) {
             throw new MalformedCryptoElementException("The old public key does not match the new public key");
         }
+    }
+
+    /**
+     * Extracts the public key string from the signature element of a nanopub, if it exists and is valid.
+     *
+     * @param nanopub the nanopub to extract the public key from
+     * @return the public key string if a valid signature element is found, null otherwise
+     */
+    public static String getPubKey(Nanopub nanopub) {
+        NanopubSignatureElement signatureElement;
+        try {
+            signatureElement = SignatureUtils.getSignatureElement(nanopub);
+            if (signatureElement != null && SignatureUtils.hasValidSignature(signatureElement) && signatureElement.getPublicKeyString() != null) {
+                return signatureElement.getPublicKeyString();
+            }
+        } catch (MalformedCryptoElementException | GeneralSecurityException ex) {
+            // Returning null is a normal outcome here, so this is not an error for the caller.
+            logger.warn("Could not check the signature of nanopub {}; treating it as unsigned: {}", nanopub.getUri(), ex.getMessage());
+            logger.debug("Signature check of nanopub {} failed", nanopub.getUri(), ex);
+        }
+        return null;
     }
 
 }

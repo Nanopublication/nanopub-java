@@ -3,13 +3,15 @@ package org.nanopub.extra.security;
 import com.beust.jcommander.ParameterException;
 import jakarta.xml.bind.DatatypeConverter;
 import net.trustyuri.TrustyUriException;
-import net.trustyuri.TrustyUriResource;
+import net.trustyuri.TrustyUriUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -20,12 +22,16 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 /**
  * Command line tool to sign nanopubs with a private key.
  */
 public class SignNanopub extends CliRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(SignNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
     private List<File> inputNanopubFiles = new ArrayList<>();
@@ -42,13 +48,16 @@ public class SignNanopub extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-v", description = "Verbose")
     private boolean verbose = false;
 
+    @com.beust.jcommander.Parameter(names = "--strict", description = "Only sign if the network knows the signer by this key")
+    private boolean strict = false;
+
     @com.beust.jcommander.Parameter(names = "-r", description = "Resolve cross-nanopub references")
     private boolean resolveCrossRefs = false;
 
     @com.beust.jcommander.Parameter(names = "-R", description = "Resolve cross-nanopub references based on prefixes")
     private boolean resolveCrossRefsPrefixBased = false;
 
-    @com.beust.jcommander.Parameter(names = "-s", description = "The orcid IRI of the signer")
+    @com.beust.jcommander.Parameter(names = "-s", description = "The IRI of the signer, typically an ORCID IRI. It can also be a sub-IRI of the nanopub being signed, given under its temporary URI (e.g. http://purl.org/nanopub/temp/np001/my-bot), which lets an agent self-sign its own introduction")
     private String signer;
 
     @com.beust.jcommander.Parameter(names = "--profile", description = "Profile file for signer iri and key files, " + "defaults to ~/.nanopub/profile.yaml")
@@ -87,6 +96,29 @@ public class SignNanopub extends CliRunner {
     }
 
     /**
+     * Reports whether the network knows the signer by the key about to sign (issue #150).
+     * <p>
+     * A signature made with an undeclared key is valid but cannot be attributed, and a
+     * nanopublication cannot be corrected once published, so the warning comes before anything is
+     * signed. It stays a warning unless {@code --strict} is given: the check reads the network, and
+     * an unreachable query service is no reason to stop someone signing.
+     *
+     * @param signerIri the signer the nanopubs will be signed for
+     * @throws java.lang.Exception in strict mode, if the network does not know the signer by this key
+     */
+    private void checkKeyAgainstNetwork(IRI signerIri) throws Exception {
+        ProfileKeyCheck.Result result = ProfileKeyCheck.check(signerIri, SignatureUtils.encodePublicKey(key.getPublic()));
+        if (!result.isAcceptable()) {
+            System.err.println("WARNING: " + result.message());
+            if (strict) {
+                throw new Exception("Strict mode: nothing was signed. " + result.message());
+            }
+        } else if (verbose) {
+            System.out.println(result.message());
+        }
+    }
+
+    /**
      * Runs the signing process for the nanopubs.
      *
      * @throws java.lang.Exception if an error occurs during signing
@@ -99,10 +131,7 @@ public class SignNanopub extends CliRunner {
             profile = new NanopubProfile(NanopubProfile.IMPLICIT_PROFILE_FILE_NAME);
         }
         if (keyFilename == null) {
-            keyFilename = profile.getPrivateKeyPath();
-        }
-        if (keyFilename == null) {
-            keyFilename = "~/.nanopub/id_rsa";
+            keyFilename = profile.getPrivateKeyPath() != null ? profile.getPrivateKeyPath() : TransformContext.DEFAULT_KEY_PATH;
         }
 
         if (keyFilename.endsWith("_dsa")) {
@@ -118,51 +147,144 @@ public class SignNanopub extends CliRunner {
             signerIri = vf.createIRI(signer);
         } else if (profile.getOrcidId() != null) {
             signerIri = vf.createIRI(profile.getOrcidId());
+        } else {
+            String msg = "No valid signer specified. Use either: -s or --profile !";
+            throw new Exception(msg);
         }
+        checkKeyAgainstNetwork(signerIri);
+
         final TransformContext c = new TransformContext(algorithm, key, signerIri, resolveCrossRefs, resolveCrossRefsPrefixBased, ignoreSigned);
 
-        final OutputStream singleOut;
-        if (singleOutputFile != null) {
-            if (singleOutputFile.getName().matches(".*\\.(gz|gzip)")) {
-                singleOut = new GZIPOutputStream(new FileOutputStream(singleOutputFile));
-            } else {
-                singleOut = new FileOutputStream(singleOutputFile);
+        // The output files are opened lazily, so that a run that fails before anything is signed does
+        // not truncate an existing file or leave an empty one behind (see issue #129).
+        final LazyFileOutputStream singleOut = singleOutputFile == null ? null : new LazyFileOutputStream(singleOutputFile);
+        try {
+            for (File inputFile : inputNanopubFiles) {
+                final File outputFile;
+                final LazyFileOutputStream out;
+                if (singleOut == null) {
+                    outputFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
+                    out = new LazyFileOutputStream(outputFile);
+                } else {
+                    outputFile = singleOutputFile;
+                    out = singleOut;
+                }
+                final RDFFormat inFormat = getFormat(inputFile, RDFFormat.TRIG);
+                final RDFFormat outFormat = getFormat(outputFile, RDFFormat.TRIG);
+                try {
+                    MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
+                        try {
+                            np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
+                            if (verbose) {
+                                System.out.println("Nanopub URI: " + np.getUri());
+                            }
+                        } catch (RDFHandlerException | SignatureException | InvalidKeyException |
+                                 TrustyUriException ex) {
+                            ex.printStackTrace();
+                            throw new RuntimeException(ex);
+                        }
+                    });
+                    if (out != singleOut) {
+                        // this input was processed without error, so an input without nanopubs still
+                        // gets its (empty) output file, as it did before
+                        out.createIfNotWrittenTo();
+                    }
+                } finally {
+                    if (out != singleOut) {
+                        out.close();
+                    }
+                }
             }
-        } else {
-            singleOut = null;
+            if (singleOut != null) {
+                singleOut.createIfNotWrittenTo();
+            }
+        } finally {
+            if (singleOut != null) {
+                singleOut.close();
+            }
+        }
+    }
+
+    /**
+     * Determines the RDF format of a file from its name alone.
+     * <p>
+     * This derives the format the same way {@code TrustyUriResource.getFormat(RDFFormat)} does, but
+     * without opening the file: the output file does not exist yet at this point, as it is only created
+     * once there is something to write to it.
+     *
+     * @param file          the file whose format to determine
+     * @param defaultFormat the format to fall back to if the name does not identify one
+     * @return the RDF format of the file
+     */
+    private static RDFFormat getFormat(File file, RDFFormat defaultFormat) {
+        String mimetype = TrustyUriUtils.getMimetype(file.toString());
+        Optional<RDFFormat> format = mimetype == null ? Optional.empty() : Rio.getParserFormatForMIMEType(mimetype);
+        if (format.isEmpty()) {
+            format = Rio.getParserFormatForFileName(file.toString());
+        }
+        return format.orElse(defaultFormat);
+    }
+
+    /**
+     * An output stream to a file that is only created once something is actually written to it.
+     * <p>
+     * Opening a {@link java.io.FileOutputStream} truncates its target, and signing can fail before the
+     * first nanopub is written. Delaying the open until the first write keeps a failed run from
+     * destroying an existing file or leaving an empty one behind, while preserving the streaming
+     * behaviour for files with several nanopubs.
+     */
+    private static class LazyFileOutputStream extends OutputStream {
+
+        private final File file;
+        private OutputStream out;
+
+        LazyFileOutputStream(File file) {
+            this.file = file;
         }
 
-        for (File inputFile : inputNanopubFiles) {
-            File outputFile;
-            final OutputStream out;
-            if (singleOutputFile == null) {
-                outputFile = new File(inputFile.getParent(), "signed." + inputFile.getName());
-                if (inputFile.getName().matches(".*\\.(gz|gzip)")) {
-                    out = new GZIPOutputStream(new FileOutputStream(outputFile));
+        private OutputStream open() throws IOException {
+            if (out == null) {
+                if (file.getName().matches(".*\\.(gz|gzip)")) {
+                    out = new GZIPOutputStream(new FileOutputStream(file));
                 } else {
-                    out = new FileOutputStream(outputFile);
+                    out = new FileOutputStream(file);
                 }
-            } else {
-                outputFile = singleOutputFile;
-                out = singleOut;
             }
-            final RDFFormat inFormat = new TrustyUriResource(inputFile).getFormat(RDFFormat.TRIG);
-            final RDFFormat outFormat = new TrustyUriResource(outputFile).getFormat(RDFFormat.TRIG);
-            try (out) {
-                MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
-                    try {
-                        np = writeAsSignedTrustyNanopub(np, outFormat, c, out);
-                        if (verbose) {
-                            System.out.println("Nanopub URI: " + np.getUri());
-                        }
-                    } catch (RDFHandlerException | SignatureException | InvalidKeyException |
-                             TrustyUriException ex) {
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
-                    }
-                });
+            return out;
+        }
+
+        /**
+         * Creates the file even though nothing was written to it. To be called only once the run has
+         * succeeded, never on the failure path.
+         */
+        void createIfNotWrittenTo() throws IOException {
+            open();
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            open().write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            open().write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if (out != null) {
+                out.flush();
             }
         }
+
+        @Override
+        public void close() throws IOException {
+            if (out != null) {
+                out.close();
+            }
+        }
+
     }
 
     /**
@@ -187,10 +309,15 @@ public class SignNanopub extends CliRunner {
             }
         }
         try {
-            return SignatureUtils.createSignedNanopub(nanopub, c);
+            Nanopub signed = SignatureUtils.createSignedNanopub(nanopub, c);
+            logger.debug("Signed nanopub {} as {}", nanopub.getUri(), signed.getUri());
+            return signed;
+        } catch (MalformedNanopubException ex) {
+            // the nanopub is not fit to be signed; the caller gets the reason rather than a runtime error
+            throw new SignatureException("Could not sign nanopub " + nanopub.getUri() + ": " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+            // Not logged here: the cause travels with the exception and is the caller's to report.
+            throw new RuntimeException("Could not sign nanopub " + nanopub.getUri(), ex);
         }
     }
 
@@ -258,6 +385,12 @@ public class SignNanopub extends CliRunner {
 
     /**
      * Loads a key pair from the specified key file.
+     * <p>
+     * The private key is read from the given file and the public key from the same file name with the
+     * suffix {@code .pub}. Both are expected to be base64-encoded, the private one in PKCS#8 and the
+     * public one in X.509/SubjectPublicKeyInfo format. PEM header and footer lines (such as
+     * {@code -----BEGIN PRIVATE KEY-----}) and line breaks are accepted and ignored, so plain PEM files
+     * can be used as they are produced by tools like OpenSSL.
      *
      * @param keyFilename the path to the key file
      * @param algorithm   the signature algorithm used for the key
@@ -269,13 +402,60 @@ public class SignNanopub extends CliRunner {
     public static KeyPair loadKey(String keyFilename, SignatureAlgorithm algorithm) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         keyFilename = SignatureUtils.getFullFilePath(keyFilename);
         KeyFactory kf = KeyFactory.getInstance(algorithm.name());
-        byte[] privateKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename), StandardCharsets.UTF_8));
-        KeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        PrivateKey privateKey = kf.generatePrivate(privateSpec);
-        byte[] publicKeyBytes = DatatypeConverter.parseBase64Binary(IOUtils.toString(new FileInputStream(keyFilename + ".pub"), StandardCharsets.UTF_8));
-        KeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
-        PublicKey publicKey = kf.generatePublic(publicSpec);
+        String publicKeyFilename = keyFilename + ".pub";
+        String privateKeyString = readKeyFile(keyFilename);
+        String publicKeyString = readKeyFile(publicKeyFilename);
+        PrivateKey privateKey;
+        try {
+            KeySpec privateSpec = new PKCS8EncodedKeySpec(decodeKey(privateKeyString));
+            privateKey = kf.generatePrivate(privateSpec);
+        } catch (IllegalArgumentException | InvalidKeySpecException ex) {
+            throw new InvalidKeySpecException(getKeyErrorMessage(keyFilename, privateKeyString, true), ex);
+        }
+        PublicKey publicKey;
+        try {
+            KeySpec publicSpec = new X509EncodedKeySpec(decodeKey(publicKeyString));
+            publicKey = kf.generatePublic(publicSpec);
+        } catch (IllegalArgumentException | InvalidKeySpecException ex) {
+            throw new InvalidKeySpecException(getKeyErrorMessage(publicKeyFilename, publicKeyString, false), ex);
+        }
         return new KeyPair(publicKey, privateKey);
+    }
+
+    private static final Pattern pemArmorPattern = Pattern.compile("-----(BEGIN|END)[^-]*-----");
+
+    private static String readKeyFile(String keyFilename) throws IOException {
+        try (InputStream in = new FileInputStream(keyFilename)) {
+            return IOUtils.toString(in, StandardCharsets.UTF_8);
+        }
+    }
+
+    /**
+     * Decodes a base64-encoded key, ignoring PEM header/footer lines and line breaks if present.
+     */
+    private static byte[] decodeKey(String keyString) {
+        return DatatypeConverter.parseBase64Binary(pemArmorPattern.matcher(keyString).replaceAll(""));
+    }
+
+    private static String getKeyErrorMessage(String keyFilename, String keyString, boolean isPrivateKey) {
+        String hint;
+        if (keyString.contains("BEGIN ENCRYPTED PRIVATE KEY")) {
+            hint = "The key seems to be protected by a passphrase, which is not supported. Decrypt it first and " +
+                    "use the decrypted key, e.g. with: openssl pkcs8 -topk8 -nocrypt -in " + keyFilename + " -out " + keyFilename + ".pkcs8";
+        } else if (keyString.contains("BEGIN RSA PRIVATE KEY")) {
+            hint = "The key seems to be in PKCS#1 format, which is not supported. Convert it to PKCS#8 and " +
+                    "use the converted key, e.g. with: openssl pkcs8 -topk8 -nocrypt -in " + keyFilename + " -out " + keyFilename + ".pkcs8";
+        } else if (keyString.contains("BEGIN RSA PUBLIC KEY")) {
+            hint = "The key seems to be in PKCS#1 format, which is not supported. Convert it to X.509 and " +
+                    "use the converted key, e.g. with: openssl rsa -RSAPublicKey_in -in " + keyFilename + " -pubout -out " + keyFilename + ".x509";
+        } else if (keyString.contains("BEGIN OPENSSH PRIVATE KEY") || keyString.startsWith("ssh-")) {
+            hint = "The key seems to be in OpenSSH format, which is not supported. Convert it to PKCS#8, " +
+                    "e.g. with: ssh-keygen -p -m PKCS8 -f " + keyFilename;
+        } else {
+            hint = "Expected a base64-encoded " + (isPrivateKey ? "PKCS#8 private key" : "X.509 public key") +
+                    ", with or without PEM header/footer lines.";
+        }
+        return "Could not read the " + (isPrivateKey ? "private" : "public") + " key from file " + keyFilename + ". " + hint;
     }
 
 }

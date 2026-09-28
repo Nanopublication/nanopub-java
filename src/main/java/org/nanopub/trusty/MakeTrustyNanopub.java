@@ -10,6 +10,8 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.rio.*;
 import org.nanopub.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +22,8 @@ import java.util.zip.GZIPOutputStream;
  * Command-line tool to transform nanopubs into Trusty Nanopubs.
  */
 public class MakeTrustyNanopub extends CliRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(MakeTrustyNanopub.class);
 
     @com.beust.jcommander.Parameter(description = "input-nanopub-files", required = true)
     private List<File> inputNanopubsFiles = new ArrayList<>();
@@ -169,6 +173,7 @@ public class MakeTrustyNanopub extends CliRunner {
         if (np instanceof NanopubWithNs) {
             ((NanopubWithNs) np).removeUnusedPrefixes();
         }
+        logger.debug("Transformed nanopub {} into trusty nanopub {}", nanopub.getUri(), np.getUri());
         return np;
     }
 

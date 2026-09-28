@@ -1,10 +1,6 @@
 package org.nanopub.fdo;
 
-import org.nanopub.extra.services.ApiResponse;
-import org.nanopub.extra.services.FailedApiCallException;
-import org.nanopub.extra.services.QueryAccess;
-
-import java.util.Map;
+import org.nanopub.extra.services.*;
 
 /**
  * This class represents an FDO query.
@@ -26,9 +22,11 @@ public class FdoQuery {
      * @param query The search query string
      * @return An ApiResponse containing the FDOs that match the search query.
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
+     * @throws APINotReachableException                          if the API is not reachable.
+     * @throws NotEnoughAPIInstancesException                    if there are not enough API instances available.
      */
-    public static ApiResponse textSearch(String query) throws FailedApiCallException {
-        return QueryAccess.get(textSearch, Map.of("query", query));
+    public static ApiResponse textSearch(String query) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        return QueryAccess.get(new QueryRef(textSearch, "query", query));
     }
 
     /**
@@ -37,9 +35,11 @@ public class FdoQuery {
      * @param ref The PID or handle to search for
      * @return An ApiResponse containing the FDOs that refer to the given PID / handle.
      * @throws org.nanopub.extra.services.FailedApiCallException if the API call fails.
+     * @throws APINotReachableException                          if the API is not reachable.
+     * @throws NotEnoughAPIInstancesException                    if there are not enough API instances available.
      */
-    public static ApiResponse findByRef(String ref) throws FailedApiCallException {
-        return QueryAccess.get(findByRef, Map.of("refid", ref));
+    public static ApiResponse findByRef(String ref) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        return QueryAccess.get(new QueryRef(findByRef, "refid", ref));
     }
 
     /**
@@ -47,10 +47,12 @@ public class FdoQuery {
      *
      * @param creator The orcid url, i.e. <a href="https://orcid.org/0009-0008-3635-347X">...</a>
      * @return An ApiResponse containing the FDOs created by the specified user.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws FailedApiCallException         if the API call fails.
+     * @throws APINotReachableException       if the API is not reachable.
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available.
      */
-    public static ApiResponse getFeed(String creator) throws FailedApiCallException {
-        return QueryAccess.get(getFeed, Map.of("creator", creator));
+    public static ApiResponse getFeed(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        return QueryAccess.get(new QueryRef(getFeed, "creator", creator));
     }
 
     /**
@@ -58,10 +60,12 @@ public class FdoQuery {
      *
      * @param creator The orcid url, i.e. <a href="https://orcid.org/0009-0008-3635-347X">...</a>
      * @return An ApiResponse containing the favorite things of the specified user.
-     * @throws FailedApiCallException if the API call fails.
+     * @throws FailedApiCallException         if the API call fails.
+     * @throws APINotReachableException       if the API is not reachable.
+     * @throws NotEnoughAPIInstancesException if there are not enough API instances available.
      */
-    public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException {
-        return QueryAccess.get(getFavoriteThings, Map.of("creator", creator));
+    public static ApiResponse getFavoriteThings(String creator) throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
+        return QueryAccess.get(new QueryRef(getFavoriteThings, "creator", creator));
     }
 
 }

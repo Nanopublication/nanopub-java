@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.FDOF;
@@ -95,6 +96,18 @@ class FdoUtilsTest {
     }
 
     @Test
+    void extractHandleId_stripsKnownPrefixes() {
+        assertEquals("10.3535/ZJX-6N5-A5C", FdoUtils.extractHandleId("https://hdl.handle.net/10.3535/ZJX-6N5-A5C"));
+        assertEquals("10.3535/ZJX-6N5-A5C", FdoUtils.extractHandleId("http://hdl.handle.net/10.3535/ZJX-6N5-A5C"));
+        assertEquals("21.T11148/abc", FdoUtils.extractHandleId("https://doi.org/21.T11148/abc"));
+        assertEquals("21.T11148/abc", FdoUtils.extractHandleId("http://doi.org/21.T11148/abc"));
+        assertEquals("21.T11148/abc", FdoUtils.extractHandleId("21.T11148/abc"));
+        assertNull(FdoUtils.extractHandleId("not a handle"));
+        assertNull(FdoUtils.extractHandleId("https://example.org/something"));
+        assertNull(FdoUtils.extractHandleId(null));
+    }
+
+    @Test
     void toIriWithHandle() {
         String handle = VALID_HANDLE;
         IRI result = FdoUtils.toIri(handle);
@@ -102,7 +115,7 @@ class FdoUtilsTest {
     }
 
     @Test
-    void isFdoNanopubWithValidFdoNanopub() throws MalformedNanopubException {
+    void isFdoNanopubWithValidFdoNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = TestUtils.getNanopubCreator();
         creator.addAssertionStatement(TestUtils.anyIri, RDF.TYPE, FDOF.FAIR_DIGITAL_OBJECT);
         creator.addProvenanceStatement(TestUtils.anyIri, TestUtils.anyIri);
@@ -113,7 +126,7 @@ class FdoUtilsTest {
     }
 
     @Test
-    void isFdoNanopubWithInvalidFdoNanopub() throws MalformedNanopubException {
+    void isFdoNanopubWithInvalidFdoNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         Nanopub np = TestUtils.createNanopub();
         assertFalse(FdoUtils.isFdoNanopub(np));
     }

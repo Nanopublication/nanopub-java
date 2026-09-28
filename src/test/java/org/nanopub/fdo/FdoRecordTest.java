@@ -1,6 +1,5 @@
 package org.nanopub.fdo;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.Values;
@@ -11,22 +10,20 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
-import org.nanopub.MalformedNanopubException;
-import org.nanopub.Nanopub;
-import org.nanopub.NanopubCreator;
-import org.nanopub.NanopubImpl;
+import org.nanopub.*;
 import org.nanopub.extra.security.*;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.TestSuiteEntry;
 import org.nanopub.trusty.TempUriReplacer;
-import org.nanopub.utils.MockFileService;
-import org.nanopub.utils.MockFileServiceExtension;
 import org.nanopub.vocabulary.FDOF;
 import org.nanopub.vocabulary.HDL;
 import org.nanopub.vocabulary.NPX;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -41,26 +38,33 @@ import static org.nanopub.extra.security.SignatureAlgorithm.RSA;
 import static org.nanopub.fdo.FdoRecord.SCHEMA_ID;
 import static org.nanopub.utils.TestUtils.vf;
 
-@ExtendWith(MockFileServiceExtension.class)
 class FdoRecordTest {
 
-    private static final String TEST_KEY_PATH = "~/.nanopub/testkey/";
     private static final String TEST_KEY_NAME = "id";
-    private static final String testKeysDirPath = SignatureUtils.getFullFilePath(TEST_KEY_PATH);
+
+    /**
+     * Where this test's keys are made. A directory of its own, per run: ~/.nanopub is
+     * where the person running the tests keeps their own signing key and profile, and a
+     * test suite has no business writing there.
+     */
+    @TempDir
+    private static Path testKeysDir;
+
+    private static MockedStatic<TransformContext> transformContextMock;
 
     @BeforeAll
     static void setUp() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        File testKeysDir = new File(testKeysDirPath);
-        testKeysDir.mkdirs();
-        MakeKeys.make(testKeysDirPath + TEST_KEY_NAME, SignatureAlgorithm.RSA);
-        assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase()).exists());
-        assertTrue(new File(testKeysDirPath + TEST_KEY_NAME + "_" + SignatureAlgorithm.RSA.name().toLowerCase() + ".pub").exists());
+        String keyFilePrefix = testKeysDir.resolve(TEST_KEY_NAME).toString();
+        MakeKeys.make(keyFilePrefix, RSA);
+        String privateKeyFile = keyFilePrefix + "_" + RSA.name().toLowerCase();
+        assertTrue(Files.exists(Path.of(privateKeyFile)));
+        assertTrue(Files.exists(Path.of(privateKeyFile + ".pub")));
 
         // mock TransformContext.makeDefault() to get test keys
-        KeyPair key = SignNanopub.loadKey(TEST_KEY_PATH + "/id_rsa", RSA);
+        KeyPair key = SignNanopub.loadKey(privateKeyFile, RSA);
 
         TransformContext testTC = new TransformContext(RSA, key, null, false, false, false);
-        MockedStatic<TransformContext> transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
+        transformContextMock = mockStatic(TransformContext.class, CALLS_REAL_METHODS);
         transformContextMock
                 .when(TransformContext::makeDefault)
                 .thenAnswer(invocation -> testTC);
@@ -68,10 +72,11 @@ class FdoRecordTest {
     }
 
     @AfterAll
-    static void tearDown() throws IOException {
-        File testKeysDir = new File(testKeysDirPath);
-        FileUtils.deleteDirectory(testKeysDir);
-        assertFalse(testKeysDir.exists());
+    static void tearDown() {
+        if (transformContextMock != null) {
+            transformContextMock.close();
+            transformContextMock = null;
+        }
     }
 
 
@@ -340,13 +345,16 @@ class FdoRecordTest {
     }
 
     @Test
-    void createUpdatedNanopubRecordWithNanopub() throws MalformedCryptoElementException, IOException, MalformedNanopubException {
+    void createUpdatedNanopubRecordWithNanopub() throws MalformedCryptoElementException, IOException, MalformedNanopubException, NanopubAlreadyFinalizedException {
         String artifact = "RA2A-0ojBbTr2aeXUe2Bq4Fn8VLl5Ddr82fOuegiILGkA";
         String fdoNanopubUrl = "https://w3id.org/np/" + artifact;
 
         try (MockedStatic<SignatureUtils> signatureUtilsMock = mockStatic(SignatureUtils.class, CALLS_REAL_METHODS);
              MockedStatic<RetrieveFdo> mockedRetrieveFdo = mockStatic(RetrieveFdo.class)) {
-            Nanopub nanopub = new NanopubImpl(new File(MockFileService.getValidAndSignedNanopubFromId(artifact)));
+            TestSuiteEntry entry = NanopubTestSuite.getLatest()
+                    .getByArtifactCode(artifact)
+                    .getFirst();
+            Nanopub nanopub = new NanopubImpl(entry.toFile());
             FdoRecord fdoRecord = new FdoRecord(nanopub);
             mockedRetrieveFdo.when(() -> RetrieveFdo.resolveId(fdoNanopubUrl)).thenReturn(fdoRecord);
             NanopubCreator creator;

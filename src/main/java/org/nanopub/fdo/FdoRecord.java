@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.model.vocabulary.PROV;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.SignatureUtils;
@@ -236,9 +237,10 @@ public class FdoRecord implements Serializable {
      * Create a new NanopubCreator for this FdoRecord, which can be used to create a new Nanopub.
      *
      * @return a NanopubCreator for this FdoRecord
-     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws MalformedCryptoElementException  if the original Nanopub is not set or does not match the public key
+     * @throws NanopubAlreadyFinalizedException if the original Nanopub is already finalized
      */
-    public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException {
+    public NanopubCreator createUpdatedNanopub() throws MalformedCryptoElementException, NanopubAlreadyFinalizedException {
         return createUpdatedNanopub(TransformContext.makeDefault());
     }
 
@@ -247,9 +249,10 @@ public class FdoRecord implements Serializable {
      *
      * @param tc the TransformContext to use for the Nanopub creation, must not be null
      * @return a NanopubCreator for this FdoRecord
-     * @throws org.nanopub.extra.security.MalformedCryptoElementException if the original Nanopub is not set or does not match the public key
+     * @throws MalformedCryptoElementException  if the original Nanopub is not set or does not match the public key
+     * @throws NanopubAlreadyFinalizedException if the original Nanopub is already finalized
      */
-    public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException {
+    public NanopubCreator createUpdatedNanopub(TransformContext tc) throws MalformedCryptoElementException, NanopubAlreadyFinalizedException {
         if (originalNanopub == null) {
             throw new MalformedCryptoElementException("There is no original nanopub to update.");
         }

@@ -67,7 +67,7 @@ public class Import extends CliRunner {
     private RDFFormat rdfInFormat, rdfOutFormat;
     private OutputStream outputStream = System.out;
 
-    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException {
+    private void run() throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, TrustyUriException, NanopubAlreadyFinalizedException {
 
         File inputFile = inputFiles.getFirst();
         if (inFormat != null) {
@@ -107,12 +107,13 @@ public class Import extends CliRunner {
      * @param type   the type of import
      * @param format the RDF format of the input file
      * @return a list of created nanopublications
-     * @throws java.io.IOException                       if an I/O error occurs
-     * @throws org.eclipse.rdf4j.rio.RDFParseException   if the RDF data cannot be parsed
-     * @throws org.eclipse.rdf4j.rio.RDFHandlerException if there is an error handling the RDF data
-     * @throws org.nanopub.MalformedNanopubException     if the nanopublication is malformed
+     * @throws IOException                      if an I/O error occurs
+     * @throws RDFParseException                if the RDF data cannot be parsed
+     * @throws RDFHandlerException              if there is an error handling the RDF data
+     * @throws MalformedNanopubException        if the nanopublication is malformed
+     * @throws NanopubAlreadyFinalizedException if the nanopublication has already been finalized
      */
-    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException {
+    public static List<Nanopub> createNanopubs(File file, String type, RDFFormat format) throws IOException, RDFParseException, RDFHandlerException, MalformedNanopubException, NanopubAlreadyFinalizedException {
         final NanopubImporter importer;
         if ("cedar".equals(type)) {
             importer = new CedarNanopubImporter();
@@ -158,8 +159,9 @@ public class Import extends CliRunner {
          * Reads RDF statements and prepares them for nanopublication creation.
          *
          * @param statements the list of RDF statements to read
+         * @throws NanopubAlreadyFinalizedException if the nanopublication has already been finalized
          */
-        public void readStatements(List<Statement> statements);
+        public void readStatements(List<Statement> statements) throws NanopubAlreadyFinalizedException;
 
         /**
          * Finalizes the nanopublications after all statements have been read.
@@ -197,16 +199,16 @@ public class Import extends CliRunner {
          * @param statements the list of RDF statements to read
          */
         @Override
-        public void readStatements(List<Statement> statements) {
+        public void readStatements(List<Statement> statements) throws NanopubAlreadyFinalizedException {
             String cedarId = getCedarId(statements);
             npIriString = TempUriReplacer.tempUri + cedarId + "#";
             npIri = vf.createIRI(npIriString);
 
             npCreator = new NanopubCreator(npIri);
             addNamespaces();
-            npCreator.setAssertionUri(npIriString + "assertion");
-            npCreator.setProvenanceUri(npIriString + "provenance");
-            npCreator.setPubinfoUri(npIriString + "pubinfo");
+            npCreator.setAssertionUri(npIriString + NanopubUtils.ASSERTION_SUFFIX);
+            npCreator.setProvenanceUri(npIriString + NanopubUtils.PROVENANCE_SUFFIX);
+            npCreator.setPubinfoUri(npIriString + NanopubUtils.PUBINFO_SUFFIX);
 
             npCreator.addPubinfoStatement(vf.createIRI("https://repo.metadatacenter.org/template-instances/" + cedarId), DCTERMS.HAS_VERSION, npIri);
 
@@ -245,7 +247,7 @@ public class Import extends CliRunner {
             throw new RuntimeException("No Cedar ID found");
         }
 
-        private void addNamespaces() {
+        private void addNamespaces() throws NanopubAlreadyFinalizedException {
             npCreator.addNamespace("", npIriString);
             npCreator.addNamespace(RDF.NS);
             npCreator.addNamespace(RDFS.NS);
@@ -274,7 +276,7 @@ public class Import extends CliRunner {
             try {
                 nanopubs = new ArrayList<>();
                 nanopubs.add(npCreator.finalizeNanopub());
-            } catch (MalformedNanopubException ex) {
+            } catch (MalformedNanopubException | NanopubAlreadyFinalizedException ex) {
                 throw new RuntimeException(ex);
             }
         }

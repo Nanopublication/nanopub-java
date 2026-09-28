@@ -3,6 +3,7 @@ package org.nanopub;
 import org.nanopub.extra.aida.AidaPattern;
 import org.nanopub.extra.index.NanopubIndexPattern;
 import org.nanopub.extra.security.DigitalSignaturePattern;
+import org.nanopub.extra.services.GrlcQueryPattern;
 import org.nanopub.trusty.TrustyNanopubPattern;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class NanopubPatterns {
         addPattern(new NanopubIndexPattern());
         addPattern(new AidaPattern());
         addPattern(new DigitalSignaturePattern());
+        addPattern(new GrlcQueryPattern());
     }
 
     private NanopubPatterns() {}  // no instances allowed

@@ -21,7 +21,7 @@ public class NanopubProfile {
      */
     public final static String IMPLICIT_PROFILE_FILE_NAME = System.getProperty("user.home") + "/.nanopub/profile.yaml";
 
-    private Map<String, Object> map;
+    private final Map<String, Object> map;
 
     /**
      * Constructor that reads the profile file from the default location.

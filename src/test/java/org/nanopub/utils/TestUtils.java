@@ -6,6 +6,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.nanopub.MalformedNanopubException;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 
 public class TestUtils {
@@ -13,21 +14,21 @@ public class TestUtils {
     public final static String NANOPUB_URI = "https://knowledgepixels.com/nanopubIri#title";
     public final static ValueFactory vf = SimpleValueFactory.getInstance();
     public final static IRI anyIri = vf.createIRI("https://knowledgepixels.com/nanopubIri#any");
-    public final static String ORCID = "https://orcid.org/0000-0000-0000-0000";
+    public final static String ORCID = "https://orcid.org/0000-0000-0000-0001";
 
-    public static Nanopub createNanopub() throws MalformedNanopubException {
+    public static Nanopub createNanopub() throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         return createNanopub(NANOPUB_URI);
     }
 
-    public static NanopubCreator getNanopubCreator() {
+    public static NanopubCreator getNanopubCreator() throws NanopubAlreadyFinalizedException {
         return new NanopubCreator(NANOPUB_URI);
     }
 
-    public static NanopubCreator getNanopubCreator(String nanopubUri) {
+    public static NanopubCreator getNanopubCreator(String nanopubUri) throws NanopubAlreadyFinalizedException {
         return new NanopubCreator(nanopubUri);
     }
 
-    public static Nanopub createNanopub(String nanopubUri) throws MalformedNanopubException {
+    public static Nanopub createNanopub(String nanopubUri) throws MalformedNanopubException, NanopubAlreadyFinalizedException {
         NanopubCreator creator = getNanopubCreator(nanopubUri);
 
         // Create valid nanopub

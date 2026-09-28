@@ -1,6 +1,8 @@
 package org.nanopub.extra.server;
 
 import org.nanopub.extra.server.RegistryInfo.RegistryInfoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -9,6 +11,8 @@ import java.util.*;
  * An iterator that provides access to a list of nanopub servers.
  */
 public class ServerIterator implements Iterator<RegistryInfo> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServerIterator.class);
 
     private static Map<String, RegistryInfo> serverInfos = new HashMap<>();
     private static long serverInfoRefreshed = System.currentTimeMillis();
@@ -32,14 +36,23 @@ public class ServerIterator implements Iterator<RegistryInfo> {
      * @param forceServerReload if true, forces a reload of the server list from the cache
      */
     public ServerIterator(boolean forceServerReload) {
+        // An explicitly configured instance list replaces bootstrap and discovery, so it has to
+        // replace the cache as well: a cache written by an earlier run against the public network
+        // would otherwise keep sending lookups there, silently, for up to 24 hours.
         if (!forceServerReload) {
-            try {
-                loadCachedServers();
-            } catch (Exception ex) {
+            String overrideSource = NanopubServerUtils.getRegistryInstancesOverrideSource();
+            if (overrideSource != null) {
+                logger.debug("Ignoring the cached registry list: {} is set", overrideSource);
+            } else {
+                try {
+                    loadCachedServers();
+                } catch (Exception ex) {
+                    logger.warn("Could not read the cached registry list from {}; falling back to the bootstrap list", getServerListFile(), ex);
+                }
             }
         }
         if (cachedServers == null) {
-            serversToContact.addAll(NanopubServerUtils.getBootstrapServerList());
+            serversToContact.addAll(NanopubServerUtils.getRegistryServerList());
         }
     }
 
@@ -101,18 +114,21 @@ public class ServerIterator implements Iterator<RegistryInfo> {
 
     private RegistryInfo getNextServer() {
         if (cachedServers != null) {
-            if (cachedServers.isEmpty()) return null;
-            return cachedServers.removeFirst();
+            while (!cachedServers.isEmpty()) {
+                RegistryInfo info = cachedServers.removeFirst();
+                if (NanopubServerUtils.isRegistryEvicted(info.getUrl())) continue;
+                return info;
+            }
+            return null;
         } else {
             while (!serversToContact.isEmpty()) {
-                if (!serversToContact.isEmpty()) {
-                    String url = serversToContact.removeFirst();
-                    if (serversContacted.containsKey(url)) continue;
-                    serversContacted.put(url, true);
-                    RegistryInfo info = getServerInfo(url);
-                    if (info == null) continue;
-                    return info;
-                }
+                String url = serversToContact.removeFirst();
+                if (serversContacted.containsKey(url)) continue;
+                serversContacted.put(url, true);
+                if (NanopubServerUtils.isRegistryEvicted(url)) continue;
+                RegistryInfo info = getServerInfo(url);
+                if (info == null) continue;
+                return info;
             }
         }
         return null;
@@ -125,9 +141,15 @@ public class ServerIterator implements Iterator<RegistryInfo> {
         }
         if (!serverInfos.containsKey(url)) {
             try {
-                serverInfos.put(url, RegistryInfo.load(url));
+                RegistryInfo info = RegistryInfo.load(url);
+                if (!NanopubServerUtils.isReadyRegistryStatus(info.getStatus())) {
+                    NanopubServerUtils.evictRegistry(url, "status " + info.getStatus());
+                    return null;
+                }
+                serverInfos.put(url, info);
             } catch (RegistryInfoException ex) {
-                // ignore
+                logger.warn("Could not load registry info from {}; skipping this registry: {}", url, ex.getMessage());
+                logger.debug("Registry info request to {} failed", url, ex);
             }
         }
         return serverInfos.get(url);
@@ -155,6 +177,14 @@ public class ServerIterator implements Iterator<RegistryInfo> {
      * @throws java.io.IOException if an I/O error occurs
      */
     public static void writeCachedServers(List<RegistryInfo> cachedServers) throws IOException {
+        String overrideSource = NanopubServerUtils.getRegistryInstancesOverrideSource();
+        if (overrideSource != null) {
+            // The list was gathered under an instance-list override; persisting it would leak that
+            // private view into the shared cache file, which every JVM using this home directory
+            // reads, including ones running without the override.
+            logger.debug("Not caching the registry list: {} is set", overrideSource);
+            return;
+        }
         if (cachedServers.size() < 5) return;
         File serverListFile = getServerListFile();
         serverListFile.getParentFile().mkdir();

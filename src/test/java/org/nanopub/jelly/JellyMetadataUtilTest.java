@@ -6,28 +6,31 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 public class JellyMetadataUtilTest {
 
     private final long[] testCases = {0, 1, 200, Integer.MAX_VALUE, Long.MAX_VALUE};
 
     @Test
     public void testCounterMetadataRoundTrip() {
-        assert JellyMetadataUtil.COUNTER_KEY == "c";
+        assertEquals(JellyMetadataUtil.COUNTER_KEY, "c");
 
         for (long testCase : testCases) {
             var m = JellyMetadataUtil.getCounterMetadata(testCase);
-            assert m.getKey().equals(JellyMetadataUtil.COUNTER_KEY);
-            assert m.getValue() != null;
+            assertEquals(JellyMetadataUtil.COUNTER_KEY, m.getKey());
+            assertNotNull(m.getValue());
             // Parsing
             var counter = JellyMetadataUtil.tryGetCounterFromMetadata(List.of(m));
-            assert counter == testCase;
+            assertEquals(testCase, counter);
         }
     }
 
     @Test
     public void testGetCounterNoKey() {
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(List.of());
-        assert counter == -1;
+        assertEquals(-1, counter);
     }
 
     @Test
@@ -39,6 +42,6 @@ public class JellyMetadataUtilTest {
         );
 
         var counter = JellyMetadataUtil.tryGetCounterFromMetadata(m);
-        assert counter == -1;
+        assertEquals(-1, counter);
     }
 }
