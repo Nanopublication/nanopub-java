@@ -4,6 +4,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
@@ -418,6 +419,80 @@ class NanopubVerifierTest {
         verifier.verify();
         assertTrue(verifier.getIssues().contains("Nanopub creation time has datatype " + XSD.INTEGER + " instead of xsd:dateTime."));
         assertFalse(verifier.getIssues().contains("Nanopub has no creation time."));
+    }
+
+    // -- checkIntroAlternativeIds --
+
+    private static final IRI KEY_DECLARATION = vf.createIRI("https://example.org/keyDeclaration");
+    private static final IRI ALTERNATIVE_ID = vf.createIRI("https://example.org/people/jane");
+
+    private NanopubCreator introCreator() throws NanopubAlreadyFinalizedException {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(KEY_DECLARATION, NPX.DECLARED_BY, SIGNER_IRI);
+        c.addAssertionStatement(KEY_DECLARATION, NPX.HAS_PUBLIC_KEY, vf.createLiteral("a public key"));
+        return c;
+    }
+
+    private static boolean isIntroAlternativeIdIssue(String issue) {
+        return issue.startsWith("Alternative ID is the same as the main ID") || issue.startsWith("owl:sameAs from ");
+    }
+
+    @Test
+    void checkIntroAlternativeIds_alternativeId_noAlternativeIdProblem() throws Exception {
+        NanopubCreator c = introCreator();
+        c.addAssertionStatement(SIGNER_IRI, OWL.SAMEAS, ALTERNATIVE_ID);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(NanopubVerifierTest::isIntroAlternativeIdIssue));
+    }
+
+    @Test
+    void checkIntroAlternativeIds_alternativeIdIsTheMainId_reportsProblem() throws Exception {
+        NanopubCreator c = introCreator();
+        c.addAssertionStatement(SIGNER_IRI, OWL.SAMEAS, SIGNER_IRI);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().contains("Alternative ID is the same as the main ID: " + SIGNER_IRI));
+    }
+
+    @Test
+    void checkIntroAlternativeIds_sameAsPointingToTheMainId_reportsProblem() throws Exception {
+        NanopubCreator c = introCreator();
+        c.addAssertionStatement(ALTERNATIVE_ID, OWL.SAMEAS, SIGNER_IRI);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().contains("owl:sameAs from " + ALTERNATIVE_ID + " to the main ID " + SIGNER_IRI
+                + " is ignored; alternative IDs are stated as <main> owl:sameAs <alternative>"));
+    }
+
+    @Test
+    void checkIntroAlternativeIds_sameAsInBothDirections_noAlternativeIdProblem() throws Exception {
+        NanopubCreator c = introCreator();
+        c.addAssertionStatement(SIGNER_IRI, OWL.SAMEAS, ALTERNATIVE_ID);
+        c.addAssertionStatement(ALTERNATIVE_ID, OWL.SAMEAS, SIGNER_IRI);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(NanopubVerifierTest::isIntroAlternativeIdIssue));
+    }
+
+    @Test
+    void checkIntroAlternativeIds_notAnIntro_noAlternativeIdProblem() throws Exception {
+        NanopubCreator c = baseCreator();
+        c.addAssertionStatement(SIGNER_IRI, OWL.SAMEAS, SIGNER_IRI);
+        c.addAssertionStatement(ALTERNATIVE_ID, OWL.SAMEAS, SIGNER_IRI);
+        Nanopub np = c.finalizeNanopub();
+
+        NanopubVerifier verifier = new NanopubVerifier(np);
+        verifier.verify();
+        assertTrue(verifier.getIssues().stream().noneMatch(NanopubVerifierTest::isIntroAlternativeIdIssue));
     }
 
 }
