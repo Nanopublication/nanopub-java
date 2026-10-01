@@ -1,6 +1,15 @@
 package org.nanopub.extra.server;
 
-import com.mongodb.*;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
 import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.MalformedNanopubException;
@@ -9,8 +18,14 @@ import org.nanopub.NanopubImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * A class to manage a Nanopublication database.
+ * <p>
+ * It needs the MongoDB Java driver ({@code org.mongodb:mongodb-driver-sync}), which is an
+ * optional dependency of nanopub-java: a project that uses this class has to declare the driver
+ * itself.
  */
 // This code is partly copied from ch.tkuhn.nanopub.server.NanopubDb
 public class NanopubDb {
@@ -18,10 +33,12 @@ public class NanopubDb {
     // Use trig internally to keep namespaces:
     private static RDFFormat internalFormat = RDFFormat.TRIG;
 
+    private static final Document PING_COMMAND = new Document("ping", 1);
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private MongoClient mongo;
-    private DB db;
+    private MongoDatabase db;
 
     /**
      * Constructor to initialize the NanopubDb with MongoDB connection parameters.
@@ -34,20 +51,14 @@ public class NanopubDb {
      */
     public NanopubDb(String mongoDbHost, int mongoDbPort, String mongoDbName, String mongoDbUsername, String mongoDbPw) {
         logger.debug("Initializing nanopub DB for mongodb://{}:{}/{}", mongoDbHost, mongoDbPort, mongoDbName);
-        ServerAddress serverAddress = new ServerAddress(mongoDbHost, mongoDbPort);
-
+        MongoClientSettings.Builder settings = MongoClientSettings.builder()
+                .applyToClusterSettings(cluster -> cluster.hosts(List.of(new ServerAddress(mongoDbHost, mongoDbPort))));
         if (mongoDbUsername != null) {
-            MongoCredential credential = MongoCredential.createCredential(
-                    mongoDbUsername,
-                    mongoDbName,
-                    mongoDbPw.toCharArray());
-            mongo = new MongoClient(serverAddress, credential, MongoClientOptions.builder().build());
-        } else {
-            mongo = new MongoClient(serverAddress);
+            settings.credential(MongoCredential.createCredential(mongoDbUsername, mongoDbName, mongoDbPw.toCharArray()));
         }
-        db = mongo.getDB(mongoDbName);
+        mongo = MongoClients.create(settings.build());
+        db = mongo.getDatabase(mongoDbName);
     }
-
 
     /**
      * Returns the MongoDB client object.
@@ -58,8 +69,6 @@ public class NanopubDb {
         return mongo;
     }
 
-    private static DBObject pingCommand = new BasicDBObject("ping", "1");
-
     /**
      * Checks if the database is accessible.
      * This method sends a ping command to the database and returns true if it succeeds.
@@ -69,15 +78,19 @@ public class NanopubDb {
      */
     public boolean isAccessible() {
         try {
-            db.command(pingCommand);
+            db.runCommand(PING_COMMAND);
         } catch (MongoException ex) {
             return false;
         }
         return true;
     }
 
-    private DBCollection getNanopubCollection() {
+    private MongoCollection<Document> getNanopubCollection() {
         return db.getCollection("nanopubs");
+    }
+
+    private Document findNanopubDocument(String artifactCode) {
+        return getNanopubCollection().find(Filters.eq("_id", artifactCode)).first();
     }
 
     /**
@@ -87,21 +100,18 @@ public class NanopubDb {
      * @return the Nanopub object, or null if no nanopub with the given artifact code exists
      */
     public Nanopub getNanopub(String artifactCode) {
-        BasicDBObject query = new BasicDBObject("_id", artifactCode);
-        DBCursor cursor = getNanopubCollection().find(query);
-        if (!cursor.hasNext()) {
+        Document document = findNanopubDocument(artifactCode);
+        if (document == null) {
             return null;
         }
-        String nanopubString = cursor.next().get("nanopub").toString();
-        Nanopub np = null;
+        String nanopubString = document.get("nanopub").toString();
         try {
-            np = new NanopubImpl(nanopubString, internalFormat);
+            return new NanopubImpl(nanopubString, internalFormat);
         } catch (MalformedNanopubException ex) {
             throw new RuntimeException("Stored nanopub is not well-formed (this shouldn't happen)", ex);
         } catch (RDF4JException ex) {
             throw new RuntimeException("Stored nanopub is corrupted (this shouldn't happen)", ex);
         }
-        return np;
     }
 
     /**
@@ -111,8 +121,7 @@ public class NanopubDb {
      * @return true if a nanopub with the given artifact code exists, false otherwise
      */
     public boolean hasNanopub(String artifactCode) {
-        BasicDBObject query = new BasicDBObject("_id", artifactCode);
-        return getNanopubCollection().find(query).hasNext();
+        return findNanopubDocument(artifactCode) != null;
     }
 
 }
