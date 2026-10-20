@@ -18,6 +18,10 @@ from The Central Repository, with an entry in your pom.xml file as shown
 Alternatively, you might want to use one of the [pre-built
 jar files](https://github.com/Nanopublication/nanopub-java/releases).
 
+The MongoDB driver is an optional dependency: if your project uses the classes that read
+nanopubs from MongoDB (`NanopubDb`, or `NanopubStream.fromMongoCursor`), declare
+`org.mongodb:mongodb-driver-sync` in your own pom.xml. The command-line jar includes it.
+
 
 ## Quickstart Java Instructions
 
