@@ -3,6 +3,7 @@ package org.nanopub.extra.server;
 import com.beust.jcommander.ParameterException;
 import net.trustyuri.ArtifactCode;
 import net.trustyuri.TrustyUriUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -58,6 +59,12 @@ public class PublishNanopub extends CliRunner {
         try {
             PublishNanopub obj = CliRunner.initJc(new PublishNanopub(), args);
             obj.run();
+            if (obj.failed) {
+                // A batch that stopped early has to be distinguishable from one that completed:
+                // the nanopubs after the stopping point were not published, and a caller seeing
+                // only the exit code would otherwise take the run for a success.
+                System.exit(1);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
@@ -113,6 +120,24 @@ public class PublishNanopub extends CliRunner {
     private boolean failed;
     private SPARQLRepository sparqlRepo;
     private ArtifactCode artifactCode;
+    private String currentInput;
+    private String stoppedAt;
+    private String failureReason;
+    private String lastRegistryFailure;
+    private final List<String> registriesTried = new ArrayList<>();
+
+    /**
+     * How often one registry is asked before the next one is tried. A rate limit or a short
+     * outage passes within seconds, so a handful of attempts covers it; a registry that is down
+     * for longer is better served by moving on.
+     */
+    private static final int MAX_ATTEMPTS_PER_REGISTRY = 4;
+
+    /**
+     * Upper bound on a single wait, including one a {@code Retry-After} header asks for, so that
+     * a misconfigured or hostile header cannot stall a batch indefinitely.
+     */
+    private static final long MAX_RETRY_DELAY_MILLIS = 30000;
 
     /**
      * Default constructor for PublishNanopub.
@@ -153,6 +178,7 @@ public class PublishNanopub extends CliRunner {
         failed = false;
         for (String s : nanopubs) {
             count = 0;
+            currentInput = s;
             try {
                 if (sparqlEndpointUrl != null) {
                     if (sparqlRepo == null) {
@@ -171,16 +197,19 @@ public class PublishNanopub extends CliRunner {
                     if (count == 0) {
                         logger.warn("No nanopub found in {}", s);
                         System.out.println("NO NANOPUB FOUND: " + s);
+                        stopBatch(s, "no nanopub found");
                         break;
                     }
                 }
             } catch (RDF4JException ex) {
                 logger.error("Could not read RDF from {}", s, ex);
                 System.err.println("RDF ERROR: " + s);
+                stopBatch(s, "could not be read as RDF: " + ex.getMessage());
                 break;
             } catch (MalformedNanopubException ex) {
                 logger.error("Malformed nanopub in {}", s, ex);
                 System.err.println("INVALID NANOPUB: " + s);
+                stopBatch(s, "malformed nanopub: " + ex.getMessage());
                 break;
             }
             if (failed) {
@@ -189,9 +218,20 @@ public class PublishNanopub extends CliRunner {
                 break;
             }
         }
+        int publishedTotal = 0;
         for (String s : usedServers.keySet()) {
             int c = usedServers.get(s);
+            publishedTotal += c;
             System.out.println(c + " nanopub" + (c == 1 ? "" : "s") + " published at " + s);
+        }
+        if (failed) {
+            // The counts above are per registry and are printed on a successful run too, so say
+            // explicitly that this run did not get through its input, and where it stopped. Input
+            // after that point was not published at all.
+            System.out.println("BATCH INCOMPLETE: stopped at " + stoppedAt
+                               + (failureReason == null ? "" : " (" + failureReason + ")")
+                               + "; " + publishedTotal + " nanopub" + (publishedTotal == 1 ? "" : "s")
+                               + " published before that, the rest was not");
         }
         if (sparqlRepo != null) {
             try {
@@ -209,13 +249,37 @@ public class PublishNanopub extends CliRunner {
         }
         try {
             publishNanopub(nanopub);
-        } catch (IOException ex) {
-            logger.error("Failed to publish nanopub {}", nanopub.getUri(), ex);
+        } catch (IOException | RuntimeException ex) {
+            // publishNanopub reports "could not publish this one" with an unchecked exception as
+            // well — a registry rejecting the nanopub outright, or every registry having been
+            // tried — and letting that escape would end the run with a stack trace instead of
+            // the summary and the exit code that say what happened.
+            if (ex instanceof NanopubRejectedException) {
+                // Its message says what happened and why; a stack trace would only bury it.
+                logger.error("Failed to publish nanopub {}: {}", nanopub.getUri(), ex.getMessage());
+            } else {
+                logger.error("Failed to publish nanopub {}", nanopub.getUri(), ex);
+            }
+            System.err.println(ex.getMessage());
             if (verbose) {
-                System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+                System.err.println(ex.getClass().getName());
                 System.err.println("---");
             }
-            failed = true;
+            stopBatch(currentInput == null ? String.valueOf(nanopub.getUri())
+                    : currentInput + ", at nanopub " + nanopub.getUri(), null);
+        }
+    }
+
+    /**
+     * Records that the batch is not going to finish, so that the summary, the message and the
+     * exit code can say so. The first stopping point wins: it is the one the user has to resume
+     * from.
+     */
+    private void stopBatch(String where, String reason) {
+        failed = true;
+        if (stoppedAt == null) {
+            stoppedAt = where;
+            failureReason = reason;
         }
     }
 
@@ -283,6 +347,10 @@ public class PublishNanopub extends CliRunner {
             registryInfo = serverIterator.next();
         }
         artifactCode = ArtifactCode.of(TrustyUriUtils.getArtifactCode(nanopub.getUri().toString()));
+        // Per nanopublication: the instance is reused for a whole batch, and the failure report
+        // has to describe this nanopublication's attempts, not every earlier one's.
+        registriesTried.clear();
+        lastRegistryFailure = null;
         reportProgress("Trying to publish nanopub: " + artifactCode);
         boolean isProtected = NanopubServerUtils.isProtectedNanopub(nanopub);
         boolean foundEligibleRegistry = false;
@@ -302,18 +370,17 @@ public class PublishNanopub extends CliRunner {
 
             reportProgress("Trying server: " + url);
             try {
-                HttpPost post = preparePost(nanopub);
-                if (!dryRun) {
-                    String nanopubUrl = executePost(post, url);
-                    if (nanopubUrl != null) {
-                        return nanopubUrl;
-                    }
+                String nanopubUrl = publishToRegistry(nanopub, url);
+                if (nanopubUrl != null) {
+                    return nanopubUrl;
                 }
             } catch (IOException | RDF4JException ex) {
+                lastRegistryFailure = url + ": " + ex.getClass().getSimpleName() + ": " + ex.getMessage();
                 logger.warn("Publishing {} to {} failed, trying next registry — {}: {}", artifactCode, url, ex.getClass().getSimpleName(), ex.getMessage());
                 logger.debug("Publishing {} to {} failed", artifactCode, url, ex);
                 reportProgress(ex.getClass().getName() + ": " + ex.getMessage());
             }
+            registriesTried.add(url);
             registryInfo = serverIterator.next();
         }
         registryInfo = null;
@@ -326,10 +393,117 @@ public class PublishNanopub extends CliRunner {
             System.out.println("Nanopub NOT published: --dry-run, np-uri=" + nanopub.getUri());
             return null;
         } else {
-            throw new RuntimeException(String.format("Failed to publish the nanopub. " +
-                                                     "Details: Probably the HTTP Response Codes from Servers where not between 200 and 300\n" +
-                                                     "Server URL = '%s'", serverUrl));
+            // Name the registries that were actually contacted and the last thing one of them
+            // said. The message used to report the serverUrl parameter, which is null on the
+            // command-line path, so it never identified anything.
+            throw new RuntimeException("Failed to publish nanopublication " + nanopub.getUri()
+                                       + " to any registry. Registries tried: "
+                                       + (registriesTried.isEmpty() ? "none" : String.join(", ", registriesTried))
+                                       + (lastRegistryFailure == null ? "" : ". Last failure: " + lastRegistryFailure));
         }
+    }
+
+    /**
+     * Posts a nanopublication to one registry, retrying while the registry says "not now" rather
+     * than "not ever".
+     * <p>
+     * A rate limit (429) or a brief unavailability (408 and the 5xx statuses) is the expected
+     * answer during a bulk publish — the public registries allow 10 requests per second per IP —
+     * and moving to the next registry instead of waiting a moment uses up the registry list in
+     * seconds, after which the whole batch fails. Any other 4xx is the registry refusing this
+     * nanopublication on its content, which every registry would do, so it is reported as a
+     * rejection straight away rather than tried elsewhere.
+     *
+     * @return the URL of the published nanopublication, or null if this registry did not take it
+     * and the next one should be tried
+     */
+    private String publishToRegistry(Nanopub nanopub, String url) throws IOException {
+        for (int attempt = 1; ; attempt++) {
+            HttpPost post = preparePost(nanopub);
+            if (dryRun) {
+                return null;
+            }
+            PostResponse response = executePost(post, url);
+            if (response.isSuccess()) {
+                return getPublishedNanopubUrl();
+            }
+            if (isNanopubRejection(response.statusCode())) {
+                throw new NanopubRejectedException(nanopub.getUri(), url, response.statusCode(), response.reasonPhrase());
+            }
+            lastRegistryFailure = url + ": HTTP " + response.statusCode()
+                                  + (response.reasonPhrase() == null ? "" : " " + response.reasonPhrase());
+            if (!isWorthRetrying(response.statusCode())) {
+                // Not about this nanopublication and not something that passes by itself (an
+                // unexpected status, a wrong endpoint, a client that this registry will not
+                // accept): try the next registry, as before.
+                logger.warn("Registry {} answered HTTP {} for {}; trying the next registry",
+                        url, response.statusCode(), artifactCode);
+                return null;
+            }
+            if (attempt >= MAX_ATTEMPTS_PER_REGISTRY) {
+                logger.warn("Registry {} answered HTTP {} for {} on all {} attempts; trying the next registry",
+                        url, response.statusCode(), artifactCode, MAX_ATTEMPTS_PER_REGISTRY);
+                return null;
+            }
+            long waitMillis = retryDelayMillis(attempt, response.retryAfterSeconds());
+            logger.info("Registry {} answered HTTP {} for {}; retrying in {} ms (attempt {} of {})",
+                    url, response.statusCode(), artifactCode, waitMillis, attempt, MAX_ATTEMPTS_PER_REGISTRY);
+            reportProgress("HTTP " + response.statusCode() + " from " + url + "; waiting " + waitMillis + " ms");
+            waitBeforeRetry(waitMillis);
+        }
+    }
+
+    /**
+     * Waits before the next attempt at the same registry. Package-private so that tests can
+     * override it and not spend the backoff.
+     *
+     * @param millis how long to wait
+     */
+    void waitBeforeRetry(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting to retry a registry", ex);
+        }
+    }
+
+    /**
+     * Whether a status means the registry is judging the nanopublication itself, so that no other
+     * registry would take it either. Deliberately narrow: 401, 403, 404 and 405 are about the
+     * endpoint or the client rather than the content, and those keep falling through to the next
+     * registry the way they always have.
+     */
+    private static boolean isNanopubRejection(int statusCode) {
+        return statusCode == 400 || statusCode == 409 || statusCode == 413
+               || statusCode == 415 || statusCode == 422;
+    }
+
+    /**
+     * Whether a status says "not now": a rate limit, a request timeout, or a server-side problem
+     * that a moment's wait may clear.
+     */
+    private static boolean isWorthRetrying(int statusCode) {
+        return statusCode == 408 || statusCode == 429 || statusCode >= 500;
+    }
+
+    private static long retryDelayMillis(int attempt, Integer retryAfterSeconds) {
+        if (retryAfterSeconds != null) {
+            return Math.min(retryAfterSeconds * 1000L, MAX_RETRY_DELAY_MILLIS);
+        }
+        return Math.min((1L << (attempt - 1)) * 1000L, MAX_RETRY_DELAY_MILLIS);
+    }
+
+    /**
+     * What a registry answered to a POST: enough to tell a rate limit from a rejection, and to
+     * honour a {@code Retry-After} header.
+     */
+    private record PostResponse(int statusCode, String reasonPhrase, Integer retryAfterSeconds) {
+
+        boolean isSuccess() {
+            return statusCode >= 200 && statusCode < 300;
+        }
+
     }
 
     private HttpPost preparePost(Nanopub nanopub) throws IOException {
@@ -340,9 +514,10 @@ public class PublishNanopub extends CliRunner {
         return post;
     }
 
-    private String executePost(HttpPost post, String url) throws IOException {
+    private PostResponse executePost(HttpPost post, String url) throws IOException {
         HttpResponse response = NanopubUtils.getHttpClient().execute(post);
         int code = response.getStatusLine().getStatusCode();
+        String reasonPhrase = response.getStatusLine().getReasonPhrase();
         if (code >= 200 && code < 300) {
             if (usedServers.containsKey(url)) {
                 usedServers.put(url, usedServers.get(url) + 1);
@@ -352,12 +527,28 @@ public class PublishNanopub extends CliRunner {
             String nanopubUrl = registryInfo.getCollectionUrl() + artifactCode;
             logger.debug("Published {} at {}", artifactCode, nanopubUrl);
             reportProgress("Published: " + nanopubUrl);
-            return nanopubUrl;
         } else {
-            logger.warn("Registry {} rejected {} with HTTP {} {}", url, artifactCode, code, response.getStatusLine().getReasonPhrase());
-            reportProgress("Response: " + code + " " + response.getStatusLine().getReasonPhrase());
+            logger.warn("Registry {} rejected {} with HTTP {} {}", url, artifactCode, code, reasonPhrase);
+            reportProgress("Response: " + code + " " + reasonPhrase);
         }
-        return null; // post failed
+        return new PostResponse(code, reasonPhrase, retryAfterSeconds(response));
+    }
+
+    /**
+     * Reads a {@code Retry-After} header in its delay-seconds form. The HTTP-date form is left to
+     * the backoff schedule rather than parsed, as registries send the seconds form.
+     */
+    private static Integer retryAfterSeconds(HttpResponse response) {
+        Header header = response.getFirstHeader("Retry-After");
+        if (header == null || header.getValue() == null) {
+            return null;
+        }
+        try {
+            int seconds = Integer.parseInt(header.getValue().trim());
+            return seconds >= 0 ? seconds : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     /**
