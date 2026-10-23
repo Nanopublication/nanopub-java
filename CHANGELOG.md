@@ -1,3 +1,57 @@
+## [1.95.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.94.0...nanopub-1.95.0) (2026-10-23)
+
+### Features
+
+* **deps:** make the MongoDB driver an optional dependency ([211a63c](https://github.com/Nanopublication/nanopub-java/commit/211a63c9375067614d0b9c460a47659f75d2dcd8)), closes [#166](https://github.com/Nanopublication/nanopub-java/issues/166)
+* name the parts a nanopublication keeps for itself ([3e60ff5](https://github.com/Nanopublication/nanopub-java/commit/3e60ff52d42129b7ef047c3aa94f945cfa504604))
+* **ntemplate:** add the TransientTemplate and NewUriPlaceholder terms ([492896a](https://github.com/Nanopublication/nanopub-java/commit/492896a312e238b06dc5a1c0ec985bf5a46bc83d))
+* **security:** check the signing key against the network before signing ([b15a52c](https://github.com/Nanopublication/nanopub-java/commit/b15a52c8f272ce3305bb19b6f462d2de2fdb4653)), closes [#150](https://github.com/Nanopublication/nanopub-java/issues/150) [#150](https://github.com/Nanopublication/nanopub-java/issues/150)
+* **security:** count an introduction only when it declares the key that signed it ([80fdc2e](https://github.com/Nanopublication/nanopub-java/commit/80fdc2eca2e974ac97bbe3b84b898603e5149d87))
+
+### Dependency updates
+
+* **core-deps:** update dependency com.google.guava:guava to v33.7.1-jre ([8492c78](https://github.com/Nanopublication/nanopub-java/commit/8492c78a17be5a42d174d6b595c43a397a1a50b9))
+* **core-deps:** update dependency org.apache.commons:commons-lang3 to v3.21.0 ([4453a3b](https://github.com/Nanopublication/nanopub-java/commit/4453a3b63b364a41487a22d42f3953591372f17b))
+* **core-deps:** update dependency org.jcommander:jcommander to v1.85 ([03c94aa](https://github.com/Nanopublication/nanopub-java/commit/03c94aa599eb9840d85a273128380be25f2dd2ae))
+* **core-deps:** update dependency org.jcommander:jcommander to v3 ([1d0026b](https://github.com/Nanopublication/nanopub-java/commit/1d0026b1783167b34d6139b3776da3ff2f035a88))
+* **core-deps:** update dependency org.yaml:snakeyaml to v2.7 ([897a148](https://github.com/Nanopublication/nanopub-java/commit/897a148a32202915a1032ca19e88068e45cf73d0))
+* **core-deps:** update slf4j monorepo to v2.0.19 ([95913e2](https://github.com/Nanopublication/nanopub-java/commit/95913e2258eb2d56f01116c85f21aabd08ea1a8c))
+* **core-deps:** update slf4j monorepo to v2.0.20 ([aafe7fe](https://github.com/Nanopublication/nanopub-java/commit/aafe7fe420075b4885cd1c80729f56ef270eef84))
+* **deps:** update dependency maven to v3.10.0 ([878e064](https://github.com/Nanopublication/nanopub-java/commit/878e064dd72a3c73d4f6da6ddfeaa7450bd80d0a))
+
+### Bug Fixes
+
+* **check:** don't crash on blank-node subjects in the assertion ([9daab68](https://github.com/Nanopublication/nanopub-java/commit/9daab685abe2141e92afe2d2e8c18f773ae74cad))
+* **publish:** report an incomplete batch and retry a rate-limited registry ([84ab740](https://github.com/Nanopublication/nanopub-java/commit/84ab740a9b8b4071797a4e6b1220a7b91eac8ead)), closes [#176](https://github.com/Nanopublication/nanopub-java/issues/176)
+* update the bundled nanopub setting to the current version ([cdb359c](https://github.com/Nanopublication/nanopub-java/commit/cdb359c4a7a3dc741cd6af68e3bfce2da8d5f693))
+
+### Documentation
+
+* **cli:** specify what --strict does on sign and publish ([a05a3b8](https://github.com/Nanopublication/nanopub-java/commit/a05a3b8c022aae2b57881ed82a0a51542a0edf36))
+
+### Tests
+
+* **deps:** update dependency org.mockito:mockito-core to v5.24.0 ([4a31c38](https://github.com/Nanopublication/nanopub-java/commit/4a31c38f1a92f3239f0558a1198beaab1f6c7eab))
+* **sign:** answer the network key check locally in SignNanopubTest ([3745605](https://github.com/Nanopublication/nanopub-java/commit/3745605ddd53120495b81753ddf894ed3faca3dc)), closes [#158](https://github.com/Nanopublication/nanopub-java/issues/158)
+
+### Build and continuous integration
+
+* **deps:** update actions/setup-java action to v6.0.1 ([3f47c89](https://github.com/Nanopublication/nanopub-java/commit/3f47c89ee2335575923aa7ec95650a2509c7b721))
+* **deps:** update actions/setup-java action to v6.1.0 ([1fd8fd6](https://github.com/Nanopublication/nanopub-java/commit/1fd8fd65f91e03304dee3c04b6d2d296d04ba288))
+* **deps:** update actions/setup-node action to v7.1.0 ([fbfc199](https://github.com/Nanopublication/nanopub-java/commit/fbfc1992de66734182eff74177e7731ee8526d9a))
+* **deps:** update dependency org.apache.maven.plugins:maven-failsafe-plugin to v3.6.0 ([2b17593](https://github.com/Nanopublication/nanopub-java/commit/2b17593c80d1204cdf434c0015217dab023c4fec))
+* **deps:** update dependency org.apache.maven.plugins:maven-surefire-plugin to v3.6.0 ([ebc9f97](https://github.com/Nanopublication/nanopub-java/commit/ebc9f97cde8b803dae1cb69c87f10a51839136f8))
+* **deps:** update dependency org.codehaus.mojo:build-helper-maven-plugin to v3.6.2 ([e2d84a4](https://github.com/Nanopublication/nanopub-java/commit/e2d84a4fffd29b5ffaba30ba8c51820cadbb87a5))
+* **deps:** update dependency org.sonatype.central:central-publishing-maven-plugin to v0.12.0 ([403e53a](https://github.com/Nanopublication/nanopub-java/commit/403e53a1931e82bf6d896640ddb00186b679ddef))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([d13cad3](https://github.com/Nanopublication/nanopub-java/commit/d13cad3454c4977aacafbda60e082df4bf8523b5))
+
+### Refactoring
+
+* read the part names from the constants everywhere ([aa7b605](https://github.com/Nanopublication/nanopub-java/commit/aa7b60545915f42aa83ec8703aac53c26aae83a0))
+
 ## [1.94.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.93.0...nanopub-1.94.0) (2026-09-01)
 
 ### Features
