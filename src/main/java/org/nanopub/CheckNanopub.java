@@ -40,6 +40,8 @@ public class CheckNanopub extends CliRunner {
 
     /**
      * Main method to run the CheckNanopub tool from the command line.
+     * Exits with status 1 if any input fails to parse, contains no nanopub,
+     * or contains an invalid nanopub or signature.
      *
      * @param args command line arguments
      */
@@ -49,12 +51,28 @@ public class CheckNanopub extends CliRunner {
             obj.setLogPrintStream(System.out);
             Report report = obj.check();
             System.out.println("Summary: " + report.getSummary());
+            int exitStatus = exitStatusFor(report);
+            if (exitStatus != 0) {
+                System.exit(exitStatus);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1);
         }
+    }
+
+    /**
+     * Returns the process exit status the command line tool reports for a
+     * check: 0 if every nanopub is valid, 1 if anything is invalid or could not
+     * be read. Valid nanopubs that are not trusty count as a success.
+     *
+     * @param report the report of a completed check
+     * @return 0 if all nanopubs are valid, 1 otherwise
+     */
+    static int exitStatusFor(Report report) {
+        return report.areAllValid() ? 0 : 1;
     }
 
     private Report report;
@@ -445,10 +463,10 @@ public class CheckNanopub extends CliRunner {
         }
 
         /**
-         * Returns the total count of all nanopubs processed (both valid and
-         * invalid).
+         * Returns whether no nanopub was invalid, had an invalid signature, or
+         * failed to be read.
          *
-         * @return the total count of all nanopubs
+         * @return true if all nanopubs are valid, false otherwise
          */
         public boolean areAllValid() {
             return getAllInvalidCount() == 0;
