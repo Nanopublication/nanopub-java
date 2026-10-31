@@ -257,6 +257,84 @@ public class CheckNanopubTest {
     }
 
     @Test
+    void exitStatusFor_withNoInputs_isZero() throws IOException {
+        assertEquals(0, CheckNanopub.exitStatusFor(new CheckNanopub(List.of()).check()));
+    }
+
+    @Test
+    void exitStatusFor_withValidNanopub_isZero(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("valid.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
+
+        assertEquals(0, CheckNanopub.exitStatusFor(checkSilently(file)));
+    }
+
+    @Test
+    void exitStatusFor_withUnparseableFile_isOne(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("garbage.trig").toFile();
+        Files.writeString(file.toPath(), "garbage");
+
+        CheckNanopub.Report report = checkSilently(file);
+
+        assertEquals(1, report.getErrorCount());
+        assertEquals(1, CheckNanopub.exitStatusFor(report));
+    }
+
+    @Test
+    void exitStatusFor_withTruncatedNanopub_isOne(@TempDir Path tmp) throws IOException {
+        String nanopub = PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer");
+        File file = tmp.resolve("truncated.trig").toFile();
+        Files.writeString(file.toPath(), nanopub.substring(0, nanopub.length() / 2));
+
+        assertEquals(1, CheckNanopub.exitStatusFor(checkSilently(file)));
+    }
+
+    @Test
+    void exitStatusFor_withEmptyFile_isOne(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("empty.trig").toFile();
+        Files.writeString(file.toPath(), "");
+
+        assertEquals(1, CheckNanopub.exitStatusFor(checkSilently(file)));
+    }
+
+    @Test
+    void exitStatusFor_withInvalidNanopub_isOne(@TempDir Path tmp) throws IOException {
+        File file = tmp.resolve("invalid.trig").toFile();
+        Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"two\"^^xsd:integer"));
+
+        CheckNanopub.Report report = checkSilently(file);
+
+        assertEquals(1, report.getInvalidCount());
+        assertEquals(1, CheckNanopub.exitStatusFor(report));
+    }
+
+    @Test
+    void exitStatusFor_withOneInvalidAmongValidFiles_isOne(@TempDir Path tmp) throws IOException {
+        File valid = tmp.resolve("valid.trig").toFile();
+        Files.writeString(valid.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
+        File garbage = tmp.resolve("garbage.trig").toFile();
+        Files.writeString(garbage.toPath(), "garbage");
+
+        CheckNanopub checker = new CheckNanopub(List.of(valid.getAbsolutePath(), garbage.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+
+        assertEquals(1, CheckNanopub.exitStatusFor(checker.check()));
+    }
+
+    /**
+     * Checks a single file with the log discarded.
+     *
+     * @param file the file to check
+     * @return the report of the check
+     * @throws IOException if the file cannot be read
+     */
+    private static CheckNanopub.Report checkSilently(File file) throws IOException {
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+        return checker.check();
+    }
+
+    @Test
     void main_printsASummary(@TempDir Path tmp) throws IOException {
         File file = tmp.resolve("main.trig").toFile();
         Files.writeString(file.toPath(), PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer"));
