@@ -39,6 +39,7 @@ public class FetchIndex {
     private Map<RegistryInfo, Set<FetchNanopubTask>> serverLoad;
     private Map<RegistryInfo, Integer> serverUsage;
     private int nanopubCount;
+    private int failedCount;
     private Listener listener;
 
     /**
@@ -131,6 +132,7 @@ public class FetchIndex {
             if (task.getNanopub() == null) {
                 if (task.getTriedServersCount() == registries.size()) {
                     logger.warn("Failed to get {} from any of the {} known registries; giving up on it", task.getNanopubUri(), registries.size());
+                    failedCount++;
                     fetchTasks.remove(task);
                     continue;
                 }
@@ -218,6 +220,17 @@ public class FetchIndex {
      */
     public int getNanopubCount() {
         return nanopubCount;
+    }
+
+    /**
+     * Returns the number of nanopubs, index or content, that could not be
+     * fetched from any of the known registries and were therefore left out of
+     * the output.
+     *
+     * @return the number of nanopubs that could not be fetched
+     */
+    public int getFailedCount() {
+        return failedCount;
     }
 
     /**

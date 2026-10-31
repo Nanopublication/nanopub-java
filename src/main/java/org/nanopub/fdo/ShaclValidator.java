@@ -35,8 +35,11 @@ public class ShaclValidator extends CliRunner {
     @com.beust.jcommander.Parameter(names = "-s", description = "SHACL shape file", required = true)
     private File shapeFile;
 
+    private boolean validationSucceeded;
+
     /**
      * Main method to run the ShaclValidator.
+     * Exits with status 1 if the nanopub does not conform to the shape.
      *
      * @param args command line arguments
      */
@@ -44,6 +47,10 @@ public class ShaclValidator extends CliRunner {
         try {
             ShaclValidator obj = CliRunner.initJc(new ShaclValidator(), args);
             obj.run();
+            int exitStatus = obj.exitStatus();
+            if (exitStatus != 0) {
+                System.exit(exitStatus);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
@@ -123,11 +130,22 @@ public class ShaclValidator extends CliRunner {
     public void run() throws MalformedNanopubException, IOException {
         Nanopub shape = new NanopubImpl(shapeFile);
         Nanopub data = new NanopubImpl(nanopubFile);
-        if (validateShacl(shape, data).isValid()) {
+        validationSucceeded = validateShacl(shape, data).isValid();
+        if (validationSucceeded) {
             System.out.println("Validation successful.");
         } else {
             System.out.println("Validation not successful.");
         }
+    }
+
+    /**
+     * Returns the process exit status for the last run: 0 if the nanopub
+     * conforms to the shape, 1 otherwise.
+     *
+     * @return 0 if validation succeeded, 1 otherwise
+     */
+    int exitStatus() {
+        return validationSucceeded ? 0 : 1;
     }
 
 }

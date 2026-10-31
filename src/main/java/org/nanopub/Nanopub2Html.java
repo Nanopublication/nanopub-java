@@ -31,10 +31,13 @@ public class Nanopub2Html extends CliRunner {
 
     private OutputStream outputStream = System.out;
 
+    private int failureCount;
+
     private static final Charset utf8Charset = StandardCharsets.UTF_8;
 
     /**
      * Main method to run the Nanopub2Html command line tool.
+     * Exits with status 1 if any input could not be read or rendered.
      *
      * @param args the command line arguments
      */
@@ -42,6 +45,10 @@ public class Nanopub2Html extends CliRunner {
         try {
             Nanopub2Html obj = CliRunner.initJc(new Nanopub2Html(), args);
             obj.run();
+            int exitStatus = obj.exitStatus();
+            if (exitStatus != 0) {
+                System.exit(exitStatus);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
@@ -63,7 +70,14 @@ public class Nanopub2Html extends CliRunner {
     }
 
 
-    private void run() throws IOException {
+    /**
+     * Converts the input nanopubs to HTML. An input that cannot be read, or a
+     * nanopub that cannot be rendered, is reported and counted, and the run
+     * continues with the rest.
+     *
+     * @throws IOException if the output file cannot be opened or written
+     */
+    void run() throws IOException {
         if (outputFile != null) {
             outputStream = new FileOutputStream(outputFile);
         }
@@ -76,10 +90,12 @@ public class Nanopub2Html extends CliRunner {
                             createHtml(np);
                         } catch (IOException | RDFHandlerException ex) {
                             ex.printStackTrace();
+                            failureCount++;
                         }
                     });
                 } catch (RDF4JException | MalformedNanopubException ex) {
                     ex.printStackTrace();
+                    failureCount++;
                 }
             }
             outputStream.flush();
@@ -88,6 +104,16 @@ public class Nanopub2Html extends CliRunner {
                 outputStream.close();
             }
         }
+    }
+
+    /**
+     * Returns the process exit status for the last run: 0 if every input was
+     * converted, 1 if any input could not be read or rendered.
+     *
+     * @return 0 if all inputs were converted, 1 otherwise
+     */
+    int exitStatus() {
+        return failureCount == 0 ? 0 : 1;
     }
 
     private void createHtml(Nanopub np) throws IOException, RDFHandlerException {

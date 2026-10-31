@@ -69,7 +69,7 @@ public class Tar extends CliRunner {
                 MultiNanopubRdfHandler.process(rdfInFormat, inputFile, np -> {
                     try {
                         process(np);
-                    } catch (RDFHandlerException ex) {
+                    } catch (RDFHandlerException | IOException ex) {
                         throw new RuntimeException(ex);
                     }
                 });
@@ -82,19 +82,22 @@ public class Tar extends CliRunner {
         }
     }
 
-    private void process(Nanopub np) throws RDFHandlerException {
-        try {
-            String filename = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());
-            filename = filename.replaceFirst("^(..)(..)(..)", "$1/$2/$3/");
-            TarArchiveEntry tarEntry = new TarArchiveEntry(filename);
-            byte[] npBytes = NanopubUtils.writeToString(np, RDFFormat.TRIG).getBytes(Charsets.UTF_8);
-            tarEntry.setSize(npBytes.length);
-            outputStream.putArchiveEntry(tarEntry);
-            outputStream.write(npBytes);
-            outputStream.closeArchiveEntry();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    /**
+     * Writes a nanopub into the archive as one entry.
+     *
+     * @param np the nanopub to write
+     * @throws RDFHandlerException if the nanopub cannot be serialized
+     * @throws IOException         if the entry cannot be written to the archive
+     */
+    private void process(Nanopub np) throws RDFHandlerException, IOException {
+        String filename = TrustyUriUtils.getArtifactCode(np.getUri().stringValue());
+        filename = filename.replaceFirst("^(..)(..)(..)", "$1/$2/$3/");
+        TarArchiveEntry tarEntry = new TarArchiveEntry(filename);
+        byte[] npBytes = NanopubUtils.writeToString(np, RDFFormat.TRIG).getBytes(Charsets.UTF_8);
+        tarEntry.setSize(npBytes.length);
+        outputStream.putArchiveEntry(tarEntry);
+        outputStream.write(npBytes);
+        outputStream.closeArchiveEntry();
     }
 
 }

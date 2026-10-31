@@ -37,6 +37,8 @@ public class NanopubStatus extends CliRunner {
 
     /**
      * Main method to run the NanopubStatus command line tool.
+     * Exits with status 1 if the nanopub, or in recursive mode any nanopub of
+     * the index, is not found on any registry.
      *
      * @param args Command line arguments
      */
@@ -44,6 +46,10 @@ public class NanopubStatus extends CliRunner {
         try {
             NanopubStatus obj = CliRunner.initJc(new NanopubStatus(), args);
             obj.run();
+            int exitStatus = obj.exitStatus();
+            if (exitStatus != 0) {
+                System.exit(exitStatus);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
@@ -72,6 +78,7 @@ public class NanopubStatus extends CliRunner {
     }
 
     private int contentNpCount, indexNpCount;
+    private int notFoundCount;
     private int minCount = -1;
 
     /**
@@ -81,15 +88,35 @@ public class NanopubStatus extends CliRunner {
     public NanopubStatus() {
     }
 
-    private void run() throws IOException, RDFHandlerException {
+    /**
+     * Checks the status of the given nanopub and, in recursive mode, of the
+     * entire content of the index.
+     *
+     * @throws IOException         if an I/O error occurs
+     * @throws RDFHandlerException if an error occurs while handling RDF data
+     */
+    void run() throws IOException, RDFHandlerException {
         checkNanopub(nanopubIds.getFirst(), recursive);
         if (recursive) {
             System.out.print(indexNpCount + " index nanopub" + (indexNpCount != 1 ? "s" : "") + "; ");
             System.out.println(contentNpCount + " content nanopub" + (contentNpCount != 1 ? "s" : ""));
+            if (notFoundCount > 0) {
+                System.out.println(notFoundCount + " nanopub" + (notFoundCount != 1 ? "s" : "") + " not found on any nanopub server");
+            }
             if (checkAllServers) {
                 System.out.println("Each found on at least " + minCount + " nanopub server" + (minCount != 1 ? "s" : "") + ".");
             }
         }
+    }
+
+    /**
+     * Returns the process exit status for the last run: 0 if every checked
+     * nanopub was found on at least one registry, 1 otherwise.
+     *
+     * @return 0 if all checked nanopubs were found, 1 otherwise
+     */
+    int exitStatus() {
+        return notFoundCount == 0 ? 0 : 1;
     }
 
     private void checkNanopub(String nanopubId, boolean checkIndexContent) {
@@ -169,6 +196,9 @@ public class NanopubStatus extends CliRunner {
             } else {
                 contentNpCount++;
             }
+        } else {
+            System.err.println("NOT FOUND: " + nanopubId);
+            notFoundCount++;
         }
         if ((indexNpCount + contentNpCount) % 100 == 0) {
             System.err.print((indexNpCount + contentNpCount) + " nanopubs...\r");

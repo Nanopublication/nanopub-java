@@ -73,8 +73,12 @@ public class GetNanopub extends CliRunner {
             description = "Simulate an unreliable connection for testing purposes")
     private boolean simUnrelConn;
 
+    private int notRetrievedCount;
+
     /**
      * Main method to run the GetNanopub command line tool.
+     * Exits with status 1 if any requested nanopub, or any nanopub of a
+     * requested index, could not be retrieved.
      *
      * @param args Command line arguments
      */
@@ -83,6 +87,10 @@ public class GetNanopub extends CliRunner {
             GetNanopub obj = CliRunner.initJc(new GetNanopub(), args);
             simulateUnreliableConnection = obj.simUnrelConn;
             obj.run();
+            int exitStatus = obj.exitStatus();
+            if (exitStatus != 0) {
+                System.exit(exitStatus);
+            }
         } catch (ParameterException ex) {
             System.exit(1);
         } catch (Exception ex) {
@@ -314,6 +322,7 @@ public class GetNanopub extends CliRunner {
                     });
                     fetchIndex.run();
                     count = fetchIndex.getNanopubCount();
+                    reportIndexNanopubsNotRetrieved(nanopubId, fetchIndex.getFailedCount());
                 } else {
                     Nanopub np;
                     if (db == null) {
@@ -352,9 +361,36 @@ public class GetNanopub extends CliRunner {
         }
     }
 
+    /**
+     * Returns the process exit status for the last run: 0 if every requested
+     * nanopub was retrieved, 1 otherwise.
+     *
+     * @return 0 if all requested nanopubs were retrieved, 1 otherwise
+     */
+    int exitStatus() {
+        return notRetrievedCount == 0 ? 0 : 1;
+    }
+
+    /**
+     * Reports and counts the nanopubs of an index that could not be fetched
+     * from any registry.
+     *
+     * @param indexId     the index the nanopubs belong to
+     * @param failedCount the number of nanopubs that could not be fetched
+     */
+    private void reportIndexNanopubsNotRetrieved(String indexId, int failedCount) {
+        if (failedCount == 0) {
+            return;
+        }
+        System.err.println("NOT RETRIEVED: " + failedCount + " nanopub" + (failedCount != 1 ? "s" : "")
+                           + " of index " + indexId + " could not be fetched from any registry");
+        notRetrievedCount += failedCount;
+    }
+
     private void outputNanopub(String nanopubId, Nanopub np) throws RDFHandlerException {
         if (np == null) {
             System.err.println("NOT FOUND: " + nanopubId);
+            notRetrievedCount++;
             return;
         }
         count++;

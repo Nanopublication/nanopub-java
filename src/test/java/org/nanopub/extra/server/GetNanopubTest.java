@@ -3,6 +3,8 @@ package org.nanopub.extra.server;
 import net.trustyuri.ArtifactCode;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.nanopub.CliRunner;
 import org.nanopub.Nanopub;
@@ -14,7 +16,9 @@ import java.io.File;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 public class GetNanopubTest {
 
@@ -44,8 +48,48 @@ public class GetNanopubTest {
             NanopubImpl testNano = new NanopubImpl(outFile, RDFFormat.TRIG);
 
             assertEquals(nanopub, testNano);
+            assertEquals(0, c.exitStatus());
             outFile.delete();
         }
     }
+
+    @Test
+    void exitStatus_withNanopubNotFound_isOne(@TempDir File tempDir) throws Exception {
+        try (MockedStatic<GetNanopub> ignored = mockStatic(GetNanopub.class)) {
+            GetNanopub c = CliRunner.initJc(new GetNanopub(), new String[]{
+                    MISSING_NANOPUB, "-o", new File(tempDir, "out.trig").getPath()});
+
+            c.run();
+
+            assertEquals(1, c.exitStatus());
+        }
+    }
+
+    @Test
+    void exitStatus_withIndexNanopubsNotRetrieved_isOne(@TempDir File tempDir) throws Exception {
+        try (MockedConstruction<FetchIndex> ignored = mockConstruction(FetchIndex.class,
+                (fetchIndex, context) -> when(fetchIndex.getFailedCount()).thenReturn(2))) {
+            GetNanopub c = CliRunner.initJc(new GetNanopub(), new String[]{
+                    "-c", MISSING_NANOPUB, "-o", new File(tempDir, "out.trig").getPath()});
+
+            c.run();
+
+            assertEquals(1, c.exitStatus());
+        }
+    }
+
+    @Test
+    void exitStatus_withIndexFullyRetrieved_isZero(@TempDir File tempDir) throws Exception {
+        try (MockedConstruction<FetchIndex> ignored = mockConstruction(FetchIndex.class)) {
+            GetNanopub c = CliRunner.initJc(new GetNanopub(), new String[]{
+                    "-c", MISSING_NANOPUB, "-o", new File(tempDir, "out.trig").getPath()});
+
+            c.run();
+
+            assertEquals(0, c.exitStatus());
+        }
+    }
+
+    private static final String MISSING_NANOPUB = "https://w3id.org/np/RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 }
