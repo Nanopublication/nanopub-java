@@ -1,3 +1,27 @@
+## [1.95.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.95.0...nanopub-1.95.1) (2026-10-31)
+
+### Dependency updates
+
+* **core-deps:** update dependency com.google.code.gson:gson to v2.15.0 ([090e67d](https://github.com/Nanopublication/nanopub-java/commit/090e67deb704f71fcafd4a13e997b19d2baad9e0))
+* **core-deps:** update dependency org.mongodb:mongodb-driver-sync to v5.14.0 ([3290fdb](https://github.com/Nanopublication/nanopub-java/commit/3290fdbeed29fa2bdc25e95ffa1121b84d4a6990))
+
+### Bug Fixes
+
+* **check:** exit non-zero when a check finds invalid input ([a2d31a0](https://github.com/Nanopublication/nanopub-java/commit/a2d31a011842d480eae40a66c06aa1312473ce39)), closes [#188](https://github.com/Nanopublication/nanopub-java/issues/188)
+* **cli:** exit non-zero when get, html, shacl, status or tar fail ([4865576](https://github.com/Nanopublication/nanopub-java/commit/48655768f5e7a44f76619855b0f6658761391a91)), closes [#189](https://github.com/Nanopublication/nanopub-java/issues/189) [#191](https://github.com/Nanopublication/nanopub-java/issues/191)
+
+### Build and continuous integration
+
+* **deps:** update actions/setup-python action to v7.1.0 ([3da32d8](https://github.com/Nanopublication/nanopub-java/commit/3da32d8eae4def155357cdf046a0c72a4f828279))
+* **deps:** update dependency org.apache.maven.plugins:maven-failsafe-plugin to v3.6.1 ([57303b6](https://github.com/Nanopublication/nanopub-java/commit/57303b64eef19bfa853af99ada009e7b6ea87550))
+* **deps:** update dependency org.apache.maven.plugins:maven-surefire-plugin to v3.6.1 ([843d388](https://github.com/Nanopublication/nanopub-java/commit/843d388145dad7ff8886b877b46d037ccfde394e))
+* **deps:** update dependency org.jacoco:jacoco-maven-plugin to v0.8.16 ([ef34f7c](https://github.com/Nanopublication/nanopub-java/commit/ef34f7c0fba1fa5046611e171fba6aeefdb21c82))
+* **deps:** update docker/login-action action to v4.7.0 ([e14fb74](https://github.com/Nanopublication/nanopub-java/commit/e14fb740a3fa00ca0fd81fb1cd19f12154c73dc4))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([7fb16c1](https://github.com/Nanopublication/nanopub-java/commit/7fb16c13a8f12c2c49ceb6af85c2b9bfe85d0af0))
+
 ## [1.95.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.94.0...nanopub-1.95.0) (2026-10-23)
 
 ### Features
