@@ -147,15 +147,43 @@ class Nanopub2HtmlTest {
     }
 
     @Test
-    void mainReportsUnreadableInput(@TempDir File tempDir) throws Exception {
+    void runWithUnreadableInputFinishesAndReportsFailure(@TempDir File tempDir) throws Exception {
         File input = new File(tempDir, "broken.trig");
         Files.writeString(input.toPath(), "this is not TriG at all", StandardCharsets.UTF_8);
         File output = new File(tempDir, "output.html");
+        Nanopub2Html tool = CliRunner.initJc(new Nanopub2Html(), new String[]{"-o", output.getAbsolutePath(), input.getAbsolutePath()});
 
-        // the parse error is reported, but the tool still finishes and writes its (empty) output
-        assertDoesNotThrow(() -> Nanopub2Html.main(
-                new String[]{"-o", output.getAbsolutePath(), input.getAbsolutePath()}));
+        assertDoesNotThrow(tool::run);
+
         assertTrue(output.exists());
+        assertEquals(1, tool.exitStatus());
+    }
+
+    @Test
+    void runWithOneUnreadableAmongReadableInputsReportsFailure(@TempDir File tempDir) throws Exception {
+        File readable = new File(tempDir, "input.trig");
+        Files.writeString(readable.toPath(), readFile().writeToString(RDFFormat.TRIG), StandardCharsets.UTF_8);
+        File broken = new File(tempDir, "broken.trig");
+        Files.writeString(broken.toPath(), "this is not TriG at all", StandardCharsets.UTF_8);
+        File output = new File(tempDir, "output.html");
+        Nanopub2Html tool = CliRunner.initJc(new Nanopub2Html(),
+                new String[]{"-o", output.getAbsolutePath(), readable.getAbsolutePath(), broken.getAbsolutePath()});
+
+        tool.run();
+
+        assertEquals(1, tool.exitStatus());
+    }
+
+    @Test
+    void runWithReadableInputReportsSuccess(@TempDir File tempDir) throws Exception {
+        File input = new File(tempDir, "input.trig");
+        Files.writeString(input.toPath(), readFile().writeToString(RDFFormat.TRIG), StandardCharsets.UTF_8);
+        File output = new File(tempDir, "output.html");
+        Nanopub2Html tool = CliRunner.initJc(new Nanopub2Html(), new String[]{"-o", output.getAbsolutePath(), input.getAbsolutePath()});
+
+        tool.run();
+
+        assertEquals(0, tool.exitStatus());
     }
 
 }
