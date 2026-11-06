@@ -1,8 +1,12 @@
 package org.nanopub.extra.services;
 
 import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.DateUtils;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.util.EntityUtils;
 import org.nanopub.NanopubUtils;
 import org.nanopub.vocabulary.NPS;
@@ -10,6 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.UnknownHostException;
+import java.time.DateTimeException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -19,7 +28,16 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class QueryCall {
 
-    private static int maxRetryCount = 3;
+    /**
+     * How many times an instance that cannot be reached is tried during one call.
+     */
+    private static final int MAX_ATTEMPTS = 3;
+
+    /**
+     * HTTP status 429 (Too Many Requests), which {@link HttpStatus} lacks.
+     */
+    private static final int SC_TOO_MANY_REQUESTS = 429;
+
     private static final Logger logger = LoggerFactory.getLogger(QueryCall.class);
 
     private QueryCall() {
@@ -116,40 +134,104 @@ public class QueryCall {
      * returning the first successful response. Instances reporting a non-ready
      * status are evicted for a cool-down period (see
      * {@link #EVICTION_COOLDOWN_PROPERTY}).
+     * <p>
+     * Only instances that could not be reached at all (connection refused, connect
+     * timeout, unknown host) are tried again, up to {@value #MAX_ATTEMPTS} times in
+     * all. An instance that answered with an error status, or timed out while the
+     * query was running, is asked once: it would most likely fail again, and the
+     * server may still be evaluating the query after the client has given up.
+     * <p>
+     * An instance that refuses the query with {@code 503} or {@code 429} and a
+     * {@code Retry-After} header is not asked again either. If some instances refused
+     * and the others could not be reached or were evicted, a {@link QueryRefusedException}
+     * gives the earliest time one of them will accept the query again.
      *
      * @param queryRef the reference to the query to run
      * @return the HTTP response from the query API
-     * @throws APINotReachableException       if the API is not reachable after retries
+     * @throws QueryRefusedException          if the query was refused and no other instance could take it
+     * @throws APINotReachableException       if no instance returned a response
      * @throws NotEnoughAPIInstancesException if there are not enough API instances available
      */
     public static HttpResponse run(QueryRef queryRef) throws APINotReachableException, NotEnoughAPIInstancesException {
         logger.debug("Preparing query call: {}", queryRef);
-        int retryCount = 0;
-        while (retryCount < maxRetryCount) {
-            List<String> candidates = filterEvicted(getApiInstances());
-            if (candidates.isEmpty()) {
-                logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", getApiInstances().size(), queryRef.getQueryId());
-                throw new NotEnoughAPIInstancesException(
-                        "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
-            }
-            Collections.shuffle(candidates);
+        List<String> candidates = filterEvicted(getApiInstances());
+        if (candidates.isEmpty()) {
+            logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", getApiInstances().size(), queryRef.getQueryId());
+            throw new NotEnoughAPIInstancesException(
+                    "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
+        }
+        Collections.shuffle(candidates);
+        List<String> asked = new ArrayList<>(candidates);
+        Instant retryAfter = null;
+        boolean failed = false;
+        for (int round = 1; round <= MAX_ATTEMPTS && !candidates.isEmpty(); round++) {
+            List<String> unreachable = new ArrayList<>();
             for (String apiUrl : candidates) {
-                HttpResponse resp = tryInstance(apiUrl, queryRef);
-                if (resp != null) {
-                    return resp;
+                Attempt a = tryInstance(apiUrl, queryRef);
+                switch (a.outcome()) {
+                    case ANSWERED -> {
+                        return a.response();
+                    }
+                    case REFUSED -> {
+                        if (retryAfter == null || a.retryAfter().isBefore(retryAfter)) {
+                            retryAfter = a.retryAfter();
+                        }
+                    }
+                    case UNREACHABLE -> unreachable.add(apiUrl);
+                    case FAILED -> failed = true;
+                    case EVICTED -> {
+                    }
                 }
             }
-            retryCount = retryCount + 1;
+            candidates = filterEvicted(unreachable);
+        }
+        if (retryAfter != null && !failed) {
+            throw new QueryRefusedException("Query refused by Nanopub Query instance(s): " + queryRef.getQueryId()
+                                            + "; try again after " + retryAfter, retryAfter);
+        }
+        if (filterEvicted(asked).isEmpty()) {
+            throw new NotEnoughAPIInstancesException(
+                    "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
         }
         throw new APINotReachableException("Giving up contacting API: " + queryRef.getQueryId());
     }
 
-    private static HttpResponse tryInstance(String apiUrl, QueryRef queryRef) {
+    /**
+     * How a request to one instance ended.
+     */
+    private enum Outcome {
+        /** A successful response, to be returned. */
+        ANSWERED,
+        /** Refused with a {@code Retry-After}; not asked again in this call. */
+        REFUSED,
+        /** Not reached at all; asked again in the next round. */
+        UNREACHABLE,
+        /** Answered with an error, or timed out while the query ran; not asked again in this call. */
+        FAILED,
+        /** Reported a non-ready status and was evicted. */
+        EVICTED
+    }
+
+    private record Attempt(Outcome outcome, HttpResponse response, Instant retryAfter) {
+
+        static Attempt of(Outcome outcome) {
+            return new Attempt(outcome, null, null);
+        }
+
+    }
+
+    private static Attempt tryInstance(String apiUrl, QueryRef queryRef) {
         HttpGet get = new HttpGet(apiUrl + "api/" + queryRef.getAsUrlString());
         get.setHeader("Accept", "text/csv, text/turtle;q=0.9, application/ld+json;q=0.8");
         HttpResponse resp = null;
         try {
             resp = NanopubUtils.getHttpClient().execute(get);
+            Instant retryAfter = getRefusalRetryAfter(resp, Instant.now());
+            if (retryAfter != null) {
+                EntityUtils.consumeQuietly(resp.getEntity());
+                logger.warn("Request to {} refused for query {} — {}; try again after {}", apiUrl, queryRef, resp.getStatusLine(), retryAfter);
+                return new Attempt(Outcome.REFUSED, null, retryAfter);
+            }
             if (!wasSuccessfulNonempty(resp)) {
                 throw new IOException(resp.getStatusLine().toString());
             }
@@ -158,20 +240,67 @@ public class QueryCall {
                 String status = h == null ? "missing" : h.getValue();
                 evict(apiUrl, "status " + status);
                 EntityUtils.consumeQuietly(resp.getEntity());
-                return null;
+                return Attempt.of(Outcome.EVICTED);
             }
             long len = resp.getEntity().getContentLength();
             String sizeStr = len >= 0 ? len + " bytes" : "unknown (chunked/no Content-Length)";
             logger.debug("Response received from {} for query {} ({})", apiUrl, queryRef, sizeStr);
-            return resp;
+            return new Attempt(Outcome.ANSWERED, resp, null);
         } catch (Exception ex) {
             if (resp != null) {
                 EntityUtils.consumeQuietly(resp.getEntity());
             }
             logger.warn("Request to {} failed for query {} — {}: {}", apiUrl, queryRef, ex.getClass().getSimpleName(), ex.getMessage());
             logger.debug("Request to {} failed for query {}", apiUrl, queryRef, ex);
+            return Attempt.of(isUnreachable(ex) ? Outcome.UNREACHABLE : Outcome.FAILED);
+        }
+    }
+
+    /**
+     * Returns true if a request failed without reaching the instance, so that asking
+     * again cannot add to its load: the connection was refused or timed out (including a
+     * timeout waiting for a pooled connection), or the host could not be resolved or routed to.
+     * A read timeout ({@link java.net.SocketTimeoutException}) does not count: the query
+     * was running.
+     */
+    static boolean isUnreachable(Exception ex) {
+        return ex instanceof ConnectException
+               || ex instanceof ConnectTimeoutException
+               || ex instanceof UnknownHostException
+               || ex instanceof NoRouteToHostException;
+    }
+
+    /**
+     * Returns when to try again if the response refuses the request: status {@code 503}
+     * or {@code 429} with a valid {@code Retry-After} header. Returns null otherwise.
+     */
+    static Instant getRefusalRetryAfter(HttpResponse resp, Instant now) {
+        int code = resp.getStatusLine().getStatusCode();
+        if (code != HttpStatus.SC_SERVICE_UNAVAILABLE && code != SC_TOO_MANY_REQUESTS) {
             return null;
         }
+        Header h = resp.getFirstHeader(HttpHeaders.RETRY_AFTER);
+        return h == null ? null : parseRetryAfter(h.getValue(), now);
+    }
+
+    /**
+     * Parses a {@code Retry-After} value, given as a number of seconds or as an HTTP date.
+     * Returns null if it is neither.
+     */
+    static Instant parseRetryAfter(String value, Instant now) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String v = value.trim();
+        if (v.chars().allMatch(c -> c >= '0' && c <= '9')) {
+            try {
+                return now.plusSeconds(Long.parseLong(v));
+            } catch (ArithmeticException | DateTimeException | NumberFormatException ex) {
+                return null;
+            }
+        }
+        Date date = DateUtils.parseDate(v);
+        return date == null ? null : date.toInstant();
     }
 
     /**

@@ -1,11 +1,24 @@
 package org.nanopub.extra.services;
 
+import org.apache.http.HttpHost;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.conn.HttpHostConnectException;
 import org.junit.jupiter.api.*;
 import org.nanopub.utils.MockNanopubUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -282,15 +295,164 @@ public class QueryCallTest {
     }
 
     @Test
-    void runGivesUpAfterRetriesWhenAllRequestsFail() throws Exception {
+    void runAsksEachInstanceOnceWhenAllAnswerWithErrors() throws Exception {
         // Admit all instances as healthy first...
         mockNanopubUtils.setHttpResponseStatusCode(200);
         QueryCall.getApiInstances();
 
-        // ...then fail every query request (HTTP 500). Failed requests do not
-        // evict, so run() retries and eventually gives up.
+        // ...then fail every query request (HTTP 500). The same query would fail
+        // again, so no instance is asked twice.
         mockNanopubUtils.setHttpResponseStatusCode(500);
+        APINotReachableException ex = assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertFalse(ex instanceof QueryRefusedException);
+        assertApiRequests(1, 1, 1);
+    }
+
+    @Test
+    void runAsksEachInstanceOnceWhenTheQueryTimesOut() throws Exception {
+        // A read timeout means the query was running; the server may still be
+        // evaluating it, so asking again would only add to its load.
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (isApiRequest(url)) throw new SocketTimeoutException("Read timed out");
+            return null;
+        });
         assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertApiRequests(1, 1, 1);
+    }
+
+    @Test
+    void runRetriesInstancesThatCannotBeReached() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (isApiRequest(url)) throw new ConnectException("Connection refused");
+            return null;
+        });
+        APINotReachableException ex = assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertFalse(ex instanceof QueryRefusedException);
+        assertApiRequests(3, 3, 3);
+    }
+
+    @Test
+    void runRetriesOnlyTheInstancesThatCannotBeReached() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (url.startsWith(apiUrl(0))) throw new ConnectTimeoutException("Connect timed out");
+            if (url.startsWith(apiUrl(1))) throw new SocketTimeoutException("Read timed out");
+            if (url.startsWith(apiUrl(2))) return mockNanopubUtils.response(500, Map.of());
+            return null;
+        });
+        assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertApiRequests(3, 1, 1);
+    }
+
+    @Test
+    void runReturnsResponseFromInstanceReachedOnRetry() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setResponseBody("a,b\n1,2\n");
+        AtomicInteger attempts = new AtomicInteger();
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (url.startsWith(apiUrl(0)) && attempts.incrementAndGet() == 1) {
+                throw new ConnectException("Connection refused");
+            }
+            if (url.startsWith(apiUrl(1)) || url.startsWith(apiUrl(2))) {
+                return mockNanopubUtils.response(500, Map.of());
+            }
+            return null;
+        });
+        assertNotNull(QueryCall.run(QUERY_REF));
+        assertApiRequests(2, 1, 1);
+    }
+
+    @Test
+    void runThrowsQueryRefusedWhenEveryInstanceRefuses() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> isApiRequest(url)
+                ? mockNanopubUtils.response(503, Map.of("Retry-After", "30"))
+                : null);
+        Instant before = Instant.now();
+        QueryRefusedException ex = assertThrows(QueryRefusedException.class, () -> QueryCall.run(QUERY_REF));
+        Instant after = Instant.now();
+        assertFalse(ex.getRetryAfter().isBefore(before.plusSeconds(30)));
+        assertFalse(ex.getRetryAfter().isAfter(after.plusSeconds(30)));
+        assertApiRequests(1, 1, 1);
+    }
+
+    @Test
+    void runReportsTheEarliestRetryAfter() throws Exception {
+        // One instance refuses with 503, one with 429, and one cannot be reached:
+        // the query is accepted again at the earlier of the two refusals.
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (url.startsWith(apiUrl(0))) return mockNanopubUtils.response(503, Map.of("Retry-After", "40"));
+            if (url.startsWith(apiUrl(1))) return mockNanopubUtils.response(429, Map.of("retry-after", "20"));
+            if (url.startsWith(apiUrl(2))) throw new ConnectException("Connection refused");
+            return null;
+        });
+        Instant before = Instant.now();
+        QueryRefusedException ex = assertThrows(QueryRefusedException.class, () -> QueryCall.run(QUERY_REF));
+        Instant after = Instant.now();
+        assertFalse(ex.getRetryAfter().isBefore(before.plusSeconds(20)));
+        assertFalse(ex.getRetryAfter().isAfter(after.plusSeconds(20)));
+        assertApiRequests(1, 1, 3);
+    }
+
+    @Test
+    void runDoesNotThrowQueryRefusedWhenAnotherInstanceFailed() throws Exception {
+        // The instance that answered with an error would accept the query now,
+        // so there is no time to wait for.
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (url.startsWith(apiUrl(0))) return mockNanopubUtils.response(503, Map.of("Retry-After", "30"));
+            if (isApiRequest(url)) return mockNanopubUtils.response(500, Map.of());
+            return null;
+        });
+        APINotReachableException ex = assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertFalse(ex instanceof QueryRefusedException);
+        assertApiRequests(1, 1, 1);
+    }
+
+    @Test
+    void runTreatsUnavailableWithoutRetryAfterAsFailure() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setRequestHandler(url -> isApiRequest(url)
+                ? mockNanopubUtils.response(503, Map.of())
+                : null);
+        APINotReachableException ex = assertThrows(APINotReachableException.class, () -> QueryCall.run(QUERY_REF));
+        assertFalse(ex instanceof QueryRefusedException);
+        assertApiRequests(1, 1, 1);
+    }
+
+    @Test
+    void parseRetryAfterReadsSecondsAndHttpDates() {
+        Instant now = Instant.parse("2026-11-05T09:00:00Z");
+        assertEquals(now.plusSeconds(17), QueryCall.parseRetryAfter("17", now));
+        assertEquals(now.plusSeconds(17), QueryCall.parseRetryAfter(" 17 ", now));
+        assertEquals(now, QueryCall.parseRetryAfter("0", now));
+        assertEquals(Instant.parse("2026-11-05T09:01:00Z"),
+                QueryCall.parseRetryAfter("Thu, 05 Nov 2026 09:01:00 GMT", now));
+        assertNull(QueryCall.parseRetryAfter(null, now));
+        assertNull(QueryCall.parseRetryAfter("", now));
+        assertNull(QueryCall.parseRetryAfter("-5", now));
+        assertNull(QueryCall.parseRetryAfter("1.5", now));
+        assertNull(QueryCall.parseRetryAfter("soon", now));
+        assertNull(QueryCall.parseRetryAfter("99999999999999999999", now));
+        assertNull(QueryCall.parseRetryAfter(String.valueOf(Long.MAX_VALUE), now));
+    }
+
+    @Test
+    void isUnreachableOnlyForRequestsThatNeverReachedTheInstance() {
+        assertTrue(QueryCall.isUnreachable(new ConnectException("Connection refused")));
+        assertTrue(QueryCall.isUnreachable(new HttpHostConnectException(new IOException(), new HttpHost("example.org"))));
+        assertTrue(QueryCall.isUnreachable(new ConnectTimeoutException("Connect timed out")));
+        assertTrue(QueryCall.isUnreachable(new ConnectionPoolTimeoutException("Timeout waiting for connection from pool")));
+        assertTrue(QueryCall.isUnreachable(new UnknownHostException("example.org")));
+        assertTrue(QueryCall.isUnreachable(new NoRouteToHostException("No route to host")));
+
+        assertFalse(QueryCall.isUnreachable(new SocketTimeoutException("Read timed out")));
+        assertFalse(QueryCall.isUnreachable(new NoHttpResponseException("The target server failed to respond")));
+        assertFalse(QueryCall.isUnreachable(new SocketException("Connection reset")));
+        assertFalse(QueryCall.isUnreachable(new IOException("HTTP/1.1 500 Internal Server Error")));
     }
 
     @Test
@@ -305,6 +467,26 @@ public class QueryCallTest {
         assertThrows(NotEnoughAPIInstancesException.class, () -> QueryCall.run(QUERY_REF));
     }
 
+
+    private static String apiUrl(int instanceIndex) {
+        return DEFAULT_INSTANCES.split(" ")[instanceIndex] + "api/";
+    }
+
+    private static boolean isApiRequest(String url) {
+        return url.contains("/api/");
+    }
+
+    /**
+     * Asserts how many query requests each of the default instances received.
+     */
+    private void assertApiRequests(int... expectedPerInstance) {
+        List<String> urls = mockNanopubUtils.getRequestedUrls();
+        for (int i = 0; i < expectedPerInstance.length; i++) {
+            String prefix = apiUrl(i);
+            long n = urls.stream().filter(u -> u.startsWith(prefix)).count();
+            assertEquals(expectedPerInstance[i], n, "Query requests to " + prefix);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     private static java.util.Map<String, Long> getEvictedUntil() throws NoSuchFieldException, IllegalAccessException {
