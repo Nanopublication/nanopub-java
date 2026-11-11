@@ -20,8 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -90,7 +88,7 @@ public class TimestampUpdater extends CliRunner {
         MultiNanopubRdfHandler.process(inFormat, inputFile, np -> {
             try {
                 List<Statement> newStatements = removeCreationTime(np);
-                newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, currentTimeInUtc(), np.getPubinfoUri()));
+                newStatements.add(vf.createStatement(np.getUri(), DCTERMS.CREATED, TimestampNow.getTimestamp(), np.getPubinfoUri()));
                 Nanopub updatedNp;
                 if (np instanceof NanopubImpl) {
                     updatedNp = new NanopubImpl(newStatements, ((NanopubImpl) np).getNsPrefixes(), ((NanopubImpl) np).getNs());
@@ -111,14 +109,6 @@ public class TimestampUpdater extends CliRunner {
                 throw new RuntimeException(e);
             }
         });
-    }
-
-    /**
-     * The current time as an xsd:dateTime literal in UTC, e.g. "2026-11-11T15:28:52.459Z", independent of
-     * the time zone of the machine it runs on.
-     */
-    private Literal currentTimeInUtc() {
-        return vf.createLiteral(Instant.now().truncatedTo(ChronoUnit.MILLIS).toString(), XSD.DATETIME);
     }
 
     /**

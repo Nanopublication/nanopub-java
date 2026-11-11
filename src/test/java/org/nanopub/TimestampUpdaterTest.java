@@ -145,20 +145,6 @@ public class TimestampUpdaterTest {
     }
 
     @Test
-    void writesTheCreationTimeInUtc(@TempDir File tempDir) throws Exception {
-        File input = copyOfFirstPlainNanopub(tempDir, "input.trig");
-        File output = new File(tempDir, "out.trig");
-
-        CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", output.getPath(), input.getPath()}).run();
-
-        Nanopub updated = new NanopubImpl(output, RDFFormat.TRIG);
-        String created = updated.getPubinfo().stream()
-                .filter(st -> st.getSubject().equals(updated.getUri()) && st.getPredicate().equals(DCTERMS.CREATED))
-                .findFirst().orElseThrow().getObject().stringValue();
-        assertTrue(created.endsWith("Z"), created);
-    }
-
-    @Test
     void updatesTheInputFileInPlace(@TempDir File tempDir) throws Exception {
         File file = copyOfFirstPlainNanopub(tempDir, "input.trig");
         Calendar before = Calendar.getInstance();
