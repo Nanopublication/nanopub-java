@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,8 +37,24 @@ public class ProfileKeyCheck {
     /**
      * The query listing every introduction published on the network, with the user it introduces
      * and the public key it declares for them.
+     *
+     * @deprecated the check no longer reads it: the answer covers every user on the network and
+     * takes many seconds to fetch, which every {@code sign} and {@code publish} call paid for
+     * (issue #206). Use {@link #GET_USER_INTROS}, which answers for one user.
      */
+    @Deprecated
     public static final String GET_ALL_USER_INTROS = "RAjHh6P11QFUaoPiMRBavdAnTq4YMJW4PB85oVFSBfYjU/get-all-user-intros";
+
+    /**
+     * The query listing the introductions published for one user, given as its {@code user}
+     * parameter, with the public keys they declare. Its rows have the columns the check reads
+     * from {@link #GET_ALL_USER_INTROS}: {@code user}, {@code intronp}, {@code pubkey} and
+     * {@code authoritative}.
+     */
+    public static final String GET_USER_INTROS = "RA9bs1Xj7ZvYULxR3Ae_rWIDw5QbPAPtIgIBZFCnDi87s/get-user-intros";
+
+    /** The parameter of {@link #GET_USER_INTROS} that names the user. */
+    static final String USER_PARAM = "user";
 
     private ProfileKeyCheck() {
     }
@@ -136,7 +154,7 @@ public class ProfileKeyCheck {
         }
         ApiResponse introductions;
         try {
-            introductions = fetchIntroductions();
+            introductions = fetchIntroductions(signer);
         } catch (Exception ex) {
             logger.debug("Could not fetch the introductions to check the signing key", ex);
             return new Result(Status.NOT_CHECKED,
@@ -184,22 +202,28 @@ public class ProfileKeyCheck {
         return check(signer, publicKeyString).status() == Status.DECLARED;
     }
 
-    // How long a fetched list of introductions is reused. Publishing a file of nanopublications asks
-    // the same question once per nanopublication, and the answer does not change between them; a few
-    // minutes also keeps a newly published introduction from staying invisible for long.
+    // How long the introductions fetched for a signer are reused. Publishing a file of
+    // nanopublications asks the same question once per nanopublication, and the answer does not
+    // change between them; a few minutes also keeps a newly published introduction from staying
+    // invisible for long.
     private static final long INTRODUCTIONS_MAX_AGE_MS = 5 * 60 * 1000;
 
-    private static ApiResponse cachedIntroductions;
-    private static long cachedAt;
+    private record CachedIntroductions(ApiResponse introductions, long fetchedAt) {
+    }
 
-    private static synchronized ApiResponse fetchIntroductions() throws Exception {
+    private static final Map<String, CachedIntroductions> cachedIntroductions = new HashMap<>();
+
+    // Asks only about the signer. The cache lives as long as the JVM, and the command line starts
+    // one per call, so what is asked has to be cheap to ask every time: the introductions of one
+    // user come back in a fraction of a second, those of all users in tens of seconds (issue #206).
+    private static synchronized ApiResponse fetchIntroductions(IRI signer) throws Exception {
         long now = System.currentTimeMillis();
-        if (cachedIntroductions != null && now - cachedAt < INTRODUCTIONS_MAX_AGE_MS) {
-            return cachedIntroductions;
+        CachedIntroductions cached = cachedIntroductions.get(signer.stringValue());
+        if (cached != null && now - cached.fetchedAt() < INTRODUCTIONS_MAX_AGE_MS) {
+            return cached.introductions();
         }
-        ApiResponse introductions = QueryAccess.get(new QueryRef(GET_ALL_USER_INTROS));
-        cachedIntroductions = introductions;
-        cachedAt = now;
+        ApiResponse introductions = QueryAccess.get(new QueryRef(GET_USER_INTROS, USER_PARAM, signer.stringValue()));
+        cachedIntroductions.put(signer.stringValue(), new CachedIntroductions(introductions, now));
         return introductions;
     }
 
@@ -207,15 +231,15 @@ public class ProfileKeyCheck {
      * Forgets the introductions read from the network, so that the next check fetches them again.
      */
     public static synchronized void clearCache() {
-        cachedIntroductions = null;
-        cachedAt = 0;
+        cachedIntroductions.clear();
     }
 
     /**
      * Works out what the given introductions say about a signer and key, without going near the
      * network, so that the classification can be exercised on its own.
      *
-     * @param introductions   the response of {@link #GET_ALL_USER_INTROS}
+     * @param introductions   the response of {@link #GET_USER_INTROS}, or any other with its
+     *                        columns; rows about other users are ignored
      * @param signer          the signer IRI
      * @param publicKeyString the base64 public key that will sign
      * @return what the introductions establish, and the ones declaring the key

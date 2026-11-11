@@ -2,14 +2,23 @@ package org.nanopub.extra.security;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.Values;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.nanopub.extra.services.ApiResponse;
+import org.nanopub.extra.services.QueryAccess;
+import org.nanopub.extra.services.QueryRef;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 
 /**
  * A signature made with a key no introduction declares for its signer is valid, publishes and
@@ -28,6 +37,12 @@ class ProfileKeyCheckTest {
     private static final String ANOTHER_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsomeOtherKey";
     private static final IRI FIRST_INTRO = Values.iri("https://w3id.org/np/RAfirstIntro");
     private static final IRI SECOND_INTRO = Values.iri("https://w3id.org/np/RAsecondIntro");
+
+    @BeforeEach
+    @AfterEach
+    void forgetWhatWasFetched() {
+        ProfileKeyCheck.clearCache();
+    }
 
     /**
      * Builds a response shaped like the one the introductions query answers with.
@@ -188,6 +203,66 @@ class ProfileKeyCheckTest {
     void everyComplaintExplainsItself() {
         String message = ProfileKeyCheck.check(SIGNER, null).message();
         assertFalse(message.isBlank());
+    }
+
+    /**
+     * The command line starts a JVM per call, so nothing fetched outlives it, and the introductions
+     * of everyone on the network take tens of seconds to fetch. The check therefore asks only about
+     * the signer (issue #206).
+     */
+    @Test
+    void theNetworkIsAskedAboutTheSignerOnly() {
+        try (MockedStatic<QueryAccess> queryAccess = mockStatic(QueryAccess.class)) {
+            queryAccess.when(() -> QueryAccess.get(any())).thenReturn(introductions(selfSignedDeclaration(SIGNER, KEY)));
+
+            assertEquals(ProfileKeyCheck.Status.DECLARED, ProfileKeyCheck.check(SIGNER, KEY).status());
+
+            ArgumentCaptor<QueryRef> asked = ArgumentCaptor.forClass(QueryRef.class);
+            queryAccess.verify(() -> QueryAccess.get(asked.capture()));
+            assertEquals(ProfileKeyCheck.GET_USER_INTROS, asked.getValue().getQueryId());
+            assertEquals(List.of(SIGNER.stringValue()), List.copyOf(asked.getValue().getParams().get("user")));
+        }
+    }
+
+    @Test
+    void theSameSignerIsAskedAboutOnce() {
+        try (MockedStatic<QueryAccess> queryAccess = mockStatic(QueryAccess.class)) {
+            queryAccess.when(() -> QueryAccess.get(any())).thenReturn(introductions(selfSignedDeclaration(SIGNER, KEY)));
+
+            ProfileKeyCheck.check(SIGNER, KEY);
+            ProfileKeyCheck.check(SIGNER, ANOTHER_KEY);
+
+            queryAccess.verify(() -> QueryAccess.get(any()), times(1));
+        }
+    }
+
+    /**
+     * What was fetched for one signer says nothing about another, so it must not answer for them.
+     */
+    @Test
+    void anotherSignerIsAskedAboutSeparately() {
+        try (MockedStatic<QueryAccess> queryAccess = mockStatic(QueryAccess.class)) {
+            queryAccess.when(() -> QueryAccess.get(any()))
+                    .thenReturn(introductions(selfSignedDeclaration(SIGNER, KEY)))
+                    .thenReturn(introductions());
+
+            assertEquals(ProfileKeyCheck.Status.DECLARED, ProfileKeyCheck.check(SIGNER, KEY).status());
+            assertEquals(ProfileKeyCheck.Status.SIGNER_NOT_INTRODUCED, ProfileKeyCheck.check(SOMEBODY_ELSE, KEY).status());
+
+            queryAccess.verify(() -> QueryAccess.get(any()), times(2));
+        }
+    }
+
+    @Test
+    void aQueryServiceThatCannotBeAskedLeavesSigningAlone() {
+        try (MockedStatic<QueryAccess> queryAccess = mockStatic(QueryAccess.class)) {
+            queryAccess.when(() -> QueryAccess.get(any())).thenThrow(new RuntimeException("no instance answered"));
+
+            ProfileKeyCheck.Result result = ProfileKeyCheck.check(SIGNER, KEY);
+
+            assertEquals(ProfileKeyCheck.Status.NOT_CHECKED, result.status());
+            assertTrue(result.isAcceptable());
+        }
     }
 
 }
