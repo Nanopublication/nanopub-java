@@ -42,8 +42,11 @@ class ServiceLookupTest {
 
     private Path cacheFile;
 
+    private String cacheFilePropertyBefore;
+
     @BeforeEach
     void keepServicesInATempFile() {
+        cacheFilePropertyBefore = System.getProperty(ServiceLookup.CACHE_FILE_PROPERTY);
         cacheFile = tempDir.resolve("cachedservices");
         System.setProperty(ServiceLookup.CACHE_FILE_PROPERTY, cacheFile.toString());
         ServiceLookup.clearCache();
@@ -51,7 +54,13 @@ class ServiceLookupTest {
 
     @AfterEach
     void clearCache() {
-        System.clearProperty(ServiceLookup.CACHE_FILE_PROPERTY);
+        // put back rather than cleared: cleared, the tests that follow would use the file in the
+        // home directory
+        if (cacheFilePropertyBefore == null) {
+            System.clearProperty(ServiceLookup.CACHE_FILE_PROPERTY);
+        } else {
+            System.setProperty(ServiceLookup.CACHE_FILE_PROPERTY, cacheFilePropertyBefore);
+        }
         ServiceLookup.clearCache();
     }
 

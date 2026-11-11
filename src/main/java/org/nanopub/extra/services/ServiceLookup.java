@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -202,7 +203,11 @@ public class ServiceLookup {
             Path temp = Files.createTempFile(dir.toPath(), file.getName(), ".tmp");
             try {
                 Files.writeString(temp, content.toString(), StandardCharsets.UTF_8);
-                Files.move(temp, file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                try {
+                    Files.move(temp, file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException ex) {
+                    Files.move(temp, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
             } finally {
                 Files.deleteIfExists(temp);
             }
