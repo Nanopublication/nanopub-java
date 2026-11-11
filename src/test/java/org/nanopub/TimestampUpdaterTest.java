@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -140,6 +142,62 @@ public class TimestampUpdaterTest {
         assertEquals(1, updated.getPubinfo().stream()
                 .filter(st -> st.getPredicate().equals(DCTERMS.CREATED)).count());
         assertTrue(updated.getCreationTime().get(Calendar.YEAR) > 2000);
+    }
+
+    @Test
+    void updatesTheInputFileInPlace(@TempDir File tempDir) throws Exception {
+        File file = copyOfFirstPlainNanopub(tempDir, "input.trig");
+        Calendar before = Calendar.getInstance();
+        before.set(Calendar.MILLISECOND, 0);
+
+        CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", file.getPath(), file.getPath()}).run();
+
+        Nanopub updated = new NanopubImpl(file, RDFFormat.TRIG);
+        assertFalse(before.after(updated.getCreationTime()));
+        assertEquals(List.of("input.trig"), List.of(tempDir.list()));
+    }
+
+    @Test
+    void updatesAFileWithSeveralNanopubsInPlace(@TempDir File tempDir) throws Exception {
+        List<TestSuiteEntry> valid = NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.PLAIN);
+        File file = new File(tempDir, "several.trig");
+        Files.writeString(file.toPath(), Files.readString(valid.get(0).toFile().toPath()) + "\n"
+                + Files.readString(valid.get(1).toFile().toPath()));
+
+        CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", file.getPath(), file.getPath()}).run();
+
+        assertEquals(2, countNanopubs(file));
+    }
+
+    @Test
+    void writesSeveralInputsIntoOneOutputFile(@TempDir File tempDir) throws Exception {
+        List<TestSuiteEntry> valid = NanopubTestSuite.getLatest().getValid(TestSuiteSubfolder.PLAIN);
+        File output = new File(tempDir, "out.trig");
+
+        CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", output.getPath(),
+                valid.get(0).toFile().getPath(), valid.get(1).toFile().getPath()}).run();
+
+        assertEquals(2, countNanopubs(output));
+    }
+
+    @Test
+    void leavesAnExistingOutputUntouchedWhenTheRunFails(@TempDir File tempDir) throws Exception {
+        File input = new File(tempDir, "broken.trig");
+        Files.writeString(input.toPath(), "this is not TriG");
+        File output = new File(tempDir, "out.trig");
+        Files.writeString(output.toPath(), "previous content");
+
+        TimestampUpdater c = CliRunner.initJc(new TimestampUpdater(), new String[]{"-o", output.getPath(), input.getPath()});
+        assertThrows(Exception.class, c::run);
+
+        assertEquals("previous content", Files.readString(output.toPath()));
+        assertEquals(2, tempDir.list().length, "no temporary file may be left behind");
+    }
+
+    private static int countNanopubs(File file) throws Exception {
+        List<Nanopub> nanopubs = new ArrayList<>();
+        MultiNanopubRdfHandler.process(RDFFormat.TRIG, file, nanopubs::add);
+        return nanopubs.size();
     }
 
 }
