@@ -232,6 +232,11 @@
         <configuration>
           <!--suppress UnresolvedMavenProperty -->
           <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+          <systemPropertyVariables>
+            <!-- Empty: the tests neither read nor write ~/.nanopub/cachedservices, so that they
+                 do not depend on, or leave behind, what is in the home directory. -->
+            <nanopub.services.cache-file/>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
       <plugin>

@@ -135,6 +135,11 @@ public class QueryCall {
      * status are evicted for a cool-down period (see
      * {@link #EVICTION_COOLDOWN_PROPERTY}).
      * <p>
+     * An instance is health-checked the first time it is about to be asked, not before:
+     * checking all of them up front costs a connection to each, which a call that the
+     * first instance answers never needs (issue #208). An instance that fails its check is
+     * evicted and the next one is tried.
+     * <p>
      * Only instances that could not be reached at all (connection refused, connect
      * timeout, unknown host) are tried again, up to {@value #MAX_ATTEMPTS} times in
      * all. An instance that answered with an error status, or timed out while the
@@ -154,9 +159,13 @@ public class QueryCall {
      */
     public static HttpResponse run(QueryRef queryRef) throws APINotReachableException, NotEnoughAPIInstancesException {
         logger.debug("Preparing query call: {}", queryRef);
-        List<String> candidates = filterEvicted(getApiInstances());
+        List<String> configured = resolveCandidateInstances();
+        if (configured.isEmpty()) {
+            throw new NotEnoughAPIInstancesException("No query API instances configured or discoverable");
+        }
+        List<String> candidates = filterEvicted(configured);
         if (candidates.isEmpty()) {
-            logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", getApiInstances().size(), queryRef.getQueryId());
+            logger.warn("All {} Nanopub Query instance(s) currently evicted; cannot dispatch call for {}", configured.size(), queryRef.getQueryId());
             throw new NotEnoughAPIInstancesException(
                     "All Nanopub Query instances are currently evicted (loading/resetting); try again later");
         }
@@ -164,9 +173,14 @@ public class QueryCall {
         List<String> asked = new ArrayList<>(candidates);
         Instant retryAfter = null;
         boolean failed = false;
+        boolean anyAdmitted = false;
         for (int round = 1; round <= MAX_ATTEMPTS && !candidates.isEmpty(); round++) {
             List<String> unreachable = new ArrayList<>();
             for (String apiUrl : candidates) {
+                if (!admit(apiUrl)) {
+                    continue;
+                }
+                anyAdmitted = true;
                 Attempt a = tryInstance(apiUrl, queryRef);
                 switch (a.outcome()) {
                     case ANSWERED -> {
@@ -184,6 +198,9 @@ public class QueryCall {
                 }
             }
             candidates = filterEvicted(unreachable);
+        }
+        if (!anyAdmitted) {
+            throw new NotEnoughAPIInstancesException("No healthy Nanopub Query instances available");
         }
         if (retryAfter != null && !failed) {
             throw new QueryRefusedException("Query refused by Nanopub Query instance(s): " + queryRef.getQueryId()
@@ -339,39 +356,13 @@ public class QueryCall {
         if (checkedApiInstances == null) {
             checkedApiInstances = new ArrayList<>();
         }
-        long now = System.currentTimeMillis();
         boolean anyNewAdmitted = false;
         for (String a : candidates) {
             if (checkedApiInstances.contains(a)) {
                 continue;
             }
-            Long until = evictedUntil.get(a);
-            if (until != null && until > now) {
-                continue;
-            }
-            try {
-                logger.debug("Checking API instance: {}", a);
-                HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
-                if (!wasSuccessful(resp)) {
-                    EntityUtils.consumeQuietly(resp.getEntity());
-                    logger.warn("Nanopub Query instance not accessible (HTTP {}): {}", resp.getStatusLine().getStatusCode(), a);
-                    evict(a, "not accessible");
-                } else if (!isReadyStatus(resp)) {
-                    Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
-                    String status = h == null ? "missing" : h.getValue();
-                    EntityUtils.consumeQuietly(resp.getEntity());
-                    logger.warn("Nanopub Query instance not ready (status={}): {}; evicting", status, a);
-                    evict(a, "status " + status);
-                } else {
-                    EntityUtils.consumeQuietly(resp.getEntity());
-                    logger.debug("Nanopub Query instance admitted: {}", a);
-                    checkedApiInstances.add(a);
-                    anyNewAdmitted = true;
-                }
-            } catch (IOException ex) {
-                logger.warn("Nanopub Query instance not accessible ({}): {}", ex.getMessage(), a);
-                logger.debug("Health check request to {} failed", a, ex);
-                evict(a, "not accessible");
+            if (admit(a)) {
+                anyNewAdmitted = true;
             }
         }
         if (anyNewAdmitted) {
@@ -384,6 +375,51 @@ public class QueryCall {
             logger.warn("Only one healthy Nanopub Query instance available; no failover.");
         }
         return checkedApiInstances;
+    }
+
+    /**
+     * Returns true if the instance may be asked: it passed its health check earlier, or passes it
+     * now. An instance that is evicted is not checked, and one that fails its check is evicted.
+     * The check is an HTTP GET to the instance's root URL.
+     */
+    private static synchronized boolean admit(String a) {
+        if (checkedApiInstances == null) {
+            checkedApiInstances = new ArrayList<>();
+        }
+        if (checkedApiInstances.contains(a)) {
+            return true;
+        }
+        Long until = evictedUntil.get(a);
+        if (until != null && until > System.currentTimeMillis()) {
+            return false;
+        }
+        try {
+            logger.debug("Checking API instance: {}", a);
+            HttpResponse resp = NanopubUtils.getHttpClient().execute(new HttpGet(a));
+            if (!wasSuccessful(resp)) {
+                EntityUtils.consumeQuietly(resp.getEntity());
+                logger.warn("Nanopub Query instance not accessible (HTTP {}): {}", resp.getStatusLine().getStatusCode(), a);
+                evict(a, "not accessible");
+                return false;
+            }
+            if (!isReadyStatus(resp)) {
+                Header h = resp.getFirstHeader(QUERY_STATUS_HEADER);
+                String status = h == null ? "missing" : h.getValue();
+                EntityUtils.consumeQuietly(resp.getEntity());
+                logger.warn("Nanopub Query instance not ready (status={}): {}; evicting", status, a);
+                evict(a, "status " + status);
+                return false;
+            }
+            EntityUtils.consumeQuietly(resp.getEntity());
+            logger.debug("Nanopub Query instance admitted: {}", a);
+            checkedApiInstances.add(a);
+            return true;
+        } catch (IOException ex) {
+            logger.warn("Nanopub Query instance not accessible ({}): {}", ex.getMessage(), a);
+            logger.debug("Health check request to {} failed", a, ex);
+            evict(a, "not accessible");
+            return false;
+        }
     }
 
     private static List<String> resolveCandidateInstances() {

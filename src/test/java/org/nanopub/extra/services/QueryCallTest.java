@@ -468,6 +468,87 @@ public class QueryCallTest {
     }
 
 
+    /**
+     * The command line starts a JVM per call, and a call that the first instance answers never
+     * talks to the others. Checking them all first costs a connection to each (issue #208).
+     */
+    @Test
+    void runChecksOnlyTheInstanceItAsks() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("READY");
+        mockNanopubUtils.setResponseBody("a,b\n1,2\n");
+
+        assertNotNull(QueryCall.run(QUERY_REF));
+
+        List<String> urls = mockNanopubUtils.getRequestedUrls();
+        assertEquals(2, urls.size(), "One health check and one query: " + urls);
+        assertFalse(isApiRequest(urls.get(0)));
+        assertTrue(urls.get(1).startsWith(urls.get(0) + "api/"), "The instance checked is the one asked: " + urls);
+    }
+
+    @Test
+    void runDoesNotCheckAnInstanceAgain() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setNanopubQueryStatus("READY");
+        mockNanopubUtils.setResponseBody("a,b\n1,2\n");
+        QueryCall.getApiInstances();
+        long checks = healthChecks();
+
+        assertNotNull(QueryCall.run(QUERY_REF));
+        assertNotNull(QueryCall.run(QUERY_REF));
+
+        assertEquals(checks, healthChecks());
+    }
+
+    @Test
+    void runPassesOverInstancesThatFailTheirCheck() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(200);
+        mockNanopubUtils.setResponseBody("a,b\n1,2\n");
+        String[] instances = DEFAULT_INSTANCES.split(" ");
+        mockNanopubUtils.setRequestHandler(url -> {
+            if (url.equals(instances[0])) throw new ConnectException("Connection refused");
+            if (url.equals(instances[1])) return mockNanopubUtils.response(200, Map.of(QueryCall.QUERY_STATUS_HEADER, "LOADING_INITIAL"));
+            return null;
+        });
+
+        assertNotNull(QueryCall.run(QUERY_REF));
+
+        assertApiRequests(0, 0, 1);
+        // whichever of the two was reached before the healthy one is out for the cool-down;
+        // one that was never reached was never checked either
+        for (String url : mockNanopubUtils.getRequestedUrls()) {
+            if (url.equals(instances[0]) || url.equals(instances[1])) {
+                assertTrue(getEvictedUntil().containsKey(url), "Evicted after a failed check: " + url);
+            }
+        }
+        assertFalse(getEvictedUntil().containsKey(instances[2]));
+    }
+
+    @Test
+    void runGivesUpWhenNoInstancePassesItsCheck() throws Exception {
+        mockNanopubUtils.setHttpResponseStatusCode(500);
+
+        assertThrows(NotEnoughAPIInstancesException.class, () -> QueryCall.run(QUERY_REF));
+
+        assertApiRequests(0, 0, 0);
+        assertEquals(3, healthChecks());
+    }
+
+    @Test
+    void runGivesUpWhenNoInstanceIsConfigured() {
+        System.setProperty(QueryCall.QUERY_INSTANCES_PROPERTY, "");
+        try (org.mockito.MockedStatic<ServiceLookup> lookup = org.mockito.Mockito.mockStatic(ServiceLookup.class)) {
+            lookup.when(() -> ServiceLookup.getServices(org.mockito.ArgumentMatchers.any())).thenReturn(List.of());
+
+            assertThrows(NotEnoughAPIInstancesException.class, () -> QueryCall.run(QUERY_REF));
+        }
+        assertTrue(mockNanopubUtils.getRequestedUrls().isEmpty());
+    }
+
+    private long healthChecks() {
+        return mockNanopubUtils.getRequestedUrls().stream().filter(u -> !isApiRequest(u)).count();
+    }
+
     private static String apiUrl(int instanceIndex) {
         return DEFAULT_INSTANCES.split(" ")[instanceIndex] + "api/";
     }
