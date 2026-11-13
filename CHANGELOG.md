@@ -1,3 +1,39 @@
+## [1.96.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.95.1...nanopub-1.96.0) (2026-11-13)
+
+### Features
+
+* **services:** don't repeat query rounds for failed queries, and pass Retry-After on ([538dd0d](https://github.com/Nanopublication/nanopub-java/commit/538dd0dd0571ca9a593bef017dfbc0982665f25a)), closes [#197](https://github.com/Nanopublication/nanopub-java/issues/197)
+
+### Dependency updates
+
+* **core-deps:** update dependency com.google.guava:guava to v33.7.2 [security] ([3adb7e1](https://github.com/Nanopublication/nanopub-java/commit/3adb7e13ace0578e3391c57e6c5bcb90208c2c85))
+* **core-deps:** update dependency org.apache.commons:commons-lang3 to v3.22.0 ([80a5583](https://github.com/Nanopublication/nanopub-java/commit/80a55836955fe2c2b7af78456ccf63d78de34031))
+* **deps:** update dependency semantic-release-preconfigured-conventional-commits to v1.1.158 ([687eecd](https://github.com/Nanopublication/nanopub-java/commit/687eecdb586199c3f584498c0a79db8fd85214c1))
+
+### Bug Fixes
+
+* make udtime safe to run in place and write the timestamp in UTC ([3a1e06a](https://github.com/Nanopublication/nanopub-java/commit/3a1e06aa90755a5792e84356d8380174628c19ec))
+* **security:** ask only about the signer when checking the signing key ([1182338](https://github.com/Nanopublication/nanopub-java/commit/1182338779238e8a23cbfdc28114ae910ed53dd9)), closes [#206](https://github.com/Nanopublication/nanopub-java/issues/206)
+* **services:** health-check a query instance when it is about to be asked ([382d754](https://github.com/Nanopublication/nanopub-java/commit/382d75424cabaa5453169addcad63ea19c08f914)), closes [#208](https://github.com/Nanopublication/nanopub-java/issues/208)
+* **services:** keep the tests out of ~/.nanopub/cachedservices ([a0e9111](https://github.com/Nanopublication/nanopub-java/commit/a0e91115ea72d1770406b9f3bff513fe9d7c7d5d)), closes [#208](https://github.com/Nanopublication/nanopub-java/issues/208)
+* **services:** walk the service intro collection once and keep what it says ([3ab9108](https://github.com/Nanopublication/nanopub-java/commit/3ab9108f2738ab5bafd85727d3a89f26d2d030da)), closes [#208](https://github.com/Nanopublication/nanopub-java/issues/208)
+
+### Build and continuous integration
+
+* **deps:** update actions/setup-java action to v6.2.0 ([abbfcb6](https://github.com/Nanopublication/nanopub-java/commit/abbfcb60092a77937bc4ce76b3c6c2019274deab))
+* **deps:** update dependency org.codehaus.mojo:build-helper-maven-plugin to v3.7.0 ([223a141](https://github.com/Nanopublication/nanopub-java/commit/223a141f987bdf0340984b2331174df47ce97801))
+* **deps:** update dependency org.codehaus.mojo:build-helper-maven-plugin to v3.8.0 ([a3f11f0](https://github.com/Nanopublication/nanopub-java/commit/a3f11f0f20ec30ad401dd27d47ec4b63302e724b))
+* **deps:** update docker/login-action action to v4.8.0 ([88ea286](https://github.com/Nanopublication/nanopub-java/commit/88ea286b459103f2fe0516e9e7a9792077459dbc))
+* **renovate:** rebase PRs only on conflict ([b4a7c33](https://github.com/Nanopublication/nanopub-java/commit/b4a7c33e22f51c49e15b0ac573287cb8909cb4ad))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([90892cd](https://github.com/Nanopublication/nanopub-java/commit/90892cd6b6d8caccdd1582d17159b961e30bed4a))
+
+### Refactoring
+
+* keep udtime's timestamp in local time like the rest of the library ([c496f5e](https://github.com/Nanopublication/nanopub-java/commit/c496f5ea93282d3011edc243b761096c92a92531))
+
 ## [1.95.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.95.0...nanopub-1.95.1) (2026-10-31)
 
 ### Dependency updates
