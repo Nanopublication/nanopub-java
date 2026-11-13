@@ -5,6 +5,7 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.jspecify.annotations.NonNull;
 import org.nanopub.Nanopub;
@@ -15,6 +16,7 @@ import org.nanopub.UriSchemes;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
 import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.setting.IntroNanopub;
 import org.nanopub.vocabulary.NTEMPLATE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,7 @@ public class NanopubVerifier {
         checkBlacklist();
         checkLiteralDatatypes();
         checkSparqlSyntax();
+        checkIntroAlternativeIds();
 
         if (issues.isEmpty()) {
             logger.debug("Nanopub {} passed verification with no issues", nanopub.getUri());
@@ -124,6 +127,27 @@ public class NanopubVerifier {
     private void checkSparqlSyntax() {
         for (Statement st : NanopubUtils.getInvalidSparqlStatements(nanopub)) {
             issues.add(NanopubUtils.describeInvalidSparql(st));
+        }
+    }
+
+    /**
+     * Check the alternative IDs of an agent introduction. They are stated as
+     * {@code <main> owl:sameAs <alternative>}, where the main ID is the agent that declares the keys.
+     * A statement that names the main ID as its own alternative, or that points the other way, is
+     * ignored when the introduction is read.
+     */
+    private void checkIntroAlternativeIds() {
+        IntroNanopub intro = new IntroNanopub(nanopub);
+        IRI mainId = intro.getUser();
+        if (mainId == null) return;
+        for (Statement st : nanopub.getAssertion()) {
+            if (!st.getPredicate().equals(OWL.SAMEAS) || !st.getObject().equals(mainId)) continue;
+            Resource subj = st.getSubject();
+            if (subj.equals(mainId)) {
+                issues.add("Alternative ID is the same as the main ID: " + mainId);
+            } else if (!intro.getAlternativeIds().contains(subj)) {
+                issues.add("owl:sameAs from " + subj + " to the main ID " + mainId + " is ignored; alternative IDs are stated as <main> owl:sameAs <alternative>");
+            }
         }
     }
 
