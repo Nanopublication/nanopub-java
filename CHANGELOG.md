@@ -1,3 +1,27 @@
+## [1.97.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.96.0...nanopub-1.97.0) (2026-11-19)
+
+### Features
+
+* **templates:** add BindingContext and PlaceholderMatcher ([91c17e8](https://github.com/Nanopublication/nanopub-java/commit/91c17e8869699bfe9d8d3a53af24bda68cadb207)), closes [#91](https://github.com/Nanopublication/nanopub-java/issues/91) [#216](https://github.com/Nanopublication/nanopub-java/issues/216) [#91](https://github.com/Nanopublication/nanopub-java/issues/91) [#216](https://github.com/Nanopublication/nanopub-java/issues/216)
+* **templates:** add template compliance checking ([a657bc8](https://github.com/Nanopublication/nanopub-java/commit/a657bc862dda3f76238282b3c23e09a26c30dd9c)), closes [#91](https://github.com/Nanopublication/nanopub-java/issues/91)
+* **templates:** add Template for reading nanopublication templates ([9ba873d](https://github.com/Nanopublication/nanopub-java/commit/9ba873dbd6935d2a11a7b4a8ce5e4e268a0bd710)), closes [#91](https://github.com/Nanopublication/nanopub-java/issues/91) [#91](https://github.com/Nanopublication/nanopub-java/issues/91)
+* **templates:** fill a template from values ([70db659](https://github.com/Nanopublication/nanopub-java/commit/70db659de89383df35b1e2abc2c33239aa6218ef)), closes [#216](https://github.com/Nanopublication/nanopub-java/issues/216) [#91](https://github.com/Nanopublication/nanopub-java/issues/91)
+* **templates:** print the request of an existing nanopublication ([66d28ca](https://github.com/Nanopublication/nanopub-java/commit/66d28ca982c76f8a50eeefccf9080f7dedd55841)), closes [#216](https://github.com/Nanopublication/nanopub-java/issues/216)
+* **vocabulary:** add DatePlaceholder, governedBy and role property terms ([2a522b1](https://github.com/Nanopublication/nanopub-java/commit/2a522b17a46004fcfb6b48a44c5c6ecd9ac3230a)), closes [#91](https://github.com/Nanopublication/nanopub-java/issues/91)
+
+### Dependency updates
+
+* **deps:** update dependency semantic-release-preconfigured-conventional-commits to v1.1.159 ([b3d8506](https://github.com/Nanopublication/nanopub-java/commit/b3d8506043dcff0a8ea9161e504c8f4b4dc5212b))
+
+### Build and continuous integration
+
+* **deps:** update actions/setup-java action to v6.3.0 ([d5691c4](https://github.com/Nanopublication/nanopub-java/commit/d5691c403fc7203c0690a4c58907c2bf64d3c0df))
+* **docs:** build the docs with Python 3.14 ([fe2080d](https://github.com/Nanopublication/nanopub-java/commit/fe2080dd846027b7456e665e356f3e8f96b224d7))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([08c8626](https://github.com/Nanopublication/nanopub-java/commit/08c862649d67d25fb8e36748a5cef13616c34be2))
+
 ## [1.96.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.95.1...nanopub-1.96.0) (2026-11-13)
 
 ### Features
