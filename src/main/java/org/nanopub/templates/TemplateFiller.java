@@ -760,10 +760,11 @@ public class TemplateFiller {
     private static String getNanopubLabel(FillRequest request, GraphFill assertion, List<Statement> pubinfo) {
         String pattern = assertion.template.getNanopubLabelPattern();
         if (pattern == null) return null;
-        Map<String, Value> valuesByName = new HashMap<>();
-        for (Map.Entry<IRI, Value> e : assertion.context.getBindings().entrySet()) {
-            valuesByName.putIfAbsent(TemplateValues.getName(e.getKey()), e.getValue());
-        }
+        // A name in the pattern is that of a placeholder, which is an IRI within the template
+        // nanopublication. Other IRIs of the template can end in the same name, as rdfs:label
+        // does for a placeholder "label", and are not meant.
+        String templateUri = assertion.template.getNanopub().getUri().stringValue();
+        Map<IRI, Value> bindings = assertion.context.getBindings();
         Map<Value, String> labels = new HashMap<>();
         for (Statement st : pubinfo) {
             if (st.getPredicate().equals(RDFS.LABEL) && st.getObject() instanceof Literal literal) labels.put(st.getSubject(), literal.stringValue());
@@ -771,7 +772,8 @@ public class TemplateFiller {
         Matcher m = LABEL_VARIABLE.matcher(pattern);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            Value value = valuesByName.get(m.group(1));
+            Value value = bindings.get(vf.createIRI(templateUri + "/" + m.group(1)));
+            if (value == null) value = bindings.get(vf.createIRI(templateUri + "#" + m.group(1)));
             String text = "";
             if (value instanceof IRI iri) {
                 String label = labels.containsKey(iri) ? labels.get(iri) : assertion.template.getLabel(iri);

@@ -151,6 +151,48 @@ class TemplateFillerTest {
     }
 
     @Test
+    void labelPatternNamesAPlaceholderNotAPropertyOfThatName() throws Exception {
+        // The placeholder "label" stands in a statement with rdfs:label, which the template
+        // also gives a label of its own.
+        TemplateBuilder t = new TemplateBuilder(TEMPLATE, NTEMPLATE.ASSERTION_TEMPLATE);
+        IRI thing = t.declare("thing", NTEMPLATE.URI_PLACEHOLDER, NTEMPLATE.LOCAL_RESOURCE);
+        IRI label = t.declare("label", NTEMPLATE.LITERAL_PLACEHOLDER);
+        t.add(label, RDFS.LABEL, "the name");
+        t.add(RDFS.LABEL, RDFS.LABEL, "has the name");
+        t.statement(thing, RDF.TYPE, EX_THING);
+        t.statement(thing, RDFS.LABEL, label);
+        t.statement(thing, DCTERMS.DESCRIPTION, t.declare("description", NTEMPLATE.LITERAL_PLACEHOLDER), NTEMPLATE.OPTIONAL_STATEMENT);
+        t.add(t.templateNode, NTEMPLATE.HAS_NANOPUB_LABEL_PATTERN, "${label}: ${description} (${type})");
+        register(t);
+
+        Nanopub np = fill(request(TEMPLATE).set("thing", "institute").set("label", "Example Institute").set("description", "A place."));
+        // "type" is the name of no placeholder, though rdf:type ends in it.
+        assertEquals(Set.of("\"Example Institute: A place. ()\""), objects(np, RDFS.LABEL));
+
+        // A placeholder without a value stands for nothing.
+        Nanopub without = fill(request(TEMPLATE).set("thing", "institute").set("label", "Example Institute"));
+        assertEquals(Set.of("\"Example Institute:  ()\""), objects(without, RDFS.LABEL));
+    }
+
+    @Test
+    void labelPatternTakesTheLabelOfAnIriValue() throws Exception {
+        TemplateBuilder t = new TemplateBuilder(TEMPLATE, NTEMPLATE.ASSERTION_TEMPLATE);
+        IRI kind = t.declare("kind", NTEMPLATE.RESTRICTED_CHOICE_PLACEHOLDER);
+        t.add(kind, NTEMPLATE.POSSIBLE_VALUE, vf.createIRI("http://example.com/Fruit"));
+        t.add(vf.createIRI("http://example.com/Fruit"), RDFS.LABEL, "fruit - something to eat");
+        t.statement(EX_THING, RDF.TYPE, kind);
+        t.statement(EX_THING, DCTERMS.RELATION, t.declare("other", NTEMPLATE.URI_PLACEHOLDER));
+        t.statement(EX_THING, DCTERMS.CONTRIBUTOR, t.declare("who", NTEMPLATE.AGENT_PLACEHOLDER));
+        t.add(t.templateNode, NTEMPLATE.HAS_NANOPUB_LABEL_PATTERN, "A ${kind}, see ${other}, by ${who}");
+        register(t);
+
+        Nanopub np = fill(request(TEMPLATE).set("kind", "http://example.com/Fruit").set("other", "https://example.org/things/apple-tree")
+                .set("who", ME.stringValue()).setCreatorName("Me"));
+
+        assertEquals(Set.of("\"A fruit, see apple-tree, by Me\""), objects(np, RDFS.LABEL));
+    }
+
+    @Test
     void whatIsFilledCompliesWithItsTemplates() throws Exception {
         register(thingTemplate());
         Nanopub np = fill(request(TEMPLATE).set("thing", "apple").set("name", "Apple").set("keyword", "fruit").set("keyword__1", "red"));
