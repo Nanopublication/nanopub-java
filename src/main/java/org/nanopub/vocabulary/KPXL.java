@@ -35,4 +35,9 @@ public final class KPXL {
      */
     public static final IRI REGULAR_ROLE_PROPERTY = VocabUtils.createIRI(NAMESPACE, "RegularRoleProperty");
 
+    /**
+     * Type of a nanopublication that grants a role to an agent in a space.
+     */
+    public static final IRI ROLE_INSTANTIATION = VocabUtils.createIRI(NAMESPACE, "RoleInstantiation");
+
 }

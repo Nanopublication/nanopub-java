@@ -15,6 +15,7 @@ In the following list you can see the short command first, followed by the class
 implementing that command.
 
 - check / CheckNanopub
+- check-template / CheckTemplateCompliance
 - get / GetNanopub
 - publish / PublishNanopub
 - sign / SignNanopub
@@ -130,6 +131,44 @@ now covers the signing-key check as well.
 The check reads the network, so it fails open: when the query service cannot be reached, nothing is
 reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal, on
 the grounds that a check which could not be made is not evidence of a problem.
+
+## Template Compliance
+
+```
+Usage: np check-template [options] input-nanopubs
+  Options:
+    -t
+      File with a template nanopub to use instead of retrieving it; can be
+      given several times
+    -v
+      Verbose: also show the templates checked against
+```
+
+The command checks whether nanopublications are what filling in the templates they name would
+give. A nanopublication names its templates in its publication info, with
+`nt:wasCreatedFromTemplate` for the assertion, `nt:wasCreatedFromProvenanceTemplate` for the
+provenance, and `nt:wasCreatedFromPubinfoTemplate` for the publication info. The files can hold
+one or several nanopublications, signed or not, so the check can be made before signing and
+publishing.
+
+For each nanopublication the command prints `COMPLIES` or `DOES NOT COMPLY`, followed by its
+findings:
+
+- An **error** is a statement of a template that is not optional and has no triples, a triple of
+  the assertion or the provenance that belongs to no statement, a value that breaks a constraint
+  of its placeholder, a template that cannot be retrieved or is for another graph, or a type the
+  assertion template sets that the nanopublication lacks.
+- A **warning** does not keep the nanopublication from complying: a triple of the publication
+  info that no template has a statement for, a graph that no template is named for (it is not
+  checked), an introduced or embedded resource that the publication info does not declare, or a
+  value under a name the nanopublication keeps for one of its own parts, such as `assertion`.
+
+The exit status is 1 if a nanopublication has an error or a file cannot be read.
+
+The templates are retrieved from the nanopublication network, at exactly the versions named. To
+check against a template that is not published yet, give its file with `-t`:
+
+```np check-template -t my-template-signed.trig my-nanopub.trig```
 
 ## Shacl Validation
 

@@ -125,3 +125,38 @@ Template template = new Template(nanopub, NanopubResolver.NONE);
 
 `getDescription()` and `getStatementDescription(statement)` return the text as published.
 It may contain HTML and is not sanitized.
+
+## Checking a Nanopublication against its Templates
+
+A nanopublication names the templates it was made from in its publication info.
+`TemplateComplianceChecker` retrieves them and checks whether the nanopublication is what filling
+them in would give:
+
+```java
+TemplateComplianceChecker checker = new TemplateComplianceChecker();
+ComplianceReport report = checker.check(nanopub);
+if (!report.isCompliant()) {
+    for (ComplianceIssue issue : report.getErrors()) {
+        System.out.println(issue.graph() + ": " + issue.message());
+    }
+}
+```
+
+An error is, for instance, a statement of a template that is not optional and has no triples, a
+triple of the assertion that belongs to no statement, or a value that breaks a constraint of its
+placeholder. `report.getWarnings()` has what does not keep the nanopublication from complying,
+such as a triple of the publication info that no template has a statement for. A checker keeps
+the templates it has retrieved, so use one for many nanopublications.
+
+The classes underneath can be used on their own. `TemplateMatcher` assigns the triples of one
+graph to the statements of one template, `PlaceholderMatcher` checks a single value against a
+placeholder, and `BindingContext` holds the values bound:
+
+```java
+BindingContext context = BindingContext.forNanopub(template, nanopub);
+TemplateMatch match = new TemplateMatcher(template).match(nanopub.getAssertion(), context);
+match.getMissingStatements();   // statements that are not optional and have no triples
+match.getUnusedTriples();       // triples that belong to no statement
+match.getViolations();          // values that break a constraint
+Value name = context.get(placeholderIri);
+```
