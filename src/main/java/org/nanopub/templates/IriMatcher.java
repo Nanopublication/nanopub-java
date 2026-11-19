@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
  * cannot contain a colon or a hash; an IRI where it would is taken in full.
  * <p>
  * A guided choice only suggests values, so the values it would offer do not constrain it.
+ * <p>
+ * A resource that is minted within the nanopublication and introduced by it keeps its IRI in
+ * later versions. Such an IRI in the namespace of another nanopublication is taken by its
+ * name there.
  */
 final class IriMatcher extends PlaceholderMatcher {
 
@@ -58,6 +62,8 @@ final class IriMatcher extends PlaceholderMatcher {
         } else if (localName != null && IriUtils.isPlainName(localName)) {
             given = localName;
             minted = true;
+        } else if (isCarriedOver(full, context)) {
+            given = IriUtils.getPostfix(full);
         }
         boolean inFull = given.equals(full);
 
@@ -81,6 +87,18 @@ final class IriMatcher extends PlaceholderMatcher {
             violations.add(reported(value, Violation.Kind.RESERVED_NAME, "'" + localName + "' is what the nanopublication calls one of its"
                     + " own parts, so the value of '" + getFieldLabel() + "' is that part rather than a resource of its own"));
         }
+    }
+
+    // An introduced resource keeps its IRI when the nanopublication is superseded, so a
+    // resource that is minted within the nanopublication may sit in the namespace of an
+    // earlier version. It is then the name within that version that was given.
+    private boolean isCarriedOver(String full, BindingContext context) {
+        if (!template.isIntroducedResource(key) || !template.isLocalResource(key) || context.hasDynamicPrefix(key)) return false;
+        String name = IriUtils.getPostfix(full);
+        if (!IriUtils.isPlainName(name) || full.length() <= name.length() + 1) return false;
+        String nanopubUri = full.substring(0, full.length() - name.length() - 1);
+        String artifactCode = TrustyUriUtils.getArtifactCode(nanopubUri);
+        return artifactCode != null && nanopubUri.endsWith(artifactCode);
     }
 
     @Override

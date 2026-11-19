@@ -160,3 +160,54 @@ match.getUnusedTriples();       // triples that belong to no statement
 match.getViolations();          // values that break a constraint
 Value name = context.get(placeholderIri);
 ```
+
+## Filling a Template
+
+`TemplateFiller` makes a nanopublication from templates and the values of their placeholders, as
+the publishing form of Nanodash does. A `FillRequest` names the templates and gives the values,
+each under the name of its placeholder:
+
+```java
+FillRequest request = new FillRequest("https://w3id.org/np/RAEFAt-QcFK0ZhqfvlsmS10BnzGJA0xwOICZXkO-ai87k")
+        .set("query", "get-things")
+        .set("title", "Get things")
+        .set("description", "Returns three things.")
+        .set("endpoint", "https://w3id.org/np/l/nanopub-query-1.1/repo/full")
+        .set("license", "http://www.apache.org/licenses/LICENSE-2.0")
+        .set("sparql", "select * where { ?s ?p ?o } limit 3")
+        .setCreator(creatorIri);
+try {
+    Nanopub nanopub = new TemplateFiller().fill(request);   // not signed
+} catch (TemplateFillException ex) {
+    ex.getProblems().forEach(System.out::println);
+}
+```
+
+The nanopublication gets the template links, the introduced and embedded resources, the types and
+the label that the form would give it. Its provenance and publication info are made from the
+templates the request names, and otherwise from the default provenance template of the assertion
+template, or "Attributed to myself/others", and from the templates for the creator and the license.
+
+A value is written as it would be typed into the form: an IRI in full, a name that is minted
+within the nanopublication, or the text of a literal. A statement that is repeated takes the
+values `name`, `name__1`, `name__2` and so on; `request.getValues().add("name", "...")` gives the
+next one. Nothing is made if something is wrong: `TemplateFillException` lists all values that are
+missing or break a constraint, all names no placeholder answers to, and all values that would be
+lost because the statement they belong to is left out.
+
+A request has the parameters of a link to the publishing form of Nanodash, and is read from and
+written as one with `FillRequest.fromUrl`, `fromJson`, `toQueryString` and `toJson`.
+
+To make a new version of a nanopublication, read its request back, change it, and say what the
+new nanopublication is to the old one:
+
+```java
+ComplianceReport report = new TemplateComplianceChecker().check(published);
+FillRequest request = FillRequest.of(report)
+        .set("title", "Get three things")
+        .setSource(FillRequest.Mode.SUPERSEDE, published.getUri().stringValue());
+Nanopub newVersion = new TemplateFiller().fill(request);
+```
+
+With `SUPERSEDE` and `OVERRIDE` the resources the old nanopublication introduces keep their IRIs
+and the root definition stays; with `DERIVE` everything is minted anew.

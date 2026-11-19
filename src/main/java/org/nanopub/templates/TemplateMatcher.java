@@ -3,8 +3,6 @@ package org.nanopub.templates;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import java.util.*;
 
@@ -31,11 +29,8 @@ import java.util.*;
  */
 public class TemplateMatcher {
 
-    private static final ValueFactory vf = SimpleValueFactory.getInstance();
-
     private final Template template;
-    // The IRIs that occur in exactly one top-level statement of the template.
-    private final Set<IRI> narrowScope = new HashSet<>();
+    private final TemplateStructure structure;
 
     /**
      * Creates a matcher for a template.
@@ -44,22 +39,7 @@ public class TemplateMatcher {
      */
     public TemplateMatcher(Template template) {
         this.template = Objects.requireNonNull(template, "template");
-        Set<IRI> seen = new HashSet<>();
-        for (IRI statement : template.getStatementIris()) {
-            Set<IRI> iris = new HashSet<>();
-            for (IRI member : getMembers(statement)) {
-                for (Value value : getPositions(member)) {
-                    if (value instanceof IRI iri) iris.add(iri);
-                }
-            }
-            for (IRI iri : iris) {
-                if (seen.add(iri)) {
-                    narrowScope.add(iri);
-                } else {
-                    narrowScope.remove(iri);
-                }
-            }
-        }
+        this.structure = new TemplateStructure(template);
     }
 
     /**
@@ -142,29 +122,15 @@ public class TemplateMatcher {
     }
 
     private List<IRI> getMembers(IRI statement) {
-        List<IRI> members = template.getStatementIris(statement);
-        return members != null && template.isGroupedStatement(statement) ? members : List.of(statement);
+        return structure.getMembers(statement);
     }
 
-    // The subject, predicate and object the template has for a statement, any of which may be
-    // missing or, wrongly, a literal.
     private Value[] getPositions(IRI statement) {
-        return new Value[]{template.getDeclaredSubject(statement), template.getDeclaredPredicate(statement), template.getObject(statement)};
+        return structure.getPositions(statement);
     }
 
-    /**
-     * Returns the key under which the value of a position is bound in a repetition.
-     *
-     * @param templateValue the value the template has in the position
-     * @param repetition    the repetition, counted from 0
-     * @return the template value, with a {@code __N} suffix where the position has a value of
-     * its own in each repetition
-     */
-    Value getKey(Value templateValue, int repetition) {
-        if (repetition == 0 || !(templateValue instanceof IRI iri)) return templateValue;
-        boolean ownValue = template.isSequenceElementPlaceholder(iri)
-                || (narrowScope.contains(iri) && (template.isPlaceholder(iri) || template.isLocalResource(iri)));
-        return ownValue ? vf.createIRI(iri.stringValue() + "__" + repetition) : iri;
+    private Value getKey(Value templateValue, int repetition) {
+        return structure.getKey(templateValue, repetition);
     }
 
     private static String getSortKey(Statement triple) {
