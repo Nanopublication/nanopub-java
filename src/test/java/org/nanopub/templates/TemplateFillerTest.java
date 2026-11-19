@@ -549,6 +549,22 @@ class TemplateFillerTest {
     }
 
     @Test
+    void linkGivenAsAValueHasToAgreeWithTheMode() throws Exception {
+        register(versionedTemplate());
+        Nanopub first = publish(request(TEMPLATE).set("thing", "apple").set("name", "Apple"));
+        String v1 = first.getUri().stringValue();
+
+        FillRequest agreeing = request(TEMPLATE).set("thing", "apple").set("name", "Apple").setSource(Mode.SUPERSEDE, v1);
+        agreeing.addPubinfoTemplate(TemplateFiller.SUPERSEDES_PUBINFO_TEMPLATE).set("np", v1);
+        assertEquals(Set.of(v1), objects(fill(agreeing), NPX.SUPERSEDES));
+
+        FillRequest other = request(TEMPLATE).set("thing", "apple").set("name", "Apple").setSource(Mode.SUPERSEDE, v1);
+        other.addPubinfoTemplate(TemplateFiller.SUPERSEDES_PUBINFO_TEMPLATE).set("np", "http://example.com/older");
+        assertEquals(List.of("The request names <" + v1 + "> with 'supersede', but gives the template for that link <http://example.com/older>; leave that value out"),
+                problems(other));
+    }
+
+    @Test
     void nanopublicationToSupersedeHasToBeThere() throws Exception {
         register(thingTemplate());
         assertProblem(problems(request(TEMPLATE).set("thing", "apple").set("name", "Apple").setSource(Mode.SUPERSEDE, "https://w3id.org/np/RANoSuchNanopubNoSuchNanopubNoSuchNanopub000")),
