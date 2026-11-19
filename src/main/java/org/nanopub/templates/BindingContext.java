@@ -49,6 +49,7 @@ public class BindingContext implements Serializable {
     private final Set<IRI> creators;
     private final Map<IRI, Value> bindings = new LinkedHashMap<>();
     private final Map<String, String> prefixBases = new HashMap<>();
+    private final Set<IRI> pinned = new HashSet<>();
 
     private BindingContext(Template template, IRI nanopubUri, IRI assertionUri, Set<IRI> creators) {
         this.template = Objects.requireNonNull(template, "template");
@@ -201,12 +202,28 @@ public class BindingContext implements Serializable {
     }
 
     /**
+     * Binds a value to a position without checking it. This is for a value that is not given
+     * anew but carried over, such as the IRI of a resource that an earlier version of the
+     * nanopublication introduced: it stands as it is, whatever the template would say about
+     * a value given now. Such a value is left out of {@link #getViolations()} too.
+     *
+     * @param templateValue the value of the template in that position, with a repetition
+     *                      suffix if it has one
+     * @param value         the value to bind
+     */
+    void pin(IRI templateValue, Value value) {
+        bindings.put(templateValue, value);
+        pinned.add(templateValue);
+    }
+
+    /**
      * Removes the binding of a position.
      *
      * @param templateValue the value of the template in that position
      */
     public void unbind(IRI templateValue) {
         bindings.remove(templateValue);
+        pinned.remove(templateValue);
     }
 
     /**
@@ -234,6 +251,7 @@ public class BindingContext implements Serializable {
     public void restore(Map<IRI, Value> snapshot) {
         bindings.clear();
         bindings.putAll(snapshot);
+        pinned.retainAll(snapshot.keySet());
     }
 
     /**
@@ -304,6 +322,7 @@ public class BindingContext implements Serializable {
     public List<Violation> getViolations() {
         List<Violation> violations = new ArrayList<>();
         for (Map.Entry<IRI, Value> e : bindings.entrySet()) {
+            if (pinned.contains(e.getKey())) continue;
             violations.addAll(PlaceholderMatcher.of(template, e.getKey()).match(e.getValue(), this).violations());
         }
         return violations;

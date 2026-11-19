@@ -61,6 +61,7 @@ public class Run {
     static {
         addRunnableClass(CheckNanopub.class, "check");
         addRunnableClass(org.nanopub.templates.CheckTemplateCompliance.class, "check-template");
+        addRunnableClass(org.nanopub.templates.FillTemplate.class, "fill");
         addRunnableClass(GetNanopub.class, "get");
         addRunnableClass(PublishNanopub.class, "publish");
         addRunnableClass(SignNanopub.class, "sign");

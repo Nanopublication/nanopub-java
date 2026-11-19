@@ -12,11 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Command-line tool that checks nanopublications against the templates they name, with a
@@ -100,18 +96,7 @@ public class CheckTemplateCompliance extends CliRunner {
      * @throws IOException if a file cannot be read
      */
     public int run() throws IOException {
-        Map<String, Nanopub> localTemplates = new HashMap<>();
-        for (String templateFile : templateFiles) {
-            try {
-                MultiNanopubRdfHandler.process(new File(templateFile), np -> localTemplates.put(np.getUri().stringValue(), np));
-            } catch (RDF4JException | MalformedNanopubException ex) {
-                throw new IOException("Cannot read template file " + templateFile + ": " + ex.getMessage(), ex);
-            }
-        }
-        TemplateComplianceChecker checker = new TemplateComplianceChecker(id -> {
-            Nanopub local = findLocal(localTemplates, id);
-            return local != null ? local : networkResolver.getNanopub(id);
-        });
+        TemplateComplianceChecker checker = new TemplateComplianceChecker(LocalNanopubs.resolver(templateFiles, networkResolver));
         count = 0;
         compliantCount = 0;
         warningCount = 0;
@@ -150,28 +135,6 @@ public class CheckTemplateCompliance extends CliRunner {
         for (ComplianceIssue issue : report.getIssues()) {
             out.println("- " + issue.severity() + ": " + issue.message());
         }
-    }
-
-    // Finds a template among the given files: by the URI of its nanopublication, by an IRI
-    // within it (a template can be referred to by its node), or by its artifact code.
-    private static Nanopub findLocal(Map<String, Nanopub> localTemplates, String id) {
-        Nanopub exact = localTemplates.get(id);
-        if (exact != null) return exact;
-        String artifactCode = getArtifactCode(id);
-        for (Map.Entry<String, Nanopub> e : localTemplates.entrySet()) {
-            String uri = e.getKey();
-            if (artifactCode != null && artifactCode.equals(getArtifactCode(uri))) return e.getValue();
-            if (!id.startsWith(uri)) continue;
-            if (uri.endsWith("/") || uri.endsWith("#") || "/#".indexOf(id.charAt(uri.length())) >= 0) return e.getValue();
-        }
-        return null;
-    }
-
-    private static final Pattern ARTIFACT_CODE = Pattern.compile("RA[A-Za-z0-9_-]{43}");
-
-    private static String getArtifactCode(String iri) {
-        Matcher m = ARTIFACT_CODE.matcher(iri);
-        return m.find() ? m.group() : null;
     }
 
 }

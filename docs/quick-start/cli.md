@@ -16,6 +16,7 @@ implementing that command.
 
 - check / CheckNanopub
 - check-template / CheckTemplateCompliance
+- fill / FillTemplate
 - get / GetNanopub
 - publish / PublishNanopub
 - sign / SignNanopub
@@ -169,6 +170,84 @@ The templates are retrieved from the nanopublication network, at exactly the ver
 check against a template that is not published yet, give its file with `-t`:
 
 ```np check-template -t my-template-signed.trig my-nanopub.trig```
+
+## Filling a Template
+
+```
+Usage: np fill [options] requests
+  Options:
+    --profile
+      Profile file for the creator IRI if neither -c nor the request gives
+      one, defaults to ~/.nanopub/profile.yaml
+    -c
+      The IRI of the creator, typically an ORCID IRI; overrides the one of the
+      request
+    -o
+      Output file; standard output if not given
+    -t
+      File with a template nanopub to use instead of retrieving it; can be
+      given several times
+```
+
+The command makes a nanopublication from templates and the values of their placeholders, as the
+publishing form of Nanodash does. The nanopublication is not signed: sign and publish it with
+`np sign` and `np publish`.
+
+A request has the parameters of a link to the publishing form of Nanodash. It is given as such a
+link or its query string, or as a JSON object with the parameters as its members, or as the name
+of a file that holds one of these:
+
+```
+np fill -o my-query.trig request.json
+np fill 'https://nanodash.example.org/publish?template=https://w3id.org/np/RA...&param_name=Example'
+```
+
+```json
+{
+  "template": "https://w3id.org/np/RAEFAt-QcFK0ZhqfvlsmS10BnzGJA0xwOICZXkO-ai87k",
+  "param_query": "get-things",
+  "param_title": "Get things",
+  "param_description": "Returns three things.",
+  "param_endpoint": "https://w3id.org/np/l/nanopub-query-1.1/repo/full",
+  "param_license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "param_sparql": "select * where { ?s ?p ?o } limit 3",
+  "creator": "https://orcid.org/0000-0000-0000-0000"
+}
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `template` | The template of the assertion. |
+| `param_<name>` | The value of the placeholder of that name. A placeholder that has a value of its own in each repetition of a statement takes `param_<name>` for the first, `param_<name>__1` for the second, and so on. An empty value keeps the default value of the template from being taken. |
+| `param_<name>__lang` | The language tag of the value, where the placeholder leaves the language open. |
+| `prtemplate`, `prparam_<name>` | The template of the provenance and the values for it. Without one, the default provenance template of the assertion template is used, or else "Attributed to myself/others". |
+| `pitemplate1`, `piparam1_<name>` | A template of the publication info and the values for it; further ones with 2, 3 and so on. The templates for the creator and the license (CC BY 4.0 unless a value is given) are used in any case, as are those the assertion template requires. |
+| `supersede` | The nanopublication the new one is a new version of. It is linked with `npx:supersedes`, and the resources it introduces and its root definition are kept. |
+| `override` | The nanopublication the new one is another definition of. It is linked with `prov:wasDerivedFrom`, and the resources it introduces and its root definition are kept. |
+| `derive` | The nanopublication the new one is derived from. It is linked with `prov:wasDerivedFrom`; nothing is kept. |
+| `target-namespace` | The namespace the nanopublication gets its URI in, instead of `https://w3id.org/np/`. |
+| `creator`, `creator-name` | The creator, whom a form takes from the person logged in. Without one, the `orcid_id` of the profile is taken. |
+| `space`, `namespace` | What `~~SPACE~~` and `~~NAMESPACE~~` stand for in the prefixes of a template, which a form takes from the page it is opened on. |
+
+The value of a placeholder is written as it would be typed into the form: an IRI in full, a name
+that is minted within the nanopublication or put after the prefix of the placeholder, or the text
+of a literal.
+
+Unlike the form, the command reads no values from the nanopublication named by `supersede`,
+`override` or `derive`: all values have to be given. Parameters that would have the form read
+values from elsewhere, such as `use`, are refused.
+
+Nothing is written if something is wrong with a request. The command then lists all it found,
+and the exit status is 1:
+
+```
+CANNOT FILL: request.json
+- The statement st1 of the assertion template lacks a value for 'param_title' (title of the query)
+- No placeholder of the assertion template answers to 'param_titel'; its placeholders are: description, endpoint, license, query, sparql, title
+```
+
+The templates are retrieved from the nanopublication network, at exactly the versions named. To
+use a template that is not published yet, give its file with `-t`.
 
 ## Shacl Validation
 
