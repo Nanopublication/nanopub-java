@@ -84,3 +84,44 @@ The best practices that are verified are the following:
 - The nanopub has a signer and the signer is also a creator of the nanopub.
 - The nanopub contains the graph uris: ...Head, ...assertion, ...provenance, and ...pubinfo.
 - The nanopub consists of below than 1200 triples and is smaller than 10MB.
+
+## Reading a Template
+
+A template is a nanopublication that describes how nanopublications of a certain kind are
+structured: the statements they consist of, the placeholders to be filled in, and the
+constraints on the values. `Template` reads one:
+
+```java
+// Fetches the template nanopublication from the network:
+Template template = new Template("https://w3id.org/np/RAEzjboN_ipuwsFnvhqAl9Fy7fZl34cGZ1QhJ-7cbbGGM");
+// Or from a nanopublication at hand, such as a file that is not published yet:
+Template template = new Template(new NanopubImpl(new File("my-template.trig")));
+
+for (IRI statement : template.getStatementIris()) {
+    IRI subject = template.getSubject(statement);
+    IRI predicate = template.getPredicate(statement);
+    Value object = template.getObject(statement);
+    boolean optional = template.isOptionalStatement(statement);
+    if (object instanceof IRI placeholder && template.isPlaceholder(placeholder)) {
+        String label = template.getLabel(placeholder);
+        String regex = template.getRegex(placeholder);       // null if unconstrained
+        boolean isLiteral = template.isLiteralPlaceholder(placeholder);
+    }
+}
+```
+
+A grouped statement is one entry of `getStatementIris()`, and `getStatementIris(group)`
+lists its members. `getStatementErrors()` reports statements that cannot produce valid
+nanopublications.
+
+Reading a template needs no network access. Only the possible values of a restricted-choice
+placeholder that are kept in another nanopublication (`nt:possibleValuesFrom`) are fetched,
+when `getPossibleValues(placeholder)` is first called. Pass a `NanopubResolver` to decide
+where nanopublications come from, or `NanopubResolver.NONE` to never fetch any:
+
+```java
+Template template = new Template(nanopub, NanopubResolver.NONE);
+```
+
+`getDescription()` and `getStatementDescription(statement)` return the text as published.
+It may contain HTML and is not sanitized.

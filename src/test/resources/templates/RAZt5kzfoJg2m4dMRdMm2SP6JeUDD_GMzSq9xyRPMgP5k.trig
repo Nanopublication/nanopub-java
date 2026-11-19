@@ -1,0 +1,132 @@
+@prefix this: <https://w3id.org/np/RAZt5kzfoJg2m4dMRdMm2SP6JeUDD_GMzSq9xyRPMgP5k> .
+@prefix sub: <https://w3id.org/np/RAZt5kzfoJg2m4dMRdMm2SP6JeUDD_GMzSq9xyRPMgP5k#> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix nt: <https://w3id.org/np/o/ntemplate/> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix orcid: <https://orcid.org/> .
+@prefix ns1: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+sub:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion sub:assertion;
+    np:hasProvenance sub:provenance;
+    np:hasPublicationInfo sub:pubinfo .
+}
+
+sub:assertion {
+  <http://purl.org/spar/cito/agreesWith> rdfs:label "agrees with - agrees with statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/cites> rdfs:label "cites - The citing entity cites the cited entity, either directly and explicitly (as in the reference list of a journal article), indirectly (e.g. by citing a more recent paper by the same group on the same topic), or implicitly (e.g. as in artistic quotations or parodies, or in cases of plagiarism)." .
+  
+  <http://purl.org/spar/cito/citesAsAuthority> rdfs:label "cites as authority - cites as something that provides an authoritative description or definition of the subject under discussion" .
+  
+  <http://purl.org/spar/cito/citesAsDataSource> rdfs:label "cites as data source - cites as source of data" .
+  
+  <http://purl.org/spar/cito/citesAsEvidence> rdfs:label "cites as evidence - cites as source of factual evidence for statements it contains" .
+  
+  <http://purl.org/spar/cito/citesAsMetadataDocument> rdfs:label "cites as metadata document - The citing entity cites the cited entity as being the container of metadata describing the citing entity." .
+  
+  <http://purl.org/spar/cito/citesAsPotentialSolution> rdfs:label "cites as potential solution - cites as providing or containing a possible solution to the issues being discussed" .
+  
+  <http://purl.org/spar/cito/citesAsRecommendedReading> rdfs:label "cites as recommended reading - cites as an item of recommended reading" .
+  
+  <http://purl.org/spar/cito/citesAsRelated> rdfs:label "cites as related - cites as something that is related" .
+  
+  <http://purl.org/spar/cito/citesAsSourceDocument> rdfs:label "cites as source document - cites as being the entity from which the citing entity is derived, or about which the citing entity contains metadata" .
+  
+  <http://purl.org/spar/cito/citesForInformation> rdfs:label "cites for information - cites as a source of information on the subject under discussion." .
+  
+  <http://purl.org/spar/cito/compiles> rdfs:label "compiles - The citing entity is used to create or compile the cited entity." .
+  
+  <http://purl.org/spar/cito/confirms> rdfs:label "confirms - confirms facts, ideas or statements presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/containsAssertionFrom> rdfs:label "contains assertion from - contains a statement of fact or a logical assertion originally present in the cited entity" .
+  
+  <http://purl.org/spar/cito/corrects> rdfs:label "corrects - corrects statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/credits> rdfs:label "credits - acknowledges contributions made by the cited entity" .
+  
+  <http://purl.org/spar/cito/critiques> rdfs:label "critiques - critiques statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/derides> rdfs:label "derides - The citing entity express derision for the cited entity, or for ideas or conclusions contained within it" .
+  
+  <http://purl.org/spar/cito/describes> rdfs:label "describes - describes the cited entity" .
+  
+  <http://purl.org/spar/cito/disagreesWith> rdfs:label "disagrees with - disagrees with statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/discusses> rdfs:label "discusses - discusses statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/disputes> rdfs:label "disputes - disputes statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/documents> rdfs:label "documents - documents information about the cited entity" .
+  
+  <http://purl.org/spar/cito/extends> rdfs:label "extends - extends facts, ideas or understandings presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/includesExcerptFrom> rdfs:label "includes excerpt from - The citing entity includes one or more excerpts from the cited entity." .
+  
+  <http://purl.org/spar/cito/includesQuotationFrom> rdfs:label "includes quotation from - includes one or more quotations from the cited entity" .
+  
+  <http://purl.org/spar/cito/linksTo> rdfs:label "links to - provides a link, in the form of an HTTP Uniform Resource Locator (URL), to the cited entity" .
+  
+  <http://purl.org/spar/cito/obtainsBackgroundFrom> rdfs:label "obtains background from - The citing entity obtains background information from the cited entity." .
+  
+  <http://purl.org/spar/cito/obtainsSupportFrom> rdfs:label "obtains support from - The citing entity obtains intellectual or factual support from the cited entity." .
+  
+  <http://purl.org/spar/cito/parodies> rdfs:label "parodies - The citing entity imitates the characteristic style or content of the cited entity for comic effect, usually without explicit citation." .
+  
+  <http://purl.org/spar/cito/plagiarizes> rdfs:label "plagiarizes - A property indicating that the author of the citing entity plagiarizes the cited entity, by including textual or other elements from the cited entity without formal acknowledgement of their source. The citing entity thus contains no explicit citation of the cited entity, according to the norms of scholarly practice, but cites it implicitly." .
+  
+  <http://purl.org/spar/cito/qualifies> rdfs:label "qualifies - qualifies or places conditions or restrictions upon statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/refutes> rdfs:label "refutes - refutes statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/repliesTo> rdfs:label "replies to - replies to statements, ideas or criticisms presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/retracts> rdfs:label "retracts - The citing entity constitutes a formal retraction of the cited entity." .
+  
+  <http://purl.org/spar/cito/reviews> rdfs:label "reviews - reviews statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/ridicules> rdfs:label "ridicules - The citing entity ridicules the cited entity or aspects of its contents." .
+  
+  <http://purl.org/spar/cito/speculatesOn> rdfs:label "speculates on - speculates on something within or related to the cited entity, without firm evidence" .
+  
+  <http://purl.org/spar/cito/supports> rdfs:label "supports - provides intellectual or factual support for statements, ideas or conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/updates> rdfs:label "updates - updates statements, ideas, hypotheses or understanding presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/usesConclusionsFrom> rdfs:label "uses conclusions from - describes work that uses conclusions presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/usesDataFrom> rdfs:label "uses data from - describes work that uses data presented in the cited entity" .
+  
+  <http://purl.org/spar/cito/usesMethodIn> rdfs:label "uses method in - describes work that uses a method detailed in the cited entity" .
+}
+
+sub:provenance {
+  sub:assertion prov:wasDerivedFrom <http://purl.org/spar/cito> .
+}
+
+sub:pubinfo {
+  orcid:0000-0002-1267-0234 foaf:name "Tobias Kuhn" .
+  
+  sub:sig npx:hasAlgorithm "RSA";
+    npx:hasPublicKey "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD4Wj537OijfOWVtsHMznuXKISqBhtGDQZfdO6pbb4hg9EHMcUFGTLbWaPrP783PHv8HMAAPjvEkHLaOHMIknqhaIa5236lfBO3r+ljVdYBElBcLvROmwG+ZGtmPNZf7lMhI15xf5TfoaSa84AFRd5J2EXekK6PhaFQhRm1IpSYtwIDAQAB";
+    npx:hasSignature "cq7pjSF6xe+R/NhC/cbyAGHm0J3uBbIcqXT0vIHyRXHwgkqLWIiWQtCcJwxnVsv5+5TZ0+/z2J9dKc1JAhb4lJOEbqBjSv3NdR4IUeeaZIDYWswawAsVLY4IVFxP6LRMqhozCjF6w0ajo2Mkp6D4RGRQE9BTQVgsuuWsbdT0R/o=";
+    npx:hasSignatureTarget this:;
+    npx:signedBy orcid:0000-0002-1267-0234 .
+  
+  this: ns1:created "2024-02-27T15:10:05.459Z"^^xsd:dateTime;
+    ns1:creator orcid:0000-0002-1267-0234;
+    ns1:license <https://creativecommons.org/licenses/by/4.0/>;
+    npx:wasCreatedAt <https://nanodash.knowledgepixels.com/>;
+    rdfs:label "Label for agreesWith: 'agrees with - agrees with statements, ideas or conclusions presented in the cited entity' (...)";
+    prov:wasDerivedFrom <http://purl.org/np/RAJb-zZdFrNzgwxmMzFstFeKTZAJImhMGNL-IzEJY4kx8>;
+    nt:wasCreatedFromProvenanceTemplate <http://purl.org/np/RAcTpoh5Ra0ssqmcpOgWdaZ_YiPE6demO6cpw-2RvSNs8>;
+    nt:wasCreatedFromPubinfoTemplate <http://purl.org/np/RAA2MfqdBCzmz9yVWjKLXNbyfBNcwsMmOqcNUxkk1maIM>,
+      <http://purl.org/np/RABngHbKpoJ3U9Nebc8mX_KUdv_vXw28EejqAyQya5zVA>, <http://purl.org/np/RAh1gm83JiG5M6kDxXhaYT1l49nCzyrckMvTzcPn-iv90>;
+    nt:wasCreatedFromTemplate <http://purl.org/np/RACmEf3s7YTFFdu6E0Pztp_n12FFOcXSn3LsQMgUre0gA> .
+}
+

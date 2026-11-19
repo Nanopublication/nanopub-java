@@ -1,0 +1,77 @@
+@prefix this: <https://w3id.org/np/RAiTfCYCViuGzC_g3oe1xqtAwv4_I0SeOVwG9wIELTrD4> .
+@prefix sub: <https://w3id.org/np/RAiTfCYCViuGzC_g3oe1xqtAwv4_I0SeOVwG9wIELTrD4/> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix nt: <https://w3id.org/np/o/ntemplate/> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix orcid: <https://orcid.org/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+sub:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion sub:assertion;
+    np:hasProvenance sub:provenance;
+    np:hasPublicationInfo sub:pubinfo .
+}
+
+sub:assertion {
+  rdf:type rdfs:label "is a" .
+  
+  <https://schema.org/CreativeWork> rdfs:label "Creative work" .
+  
+  sub:assertion a nt:AssertionTemplate;
+    dct:description "Such a nanopublication expresses citation relations to a given work based on the CiTO relation types.";
+    rdfs:label "Declare citations with CiTO #2";
+    nt:hasNanopubLabelPattern "Citations to: ${work}";
+    nt:hasStatement sub:st01, sub:st02;
+    nt:hasTag "Journals";
+    nt:hasTargetNanopubType <http://purl.org/spar/cito/cites>, <https://schema.org/CreativeWork> .
+  
+  sub:cites a nt:RestrictedChoicePlaceholder;
+    rdfs:label "select the citation type";
+    nt:possibleValuesFrom <https://w3id.org/np/RAZt5kzfoJg2m4dMRdMm2SP6JeUDD_GMzSq9xyRPMgP5k> .
+  
+  sub:citing a nt:ExternalUriPlaceholder;
+    rdfs:label "DOI (https://doi.org/10...) or other URL of the cited article" .
+  
+  sub:st01 rdf:object <https://schema.org/CreativeWork>;
+    rdf:predicate rdf:type;
+    rdf:subject sub:work .
+  
+  sub:st02 a nt:RepeatableStatement;
+    rdf:object sub:work;
+    rdf:predicate sub:cites;
+    rdf:subject sub:citing .
+  
+  sub:work a nt:ExternalUriPlaceholder;
+    rdfs:label "DOI (https://doi.org/10...) or other URL of the citing article" .
+}
+
+sub:provenance {
+  sub:assertion prov:wasAttributedTo orcid:0000-0001-7542-0286 .
+}
+
+sub:pubinfo {
+  orcid:0000-0001-7542-0286 foaf:name "Egon Willighagen" .
+  
+  this: dct:created "2026-10-11T07:40:10.495Z"^^xsd:dateTime;
+    dct:creator orcid:0000-0001-7542-0286;
+    dct:license <https://creativecommons.org/publicdomain/zero/1.0/>;
+    npx:wasCreatedAt <https://nanodash.knowledgepixels.com/>;
+    rdfs:label "Declare citations with CiTO #2";
+    nt:wasCreatedFromProvenanceTemplate <https://w3id.org/np/RA7lSq6MuK_TIC6JMSHvLtee3lpLoZDOqLJCLXevnrPoU>;
+    nt:wasCreatedFromPubinfoTemplate <https://w3id.org/np/RACJ58Gvyn91LqCKIO9zu1eijDQIeEff28iyDrJgjSJF8>,
+      <https://w3id.org/np/RAukAcWHRDlkqxk7H2XNSegc1WnHI569INvNr-xdptDGI>;
+    nt:wasCreatedFromTemplate <https://w3id.org/np/RA97ErZmL97PuPlwui1_qIdVTi5Ag8IaDdKeXlumYD_ms> .
+  
+  sub:sig npx:hasAlgorithm "RSA";
+    npx:hasPublicKey "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCcwnLEigB7mhhJ2q2o1QJZx84NenD8u7AHyq5gvmA9gpUtNtw0vo1Hbd5S5LC+LrfbQ4Axbx1RJhLQW8mxPTYmi9nHbefFLXonWxMtvVJl7WnFdgga5pS6mT6r+1RnARlBcqE4fixRBgW76VWJdV6SCmIkNCpqntSiSZHahIWXewIDAQAB";
+    npx:hasSignature "M9/9L0SwySLUkdUuCnHu7mRMLMImamKDqFqXuX3DDz2lP8w35fAhyjOCGi7NHumhZ8IaXkK8UdtKsdOWyeWfVpeimSyy6pwVQlz3Gy+PJuV0Djo7HGqQk1y6BiY7xO7J5EtWNK/nT1LdhwaPOFKlxMrloHbc9E3r5R4g9B6jwXU=";
+    npx:hasSignatureTarget this:;
+    npx:signedBy orcid:0000-0001-7542-0286 .
+}
+
