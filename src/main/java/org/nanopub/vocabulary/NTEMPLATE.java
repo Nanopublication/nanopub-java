@@ -113,6 +113,15 @@ public class NTEMPLATE {
     public static final IRI LANGUAGE_TAGGED_LITERAL_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "LanguageTaggedLiteralPlaceholder");
 
     /**
+     * Represents the class for literal placeholders that take a point in time at whatever
+     * precision it is known, from the year alone to the full date and time. The literal is
+     * typed by what was entered: {@code xsd:gYear}, {@code xsd:gYearMonth}, {@code xsd:date}
+     * or {@code xsd:dateTime}. A template can narrow the accepted precisions by listing their
+     * datatypes with {@link #HAS_DATATYPE}.
+     */
+    public static final IRI DATE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "DatePlaceholder");
+
+    /**
      * Represents the class for restricted choice placeholders.
      */
     public static final IRI RESTRICTED_CHOICE_PLACEHOLDER = VocabUtils.createIRI(NAMESPACE, "RestrictedChoicePlaceholder");
