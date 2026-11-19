@@ -18,7 +18,7 @@ permissions:
 jobs:
   publish:
     env:
-      PYTHON_VERSION: 3.9
+      PYTHON_VERSION: "3.14"
       POETRY_VERSION: 2.3.2
 
     runs-on: ubuntu-latest
