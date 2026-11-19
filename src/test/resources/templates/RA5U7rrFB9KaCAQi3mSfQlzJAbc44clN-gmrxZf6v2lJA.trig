@@ -1,0 +1,80 @@
+@prefix this: <https://w3id.org/np/RA5U7rrFB9KaCAQi3mSfQlzJAbc44clN-gmrxZf6v2lJA> .
+@prefix sub: <https://w3id.org/np/RA5U7rrFB9KaCAQi3mSfQlzJAbc44clN-gmrxZf6v2lJA/> .
+@prefix gen: <https://w3id.org/kpxl/gen/terms/> .
+@prefix np: <http://www.nanopub.org/nschema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix nt: <https://w3id.org/np/o/ntemplate/> .
+@prefix npx: <http://purl.org/nanopub/x/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix orcid: <https://orcid.org/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+sub:Head {
+  this: a np:Nanopublication;
+    np:hasAssertion sub:assertion;
+    np:hasProvenance sub:provenance;
+    np:hasPublicationInfo sub:pubinfo .
+}
+
+sub:assertion {
+  sub:answerAction a gen:ViewResultAction;
+    rdfs:label "💬 reply...";
+    gen:hasActionTemplate <https://w3id.org/np/RAFpID-NunXGUAZebXPfhD9efjvfpZqB5gDBrgP2Lp5N8>;
+    gen:hasActionTemplatePartField "void";
+    gen:hasActionTemplateQueryMapping "reply_target:target";
+    gen:hasActionTemplateTargetField "void";
+    gen:isVisibleTo gen:EveryoneRole .
+  
+  sub:postAction a gen:ViewResultAction;
+    rdfs:label "➕ add reply...";
+    gen:hasActionTemplate <https://w3id.org/np/RAFpID-NunXGUAZebXPfhD9efjvfpZqB5gDBrgP2Lp5N8>;
+    gen:hasActionTemplatePartField "void";
+    gen:hasActionTemplateQueryMapping "void";
+    gen:hasActionTemplateTargetField "target";
+    gen:isVisibleTo gen:EveryoneRole .
+  
+  sub:thread-view a gen:ResourceView, gen:ThreadView;
+    dct:isVersionOf sub:thread-view-kind;
+    dct:title "🧵 Thread";
+    rdfs:label "Thread view (new)";
+    gen:appliesToInstancesOf <https://schema.org/Question>, <https://schema.org/Statement>;
+    gen:hasPageSize "20";
+    gen:hasStructuralPosition "4.2.thread";
+    gen:hasViewAction sub:answerAction, sub:postAction;
+    gen:hasViewQuery <https://w3id.org/np/RAhdldevdeHe4nb9fM3CKA_cUnufQPq_xj4fuRyjTkq1o/get-thread>;
+    gen:hasViewQueryTargetField "resource" .
+}
+
+sub:provenance {
+  sub:assertion prov:wasAttributedTo orcid:0000-0001-8492-0354 .
+}
+
+sub:pubinfo {
+  orcid:0000-0001-8492-0354 foaf:name "Ashley Caselli" .
+  
+  this: dct:created "2026-09-09T08:24:43.556+03:00"^^xsd:dateTime;
+    dct:creator orcid:0000-0001-8492-0354;
+    dct:license <https://creativecommons.org/publicdomain/zero/1.0/>;
+    npx:embeds sub:thread-view;
+    npx:introduces sub:thread-view-kind;
+    npx:wasCreatedAt <http://localhost:37373/>;
+    nt:wasCreatedFromProvenanceTemplate <https://w3id.org/np/RA7lSq6MuK_TIC6JMSHvLtee3lpLoZDOqLJCLXevnrPoU>;
+    nt:wasCreatedFromPubinfoTemplate <https://w3id.org/np/RACJ58Gvyn91LqCKIO9zu1eijDQIeEff28iyDrJgjSJF8>,
+      <https://w3id.org/np/RAukAcWHRDlkqxk7H2XNSegc1WnHI569INvNr-xdptDGI>;
+    nt:wasCreatedFromTemplate <https://w3id.org/np/RArrCwM8dYxTH9Anj8-a6A21V9zLrRA5tlIKosGh3uNfs> .
+  
+  sub:sig npx:hasAlgorithm "RSA";
+    npx:hasPublicKey "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA+i9DV8ynzO944pYkYsDwtlqJHuk+b7FQt6Bb4TIQSDX3jGUURn6WpaNwESHmgMLWSydaH5XlabMzuqpPL4iyB+IAzvwIxdJBLhe39EQMu2j+FZ/5d/xu/gO3nZw2KoEvJ7cJisabuI05OylIRSJ+OG5CmzFxnjojUEJeCFi1njY1InhXrb0yHud9b1ifzweoN6YYOBecKs1gTOaT2bf+t4Wgzg3M0PmRVZ4F0OALsnh4T5+x7kFtiPcDKNpORi585JjKCZ4kczIF6oUKcwgC0kmIY97jtLqSLcXRkxHx5CDI6qz4XlRFs1ZbCUdSlzjdPZAkaBcNem1gIhWzkHkEnQIDAQAB";
+    npx:hasSignature "8+5mhoCsvM8/HrZ09sXO+DPS2BmiHX7Q14CywfEDKISUKLRfjTjDtmLuAdnp7NM0JjZGg+IG9fRs9LLMKZ6NNhkvV6Nn8VAFmaCVt6KlRyYIrvlle3liiKODEtHcUWCUH3fnIySOE+BF+Rm2qUC+kDPLVytJEVWl/fXHPGB2FW01YyTkF+16E5RJ9kzUP5FySb9fbY+2I6jks3Cw1lIJV4KYaK16zPvJaUcbqE5Hj9ArUm12PUo7+cdAXKs6Xwalhynw1lgmM5Wv6SpgOWh/j9htQBWjfdYL5GVKSj9eOLtj3UTd34BHgds33+9OCiP5RgsqtrOsswm6M3KqAaFXpg==";
+    npx:hasSignatureTarget this:;
+    npx:signedBy orcid:0000-0001-8492-0354 .
+  
+  <https://w3id.org/np/RAFpID-NunXGUAZebXPfhD9efjvfpZqB5gDBrgP2Lp5N8> nt:hasLabelFromApi
+      "Discourse contribution - A discourse statement that takes a typed (CiTO) stance toward, and/or replies..." .
+  
+  <https://w3id.org/np/RAhdldevdeHe4nb9fM3CKA_cUnufQPq_xj4fuRyjTkq1o/get-thread> nt:hasLabelFromApi
+      "Get the thread under a contribution - Lists the whole thread under a discourse contribution: the replies to it, the..." .
+}
+
