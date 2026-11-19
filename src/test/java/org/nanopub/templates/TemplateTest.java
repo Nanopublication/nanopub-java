@@ -28,68 +28,12 @@ class TemplateTest {
 
     private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    // A syntactically valid trusty URI shape (RA + 43 chars), so sub-IRIs strip correctly:
-    private static final String NP_URI = "https://w3id.org/np/RAAbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+    private static final String NP_URI = TemplateBuilder.NP_URI;
+    private static final IRI SUBJECT = TemplateBuilder.SUBJECT;
+    private static final IRI PREDICATE = TemplateBuilder.PREDICATE;
 
     private static IRI local(String name) {
-        return vf.createIRI(NP_URI + "/" + name);
-    }
-
-    private static final IRI SUBJECT = vf.createIRI("http://example.com/subject");
-    private static final IRI PREDICATE = vf.createIRI("http://example.com/predicate");
-
-    /**
-     * Builds legacy-shape templates (the template node is the assertion graph URI) one
-     * statement at a time.
-     */
-    private static class TemplateBuilder {
-
-        final NanopubCreator creator;
-        final IRI templateNode;
-        private int statementCount = 0;
-
-        TemplateBuilder(IRI templateType) throws Exception {
-            creator = new NanopubCreator(NP_URI);
-            creator.addProvenanceStatement(vf.createStatement(creator.getAssertionUri(), RDFS.SEEALSO, creator.getAssertionUri()));
-            creator.addPubinfoStatement(vf.createStatement(creator.getNanopubUri(), RDFS.SEEALSO, creator.getNanopubUri()));
-            templateNode = creator.getAssertionUri();
-            add(templateNode, RDF.TYPE, templateType);
-        }
-
-        TemplateBuilder() throws Exception {
-            this(NTEMPLATE.ASSERTION_TEMPLATE);
-        }
-
-        TemplateBuilder add(IRI subj, IRI pred, Value obj) throws Exception {
-            creator.addAssertionStatement(subj, pred, obj);
-            return this;
-        }
-
-        TemplateBuilder add(IRI subj, IRI pred, String literal) throws Exception {
-            return add(subj, pred, vf.createLiteral(literal));
-        }
-
-        // Adds a top-level statement and returns its IRI.
-        IRI statement(IRI subj, IRI pred, Value obj, IRI... types) throws Exception {
-            IRI st = local("st" + (++statementCount));
-            add(templateNode, NTEMPLATE.HAS_STATEMENT, st);
-            add(st, RDF.SUBJECT, subj).add(st, RDF.PREDICATE, pred).add(st, RDF.OBJECT, obj);
-            for (IRI type : types) add(st, RDF.TYPE, type);
-            return st;
-        }
-
-        // Declares a placeholder of the given types that is the object of a statement of its own.
-        IRI placeholder(String name, IRI... types) throws Exception {
-            IRI placeholder = local(name);
-            for (IRI type : types) add(placeholder, RDF.TYPE, type);
-            statement(SUBJECT, PREDICATE, placeholder);
-            return placeholder;
-        }
-
-        Template build() throws Exception {
-            return new Template(creator.finalizeNanopub(), NanopubResolver.NONE);
-        }
-
+        return TemplateBuilder.local(name);
     }
 
     @Test
