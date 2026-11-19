@@ -210,4 +210,7 @@ Nanopub newVersion = new TemplateFiller().fill(request);
 ```
 
 With `SUPERSEDE` and `OVERRIDE` the resources the old nanopublication introduces keep their IRIs
-and the root definition stays; with `DERIVE` everything is minted anew.
+and the root definition stays; with `DERIVE` everything is minted anew. The request that is read
+back does not have the link the nanopublication itself has to an earlier version. Read it only
+from a nanopublication that complies with its templates (`report.isCompliant()`), as content the
+templates do not account for is not in it.

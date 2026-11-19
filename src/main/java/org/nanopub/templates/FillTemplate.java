@@ -1,9 +1,12 @@
 package org.nanopub.templates;
 
 import com.beust.jcommander.ParameterException;
+import org.eclipse.rdf4j.common.exception.RDF4JException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.nanopub.CliRunner;
+import org.nanopub.MalformedNanopubException;
+import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubProfile;
 import org.nanopub.NanopubUtils;
@@ -20,12 +23,16 @@ import java.util.List;
 
 /**
  * Command-line tool that makes nanopublications from templates and values, with a
- * {@link TemplateFiller}. The nanopublications are not signed.
+ * {@link TemplateFiller}. The nanopublications are not signed. It can also print the request
+ * of an existing nanopublication, to make a new version from.
  */
 public class FillTemplate extends CliRunner {
 
-    @com.beust.jcommander.Parameter(description = "requests", required = true)
+    @com.beust.jcommander.Parameter(description = "requests")
     private List<String> requests = new ArrayList<>();
+
+    @com.beust.jcommander.Parameter(names = "--request-of", description = "Print the request of an existing nanopub instead of filling one: its URI, or a file that holds it")
+    private String requestOf;
 
     @com.beust.jcommander.Parameter(names = "-o", description = "Output file; standard output if not given")
     private File outputFile;
@@ -121,6 +128,18 @@ public class FillTemplate extends CliRunner {
     }
 
     /**
+     * Makes the tool print the request of an existing nanopublication instead of filling one:
+     * the templates it names and the values of their placeholders, as a JSON object. That
+     * request, changed and with a {@code supersede} parameter added, makes a new version.
+     *
+     * @param requestOf the URI of the nanopublication, or the name of a file that holds it;
+     *                  null to fill requests
+     */
+    public void setRequestOf(String requestOf) {
+        this.requestOf = requestOf;
+    }
+
+    /**
      * Sets the profile file the creator is read from if nothing else gives one.
      *
      * @param profileFile the profile file, or null for the default one
@@ -130,13 +149,25 @@ public class FillTemplate extends CliRunner {
     }
 
     /**
-     * Makes the nanopublications and writes them.
+     * Makes the nanopublications and writes them; or, if the request of an existing
+     * nanopublication is asked for, writes that.
      *
-     * @return the number of requests that no nanopublication could be made from
+     * @return the number of requests that no nanopublication could be made from; 1 if the
+     * request of an existing nanopublication could not be given
      * @throws IOException if a file cannot be read or written
      */
     public int run() throws IOException {
-        TemplateFiller filler = new TemplateFiller(LocalNanopubs.resolver(templateFiles, networkResolver));
+        NanopubResolver resolver = LocalNanopubs.resolver(templateFiles, networkResolver);
+        if (requestOf != null && !requests.isEmpty()) {
+            err.println("Give either requests to fill or --request-of, not both");
+            return 1;
+        }
+        if (requestOf != null) return printRequestOf(resolver);
+        if (requests.isEmpty()) {
+            err.println("No request given: a link, a query string, a JSON object, or a file with one of these");
+            return 1;
+        }
+        TemplateFiller filler = new TemplateFiller(resolver);
         List<Nanopub> nanopubs = new ArrayList<>();
         int failed = 0;
         for (String given : requests) {
@@ -158,7 +189,7 @@ public class FillTemplate extends CliRunner {
             }
         }
         if (failed > 0) return failed;
-        OutputStream target = out != null ? out : outputFile != null ? new FileOutputStream(outputFile) : System.out;
+        OutputStream target = openOutput();
         try {
             for (Nanopub np : nanopubs) {
                 NanopubUtils.writeToStream(np, target, RDFFormat.TRIG);
@@ -166,9 +197,86 @@ public class FillTemplate extends CliRunner {
             }
             target.flush();
         } finally {
-            if (out == null && outputFile != null) target.close();
+            closeOutput(target);
         }
         return 0;
+    }
+
+    private OutputStream openOutput() throws IOException {
+        return out != null ? out : outputFile != null ? new FileOutputStream(outputFile) : System.out;
+    }
+
+    private void closeOutput(OutputStream target) throws IOException {
+        if (out == null && outputFile != null) target.close();
+    }
+
+    // Writes the request of an existing nanopublication. It is read out of the way the
+    // nanopublication matches its templates, so one that does not comply with them has no
+    // request that would give it again: content would go missing from a new version.
+    private int printRequestOf(NanopubResolver resolver) throws IOException {
+        Nanopub np;
+        try {
+            np = getExistingNanopub(resolver);
+        } catch (TemplateFillException ex) {
+            err.println("NO REQUEST: " + ex.getMessage());
+            return 1;
+        }
+        ComplianceReport report = new TemplateComplianceChecker(resolver).check(np);
+        FillRequest request = null;
+        String problem = null;
+        if (report.isCompliant()) {
+            try {
+                request = FillRequest.of(report);
+            } catch (IllegalArgumentException ex) {
+                problem = ex.getMessage();
+            }
+        }
+        if (request == null) {
+            err.println("NO REQUEST: " + np.getUri() + " does not comply with its templates, so a request would not give it again");
+            if (problem != null) err.println("- " + problem);
+            for (ComplianceIssue issue : report.getIssues()) err.println("- " + issue.severity() + ": " + issue.message());
+            return 1;
+        }
+        // What the templates say nothing about is not in the request.
+        for (ComplianceIssue issue : report.getWarnings()) err.println("WARNING: " + issue.message());
+        // The request is meant to be filled again as a new version, so say now if it cannot be.
+        try {
+            FillRequest newVersion = FillRequest.fromParams(request.toParams()).setSource(FillRequest.Mode.SUPERSEDE, np.getUri().stringValue());
+            new TemplateFiller(id -> id.equals(np.getUri().stringValue()) ? np : resolver.getNanopub(id)).fill(newVersion);
+        } catch (TemplateFillException ex) {
+            err.println("WARNING: this request cannot be filled as it is, also not as a new version of the nanopublication:");
+            for (String p : ex.getProblems()) err.println("- " + p);
+        }
+        OutputStream target = openOutput();
+        try {
+            target.write((request.toJson() + "\n").getBytes(StandardCharsets.UTF_8));
+            target.flush();
+        } finally {
+            closeOutput(target);
+        }
+        return 0;
+    }
+
+    private Nanopub getExistingNanopub(NanopubResolver resolver) throws IOException, TemplateFillException {
+        File file = new File(requestOf);
+        if (!file.isFile()) {
+            Nanopub np;
+            try {
+                np = resolver.getNanopub(requestOf);
+            } catch (RuntimeException ex) {
+                throw new TemplateFillException("the nanopublication <" + requestOf + "> cannot be retrieved: " + ex);
+            }
+            if (np == null) throw new TemplateFillException("there is no file " + requestOf + ", and no nanopublication of that URI can be retrieved");
+            return np;
+        }
+        List<Nanopub> found = new ArrayList<>();
+        try {
+            MultiNanopubRdfHandler.process(file, found::add);
+        } catch (RDF4JException | MalformedNanopubException ex) {
+            throw new TemplateFillException("the file " + requestOf + " cannot be read: " + ex.getMessage());
+        }
+        if (found.size() != 1) throw new TemplateFillException("the file " + requestOf + " holds " + found.size() + " nanopublications; one is needed");
+        return found.get(0);
     }
 
     private IRI getCreator() throws TemplateFillException {

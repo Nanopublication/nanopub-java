@@ -179,6 +179,9 @@ Usage: np fill [options] requests
     --profile
       Profile file for the creator IRI if neither -c nor the request gives
       one, defaults to ~/.nanopub/profile.yaml
+    --request-of
+      Print the request of an existing nanopub instead of filling one: its
+      URI, or a file that holds it
     -c
       The IRI of the creator, typically an ORCID IRI; overrides the one of the
       request
@@ -236,6 +239,26 @@ of a literal.
 Unlike the form, the command reads no values from the nanopublication named by `supersede`,
 `override` or `derive`: all values have to be given. Parameters that would have the form read
 values from elsewhere, such as `use`, are refused.
+
+To make a new version of a nanopublication, have its request printed, change it, and add the
+`supersede` parameter:
+
+```
+np fill --request-of https://w3id.org/np/RA... > request.json
+# change values in request.json, and add:  "supersede": "https://w3id.org/np/RA..."
+np fill -o new-version.trig request.json
+```
+
+The request is read out of the way the nanopublication matches its templates. It has the
+templates the nanopublication names, the values of their placeholders, and its creator, but not
+a link the nanopublication itself has to an earlier version. A template for statements written
+by hand gets only what the other templates leave, and nothing of what a fill writes by itself,
+such as the creation time.
+
+A nanopublication that does not comply with its templates has no request; the command then
+lists what `np check-template` finds. Warnings are printed to standard error: those of that
+check, which can point to content the templates say nothing about and which is therefore not in
+the request, and the problems of the request if it cannot be filled as a new version as it is.
 
 Nothing is written if something is wrong with a request. The command then lists all it found,
 and the exit status is 1:

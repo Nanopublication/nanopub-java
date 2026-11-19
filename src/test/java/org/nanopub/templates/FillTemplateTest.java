@@ -1,5 +1,6 @@
 package org.nanopub.templates;
 
+import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.nanopub.MultiNanopubRdfHandler;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubUtils;
+import org.nanopub.trusty.MakeTrustyNanopub;
+import org.nanopub.vocabulary.NPX;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -125,6 +129,123 @@ class FillTemplateTest {
         assertTrue(text.contains("- No placeholder of the assertion template answers to 'param_titel'; its placeholders are: description, endpoint, license, query, sparql, title"), text);
         assertTrue(text.contains("- The statement st1 of the assertion template lacks a value for 'param_title' (title of the query)"), text);
         assertTrue(text.contains("lacks the creator (creator)"), text);
+    }
+
+    // ---------- the request of an existing nanopublication ----------
+
+    private static final String QUERY_URI = "https://w3id.org/np/" + TemplateComplianceCheckerTest.QUERY;
+
+    private FillTemplate requestOf(String nanopub) {
+        FillTemplate command = command(RESOURCES, List.of(), List.of());
+        command.setRequestOf(nanopub);
+        return command;
+    }
+
+    @Test
+    void requestOfAPublishedNanopublicationIsPrinted() throws Exception {
+        assertEquals(0, requestOf(QUERY_URI).run(), errors.toString());
+
+        FillRequest request = FillRequest.fromJson(output.toString());
+        assertEquals("https://w3id.org/np/" + QUERY_TEMPLATE, request.getTemplate());
+        assertEquals("html-test", request.getValues().get("query").text());
+        assertEquals("HTML test", request.getValues().get("title").text());
+        assertNull(request.getMode());
+        assertEquals("", errors.toString());
+    }
+
+    @Test
+    void printedRequestMakesANewVersion() throws Exception {
+        assertEquals(0, requestOf(resourceFile(TemplateComplianceCheckerTest.QUERY).getPath()).run(), errors.toString());
+        // Change the title and say what the new nanopublication is a version of.
+        String edited = output.toString().replace("\"HTML test\"", "\"HTML test, improved\"")
+                .replaceFirst("\\{", "{\n  \"supersede\": \"" + QUERY_URI + "\",");
+        Path file = tempDir.resolve("edited.json");
+        Files.writeString(file, edited);
+        output.reset();
+
+        assertEquals(0, command(RESOURCES, List.of(file.toString()), List.of()).run(), errors.toString());
+
+        Nanopub np = new NanopubImpl(output.toString(), RDFFormat.TRIG);
+        assertTrue(np.getAssertion().stream().anyMatch(st -> st.getObject().stringValue().equals("HTML test, improved")));
+        assertEquals(List.of(QUERY_URI), np.getPubinfo().stream().filter(st -> st.getPredicate().equals(NPX.SUPERSEDES)).map(st -> st.getObject().stringValue()).toList());
+        assertTrue(new TemplateComplianceChecker(RESOURCES).check(np).isCompliant());
+    }
+
+    @Test
+    void requestOfANewVersionDoesNotCarryTheLinkToTheOldOne() throws Exception {
+        // A second version, as it would be published:
+        FillRequest second = FillRequest.of(new TemplateComplianceChecker(RESOURCES).check(new NanopubImpl(resourceFile(TemplateComplianceCheckerTest.QUERY))));
+        second.setSource(FillRequest.Mode.SUPERSEDE, QUERY_URI);
+        Nanopub published = MakeTrustyNanopub.transform(new TemplateFiller(RESOURCES).fill(second));
+        Path file = tempDir.resolve("second.trig");
+        Files.writeString(file, NanopubUtils.writeToString(published, RDFFormat.TRIG));
+
+        assertEquals(0, requestOf(file.toString()).run(), errors.toString());
+
+        // Neither the link nor its template: adding 'supersede' is what makes a third version.
+        String json = output.toString();
+        assertFalse(json.contains(TemplateComplianceCheckerTest.QUERY), json);
+        assertFalse(json.contains(TemplateFiller.SUPERSEDES_PUBINFO_TEMPLATE), json);
+        assertEquals(2, FillRequest.fromJson(json).getPubinfoTemplates().size());
+    }
+
+    @Test
+    void requestThatCannotBeFilledAgainIsPrintedWithAWarning() throws Exception {
+        // The templates the request needs are there for the check, but not all for a fill.
+        NanopubResolver withoutLicense = id -> id.contains("RACJ58Gvyn91LqCKIO9zu1eijDQIeEff28iyDrJgjSJF8") ? null : RESOURCES.getNanopub(id);
+        FillTemplate command = command(withoutLicense, List.of(), List.of());
+        command.setRequestOf(QUERY_URI);
+
+        assertEquals(0, command.run());
+
+        assertEquals("html-test", FillRequest.fromJson(output.toString()).getValues().get("query").text());
+        String text = errors.toString();
+        assertTrue(text.contains("WARNING: this request cannot be filled as it is"), text);
+        assertTrue(text.contains("RACJ58Gvyn91LqCKIO9zu1eijDQIeEff28iyDrJgjSJF8> cannot be used"), text);
+    }
+
+    @Test
+    void noRequestForANanopublicationThatDoesNotComply() throws Exception {
+        // The query without its description, which its template requires.
+        Nanopub np = new NanopubImpl(resourceFile(TemplateComplianceCheckerTest.QUERY));
+        List<Statement> statements = new ArrayList<>();
+        for (Statement st : NanopubUtils.getStatements(np)) {
+            if (!(st.getContext().equals(np.getAssertionUri()) && st.getPredicate().equals(DCTERMS.DESCRIPTION))) statements.add(st);
+        }
+        Path file = tempDir.resolve("changed.trig");
+        Files.writeString(file, NanopubUtils.writeToString(new NanopubImpl(statements), RDFFormat.TRIG));
+
+        assertEquals(1, requestOf(file.toString()).run());
+
+        assertEquals("", output.toString());
+        String text = errors.toString();
+        assertTrue(text.startsWith("NO REQUEST: " + QUERY_URI + " does not comply with its templates"), text);
+        assertTrue(text.contains("- ERROR: Nothing matches the statement st2"), text);
+    }
+
+    @Test
+    void nanopublicationToReadTheRequestOfHasToBeThere() throws Exception {
+        assertEquals(1, requestOf("https://w3id.org/np/RANoSuchNanopubNoSuchNanopubNoSuchNanopub000").run());
+        assertTrue(errors.toString().startsWith("NO REQUEST: there is no file"), errors.toString());
+
+        Path two = tempDir.resolve("two.trig");
+        Files.writeString(two, Files.readString(resourceFile(TemplateComplianceCheckerTest.QUERY).toPath())
+                + "\n" + Files.readString(resourceFile(TemplateComplianceCheckerTest.VIEW).toPath()));
+        errors.reset();
+        assertEquals(1, requestOf(two.toString()).run());
+        assertTrue(errors.toString().contains("holds 2 nanopublications; one is needed"), errors.toString());
+    }
+
+    @Test
+    void eitherRequestsOrARequestToPrint() throws Exception {
+        FillTemplate both = command(RESOURCES, List.of("template=x"), List.of());
+        both.setRequestOf(QUERY_URI);
+        assertEquals(1, both.run());
+        assertTrue(errors.toString().contains("Give either requests to fill or --request-of, not both"), errors.toString());
+
+        errors.reset();
+        assertEquals(1, command(RESOURCES, List.of(), List.of()).run());
+        assertTrue(errors.toString().startsWith("No request given"), errors.toString());
     }
 
     @Test

@@ -1,7 +1,16 @@
 package org.nanopub.templates;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
+import org.eclipse.rdf4j.model.vocabulary.PROV;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.nanopub.Nanopub;
+import org.nanopub.NanopubImpl;
+import org.nanopub.NanopubUtils;
+import org.nanopub.vocabulary.NTEMPLATE;
 import org.nanopub.templates.FillRequest.Mode;
 
 import java.util.LinkedHashMap;
@@ -17,6 +26,8 @@ import static org.nanopub.templates.TemplateComplianceCheckerTest.load;
  * Tests for {@link FillRequest}.
  */
 class FillRequestTest {
+
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     private static final String T = "https://w3id.org/np/RAAbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
     private static final String PR = "https://w3id.org/np/RAProvProvProvProvProvProvProvProvProvProvPro";
@@ -163,6 +174,63 @@ class FillRequestTest {
         assertNotNull(request.getCreator());
         assertEquals(List.of(request.getCreator().stringValue()), List.copyOf(request.getProvenanceValues().toParams().values()));
         assertNull(request.getMode());
+    }
+
+    @Test
+    void catchAllTemplateGetsOnlyWhatIsWrittenByHand() throws Exception {
+        // An assertion template, the template for the creator, and one that takes any
+        // statement about the nanopublication.
+        java.util.Map<String, Nanopub> templates = new java.util.HashMap<>();
+        TemplateBuilder assertion = new TemplateBuilder(T, NTEMPLATE.ASSERTION_TEMPLATE);
+        assertion.statement(vf.createIRI("http://example.com/thing"), RDFS.LABEL, assertion.declare("name", NTEMPLATE.LITERAL_PLACEHOLDER));
+        templates.put(T, assertion.buildNanopub());
+        TemplateBuilder provenance = new TemplateBuilder(PR, NTEMPLATE.PROVENANCE_TEMPLATE);
+        provenance.statement(NTEMPLATE.ASSERTION_PLACEHOLDER, PROV.WAS_ATTRIBUTED_TO, NTEMPLATE.CREATOR_PLACEHOLDER);
+        templates.put(PR, provenance.buildNanopub());
+        TemplateBuilder creator = new TemplateBuilder(PI, NTEMPLATE.PUBINFO_TEMPLATE);
+        creator.statement(NTEMPLATE.NANOPUB_PLACEHOLDER, DCTERMS.CREATOR, NTEMPLATE.CREATOR_PLACEHOLDER);
+        templates.put(PI, creator.buildNanopub());
+        TemplateBuilder byHand = new TemplateBuilder(PI2, NTEMPLATE.PUBINFO_TEMPLATE);
+        byHand.statement(NTEMPLATE.NANOPUB_PLACEHOLDER, byHand.declare("pred", NTEMPLATE.URI_PLACEHOLDER), byHand.declare("obj", NTEMPLATE.VALUE_PLACEHOLDER),
+                NTEMPLATE.REPEATABLE_STATEMENT, NTEMPLATE.OPTIONAL_STATEMENT);
+        templates.put(PI2, byHand.buildNanopub());
+        Nanopub np = new NanopubImpl("""
+                @prefix this: <%1$s> .
+                @prefix sub: <%1$s/> .
+                @prefix np: <http://www.nanopub.org/nschema#> .
+                @prefix dct: <http://purl.org/dc/terms/> .
+                @prefix prov: <http://www.w3.org/ns/prov#> .
+                @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+                @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+                @prefix npx: <http://purl.org/nanopub/x/> .
+                @prefix nt: <https://w3id.org/np/o/ntemplate/> .
+                sub:Head { this: a np:Nanopublication ; np:hasAssertion sub:assertion ;
+                    np:hasProvenance sub:provenance ; np:hasPublicationInfo sub:pubinfo . }
+                sub:assertion { <http://example.com/thing> rdfs:label "A thing" . }
+                sub:provenance { sub:assertion prov:wasAttributedTo <%2$s> . }
+                sub:pubinfo {
+                    this: dct:created "2026-11-19T10:00:00Z"^^xsd:dateTime ; dct:creator <%2$s> ; rdfs:label "A thing" ;
+                        npx:supersedes <https://w3id.org/np/RAOldOldOldOldOldOldOldOldOldOldOldOldOldOld0> ;
+                        rdfs:seeAlso <http://example.com/more> ;
+                        nt:wasCreatedFromTemplate <%3$s> ; nt:wasCreatedFromProvenanceTemplate <%4$s> ;
+                        nt:wasCreatedFromPubinfoTemplate <%5$s> , <%6$s> .
+                    sub:sig npx:hasAlgorithm "RSA" ; npx:hasPublicKey "key" ; npx:hasSignature "signature" ; npx:hasSignatureTarget this: ; npx:signedBy <%2$s> .
+                }
+                """.formatted(OLD, ME, T, PR, PI, PI2), RDFFormat.TRIG);
+        ComplianceReport report = new TemplateComplianceChecker(templates::get).check(np);
+        assertTrue(report.isCompliant(), report.getIssues().toString());
+
+        FillRequest request = FillRequest.of(report);
+
+        // Not the creation time, the label, the link to the old version, the template links
+        // or the creator, which the other template gives:
+        assertEquals(params("template", T, "param_name", "A thing", "prtemplate", PR, "pitemplate1", PI,
+                "pitemplate2", PI2, "piparam2_pred", "http://www.w3.org/2000/01/rdf-schema#seeAlso", "piparam2_obj", "http://example.com/more",
+                "creator", ME), request.toParams());
+
+        // Without anything written by hand, the template is left out.
+        Nanopub plain = new NanopubImpl(NanopubUtils.getStatements(np).stream().filter(st -> !st.getPredicate().equals(RDFS.SEEALSO)).toList());
+        assertEquals(List.of(PI), FillRequest.of(new TemplateComplianceChecker(templates::get).check(plain)).getPubinfoTemplates());
     }
 
 }

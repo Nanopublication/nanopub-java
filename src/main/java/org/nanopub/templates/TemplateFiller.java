@@ -243,8 +243,13 @@ public class TemplateFiller {
             }
             Template used = inRequest != null ? inRequest : template;
             TemplateValues values = inRequest != null ? requested.get(inRequest) : new TemplateValues();
-            if (id.equals(sourceTemplate) && !values.has(SOURCE_PLACEHOLDER) && hasPlaceholder(used, SOURCE_PLACEHOLDER)) {
+            if (id.equals(sourceTemplate) && hasPlaceholder(used, SOURCE_PLACEHOLDER)) {
                 // The link to the existing nanopublication is given by the request as a whole.
+                RawValue given = values.get(SOURCE_PLACEHOLDER);
+                if (given != null && !given.isEmpty() && !given.text().equals(request.getSource())) {
+                    problems.add("The request names <" + request.getSource() + "> with '" + request.getMode().getParam() + "', but gives the template for that link <"
+                            + given.text() + ">; leave that value out");
+                }
                 TemplateValues withSource = new TemplateValues();
                 values.copyTo(withSource);
                 values = withSource.set(SOURCE_PLACEHOLDER, request.getSource());
