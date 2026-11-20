@@ -1,3 +1,13 @@
+## [1.97.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.97.0...nanopub-1.97.1) (2026-11-20)
+
+### Bug Fixes
+
+* **templates:** take the label pattern's names as placeholders ([ea9f8f1](https://github.com/Nanopublication/nanopub-java/commit/ea9f8f134067d50c0238fb464d59b296ebfe66e9)), closes [#225](https://github.com/Nanopublication/nanopub-java/issues/225)
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([7690697](https://github.com/Nanopublication/nanopub-java/commit/769069776f391b426fbb13ba876d9476dc6146ce))
+
 ## [1.97.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.96.0...nanopub-1.97.0) (2026-11-19)
 
 ### Features
