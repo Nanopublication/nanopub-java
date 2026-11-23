@@ -133,6 +133,43 @@ The check reads the network, so it fails open: when the query service cannot be 
 reported and signing goes ahead. `--strict` does not turn an unreachable service into a refusal, on
 the grounds that a check which could not be made is not evidence of a problem.
 
+## Checking against the Network
+
+```np check --network my-nanopub.trig```
+
+Some mistakes leave a nanopublication valid, so that it signs and publishes, and still keep it
+from doing what it is meant to do. They only show against other nanopublications. With
+`--network` (or `-n`), `np check` also looks for these:
+
+- **A new version that gives its resource a new IRI.** A nanopublication that supersedes another
+  has to introduce the same resources again, under the same IRIs. Written with the prefix of the
+  new nanopublication, an IRI changes with the trusty URI, and each version introduces a resource
+  of its own. Write the IRI of the earlier version in full, in the assertion and with
+  `npx:introduces`. For a query this is a note, as a query is specific to its version; it should
+  then be declared with `npx:embeds`. It is a note too for a nanopublication that introduces its
+  own assertion, as a template in the old shape does.
+- **A template link of the wrong kind.** `nt:wasCreatedFromTemplate` has to name an assertion
+  template, `nt:wasCreatedFromProvenanceTemplate` a provenance template, and
+  `nt:wasCreatedFromPubinfoTemplate` a publication info template.
+- **A new version signed with another key.** A nanopublication takes the place of the one it
+  supersedes only if it is signed with the same key, unless a space governs it.
+- **Governance without effect.** A definition that names a space with `gen:governedBy` is governed
+  by it only if the space maintains what the definition is a version of (`dct:isVersionOf`), and
+  the nanopublication declares the definition with `npx:embeds`.
+
+The first three are errors, the last is a note:
+
+```
+CHECK AGAINST THE NETWORK FAILED: https://w3id.org/np/RA...
+- ERROR: The superseded nanopublication <https://w3id.org/np/RA...> introduces <.../thing>, and this version introduces <.../thing> instead, which is another resource. ...
+```
+
+The exit status is 1 if there is an error. What could not be checked, because a nanopublication
+could not be retrieved or no query service answered, is a note and never an error. A
+nanopublication that is not signed yet is checked too, apart from its key.
+
+Whether a nanopublication is what its templates describe is another check: `np check-template`.
+
 ## Template Compliance
 
 ```

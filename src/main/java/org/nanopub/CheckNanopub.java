@@ -13,6 +13,8 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+import org.nanopub.extra.checks.NetworkChecker;
+import org.nanopub.extra.checks.NetworkFinding;
 import org.nanopub.extra.security.LegacySignatureUtils;
 import org.nanopub.extra.security.MalformedCryptoElementException;
 import org.nanopub.extra.security.NanopubSignatureElement;
@@ -37,6 +39,9 @@ public class CheckNanopub extends CliRunner {
 
     @com.beust.jcommander.Parameter(names = "-s", description = "Load nanopubs from given SPARQL endpoint")
     private String sparqlEndpointUrl;
+
+    @com.beust.jcommander.Parameter(names = {"-n", "--network"}, description = "Also check against the network: a new version against the one it supersedes, the template links, and governance by a space")
+    private boolean networkChecks = false;
 
     /**
      * Main method to run the CheckNanopub tool from the command line.
@@ -66,16 +71,18 @@ public class CheckNanopub extends CliRunner {
     /**
      * Returns the process exit status the command line tool reports for a
      * check: 0 if every nanopub is valid, 1 if anything is invalid or could not
-     * be read. Valid nanopubs that are not trusty count as a success.
+     * be read, or if a check against the network found an error. Valid nanopubs
+     * that are not trusty count as a success.
      *
      * @param report the report of a completed check
      * @return 0 if all nanopubs are valid, 1 otherwise
      */
     static int exitStatusFor(Report report) {
-        return report.areAllValid() ? 0 : 1;
+        return report.areAllValid() && report.getNetworkErrorCount() == 0 ? 0 : 1;
     }
 
     private Report report;
+    private NetworkChecker networkChecker;
     private int count;
     private SPARQLRepository sparqlRepo;
     private PrintStream logOut;
@@ -266,6 +273,7 @@ public class CheckNanopub extends CliRunner {
         if (!verifier.verify()) {
             report.countIssues();
         }
+        checkAgainstNetwork(np);
 
         if (verbose) {
             System.out.println("LABEL: " + NanopubUtils.getLabel(np));
@@ -291,6 +299,34 @@ public class CheckNanopub extends CliRunner {
                 System.out.println("- " + issue);
             }
         }
+    }
+
+    // The checks that need other nanopublications; see NetworkChecker.
+    private void checkAgainstNetwork(Nanopub np) {
+        if (networkChecker == null) {
+            if (!networkChecks) return;
+            networkChecker = new NetworkChecker();
+        }
+        List<NetworkFinding> findings = networkChecker.check(np);
+        if (findings.isEmpty()) return;
+        boolean failed = findings.stream().anyMatch(NetworkFinding::isError);
+        System.out.println((failed ? "CHECK AGAINST THE NETWORK FAILED: " : "Notes from the check against the network: ") + np.getUri());
+        for (NetworkFinding finding : findings) {
+            System.out.println("- " + finding.severity() + ": " + finding.message());
+        }
+        if (failed) report.countNetworkError();
+    }
+
+    /**
+     * Makes this check also run the checks that need other nanopublications, with the given
+     * checker: a new version against the one it supersedes, the template links, and
+     * governance by a space.
+     *
+     * @param networkChecker the checker to use, or null not to run these checks
+     */
+    public void setNetworkChecker(NetworkChecker networkChecker) {
+        this.networkChecker = networkChecker;
+        this.networkChecks = networkChecker != null;
     }
 
     /**
@@ -322,9 +358,23 @@ public class CheckNanopub extends CliRunner {
      */
     public class Report {
 
-        private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error, issues;
+        private int signed, legacySigned, trusty, notTrusty, invalidSignature, invalid, error, issues, networkErrors;
 
         private Report() {
+        }
+
+        private void countNetworkError() {
+            networkErrors++;
+        }
+
+        /**
+         * Returns the count of nanopubs for which a check against the network found an
+         * error. Such a nanopub is valid, but does not have the effect it is meant to have.
+         *
+         * @return the count of nanopubs with an error from the checks against the network
+         */
+        public int getNetworkErrorCount() {
+            return networkErrors;
         }
 
         private void countSigned() {
@@ -522,6 +572,9 @@ public class CheckNanopub extends CliRunner {
             }
             if (issues > 0) {
                 s += " " + issues + " nanopub with issues";
+            }
+            if (networkErrors > 0) {
+                s += (issues > 0 ? ";" : "") + " " + networkErrors + " failed the check against the network";
             }
             s = s.replaceFirst("^ ", "");
             return s;

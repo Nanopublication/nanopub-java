@@ -334,6 +334,57 @@ public class CheckNanopubTest {
         return checker.check();
     }
 
+    // A new version that introduces its thing under a new IRI.
+    private static String supersedingNanopub() {
+        return PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer").replace("http://example.org/np1#", "http://example.org/np2#")
+                .replace("this: ex:p ex:o .", "this: <http://purl.org/nanopub/x/supersedes> <http://example.org/np1#> ; <http://purl.org/nanopub/x/introduces> this:thing .");
+    }
+
+    private static org.nanopub.extra.checks.NetworkChecker offlineNetworkChecker() throws Exception {
+        Nanopub first = new NanopubImpl(PLAIN_NANOPUB.replace("@OBJECT@", "\"2\"^^xsd:integer")
+                .replace("this: ex:p ex:o .", "this: <http://purl.org/nanopub/x/introduces> this:thing ."), RDFFormat.TRIG);
+        return new org.nanopub.extra.checks.NetworkChecker(id -> id.equals("http://example.org/np1#") ? first : null, resource -> java.util.Set.of());
+    }
+
+    @Test
+    void networkChecks_areNotRunUnlessAskedFor(@TempDir Path tmp) throws Exception {
+        File file = tmp.resolve("superseding.trig").toFile();
+        Files.writeString(file.toPath(), supersedingNanopub());
+
+        CheckNanopub.Report report = checkSilently(file);
+
+        assertEquals(0, report.getNetworkErrorCount());
+        assertEquals(0, CheckNanopub.exitStatusFor(report));
+    }
+
+    @Test
+    void networkChecks_reportANewVersionThatDoesNotKeepItsResource(@TempDir Path tmp) throws Exception {
+        File file = tmp.resolve("superseding.trig").toFile();
+        Files.writeString(file.toPath(), supersedingNanopub());
+        CheckNanopub checker = new CheckNanopub(List.of(file.getAbsolutePath()));
+        checker.setLogPrintStream(new PrintStream(new ByteArrayOutputStream()));
+        checker.setNetworkChecker(offlineNetworkChecker());
+        CheckNanopub.Report[] report = new CheckNanopub.Report[1];
+
+        String printed = captureStandardOutput(() -> {
+            try {
+                report[0] = checker.check();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        assertTrue(printed.contains("CHECK AGAINST THE NETWORK FAILED: http://example.org/np2#"), printed);
+        assertTrue(printed.contains("- ERROR: The superseded nanopublication <http://example.org/np1#> introduces <http://example.org/np1#thing>, and this version introduces"
+                + " <http://example.org/np2#thing> instead"), printed);
+        assertTrue(printed.contains("- NOTE: The nanopublication is not signed"), printed);
+        assertEquals(1, report[0].getNetworkErrorCount());
+        // The nanopublication itself is valid; it is the check against the network that fails.
+        assertTrue(report[0].areAllValid());
+        assertEquals(1, CheckNanopub.exitStatusFor(report[0]));
+        assertTrue(report[0].getSummary().endsWith("1 failed the check against the network"), report[0].getSummary());
+    }
+
     @Test
     void main_printsASummary(@TempDir Path tmp) throws IOException {
         File file = tmp.resolve("main.trig").toFile();
