@@ -73,6 +73,13 @@ verifier.verify();
 verifier.getIssues();
 ```
 
+To also look for mistakes that only show against other nanopublications, such as a new version
+that gives the resource it introduces a new IRI, use `np check --network`, or in Java:
+
+```java
+List<NetworkFinding> findings = new NetworkChecker().check(nanopub);
+```
+
 ### Best Practices
 
 The best practices that are verified are the following:
