@@ -38,15 +38,18 @@ public class Count extends CliRunner {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        try {
-            Count obj = CliRunner.initJc(new Count(), args);
-            obj.run();
-        } catch (ParameterException ex) {
-            System.exit(1);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+        CliSupport.exitWith(execute(args));
+    }
+
+    /**
+     * Runs the tool and returns the process exit code, rather than ending the JVM itself,
+     * so that callers (including tests) can check the outcome.
+     *
+     * @param args command-line arguments
+     * @return 0 if the run completed, 1 if it failed
+     */
+    static int execute(String[] args) {
+        return CliSupport.execute(() -> CliRunner.initJc(new Count(), args).run());
     }
 
     /**
