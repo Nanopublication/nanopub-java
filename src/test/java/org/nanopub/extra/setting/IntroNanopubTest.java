@@ -6,7 +6,12 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.FOAF;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -15,15 +20,23 @@ import org.nanopub.Nanopub;
 import org.nanopub.NanopubAlreadyFinalizedException;
 import org.nanopub.NanopubCreator;
 import org.nanopub.extra.security.KeyDeclaration;
+import org.nanopub.extra.security.SignNanopub;
 import org.nanopub.extra.security.SignatureAlgorithm;
+import org.nanopub.extra.security.SignatureUtils;
+import org.nanopub.extra.security.TransformContext;
 import org.nanopub.extra.server.GetNanopub;
+import org.nanopub.testsuite.NanopubTestSuite;
+import org.nanopub.testsuite.SigningKeyPair;
 import org.nanopub.utils.TestUtils;
 import org.nanopub.vocabulary.NPX;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.util.Set;
 
+import static org.eclipse.rdf4j.model.util.Values.bnode;
 import static org.eclipse.rdf4j.model.util.Values.iri;
 import static org.eclipse.rdf4j.model.util.Values.literal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -183,6 +196,206 @@ class IntroNanopubTest {
 
         assertEquals(1, intro.getKeyDeclarations().size());
         assertNotNull(intro.getKeyDeclarations().getFirst().getPublicKeyString());
+    }
+
+    @Test
+    void ignoresStatementsWithABlankNodeSubject() throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.DECLARED_BY, USER);
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.HAS_PUBLIC_KEY, literal("a public key"));
+        creator.addAssertionStatement(bnode(), NPX.DECLARED_BY, USER);
+        creator.addAssertionStatement(bnode(), FOAF.NAME, literal("Jane Doe"));
+        creator.addProvenanceStatement(creator.getAssertionUri(), TestUtils.anyIri, TestUtils.anyIri);
+        creator.addPubinfoStatement(creator.getNanopubUri(), TestUtils.anyIri, TestUtils.anyIri);
+
+        IntroNanopub intro = new IntroNanopub(creator.finalizeNanopub());
+
+        assertEquals(USER, intro.getUser());
+        assertEquals(1, intro.getKeyDeclarations().size());
+    }
+
+    // ------------------------------------------------------- alternative IDs
+
+    private static final IRI ALTERNATIVE_ID = iri("https://example.org/people/jane");
+    private static final IRI OTHER_ALTERNATIVE_ID = iri("https://example.org/people/jane-doe");
+
+    /**
+     * A nanopub whose assertion declares a key for USER, plus the given statements.
+     */
+    private static Nanopub introNanopubWithStatements(Statement... statements) throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.DECLARED_BY, USER);
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.HAS_PUBLIC_KEY, literal("a public key"));
+        creator.addAssertionStatements(statements);
+        creator.addProvenanceStatement(creator.getAssertionUri(), TestUtils.anyIri, TestUtils.anyIri);
+        creator.addPubinfoStatement(creator.getNanopubUri(), TestUtils.anyIri, TestUtils.anyIri);
+        return creator.finalizeNanopub();
+    }
+
+    private static Statement sameAs(Resource subject, Value object) {
+        return SimpleValueFactory.getInstance().createStatement(subject, OWL.SAMEAS, object);
+    }
+
+    @Test
+    void readsAnAlternativeId() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(USER, ALTERNATIVE_ID)));
+
+        assertEquals(USER, intro.getUser());
+        assertEquals(Set.of(ALTERNATIVE_ID), intro.getAlternativeIds());
+    }
+
+    @Test
+    void readsSeveralAlternativeIds() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(
+                sameAs(USER, ALTERNATIVE_ID), sameAs(USER, OTHER_ALTERNATIVE_ID)));
+
+        assertEquals(Set.of(ALTERNATIVE_ID, OTHER_ALTERNATIVE_ID), intro.getAlternativeIds());
+    }
+
+    @Test
+    void hasNoAlternativeIdsByDefault() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWith("a public key", USER, "RSA"));
+
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void ignoresSameAsPointingToTheMainId() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(ALTERNATIVE_ID, USER)));
+
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void ignoresSameAsOnOtherSubjects() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(ALTERNATIVE_ID, OTHER_ALTERNATIVE_ID)));
+
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void ignoresALiteralAlternativeId() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(USER, literal(ALTERNATIVE_ID.stringValue()))));
+
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void dropsTheMainIdAsItsOwnAlternative() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(USER, USER), sameAs(USER, ALTERNATIVE_ID)));
+
+        assertEquals(Set.of(ALTERNATIVE_ID), intro.getAlternativeIds());
+    }
+
+    @Test
+    void readsAlternativeIdsOnlyForTheGivenUser() throws Exception {
+        IRI otherUser = iri("https://orcid.org/0000-0000-0000-0009");
+
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(USER, ALTERNATIVE_ID)), otherUser);
+
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void hasNoAlternativeIdsWithoutAUser() throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(USER, OWL.SAMEAS, ALTERNATIVE_ID);
+        creator.addProvenanceStatement(creator.getAssertionUri(), TestUtils.anyIri, TestUtils.anyIri);
+        creator.addPubinfoStatement(creator.getNanopubUri(), TestUtils.anyIri, TestUtils.anyIri);
+
+        IntroNanopub intro = new IntroNanopub(creator.finalizeNanopub());
+
+        assertNull(intro.getUser());
+        assertTrue(intro.getAlternativeIds().isEmpty());
+    }
+
+    @Test
+    void alternativeIdsCannotBeChanged() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubWithStatements(sameAs(USER, ALTERNATIVE_ID)));
+
+        assertThrows(UnsupportedOperationException.class, () -> intro.getAlternativeIds().add(OTHER_ALTERNATIVE_ID));
+    }
+
+    // ----------------------------------------------------- authoritative keys
+
+    private static KeyPair testKey(String name) throws Exception {
+        SigningKeyPair signingKeyPair = NanopubTestSuite.getLatest().getSigningKey(name);
+        return SignNanopub.loadKey(signingKeyPair.getPrivateKeyFile().getPath(), SignatureAlgorithm.RSA);
+    }
+
+    /**
+     * A creator for an unsigned nanopub whose assertion declares the given public key for USER.
+     */
+    private static NanopubCreator introNanopubCreatorDeclaring(KeyPair declaredKey) throws Exception {
+        NanopubCreator creator = TestUtils.getNanopubCreator();
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.DECLARED_BY, USER);
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.HAS_ALGORITHM, literal("RSA"));
+        creator.addAssertionStatement(KEY_DECLARATION, NPX.HAS_PUBLIC_KEY,
+                literal(SignatureUtils.encodePublicKey(declaredKey.getPublic())));
+        creator.addProvenanceStatement(creator.getAssertionUri(), TestUtils.anyIri, TestUtils.anyIri);
+        creator.addPubinfoStatement(creator.getNanopubUri(), TestUtils.anyIri, TestUtils.anyIri);
+        return creator;
+    }
+
+    private static Nanopub signedIntroNanopub(KeyPair declaredKey, KeyPair signingKey) throws Exception {
+        Nanopub unsigned = introNanopubCreatorDeclaring(declaredKey).finalizeNanopub();
+        TransformContext context = new TransformContext(SignatureAlgorithm.RSA, signingKey, USER, false, false, false);
+        return SignNanopub.signAndTransform(unsigned, context);
+    }
+
+    @Test
+    void aKeyTheIntroIsSignedWithIsAuthoritative() throws Exception {
+        KeyPair key = testKey("rsa-key1");
+
+        IntroNanopub intro = new IntroNanopub(signedIntroNanopub(key, key));
+
+        assertEquals(1, intro.getKeyDeclarations().size());
+        assertTrue(intro.isAuthoritative(intro.getKeyDeclarations().getFirst()));
+    }
+
+    @Test
+    void aKeyTheIntroIsNotSignedWithIsNotAuthoritative() throws Exception {
+        IntroNanopub intro = new IntroNanopub(signedIntroNanopub(testKey("rsa-key1"), testKey("rsa-key2")));
+
+        assertEquals(1, intro.getKeyDeclarations().size());
+        assertFalse(intro.isAuthoritative(intro.getKeyDeclarations().getFirst()));
+    }
+
+    @Test
+    void aKeyOfAnUnsignedIntroIsNotAuthoritative() throws Exception {
+        IntroNanopub intro = new IntroNanopub(introNanopubCreatorDeclaring(testKey("rsa-key1")).finalizeNanopub());
+
+        assertEquals(1, intro.getKeyDeclarations().size());
+        assertFalse(intro.isAuthoritative(intro.getKeyDeclarations().getFirst()));
+    }
+
+    @Test
+    void aSignatureThatDoesNotVerifyMakesNoKeyAuthoritative() throws Exception {
+        KeyPair key = testKey("rsa-key1");
+        NanopubCreator creator = introNanopubCreatorDeclaring(key);
+        // A signature element that claims the declared key, but whose signature was never made with it:
+        IRI signature = iri("https://example.org/signature");
+        creator.addPubinfoStatement(signature, NPX.HAS_SIGNATURE_TARGET, creator.getNanopubUri());
+        creator.addPubinfoStatement(signature, NPX.HAS_ALGORITHM, literal("RSA"));
+        creator.addPubinfoStatement(signature, NPX.HAS_PUBLIC_KEY, literal(SignatureUtils.encodePublicKey(key.getPublic())));
+        creator.addPubinfoStatement(signature, NPX.HAS_SIGNATURE, literal("bm90IGEgc2lnbmF0dXJl"));
+        Nanopub nanopub = creator.finalizeNanopub();
+        assertEquals(SignatureUtils.encodePublicKey(key.getPublic()),
+                SignatureUtils.getSignatureElement(nanopub).getPublicKeyString());
+
+        IntroNanopub intro = new IntroNanopub(nanopub);
+
+        assertEquals(1, intro.getKeyDeclarations().size());
+        assertFalse(intro.isAuthoritative(intro.getKeyDeclarations().getFirst()));
+    }
+
+    @Test
+    void aKeyDeclarationOfAnotherIntroIsNotAuthoritative() throws Exception {
+        KeyPair key = testKey("rsa-key1");
+        IntroNanopub intro = new IntroNanopub(signedIntroNanopub(key, key));
+        IntroNanopub otherIntro = new IntroNanopub(signedIntroNanopub(key, key));
+
+        assertFalse(intro.isAuthoritative(otherIntro.getKeyDeclarations().getFirst()));
     }
 
     // ------------------------------------------------------------- extraction
