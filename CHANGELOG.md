@@ -1,3 +1,21 @@
+## [1.98.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.97.1...nanopub-1.98.0) (2026-11-25)
+
+### Features
+
+* **check:** check a nanopublication against the network ([29f883d](https://github.com/Nanopublication/nanopub-java/commit/29f883d4ea04c9c08e891e2535dd3eb01463ff0b)), closes [#217](https://github.com/Nanopublication/nanopub-java/issues/217)
+
+### Dependency updates
+
+* **deps:** update dependency maven to v3.10.2 ([34f3478](https://github.com/Nanopublication/nanopub-java/commit/34f347815db8b3f14621c548cf97e609960ed58c))
+
+### Build and continuous integration
+
+* **deps:** update dependency node to v24.22.3 ([237d90b](https://github.com/Nanopublication/nanopub-java/commit/237d90b4832a5c3861da4bac4670530e0ccc91d7))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([e24d7d4](https://github.com/Nanopublication/nanopub-java/commit/e24d7d4853a0235e8fe042a6df40a73c9ed568cb))
+
 ## [1.97.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.97.0...nanopub-1.97.1) (2026-11-20)
 
 ### Bug Fixes
