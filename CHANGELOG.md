@@ -1,3 +1,13 @@
+## [1.98.2](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.1...nanopub-1.98.2) (2026-11-26)
+
+### Bug Fixes
+
+* **server:** wait for registries that answer 429 Too Many Requests ([3eade11](https://github.com/Nanopublication/nanopub-java/commit/3eade11df478209a7a471d0db3124c191d22bc70))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([b6ea3d6](https://github.com/Nanopublication/nanopub-java/commit/b6ea3d6d36453617d7d13278df5ce306f07f6cfa))
+
 ## [1.98.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.0...nanopub-1.98.1) (2026-11-26)
 
 ### Bug Fixes
