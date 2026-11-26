@@ -1,13 +1,18 @@
 package org.nanopub.templates;
 
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 import org.nanopub.Nanopub;
 import org.nanopub.NanopubImpl;
 import org.nanopub.NanopubUtils;
+import org.nanopub.extra.server.GetNanopub;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
 import static org.nanopub.templates.TemplateComplianceCheckerTest.QUERY;
 import static org.nanopub.templates.TemplateComplianceCheckerTest.RESOURCES;
 import static org.nanopub.templates.TemplateComplianceCheckerTest.VIEW;
@@ -27,6 +34,8 @@ import static org.nanopub.templates.TemplateComplianceCheckerTest.resourceFile;
  * Tests for the {@link CheckTemplateCompliance} command.
  */
 class CheckTemplateComplianceTest {
+
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
     @TempDir
     Path tempDir;
@@ -88,6 +97,41 @@ class CheckTemplateComplianceTest {
         output.reset();
         assertEquals(1, run(NanopubResolver.NONE, List.of(resourceFile(QUERY).getPath()), List.of()));
         assertTrue(output.toString().contains("cannot be used: nanopublication could not be retrieved"), output.toString());
+    }
+
+    @Test
+    void templateNamedByItsNodeIsRetrievedFromTheNetwork() throws Exception {
+        // The query nanopublication, naming its assertion template by an IRI within the
+        // template nanopublication, as nanopublications made from newer templates do.
+        Nanopub np = new NanopubImpl(resourceFile(QUERY));
+        IRI link = vf.createIRI("https://w3id.org/np/o/ntemplate/wasCreatedFromTemplate");
+        List<Statement> statements = new ArrayList<>();
+        for (Statement st : NanopubUtils.getStatements(np)) {
+            if (st.getPredicate().equals(link)) {
+                st = vf.createStatement(st.getSubject(), link, vf.createIRI(st.getObject().stringValue() + "/template"), st.getContext());
+            }
+            statements.add(st);
+        }
+        Path file = tempDir.resolve("node-link.trig");
+        Files.writeString(file, NanopubUtils.writeToString(new NanopubImpl(statements), RDFFormat.TRIG));
+
+        // No resolver is set, so the command asks the network, which is stood in for here:
+        CheckTemplateCompliance command = new CheckTemplateCompliance(List.of(file.toString()), List.of());
+        command.setOutput(new PrintStream(output, true));
+        int notCompliant;
+        try (MockedStatic<GetNanopub> network = mockStatic(GetNanopub.class)) {
+            network.when(() -> GetNanopub.get(anyString())).thenAnswer(call -> {
+                String id = call.getArgument(0);
+                // As the network does, it only takes what ends with an artifact code:
+                if (!id.matches("(.*[^A-Za-z0-9_-])?RA[A-Za-z0-9_-]{43}")) throw new IllegalArgumentException("Not a well-formed trusty URI");
+                return RESOURCES.getNanopub(id);
+            });
+            notCompliant = command.run();
+        }
+        String text = output.toString();
+        assertEquals(0, notCompliant, text);
+        assertTrue(text.contains("COMPLIES: https://w3id.org/np/" + QUERY), text);
+        assertFalse(text.contains("cannot be used"), text);
     }
 
     @Test
