@@ -538,7 +538,7 @@ public class PublishNanopub extends CliRunner {
      * Reads a {@code Retry-After} header in its delay-seconds form. The HTTP-date form is left to
      * the backoff schedule rather than parsed, as registries send the seconds form.
      */
-    private static Integer retryAfterSeconds(HttpResponse response) {
+    static Integer retryAfterSeconds(HttpResponse response) {
         Header header = response.getFirstHeader("Retry-After");
         if (header == null || header.getValue() == null) {
             return null;
