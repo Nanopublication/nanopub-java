@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -103,6 +104,10 @@ public class GetNanopub extends CliRunner {
 
     /**
      * Get a nanopub from the server using its URI or artifact code.
+     * <p>
+     * The registries are asked in turn. Those that answer {@code 429 Too Many Requests} are asked
+     * again after a wait, which can make this take up to about 10 seconds longer when the
+     * registries are busy.
      *
      * @param uriOrArtifactCode the URI or artifact code of the nanopub
      * @return the Nanopub object, or null if not found
@@ -137,24 +142,147 @@ public class GetNanopub extends CliRunner {
         return getWithIterator(uriOrArtifactCode, new ServerIterator(seedServers), NanopubUtils.getHttpClient());
     }
 
-    private static Nanopub getWithIterator(String uriOrArtifactCode, ServerIterator serverIterator, HttpClient httpClient) {
+    /**
+     * How often the registries that answered {@code 429 Too Many Requests} are asked again for a
+     * nanopublication before it counts as not retrieved. The public registries allow 10 requests
+     * per second per IP address, so a wait of a second or two is usually enough.
+     */
+    private static final int MAX_RETRY_ROUNDS = 3;
+
+    /**
+     * Upper bound on the time spent waiting for one nanopublication. A lookup is often made while
+     * someone waits for a page, so a {@code Retry-After} that asks for longer than is left of this
+     * is not waited for.
+     */
+    private static final long MAX_TOTAL_WAIT_MILLIS = 10000;
+
+    /**
+     * HTTP status 429 (Too Many Requests), which {@link org.apache.http.HttpStatus} lacks.
+     */
+    private static final int SC_TOO_MANY_REQUESTS = 429;
+
+    /**
+     * Spends the wait before the registries are asked again. Tests replace it, so that they need
+     * not spend the time.
+     */
+    static Sleeper sleeper = Thread::sleep;
+
+    /**
+     * Waits for the given number of milliseconds.
+     */
+    interface Sleeper {
+        void sleep(long millis) throws InterruptedException;
+    }
+
+    /**
+     * Asks the registries in turn for a nanopublication. A registry that answers
+     * {@code 429 Too Many Requests} is only saying "not now", so once the others have been asked,
+     * the ones that did are asked again after a wait: the longest time their {@code Retry-After}
+     * headers give, or otherwise 1, 2 and then 4 seconds, for at most three rounds and 10 seconds
+     * in all. Any other failure moves on to the next registry for good, as a registry that does
+     * not have the nanopublication would not have it a moment later either.
+     */
+    static Nanopub getWithIterator(String uriOrArtifactCode, Iterator<RegistryInfo> registries, HttpClient httpClient) {
         ArtifactCode ac = getArtifactCode(uriOrArtifactCode);
         if (!ac.getModule().getModuleId().equals(RdfModule.MODULE_ID)) {
             throw new IllegalArgumentException("Not a trusty URI of type " + RdfModule.MODULE_ID);
         }
-        while (serverIterator.hasNext()) {
-            RegistryInfo registryInfo = serverIterator.next();
+        Refusals refusals = new Refusals();
+        Nanopub np = getFromRegistries(ac, registries, httpClient, refusals);
+        long waited = 0;
+        for (int round = 1; np == null && !refusals.registries.isEmpty() && round <= MAX_RETRY_ROUNDS; round++) {
+            long wait = refusals.waitMillis(round);
+            if (waited + wait > MAX_TOTAL_WAIT_MILLIS) {
+                break;
+            }
+            logger.debug("{} registr{} answered 429 Too Many Requests for {}; asking again in {} ms (round {} of {})",
+                    refusals.registries.size(), refusals.registries.size() == 1 ? "y" : "ies", ac, wait, round, MAX_RETRY_ROUNDS);
+            try {
+                sleeper.sleep(wait);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            waited += wait;
+            List<RegistryInfo> again = refusals.registries;
+            refusals = new Refusals();
+            np = getFromRegistries(ac, again.iterator(), httpClient, refusals);
+        }
+        if (np == null) {
+            if (refusals.registries.isEmpty()) {
+                logger.warn("Could not get {} from any of the available registries", ac);
+            } else {
+                logger.warn("Could not get {} from any of the available registries; {} of them still answered 429 Too Many Requests",
+                        ac, refusals.registries.size());
+            }
+        }
+        return np;
+    }
+
+    private static Nanopub getFromRegistries(ArtifactCode ac, Iterator<RegistryInfo> registries, HttpClient httpClient, Refusals refusals) {
+        while (registries.hasNext()) {
+            RegistryInfo registryInfo = registries.next();
             try {
                 Nanopub np = get(ac.toString(), registryInfo, httpClient);
                 if (np != null) {
                     return np;
                 }
+            } catch (TooManyRequestsException ex) {
+                logger.debug("Registry {} answered 429 Too Many Requests for {}", registryInfo.getUrl(), ac);
+                refusals.add(registryInfo, ex.retryAfterSeconds);
             } catch (IOException | MalformedNanopubException | RDF4JException ex) {
                 logger.debug("Could not get {} from registry {}; trying the next one", ac, registryInfo.getUrl(), ex);
             }
         }
-        logger.warn("Could not get {} from any of the available registries", ac);
         return null;
+    }
+
+    /**
+     * The registries that answered {@code 429 Too Many Requests} in one round, and the longest
+     * wait one of them asked for with a {@code Retry-After} header.
+     */
+    private static final class Refusals {
+
+        private final List<RegistryInfo> registries = new ArrayList<>();
+        private boolean anyWithoutRetryAfter;
+        private Integer longestRetryAfterSeconds;
+
+        void add(RegistryInfo registryInfo, Integer retryAfterSeconds) {
+            registries.add(registryInfo);
+            if (retryAfterSeconds == null) {
+                anyWithoutRetryAfter = true;
+            } else if (longestRetryAfterSeconds == null || retryAfterSeconds > longestRetryAfterSeconds) {
+                longestRetryAfterSeconds = retryAfterSeconds;
+            }
+        }
+
+        /**
+         * The wait before the given round, long enough for each of the registries: none of them
+         * is asked again before the time it gave.
+         */
+        long waitMillis(int round) {
+            long backoff = 1000L << (round - 1);
+            if (longestRetryAfterSeconds == null) {
+                return backoff;
+            }
+            long asked = longestRetryAfterSeconds * 1000L;
+            return anyWithoutRetryAfter ? Math.max(asked, backoff) : asked;
+        }
+
+    }
+
+    /**
+     * A registry answered {@code 429 Too Many Requests}.
+     */
+    private static final class TooManyRequestsException extends IOException {
+
+        private final Integer retryAfterSeconds;
+
+        TooManyRequestsException(String message, Integer retryAfterSeconds) {
+            super(message);
+            this.retryAfterSeconds = retryAfterSeconds;
+        }
+
     }
 
     /**
@@ -212,6 +340,9 @@ public class GetNanopub extends CliRunner {
             HttpResponse resp = httpClient.execute(get);
             if (!wasSuccessful(resp)) {
                 EntityUtils.consumeQuietly(resp.getEntity());
+                if (resp.getStatusLine().getStatusCode() == SC_TOO_MANY_REQUESTS) {
+                    throw new TooManyRequestsException(resp.getStatusLine().toString(), PublishNanopub.retryAfterSeconds(resp));
+                }
                 throw new IOException(resp.getStatusLine().toString());
             }
             if (!NanopubServerUtils.isReadyRegistryStatus(resp)) {
