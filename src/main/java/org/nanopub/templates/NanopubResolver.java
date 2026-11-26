@@ -18,9 +18,12 @@ public interface NanopubResolver extends Serializable {
 
     /**
      * Retrieves nanopublications from the nanopublication network with
-     * {@link GetNanopub#get(String)}.
+     * {@link GetNanopub#get(String)}. The nanopublication is found by the artifact code in
+     * what is given, so an IRI within a nanopublication, such as the node of a template
+     * (<code>.../RA.../template</code>), retrieves that nanopublication. Null is returned
+     * for anything without an artifact code.
      */
-    NanopubResolver DEFAULT = GetNanopub::get;
+    NanopubResolver DEFAULT = NanopubResolver::getFromNetwork;
 
     /**
      * Retrieves nothing. With this resolver a template is read from its own nanopublication
@@ -31,9 +34,15 @@ public interface NanopubResolver extends Serializable {
     /**
      * Retrieves a nanopublication.
      *
-     * @param uriOrArtifactCode the URI or the artifact code of the nanopublication
+     * @param uriOrArtifactCode the URI or the artifact code of the nanopublication, or an IRI
+     *                          within it
      * @return the nanopublication, or null if it cannot be retrieved
      */
     Nanopub getNanopub(String uriOrArtifactCode);
+
+    private static Nanopub getFromNetwork(String uriOrArtifactCode) {
+        String artifactCode = LocalNanopubs.getArtifactCode(uriOrArtifactCode);
+        return artifactCode == null ? null : GetNanopub.get(artifactCode);
+    }
 
 }

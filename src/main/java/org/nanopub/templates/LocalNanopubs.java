@@ -63,7 +63,15 @@ final class LocalNanopubs {
         return null;
     }
 
-    private static String getArtifactCode(String iri) {
+    /**
+     * Returns the artifact code in a nanopublication URI or in an IRI within a
+     * nanopublication, or what is given if that is an artifact code already.
+     *
+     * @param iri the URI, IRI or artifact code; can be null
+     * @return the artifact code, or null if there is none
+     */
+    static String getArtifactCode(String iri) {
+        if (iri == null) return null;
         Matcher m = ARTIFACT_CODE.matcher(iri);
         return m.find() ? m.group() : null;
     }
