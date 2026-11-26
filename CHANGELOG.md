@@ -1,3 +1,13 @@
+## [1.98.1](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.0...nanopub-1.98.1) (2026-11-26)
+
+### Bug Fixes
+
+* **templates:** retrieve a template named by its node IRI ([8fde3b9](https://github.com/Nanopublication/nanopub-java/commit/8fde3b972534c3df10a755cc54b4b2832b3b3803))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([daf0ab3](https://github.com/Nanopublication/nanopub-java/commit/daf0ab351c1e64e7959fd05673ca7305040b67b8))
+
 ## [1.98.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.97.1...nanopub-1.98.0) (2026-11-25)
 
 ### Features
