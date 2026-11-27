@@ -1,3 +1,17 @@
+## [1.99.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.2...nanopub-1.99.0) (2026-11-27)
+
+### Features
+
+* **templates:** give the filler what a form knows, and the repetition rule ([3962bd2](https://github.com/Nanopublication/nanopub-java/commit/3962bd226a16ea620bb692bf9a613aa58f627ee3)), closes [knowledgepixels/nanodash#936](https://github.com/knowledgepixels/nanodash/issues/936)
+
+### Bug Fixes
+
+* **query:** send a query only once in np query ([94cb7bb](https://github.com/Nanopublication/nanopub-java/commit/94cb7bbb67637e41df6713d89c6f78d829c18f3a))
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([7030165](https://github.com/Nanopublication/nanopub-java/commit/70301655f681e3e72705f206ef5b3b8dbb77e3d2))
+
 ## [1.98.2](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.1...nanopub-1.98.2) (2026-11-26)
 
 ### Bug Fixes
