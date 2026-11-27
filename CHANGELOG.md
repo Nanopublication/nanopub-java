@@ -1,3 +1,13 @@
+## [1.100.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.99.0...nanopub-1.100.0) (2026-11-27)
+
+### Features
+
+* **templates:** read a nanopublication for templates the caller picks ([3c94dd8](https://github.com/Nanopublication/nanopub-java/commit/3c94dd8e582972555fb1b2c5d69c662a00d6c6db)), closes [knowledgepixels/nanodash#936](https://github.com/knowledgepixels/nanodash/issues/936)
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([833f94f](https://github.com/Nanopublication/nanopub-java/commit/833f94f7f583810d528de9ea51ea9e81fa02fc64))
+
 ## [1.99.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.98.2...nanopub-1.99.0) (2026-11-27)
 
 ### Features
