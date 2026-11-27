@@ -136,7 +136,7 @@ class PublishedTemplateTest {
 
         assertEquals(metaIri("templateVersion").stringValue(), t.getId());
         assertTrue(t.hasId(NP_PREFIX + META_TEMPLATE));
-        assertEquals(metaIri("template"), t.getTemplateKindIri());
+        assertEquals(metaIri("template"), t.getVersionIndependentIri());
         assertEquals(vf.createIRI("https://w3id.org/spaces/knowledgepixels/nanodash"), t.getGoverningSpace());
         assertEquals("Defining an assertion template (new version)", t.getLabel());
         assertEquals("Templates", t.getTag());

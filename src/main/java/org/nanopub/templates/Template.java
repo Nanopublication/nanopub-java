@@ -74,7 +74,7 @@ public class Template implements Serializable {
     // TODO: Make all these maps more generic and the code simpler:
     private IRI templateIri;
     private boolean embeddedIdentity = false;
-    private IRI templateKindIri;
+    private IRI versionIndependentIri;
     private IRI governingSpace;
     private Map<IRI, List<IRI>> typeMap = new HashMap<>();
     private Map<IRI, List<Value>> possibleValueMap = new HashMap<>();
@@ -259,20 +259,32 @@ public class Template implements Serializable {
     }
 
     /**
-     * Returns the template kind IRI, i.e. the stable identifier this template
-     * version declares itself a version of ({@code dct:isVersionOf} on the template
+     * Returns the version-independent IRI of this template, i.e. the stable identifier this
+     * template version declares itself a version of ({@code dct:isVersionOf} on the template
      * node), or null if it doesn't declare one.
      *
-     * @return the template kind IRI, or null
+     * @return the version-independent IRI, or null
      */
+    public IRI getVersionIndependentIri() {
+        return versionIndependentIri;
+    }
+
+    /**
+     * Returns the version-independent IRI of this template, under the name it had before.
+     *
+     * @return the version-independent IRI, or null
+     * @deprecated use {@link #getVersionIndependentIri()}; the {@code dct:isVersionOf} target
+     * is called the version-independent IRI, not the template kind
+     */
+    @Deprecated
     public IRI getTemplateKindIri() {
-        return templateKindIri;
+        return getVersionIndependentIri();
     }
 
     /**
      * Returns the space governing this template version ({@code gen:governedBy} on
      * the template node), or null if it doesn't declare one. A governed version's
-     * latest-resolution floats space-based within its (kind, space) pair instead of
+     * latest-resolution floats space-based within its (version-independent IRI, space) pair instead of
      * following the supersedes chain.
      *
      * @return the governing space IRI, or null
@@ -1175,9 +1187,9 @@ public class Template implements Serializable {
     /**
      * Checks whether the given nanopublication contains a full template definition,
      * i.e. whether it can serve as the source of a fill-in form. Nanopublications
-     * that merely refer to a template - most notably the registration of a template
-     * kind as a maintained resource of a space, which types the kind IRI as a
-     * template but carries no template body - do not qualify.
+     * that merely refer to a template - most notably the registration of a template's
+     * version-independent IRI as a maintained resource of a space, which types that IRI as
+     * a template but carries no template body - do not qualify.
      *
      * @param np the nanopublication to check
      * @return true if the nanopublication defines a template, false otherwise
@@ -1350,7 +1362,7 @@ public class Template implements Serializable {
                 processTemplateNodeStatement(pred, obj);
                 if (obj instanceof IRI objIri) {
                     if (pred.equals(DCTERMS.IS_VERSION_OF)) {
-                        templateKindIri = objIri;
+                        versionIndependentIri = objIri;
                     } else if (pred.equals(KPXL.GOVERNED_BY)) {
                         governingSpace = objIri;
                     }
