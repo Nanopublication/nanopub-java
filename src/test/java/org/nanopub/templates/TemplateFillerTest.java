@@ -192,6 +192,88 @@ class TemplateFillerTest {
         assertEquals(Set.of("\"A fruit, see apple-tree, by Me\""), objects(np, RDFS.LABEL));
     }
 
+    // A template with a topic chosen from a list, an agent that can also be chosen from a list,
+    // and a related thing:
+    //   ex:Thing dct:subject ?topic .
+    //   ex:Thing dct:contributor ?who .
+    //   ex:Thing dct:relation ?other .
+    private TemplateBuilder choiceTemplate() throws Exception {
+        TemplateBuilder t = new TemplateBuilder(TEMPLATE, NTEMPLATE.ASSERTION_TEMPLATE);
+        IRI topic = t.declare("topic", NTEMPLATE.GUIDED_CHOICE_PLACEHOLDER);
+        t.add(topic, NTEMPLATE.POSSIBLE_VALUES_FROM_API, "https://example.org/api/topics");
+        IRI who = t.declare("who", NTEMPLATE.AGENT_PLACEHOLDER, NTEMPLATE.GUIDED_CHOICE_PLACEHOLDER);
+        t.add(who, NTEMPLATE.POSSIBLE_VALUES_FROM_API, "https://example.org/api/people");
+        t.statement(EX_THING, DCTERMS.SUBJECT, topic);
+        t.statement(EX_THING, DCTERMS.CONTRIBUTOR, who);
+        t.statement(EX_THING, DCTERMS.RELATION, t.declare("other", NTEMPLATE.URI_PLACEHOLDER), NTEMPLATE.OPTIONAL_STATEMENT);
+        t.add(t.templateNode, NTEMPLATE.HAS_NANOPUB_LABEL_PATTERN, "${topic} by ${who}, see ${other}");
+        return t;
+    }
+
+    private static final String APPLES = "https://example.org/topics/apples";
+    private static final String SOMEONE = "https://orcid.org/0000-0000-0000-0002";
+    private static final String TREE = "https://example.org/things/apple-tree";
+
+    @Test
+    void statesTheLabelsFromAnApiOfGuidedChoices() throws Exception {
+        register(choiceTemplate());
+
+        Nanopub np = fill(request(TEMPLATE).set("topic", APPLES).set("who", SOMEONE).set("other", TREE)
+                .setLabelFromApi(APPLES, "Apples - the fruit").setLabelFromApi(SOMEONE, "Some One").setLabelFromApi(TREE, "The apple tree")
+                .setLabelFromApi("https://example.org/topics/pears", "Pears"));
+
+        // Only the guided choice states its label: the agent is chosen as an agent, the
+        // related thing is no choice, and pears are no value at all.
+        assertEquals(Set.of(APPLES + " nt:hasLabelFromApi \"Apples - the fruit\""),
+                triples(np.getPubinfo().stream().filter(st -> st.getPredicate().equals(NTEMPLATE.HAS_LABEL_FROM_API)).toList(), np));
+        // All the labels go into the label of the nanopublication.
+        assertEquals(Set.of("\"Apples by Some One, see The apple tree\""), objects(np, RDFS.LABEL));
+        ComplianceReport report = new TemplateComplianceChecker(resolver).check(np);
+        assertTrue(report.isCompliant(), report.getIssues().toString());
+    }
+
+    @Test
+    void aLabelFromAnApiIsShortened() throws Exception {
+        register(choiceTemplate());
+        String longLabel = "x".repeat(1200);
+
+        Nanopub np = fill(request(TEMPLATE).set("topic", APPLES).set("who", SOMEONE).setLabelFromApi(APPLES, longLabel));
+
+        Literal stated = (Literal) np.getPubinfo().stream().filter(st -> st.getPredicate().equals(NTEMPLATE.HAS_LABEL_FROM_API))
+                .findFirst().orElseThrow().getObject();
+        assertEquals("x".repeat(997) + "...", stated.stringValue());
+    }
+
+    @Test
+    void labelsOfThePublicationInfoAndTheTemplateComeFirst() throws Exception {
+        TemplateBuilder t = choiceTemplate();
+        t.add(vf.createIRI(APPLES), RDFS.LABEL, "apples, as the template calls them");
+        register(t);
+
+        Nanopub np = fill(request(TEMPLATE).set("topic", APPLES).set("who", SOMEONE).set("other", TREE)
+                .setLabelFromApi(APPLES, "Apples").setLabelFromApi(SOMEONE, "Some One").setLabel(SOMEONE, "Someone we know")
+                .setLabel(TREE, "a tree").setLabel(TREE, null));
+
+        // The template's label beats the one from the API, a given label beats one from the
+        // API, and a label that was taken back is not used.
+        assertEquals(Set.of("\"apples, as the template calls them by Someone we know, see apple-tree\""), objects(np, RDFS.LABEL));
+        assertThrows(IllegalArgumentException.class, () -> request(TEMPLATE).setLabel(" ", "nothing"));
+    }
+
+    @Test
+    void statesTheSiteItWasCreatedAt() throws Exception {
+        register(thingTemplate());
+
+        Nanopub np = fill(request(TEMPLATE).set("thing", "apple").set("name", "Apple").setCreationSite("https://nanodash.example.org/"));
+        assertEquals(Set.of("https://nanodash.example.org/"), objects(np, NPX.WAS_CREATED_AT));
+
+        Nanopub without = fill(request(TEMPLATE).set("thing", "apple").set("name", "Apple").setCreationSite(" "));
+        assertEquals(Set.of(), objects(without, NPX.WAS_CREATED_AT));
+        assertThrows(IllegalArgumentException.class, () -> request(TEMPLATE).setCreationSite("not an IRI"));
+        // A site and labels are not among the parameters of a link to a form.
+        assertFalse(request(TEMPLATE).setCreationSite("https://nanodash.example.org/").setLabel(APPLES, "Apples").toParams().toString().contains("example.org"));
+    }
+
     @Test
     void whatIsFilledCompliesWithItsTemplates() throws Exception {
         register(thingTemplate());

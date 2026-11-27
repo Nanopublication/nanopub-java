@@ -51,7 +51,10 @@ import java.util.regex.Pattern;
  * A form takes the rest from the person who is logged in and from the page it was opened on.
  * A request names it: {@code creator}, the IRI of the creator, with {@code creator-name};
  * and {@code space} and {@code namespace}, the IRIs that the tokens {@code ~~SPACE~~} and
- * {@code ~~NAMESPACE~~} in the prefixes of a template stand for.
+ * {@code ~~NAMESPACE~~} in the prefixes of a template stand for. What a form knows beyond
+ * that, the labels it looked up and the site it runs at, can be given to a request too
+ * ({@link #setLabelFromApi(String, String)}, {@link #setLabel(String, String)},
+ * {@link #setCreationSite(String)}), but not as parameters.
  * <p>
  * Unlike the form, a request has to give all values: nothing is read from the
  * nanopublication that is superseded, overridden or derived from, except what
@@ -134,6 +137,9 @@ public class FillRequest implements Serializable {
     private String space;
     private String namespace;
     private Date creationTime;
+    private String creationSite;
+    private final Map<String, String> labels = new LinkedHashMap<>();
+    private final Map<String, String> labelsFromApi = new LinkedHashMap<>();
 
     /**
      * Creates a request for the given assertion template.
@@ -370,6 +376,84 @@ public class FillRequest implements Serializable {
     }
 
     /**
+     * Sets the site the nanopublication is made at, such as the address of the Nanodash
+     * instance whose form was filled in. The publication info then states it with
+     * {@code npx:wasCreatedAt}.
+     *
+     * @param creationSite the IRI of the site, or null to leave it out
+     * @return this object
+     * @throws IllegalArgumentException if it is not an IRI
+     */
+    public FillRequest setCreationSite(String creationSite) {
+        if (creationSite == null || creationSite.isBlank()) {
+            this.creationSite = null;
+        } else {
+            this.creationSite = PlaceholderMatcher.createIri(creationSite).stringValue();
+        }
+        return this;
+    }
+
+    /**
+     * @return the IRI of the site the nanopublication is made at, or null if not given
+     */
+    public String getCreationSite() {
+        return creationSite;
+    }
+
+    /**
+     * Gives a label for an IRI that is the value of a placeholder, such as the name of a
+     * person. It is used where the label pattern of the assertion template names that
+     * placeholder, unless the publication info or the template give the IRI a label.
+     *
+     * @param iri   the IRI
+     * @param label the label, or null to remove one given before
+     * @return this object
+     */
+    public FillRequest setLabel(String iri, String label) {
+        putLabel(labels, iri, label);
+        return this;
+    }
+
+    /**
+     * @return the labels given with {@link #setLabel(String, String)}, by IRI
+     */
+    public Map<String, String> getLabels() {
+        return Collections.unmodifiableMap(labels);
+    }
+
+    /**
+     * Gives the label that a value chosen from a list has at the source the template names
+     * for the list ({@code nt:possibleValuesFromApi}), as a form looks it up. Where the IRI is
+     * the value of a guided choice placeholder, the publication info states the label with
+     * {@code nt:hasLabelFromApi}, shortened to 1,000 characters. It is also used as a label
+     * given with {@link #setLabel(String, String)} is, where none is given that way.
+     *
+     * @param iri   the IRI of the value
+     * @param label the label, or null to remove one given before
+     * @return this object
+     */
+    public FillRequest setLabelFromApi(String iri, String label) {
+        putLabel(labelsFromApi, iri, label);
+        return this;
+    }
+
+    /**
+     * @return the labels given with {@link #setLabelFromApi(String, String)}, by IRI
+     */
+    public Map<String, String> getLabelsFromApi() {
+        return Collections.unmodifiableMap(labelsFromApi);
+    }
+
+    private static void putLabel(Map<String, String> map, String iri, String label) {
+        if (iri == null || iri.isBlank()) throw new IllegalArgumentException("No IRI given");
+        if (label == null || label.isBlank()) {
+            map.remove(iri);
+        } else {
+            map.put(iri, label);
+        }
+    }
+
+    /**
      * Reads the request back out of a nanopublication that was checked against its templates:
      * the templates it names, the values of their placeholders, and its creator. Filling the
      * request gives the nanopublication again, as far as it is what its templates describe,
@@ -520,7 +604,7 @@ public class FillRequest implements Serializable {
 
     /**
      * Returns the request as parameters, named as in a link to the publishing form of
-     * Nanodash. The creation time is not among them.
+     * Nanodash. The creation time, the creation site and the labels are not among them.
      *
      * @return the parameters
      */

@@ -112,6 +112,8 @@ public class Template implements Serializable {
     private String targetNamespace = null;
     private String nanopubLabelPattern;
     private List<IRI> targetNanopubTypes = new ArrayList<>();
+    // Made when first needed; it is derived from the maps above, so it is not serialized.
+    private transient TemplateStructure structure;
 
     /**
      * Reads the template with the given ID, retrieving its nanopublication from the
@@ -1583,6 +1585,42 @@ public class Template implements Serializable {
 
     private void addType(IRI thing, IRI type) {
         typeMap.computeIfAbsent(thing, k -> new ArrayList<>()).add(type);
+    }
+
+    private TemplateStructure getStructure() {
+        TemplateStructure s = structure;
+        if (s == null) structure = s = new TemplateStructure(this);
+        return s;
+    }
+
+    /**
+     * Checks whether a value in a statement of the template has a value of its own in each
+     * repetition of that statement. That is so for a sequence element placeholder, and for a
+     * placeholder or local resource that occurs in a single top-level statement of the
+     * template. Any other placeholder stands for one value wherever it occurs.
+     *
+     * @param templateValue the value the template has in a statement
+     * @return true if it has a value of its own in each repetition
+     */
+    public boolean hasOwnValuePerRepetition(Value templateValue) {
+        return getStructure().hasOwnValuePerRepetition(templateValue);
+    }
+
+    /**
+     * Returns the key under which the value of a position is given in a repetition of its
+     * statement. Where the position has a value of its own in each repetition (see
+     * {@link #hasOwnValuePerRepetition(Value)}), this is the template value with the suffix
+     * {@code __N} from the second repetition on, N being the repetition counted from 0;
+     * otherwise it is the template value itself. The names of values in a {@link FillRequest}
+     * are the local names of these keys.
+     *
+     * @param templateValue the value the template has in a statement
+     * @param repetition    the repetition, counted from 0
+     * @return the key
+     */
+    public Value getRepetitionKey(Value templateValue, int repetition) {
+        if (repetition < 0) throw new IllegalArgumentException("A repetition is counted from 0: " + repetition);
+        return getStructure().getKey(templateValue, repetition);
     }
 
     /**
