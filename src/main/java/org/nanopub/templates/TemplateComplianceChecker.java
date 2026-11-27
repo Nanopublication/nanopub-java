@@ -374,9 +374,9 @@ public class TemplateComplianceChecker {
             }
             if (!named) {
                 Template requiredTemplate = loadTemplate(required.stringValue());
-                IRI versionOf = requiredTemplate == null ? null : requiredTemplate.getTemplateKindIri();
+                IRI versionOf = requiredTemplate == null ? null : requiredTemplate.getVersionIndependentIri();
                 for (TemplateMatch match : pubinfoMatches) {
-                    if (versionOf != null && versionOf.equals(match.getTemplate().getTemplateKindIri())) named = true;
+                    if (versionOf != null && versionOf.equals(match.getTemplate().getVersionIndependentIri())) named = true;
                 }
             }
             if (named) continue;

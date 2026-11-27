@@ -267,8 +267,8 @@ public class TemplateFiller {
     // is a version of: without it, a nanopublication would get its license twice.
     private static boolean isInPlaceOf(Template requested, Template standard) {
         if (requested == standard || requested.hasId(standard.getId()) || standard.hasId(requested.getId())) return true;
-        IRI kind = requested.getTemplateKindIri();
-        if (kind != null && kind.equals(standard.getTemplateKindIri())) return true;
+        IRI versionIndependentIri = requested.getVersionIndependentIri();
+        if (versionIndependentIri != null && versionIndependentIri.equals(standard.getVersionIndependentIri())) return true;
         Set<String> given = new HashSet<>();
         TemplateStructure requestedStructure = new TemplateStructure(requested);
         for (IRI statement : requested.getStatementIris()) {
