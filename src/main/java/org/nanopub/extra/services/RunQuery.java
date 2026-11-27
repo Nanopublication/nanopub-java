@@ -3,11 +3,13 @@ package org.nanopub.extra.services;
 import com.beust.jcommander.ParameterException;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
+import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.nanopub.CliRunner;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -39,15 +41,34 @@ public class RunQuery extends CliRunner {
         }
     }
 
-    private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException, IOException {
+    /**
+     * Runs the query once and prints what comes back: a table as CSV, as it arrives, and RDF from
+     * a CONSTRUCT query as Turtle.
+     */
+    private void run() throws FailedApiCallException, APINotReachableException, NotEnoughAPIInstancesException {
         Multimap<String, String> paramMap = prepareParamsMap(params);
         QueryRef queryRef = new QueryRef(queryId, paramMap);
-        ApiResponse response = QueryAccess.get(queryRef);
-        if (response.isRdfResponse()) {
-            Rio.write(response.getRdfContent(), System.out, RDFFormat.TURTLE);
-        } else {
-            QueryAccess.printCvsResponse(queryRef, new PrintWriter(System.out));
-        }
+        PrintWriter out = new PrintWriter(System.out);
+        ICSVWriter csv = new CSVWriterBuilder(out).withSeparator(',').build();
+        new QueryAccess() {
+
+            @Override
+            protected void processHeader(String[] line) {
+                csv.writeNext(line);
+            }
+
+            @Override
+            protected void processLine(String[] line) {
+                csv.writeNext(line);
+            }
+
+            @Override
+            protected void processRdfContent(Model model) {
+                Rio.write(model, System.out, RDFFormat.TURTLE);
+            }
+
+        }.call(queryRef);
+        csv.flushQuietly();
     }
 
     Multimap<String, String> prepareParamsMap(List<String> params) {
