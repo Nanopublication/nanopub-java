@@ -173,7 +173,10 @@ public class TemplateValues implements Serializable {
      * Left out are the values that follow from the nanopublication rather than being given:
      * the creator, the positions in a sequence, and a root definition that is the
      * nanopublication itself. An IRI within the nanopublication is given by its name there,
-     * so that it is minted again in the nanopublication that is made. A placeholder that has
+     * so that it is minted again in the nanopublication that is made, and so is a resource it
+     * introduces under the IRI an earlier version of it gave: a new version made with
+     * {@link FillRequest.Mode#SUPERSEDE} or {@link FillRequest.Mode#OVERRIDE} keeps such
+     * resources, and anything else mints them anew. A placeholder that has
      * a default value in the template but no value in the nanopublication gets an empty
      * value, so that the default is not taken.
      *
@@ -192,7 +195,14 @@ public class TemplateValues implements Serializable {
             PlaceholderMatcher matcher = PlaceholderMatcher.of(template, key);
             if (!matcher.isPlaceholder()) continue;
             if (template.isRootNanopubPlaceholder(key) && e.getValue().equals(context.getNanopubUri())) continue;
-            values.set(getName(key), matcher.toRaw(e.getValue(), context));
+            RawValue raw = matcher.toRaw(e.getValue(), context);
+            // A resource the nanopublication kept from an earlier version of itself is given
+            // by its name too: a new version keeps it again, anything else mints it anew.
+            if (matcher instanceof IriMatcher iriMatcher && raw.text().equals(e.getValue().stringValue())
+                    && iriMatcher.isCarriedOver(raw.text(), context)) {
+                raw = new RawValue(IriUtils.getPostfix(raw.text()));
+            }
+            values.set(getName(key), raw);
         }
         // A placeholder that has a default value but no value in the nanopublication was
         // left empty on purpose, which an empty value says.

@@ -7,17 +7,8 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.DCTERMS;
-import org.eclipse.rdf4j.model.vocabulary.PROV;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.nanopub.Nanopub;
-import org.nanopub.vocabulary.KPXL;
 import org.eclipse.rdf4j.model.vocabulary.FOAF;
-import org.nanopub.vocabulary.NPX;
 import org.nanopub.vocabulary.NTEMPLATE;
 
 import java.io.Serializable;
@@ -464,12 +455,16 @@ public class FillRequest implements Serializable {
      * to the existing one. The request as read has no such link, and neither the link the
      * nanopublication itself has to the one it supersedes or is derived from.
      * <p>
-     * A publication info template that takes any triple, such as the one for statements
-     * written by hand, gets as its values only what the other templates of the
-     * nanopublication leave, and nothing of what a fill writes by itself: creation time,
-     * label, template links, introduced and embedded resources, signature. It is left out
-     * if nothing remains for it. If something remains for one of its statements but not for
-     * another that is not optional, the request cannot be filled as it is.
+     * The nanopublication is read with a {@link SourceReader}, for the templates it names and
+     * with its creator, so the same holds as there. A publication info template that gives
+     * nothing but the link to an earlier version is left out, and a transient one gets no
+     * values. One that takes any triple, such as the one for statements written by hand, gets as
+     * its values only what the other templates of the nanopublication leave, and nothing of what
+     * a fill writes by itself: creation time, label, template links, introduced and embedded
+     * resources, types, the names of the creators. It is left out if nothing remains for it. If
+     * something remains for one of its statements but not for another that is not optional,
+     * the request cannot be filled as it is. The labels the nanopublication states for values
+     * chosen from a list are given with {@link #setLabelFromApi(String, String)}.
      *
      * @param report the findings of a {@link TemplateComplianceChecker} for the nanopublication
      * @return the request
@@ -483,121 +478,44 @@ public class FillRequest implements Serializable {
         TemplateMatch provenance = report.getProvenanceMatch();
         if (assertion == null) throw new IllegalArgumentException("The nanopublication was not matched against an assertion template");
         if (provenance == null) throw new IllegalArgumentException("The nanopublication was not matched against a provenance template");
-        FillRequest request = new FillRequest(assertion.getTemplate().getId());
-        TemplateValues.of(assertion).copyTo(request.values);
-        request.setProvenanceTemplate(provenance.getTemplate().getId());
-        TemplateValues.of(provenance).copyTo(request.provenanceValues);
         Nanopub nanopub = report.getNanopub();
+        // The creator is the one the templates took as such, or else the only one there is.
+        IRI creator = null;
         List<TemplateMatch> all = new ArrayList<>(List.of(assertion, provenance));
         all.addAll(report.getPubinfoMatches());
-        // The creator is the one the templates took as such, or else the only one there is.
         for (TemplateMatch match : all) {
-            if (request.creator == null && match.getContext().get(NTEMPLATE.CREATOR_PLACEHOLDER) instanceof IRI creator) request.creator = creator;
+            if (creator == null && match.getContext().get(NTEMPLATE.CREATOR_PLACEHOLDER) instanceof IRI c) creator = c;
         }
         Set<IRI> creators = assertion.getContext().getCreators();
-        if (request.creator == null && creators.size() == 1) request.creator = creators.iterator().next();
-        if (request.creator != null) {
+        if (creator == null && creators.size() == 1) creator = creators.iterator().next();
+
+        // The nanopublication is read again with that creator, so that what it says about
+        // another creator is not taken as being about this one.
+        SourceReader reader = new SourceReader(nanopub, creator);
+        FillRequest request = new FillRequest(assertion.getTemplate().getId());
+        reader.getValues(reader.readAssertion(assertion.getTemplate())).copyTo(request.values);
+        request.setProvenanceTemplate(provenance.getTemplate().getId());
+        reader.getValues(reader.readProvenance(provenance.getTemplate())).copyTo(request.provenanceValues);
+        request.creator = creator;
+        if (creator != null) {
             for (Statement st : nanopub.getPubinfo()) {
-                if (st.getSubject().equals(request.creator) && st.getPredicate().equals(FOAF.NAME)) request.setCreatorName(st.getObject().stringValue());
+                if (st.getSubject().equals(creator) && st.getPredicate().equals(FOAF.NAME)) request.setCreatorName(st.getObject().stringValue());
             }
         }
-        // A template that takes any triple gets what the other templates leave, and not what
-        // is written without a template: it would otherwise give the whole publication info
-        // again as values, the old creation time among them.
-        Set<Statement> takenByOthers = new HashSet<>();
-        Set<TemplateMatch> catchAll = new HashSet<>();
-        for (TemplateMatch pubinfoMatch : report.getPubinfoMatches()) {
-            if (isCatchAllTemplate(pubinfoMatch.getTemplate(), nanopub)) {
-                catchAll.add(pubinfoMatch);
-                continue;
-            }
-            for (TemplateMatch.StatementMatch statementMatch : pubinfoMatch.getMatches()) {
-                for (Map.Entry<IRI, Statement> e : statementMatch.triples().entrySet()) {
-                    takenByOthers.add(asFilled(e.getValue(), pubinfoMatch.getTemplate(), e.getKey(), request.creator));
-                }
-            }
+        List<Template> pubinfoTemplates = new ArrayList<>();
+        for (TemplateMatch match : report.getPubinfoMatches()) pubinfoTemplates.add(match.getTemplate());
+        for (Map.Entry<Template, TemplateMatch> e : reader.readPubinfo(pubinfoTemplates).entrySet()) {
+            Template template = e.getKey();
+            // The link to the nanopublication this one is a version of is not part of what it
+            // says: a nanopublication made from the request is not a version of that one. A
+            // transient template is kept, but what it says is about this nanopublication alone.
+            if (SourceReader.isLinkTemplate(template)) continue;
+            // A template that takes any triple is only there for what the others leave.
+            if (SourceReader.isCatchAllTemplate(template, nanopub) && e.getValue().getMatches().isEmpty()) continue;
+            reader.getValues(e.getValue()).copyTo(request.addPubinfoTemplate(template.getId()));
         }
-        for (TemplateMatch pubinfoMatch : report.getPubinfoMatches()) {
-            Template template = pubinfoMatch.getTemplate();
-            // The link to the nanopublication this one is a version of is not part of what
-            // it says: a nanopublication made from the request is not a version of that one.
-            if (isLinkTemplate(template)) continue;
-            TemplateMatch match = pubinfoMatch;
-            if (catchAll.contains(pubinfoMatch)) {
-                List<Statement> rest = new ArrayList<>();
-                for (Statement triple : nanopub.getPubinfo()) {
-                    if (takenByOthers.contains(triple) || isWrittenWithoutTemplate(triple, nanopub)) continue;
-                    rest.add(triple);
-                }
-                match = new TemplateMatcher(template).match(rest, BindingContext.forNanopub(template, nanopub));
-                if (match.getMatches().isEmpty()) continue;
-            }
-            TemplateValues.of(match).copyTo(request.addPubinfoTemplate(template.getId()));
-        }
+        reader.getLabelsFromApi().forEach(request::setLabelFromApi);
         return request;
-    }
-
-    // Whether a publication info template gives nothing but the link to the nanopublication
-    // that is superseded or derived from.
-    static boolean isLinkTemplate(Template template) {
-        TemplateStructure structure = new TemplateStructure(template);
-        boolean any = false;
-        for (IRI statement : template.getStatementIris()) {
-            for (IRI member : structure.getMembers(statement)) {
-                Value[] positions = structure.getPositions(member);
-                if (!NTEMPLATE.NANOPUB_PLACEHOLDER.equals(positions[0])) return false;
-                if (!NPX.SUPERSEDES.equals(positions[1]) && !PROV.WAS_DERIVED_FROM.equals(positions[1])) return false;
-                any = true;
-            }
-        }
-        return any;
-    }
-
-    // The triple a template statement gives when it is filled again: where the statement has
-    // the creator, that is the creator of the request, whichever creator the triple that
-    // was matched has.
-    private static Statement asFilled(Statement triple, Template template, IRI member, IRI creator) {
-        if (creator == null) return triple;
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        if (NTEMPLATE.CREATOR_PLACEHOLDER.equals(template.getObject(member))) {
-            return vf.createStatement(triple.getSubject(), triple.getPredicate(), creator, triple.getContext());
-        }
-        if (NTEMPLATE.CREATOR_PLACEHOLDER.equals(template.getDeclaredSubject(member))) {
-            return vf.createStatement(creator, triple.getPredicate(), triple.getObject(), triple.getContext());
-        }
-        return triple;
-    }
-
-    // Whether a publication info template has a statement that takes any triple, as the
-    // template for statements written by hand has.
-    static boolean isCatchAllTemplate(Template template, Nanopub nanopub) {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI predicate = vf.createIRI("https://example.org/any-predicate");
-        for (IRI subject : List.of(nanopub.getUri(), vf.createIRI("https://example.org/any-subject"))) {
-            for (Value object : List.of(vf.createIRI("https://example.org/any-object"), vf.createLiteral("any"))) {
-                List<Statement> triple = List.of(vf.createStatement(subject, predicate, object));
-                if (new TemplateMatcher(template).match(triple, BindingContext.forNanopub(template, nanopub)).getUnusedTriples().isEmpty()) return true;
-            }
-        }
-        return false;
-    }
-
-    private static final Set<IRI> WRITTEN_ABOUT_NANOPUB = Set.of(DCTERMS.CREATED, RDFS.LABEL, NPX.SUPERSEDES, NPX.INTRODUCES, NPX.EMBEDS, NPX.WAS_CREATED_AT,
-            NTEMPLATE.WAS_CREATED_FROM_TEMPLATE, NTEMPLATE.WAS_CREATED_FROM_PROVENANCE_TEMPLATE, NTEMPLATE.WAS_CREATED_FROM_PUBINFO_TEMPLATE);
-
-    private static final Set<IRI> WRITTEN_ANYWHERE = Set.of(NPX.HAS_ALGORITHM, NPX.HAS_PUBLIC_KEY, NPX.HAS_SIGNATURE, NPX.HAS_SIGNATURE_TARGET, NPX.SIGNED_BY,
-            NTEMPLATE.HAS_LABEL_FROM_API);
-
-    // Whether a triple of the publication info is one that filling writes by itself, without
-    // a template statement for it. This is what Nanodash leaves out when it fills a form
-    // from a nanopublication.
-    private static boolean isWrittenWithoutTemplate(Statement triple, Nanopub nanopub) {
-        IRI predicate = triple.getPredicate();
-        if (WRITTEN_ANYWHERE.contains(predicate)) return true;
-        if (predicate.equals(RDF.TYPE) && (triple.getObject().equals(KPXL.INVERSE_ROLE_PROPERTY) || triple.getObject().equals(KPXL.REGULAR_ROLE_PROPERTY))) return true;
-        if (!triple.getSubject().equals(nanopub.getUri())) return false;
-        if (WRITTEN_ABOUT_NANOPUB.contains(predicate)) return true;
-        return predicate.equals(NPX.HAS_NANOPUB_TYPE) && triple.getObject().equals(KPXL.ROLE_INSTANTIATION);
     }
 
     // ---------- as parameters ----------

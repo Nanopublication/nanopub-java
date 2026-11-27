@@ -221,3 +221,23 @@ and the root definition stays; with `DERIVE` everything is minted anew. The requ
 back does not have the link the nanopublication itself has to an earlier version. Read it only
 from a nanopublication that complies with its templates (`report.isCompliant()`), as content the
 templates do not account for is not in it.
+
+To read an existing nanopublication for other templates than the ones it names, as the form does
+when it is opened with `use`, `supersede` or `derive`, use a `SourceReader`. It takes the creator
+of the nanopublication to make, if there is one, which `nt:CREATOR` then stands for:
+
+```java
+SourceReader reader = new SourceReader(published, creatorIri);
+TemplateMatch assertion = reader.readAssertion(newerAssertionTemplate);
+TemplateValues values = reader.getValues(assertion);   // by the names of the placeholders
+assertion.getUnusedTriples();                          // what the template has no statement for
+Map<Template, TemplateMatch> pubinfo = reader.readPubinfo(pubinfoTemplates);
+reader.getUnreadPubinfo();                             // what no publication info template took
+```
+
+Each publication info template is matched against all of the publication info, except what a
+template marked as transient has taken: what it says is about that nanopublication alone, and it
+gives no values. A template that takes any triple, such as the one for statements written by hand,
+gets only what no other template took, and nothing of what a fill writes by itself, such as the
+creation time. `readPubinfo` with a list of templates reads them in that order. `FillRequest.of`
+reads a nanopublication this way, for the templates it names.
