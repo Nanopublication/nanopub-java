@@ -3,9 +3,15 @@ package org.nanopub.extra.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHttpResponse;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -53,59 +59,50 @@ public class RunQueryTest {
         return captured.toString(java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    /**
+     * An answer from a query server with the given content type and body.
+     */
+    private static HttpResponse answer(String contentType, String body) {
+        BasicHttpResponse response = new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        response.setHeader("Content-Type", contentType);
+        response.setEntity(new StringEntity(body, StandardCharsets.UTF_8));
+        return response;
+    }
+
     @Test
     void mainPrintsATabularResponseAsCsv() {
-        ApiResponse response = new ApiResponse();
-        response.setHeader(new String[]{"np", "label"});
-        response.add(new String[]{"https://example.org/np1", "Label 1"});
-
-        try (MockedStatic<QueryAccess> queryAccess = Mockito.mockStatic(QueryAccess.class)) {
-            queryAccess.when(() -> QueryAccess.get(Mockito.any(QueryRef.class))).thenReturn(response);
-            queryAccess.when(() -> QueryAccess.printCvsResponse(Mockito.any(QueryRef.class), Mockito.any()))
-                    .thenAnswer(invocation -> {
-                        java.io.Writer writer = invocation.getArgument(1);
-                        writer.write("np,label\n");
-                        writer.flush();
-                        return null;
-                    });
+        try (MockedStatic<QueryCall> queryCall = Mockito.mockStatic(QueryCall.class)) {
+            queryCall.when(() -> QueryCall.run(Mockito.any(QueryRef.class)))
+                    .thenReturn(answer("text/csv; charset=utf-8", "np,label\nhttps://example.org/np1,Label 1\n"));
 
             String printed = captureStandardOutput(() -> RunQuery.main(new String[]{QUERY_ID}));
 
-            assertTrue(printed.contains("np,label"), printed);
+            assertEquals("\"np\",\"label\"\n\"https://example.org/np1\",\"Label 1\"\n", printed);
+            queryCall.verify(() -> QueryCall.run(Mockito.any(QueryRef.class)), Mockito.times(1));
         }
     }
 
     @Test
     void mainPrintsAnRdfResponseAsTurtle() {
-        ApiResponse response = new ApiResponse();
-        org.eclipse.rdf4j.model.Model model = new org.eclipse.rdf4j.model.impl.LinkedHashModel();
-        model.add(org.eclipse.rdf4j.model.util.Values.iri("https://example.org/s"),
-                org.eclipse.rdf4j.model.util.Values.iri("https://example.org/p"),
-                org.eclipse.rdf4j.model.util.Values.iri("https://example.org/o"));
-        response.setRdfContent(model);
-
-        try (MockedStatic<QueryAccess> queryAccess = Mockito.mockStatic(QueryAccess.class)) {
-            queryAccess.when(() -> QueryAccess.get(Mockito.any(QueryRef.class))).thenReturn(response);
+        try (MockedStatic<QueryCall> queryCall = Mockito.mockStatic(QueryCall.class)) {
+            queryCall.when(() -> QueryCall.run(Mockito.any(QueryRef.class)))
+                    .thenReturn(answer("text/turtle", "<https://example.org/s> <https://example.org/p> <https://example.org/o> .\n"));
 
             String printed = captureStandardOutput(() -> RunQuery.main(new String[]{QUERY_ID}));
 
-            assertTrue(printed.contains("https://example.org/s"), printed);
+            assertTrue(printed.contains("<https://example.org/s> <https://example.org/p> <https://example.org/o>"), printed);
+            queryCall.verify(() -> QueryCall.run(Mockito.any(QueryRef.class)), Mockito.times(1));
         }
     }
 
     @Test
     void mainPassesTheGivenParametersOn() {
-        ApiResponse response = new ApiResponse();
-        response.setHeader(new String[]{"a"});
-
-        try (MockedStatic<QueryAccess> queryAccess = Mockito.mockStatic(QueryAccess.class)) {
-            queryAccess.when(() -> QueryAccess.get(Mockito.any(QueryRef.class))).thenReturn(response);
-            queryAccess.when(() -> QueryAccess.printCvsResponse(Mockito.any(QueryRef.class), Mockito.any()))
-                    .thenAnswer(invocation -> null);
+        try (MockedStatic<QueryCall> queryCall = Mockito.mockStatic(QueryCall.class)) {
+            queryCall.when(() -> QueryCall.run(Mockito.any(QueryRef.class))).thenReturn(answer("text/csv", "a\n"));
 
             captureStandardOutput(() -> RunQuery.main(new String[]{"-p", "a=1", QUERY_ID}));
 
-            queryAccess.verify(() -> QueryAccess.get(Mockito.argThat(ref ->
+            queryCall.verify(() -> QueryCall.run(Mockito.argThat(ref ->
                     "1".equals(ref.getParams().get("a").iterator().next()))));
         }
     }
