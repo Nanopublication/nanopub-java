@@ -92,7 +92,7 @@ final class IriMatcher extends PlaceholderMatcher {
     // An introduced resource keeps its IRI when the nanopublication is superseded, so a
     // resource that is minted within the nanopublication may sit in the namespace of an
     // earlier version. It is then the name within that version that was given.
-    private boolean isCarriedOver(String full, BindingContext context) {
+    boolean isCarriedOver(String full, BindingContext context) {
         if (!template.isIntroducedResource(key) || !template.isLocalResource(key) || context.hasDynamicPrefix(key)) return false;
         String name = IriUtils.getPostfix(full);
         if (!IriUtils.isPlainName(name) || full.length() <= name.length() + 1) return false;

@@ -288,9 +288,10 @@ np fill -o new-version.trig request.json
 
 The request is read out of the way the nanopublication matches its templates. It has the
 templates the nanopublication names, the values of their placeholders, and its creator, but not
-a link the nanopublication itself has to an earlier version. A template for statements written
-by hand gets only what the other templates leave, and nothing of what a fill writes by itself,
-such as the creation time.
+a link the nanopublication itself has to an earlier version, nor what a publication info template
+marked as transient gives, which is about that nanopublication alone. A template for statements
+written by hand gets only what the other templates leave, and nothing of what a fill writes by
+itself, such as the creation time.
 
 A nanopublication that does not comply with its templates has no request; the command then
 lists what `np check-template` finds. Warnings are printed to standard error: those of that
