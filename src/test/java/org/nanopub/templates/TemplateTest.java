@@ -501,6 +501,48 @@ class TemplateTest {
     }
 
     @Test
+    void valuesOfTheirOwnPerRepetition() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        // "thing" occurs in two statements and stands for one value; "keyword" and the local
+        // resource "part" occur in one each; "item" is a sequence element.
+        IRI thing = b.declare("thing", NTEMPLATE.URI_PLACEHOLDER);
+        IRI keyword = b.declare("keyword", NTEMPLATE.LITERAL_PLACEHOLDER);
+        IRI part = b.declare("part", NTEMPLATE.LOCAL_RESOURCE);
+        IRI item = b.declare("item", NTEMPLATE.SEQUENCE_ELEMENT_PLACEHOLDER);
+        b.statement(thing, RDFS.LABEL, vf.createLiteral("a thing"));
+        b.statement(thing, DCTERMS.SUBJECT, keyword, NTEMPLATE.OPTIONAL_STATEMENT, NTEMPLATE.REPEATABLE_STATEMENT);
+        b.statement(part, DCTERMS.IS_PART_OF, thing, NTEMPLATE.REPEATABLE_STATEMENT);
+        b.statement(SUBJECT, item, PREDICATE, NTEMPLATE.REPEATABLE_STATEMENT);
+        Template t = b.build();
+
+        assertFalse(t.hasOwnValuePerRepetition(thing));
+        assertTrue(t.hasOwnValuePerRepetition(keyword));
+        assertTrue(t.hasOwnValuePerRepetition(part));
+        assertTrue(t.hasOwnValuePerRepetition(item));
+        assertFalse(t.hasOwnValuePerRepetition(DCTERMS.SUBJECT));
+        assertFalse(t.hasOwnValuePerRepetition(vf.createLiteral("a thing")));
+
+        assertEquals(keyword, t.getRepetitionKey(keyword, 0));
+        assertEquals(vf.createIRI(keyword + "__2"), t.getRepetitionKey(keyword, 2));
+        assertEquals(thing, t.getRepetitionKey(thing, 2));
+        assertEquals(DCTERMS.SUBJECT, t.getRepetitionKey(DCTERMS.SUBJECT, 1));
+        assertThrows(IllegalArgumentException.class, () -> t.getRepetitionKey(keyword, -1));
+
+        // The rule is worked out again after a template is serialized, as Nanodash does with
+        // the templates of a form.
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (java.io.ObjectOutputStream out = new java.io.ObjectOutputStream(bytes)) {
+            out.writeObject(t);
+        }
+        Template copy;
+        try (java.io.ObjectInputStream in = new java.io.ObjectInputStream(new java.io.ByteArrayInputStream(bytes.toByteArray()))) {
+            copy = (Template) in.readObject();
+        }
+        assertTrue(copy.hasOwnValuePerRepetition(keyword));
+        assertFalse(copy.hasOwnValuePerRepetition(thing));
+    }
+
+    @Test
     void nullArgumentsAreRejected() throws Exception {
         Nanopub np = new TemplateBuilder().creator.finalizeNanopub();
         assertThrows(NullPointerException.class, () -> new Template((Nanopub) null));

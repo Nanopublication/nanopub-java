@@ -58,8 +58,9 @@ import java.util.regex.Pattern;
  * statements. All templates are used at exactly the version named.
  * <p>
  * The nanopublication is not signed, and its URI is a temporary one that it loses when it is
- * signed. What a form adds by looking things up is not added: the labels of values chosen
- * from a list ({@code nt:hasLabelFromApi}).
+ * signed. A filler looks nothing up: the labels of values chosen from a list
+ * ({@code nt:hasLabelFromApi}) are stated only as far as the request gives them
+ * ({@link FillRequest#setLabelFromApi(String, String)}).
  * <p>
  * A filler keeps the templates it has retrieved. It is not safe for use by several threads
  * at a time.
@@ -751,7 +752,35 @@ public class TemplateFiller {
         if (request.getCreator() != null && request.getCreatorName() != null) {
             creator.addPubinfoStatement(request.getCreator(), FOAF.NAME, vf.createLiteral(request.getCreatorName()));
         }
+        for (Map.Entry<IRI, String> e : getLabelsFromApi(request, all).entrySet()) {
+            creator.addPubinfoStatement(e.getKey(), NTEMPLATE.HAS_LABEL_FROM_API, vf.createLiteral(e.getValue()));
+        }
+        if (request.getCreationSite() != null) {
+            creator.addPubinfoStatement(NPX.WAS_CREATED_AT, vf.createIRI(request.getCreationSite()));
+        }
         return creator.finalizeNanopub();
+    }
+
+    private static final int MAX_LABEL_FROM_API_LENGTH = 1000;
+
+    // The labels from an API that the publication info states: those the request gives for
+    // the values of guided choice placeholders. An agent placeholder that is also a guided
+    // choice is not one, as a form shows it as a choice of agents.
+    private static Map<IRI, String> getLabelsFromApi(FillRequest request, List<GraphFill> fills) {
+        Map<IRI, String> labels = new LinkedHashMap<>();
+        if (request.getLabelsFromApi().isEmpty()) return labels;
+        for (GraphFill fill : fills) {
+            for (Map.Entry<IRI, Value> binding : fill.context.getBindings().entrySet()) {
+                IRI key = binding.getKey();
+                if (!fill.template.isGuidedChoicePlaceholder(key) || fill.template.isAgentPlaceholder(key)) continue;
+                if (!(binding.getValue() instanceof IRI value)) continue;
+                String label = request.getLabelsFromApi().get(value.stringValue());
+                if (label == null) continue;
+                if (label.length() > MAX_LABEL_FROM_API_LENGTH) label = label.substring(0, MAX_LABEL_FROM_API_LENGTH - 3) + "...";
+                labels.putIfAbsent(value, label);
+            }
+        }
+        return labels;
     }
 
     // The label of the nanopublication, from the pattern of the assertion template: each
@@ -777,6 +806,8 @@ public class TemplateFiller {
             String text = "";
             if (value instanceof IRI iri) {
                 String label = labels.containsKey(iri) ? labels.get(iri) : assertion.template.getLabel(iri);
+                if (label == null) label = request.getLabels().get(iri.stringValue());
+                if (label == null) label = request.getLabelsFromApi().get(iri.stringValue());
                 if (iri.equals(request.getCreator()) && request.getCreatorName() != null) label = request.getCreatorName();
                 text = label != null && !label.isEmpty() ? label.replaceFirst(" - .*$", "") : getShortName(iri.stringValue());
             } else if (value != null) {
