@@ -1,3 +1,13 @@
+## [1.102.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.101.0...nanopub-1.102.0) (2026-11-28)
+
+### Features
+
+* **templates:** check a value as it is entered, and give a placeholder's default ([2bc7adc](https://github.com/Nanopublication/nanopub-java/commit/2bc7adc4e93bf85a8794bf3337d35360032176b3)), closes [knowledgepixels/nanodash#936](https://github.com/knowledgepixels/nanodash/issues/936)
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([38201ea](https://github.com/Nanopublication/nanopub-java/commit/38201ea6e78b6972303487b9e840eb693f222648))
+
 ## [1.101.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.100.0...nanopub-1.101.0) (2026-11-28)
 
 ### Features
