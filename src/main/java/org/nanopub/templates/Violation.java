@@ -9,7 +9,8 @@ import java.io.Serializable;
  *
  * @param templateValue the value of the template in that position: a placeholder, or a fixed
  *                      IRI or literal; null if the template defines none
- * @param value         the value that was checked
+ * @param value         the value that was checked; null where a raw value was checked that
+ *                      cannot be an RDF value for the position at all
  * @param kind          what is wrong
  * @param blocking      true if the value cannot stand in this position at all, false if it
  *                      can but breaks a constraint the template puts on it
@@ -107,7 +108,24 @@ public record Violation(Value templateValue, Value value, Kind kind, boolean blo
         /**
          * The IRI is minted under a name the nanopublication uses for one of its own parts.
          */
-        RESERVED_NAME
+        RESERVED_NAME,
+
+        /**
+         * The text given for an IRI is neither an IRI in one of the allowed schemes nor a name
+         * that can follow a prefix, as it has a colon or a hash in it.
+         */
+        NOT_AN_IRI_OR_NAME,
+
+        /**
+         * The prefix of the placeholder depends on the space or resource the nanopublication is
+         * made for, which is not known.
+         */
+        UNRESOLVED_PREFIX,
+
+        /**
+         * The text given for a literal is not one as {@link LiteralSerialization} writes it.
+         */
+        MALFORMED_LITERAL
 
     }
 

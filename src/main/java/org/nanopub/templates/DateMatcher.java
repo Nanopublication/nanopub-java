@@ -44,7 +44,7 @@ final class DateMatcher extends PlaceholderMatcher {
         if (raw.isEmpty()) return null;
         DateValue dateValue = DateValue.parse(raw.text());
         if (dateValue == null) {
-            throw new IllegalArgumentException("'" + raw.text() + "' is not " + DatePrecision.describe(DatePrecision.ALL) + " for '" + getFieldLabel() + "'");
+            throw new InvalidRawValueException(Violation.Kind.DATE_PRECISION, "'" + raw.text() + "' is not " + DatePrecision.describe(DatePrecision.ALL) + " for '" + getFieldLabel() + "'");
         }
         return vf.createLiteral(dateValue.toLexical(), dateValue.getPrecision().getDatatype());
     }

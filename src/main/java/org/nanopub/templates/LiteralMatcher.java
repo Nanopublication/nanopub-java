@@ -88,14 +88,14 @@ final class LiteralMatcher extends PlaceholderMatcher {
         if (template.isLanguageTagSelectable(key)) {
             // The declared tag of such a placeholder is the one taken if none is chosen.
             String tag = raw.languageTag() != null ? raw.languageTag() : declaredTag;
-            if (tag == null) throw new IllegalArgumentException("'" + getFieldLabel() + "' needs a language tag");
+            if (tag == null) throw new InvalidRawValueException(Violation.Kind.LANGUAGE_TAG, "'" + getFieldLabel() + "' needs a language tag");
             if (!tag.matches(LANGUAGE_TAG_PATTERN)) {
-                throw new IllegalArgumentException("'" + tag + "' is not a valid language tag for '" + getFieldLabel() + "'");
+                throw new InvalidRawValueException(Violation.Kind.LANGUAGE_TAG, "'" + tag + "' is not a valid language tag for '" + getFieldLabel() + "'");
             }
             return vf.createLiteral(text, Literals.normalizeLanguageTag(tag));
         }
         if (raw.languageTag() != null && !Literals.normalizeLanguageTag(raw.languageTag()).equals(declaredTag)) {
-            throw new IllegalArgumentException("No language can be chosen for '" + getFieldLabel() + "'");
+            throw new InvalidRawValueException(Violation.Kind.LANGUAGE_TAG, "No language can be chosen for '" + getFieldLabel() + "'");
         }
         if (declaredTag != null) return vf.createLiteral(text, declaredTag);
         IRI datatype = template.getDatatype(key);

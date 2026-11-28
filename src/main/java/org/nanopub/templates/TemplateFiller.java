@@ -563,8 +563,8 @@ public class TemplateFiller {
                     return null;
                 }
             } else {
-                value = getDefault(key, matcher, context);
-                if (value != null && sourceContext != null) inSource = getDefault(key, matcher, sourceContext);
+                value = matcher.getDefault(context);
+                if (value != null && sourceContext != null) inSource = matcher.getDefault(sourceContext);
             }
             if (value == null) return null;
             Value carriedOver = getCarriedOver(key, value, inSource);
@@ -580,25 +580,6 @@ public class TemplateFiller {
             }
             rejected.add(key);
             return null;
-        }
-
-        // The default value of a placeholder as it stands in a nanopublication, or null if
-        // there is none that can stand there.
-        private Value getDefault(IRI key, PlaceholderMatcher matcher, BindingContext context) {
-            Value value = template.getDefault(key);
-            if (value == null) return null;
-            if (value.equals(NTEMPLATE.CREATOR_PLACEHOLDER)) return request.getCreator();
-            String templateUri = template.getNanopub().getUri().stringValue();
-            if (value instanceof IRI iri && iri.stringValue().startsWith(templateUri) && !iri.stringValue().equals(templateUri)) {
-                // An IRI within the template stands for the one of that name within the
-                // nanopublication that is made.
-                try {
-                    value = matcher.toValue(new RawValue(IriUtils.getPostfix(iri.stringValue())), context);
-                } catch (IllegalArgumentException ex) {
-                    return null;
-                }
-            }
-            return value != null && matcher.match(value, context).isBindable() ? value : null;
         }
 
         // A resource that the existing nanopublication introduces keeps its IRI in a new
