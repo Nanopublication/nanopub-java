@@ -123,6 +123,30 @@ public abstract class PlaceholderMatcher implements Serializable {
         return new MatchResult(violations);
     }
 
+    /**
+     * Checks a raw value against this position, as a value given when the template is filled
+     * in: the RDF value {@link #toValue(RawValue, BindingContext)} makes of it is checked as
+     * {@link #match(Value, BindingContext)} checks it. A text that cannot be an RDF value for
+     * this position at all, such as a name with a colon in it, gives a blocking violation whose
+     * value is null. The context is not changed.
+     *
+     * @param raw     the raw value
+     * @param context the nanopublication the value is for and the values bound so far
+     * @return the violations of the value; none for an empty raw value of a placeholder
+     */
+    public final MatchResult match(RawValue raw, BindingContext context) {
+        Objects.requireNonNull(raw, "raw");
+        Objects.requireNonNull(context, "context");
+        Value value;
+        try {
+            value = toValue(raw, context);
+        } catch (InvalidRawValueException ex) {
+            return new MatchResult(List.of(blocking(null, ex.getKind(), ex.getMessage())));
+        }
+        if (value == null) return new MatchResult(List.of());
+        return match(value, context);
+    }
+
     abstract void check(Value value, BindingContext context, List<Violation> violations);
 
     /**
@@ -176,6 +200,38 @@ public abstract class PlaceholderMatcher implements Serializable {
      */
     public RawValue toRaw(Value value, BindingContext context) {
         return new RawValue(value.stringValue());
+    }
+
+    /**
+     * Returns the default value of this position ({@code nt:hasDefaultValue}) as it stands in
+     * the nanopublication of the context: {@code nt:CREATOR} stands for the creator bound in
+     * the context, and an IRI within the template for the IRI of the same name within the
+     * nanopublication. {@link #toRaw(Value, BindingContext)} gives the value as a person would
+     * enter it.
+     *
+     * @param context the nanopublication the value is for and the values bound so far
+     * @return the default value, or null if the position has none, or none that can stand
+     * there
+     */
+    public Value getDefault(BindingContext context) {
+        Objects.requireNonNull(context, "context");
+        IRI key = getKey();
+        if (key == null) return null;
+        Value value = template.getDefault(key);
+        if (value == null) return null;
+        if (value.equals(NTEMPLATE.CREATOR_PLACEHOLDER)) {
+            value = context.get(NTEMPLATE.CREATOR_PLACEHOLDER);
+        } else if (value instanceof IRI iri) {
+            String templateUri = template.getNanopub().getUri().stringValue();
+            if (iri.stringValue().startsWith(templateUri) && !iri.stringValue().equals(templateUri)) {
+                try {
+                    value = toValue(new RawValue(IriUtils.getPostfix(iri.stringValue())), context);
+                } catch (IllegalArgumentException ex) {
+                    return null;
+                }
+            }
+        }
+        return value != null && match(value, context).isBindable() ? value : null;
     }
 
     Violation blocking(Value value, Violation.Kind kind, String message) {
@@ -250,7 +306,7 @@ public abstract class PlaceholderMatcher implements Serializable {
             // What follows a prefix or a namespace is a name, and an IRI in another scheme is
             // not one that can stand here:
             if (text.contains(":") || text.contains("#")) {
-                throw new IllegalArgumentException("'" + text + "' is neither an IRI in one of the schemes "
+                throw new InvalidRawValueException(Violation.Kind.NOT_AN_IRI_OR_NAME, "'" + text + "' is neither an IRI in one of the schemes "
                         + UriSchemes.ALLOWED_SCHEMES.stream().sorted().collect(Collectors.joining(", "))
                         + " nor a name without colon or hash");
             }
@@ -263,13 +319,13 @@ public abstract class PlaceholderMatcher implements Serializable {
 
     void checkPrefixResolved(IRI placeholder, BindingContext context) {
         if (context.hasUnresolvedPrefix(placeholder)) {
-            throw new IllegalArgumentException("The prefix of '" + getFieldLabel() + "' depends on the space or resource"
+            throw new InvalidRawValueException(Violation.Kind.UNRESOLVED_PREFIX, "The prefix of '" + getFieldLabel() + "' depends on the space or resource"
                     + " the nanopublication is made for, which is not given: " + template.getPrefix(placeholder));
         }
     }
 
     static IRI createIri(String iri) {
-        if (!IriUtils.isWellFormedUri(iri)) throw new IllegalArgumentException("Not a well-formed IRI: " + iri);
+        if (!IriUtils.isWellFormedUri(iri)) throw new InvalidRawValueException(Violation.Kind.MALFORMED_IRI, "Not a well-formed IRI: " + iri);
         return vf.createIRI(iri);
     }
 

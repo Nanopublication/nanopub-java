@@ -105,7 +105,7 @@ public final class LiteralSerialization {
             Matcher datatype = DATATYPE_SUFFIX.matcher(suffix);
             if (datatype.matches()) return vf.createLiteral(value, vf.createIRI(datatype.group(1)));
         }
-        throw new IllegalArgumentException("Not a valid literal serialization: " + text);
+        throw new InvalidRawValueException(Violation.Kind.MALFORMED_LITERAL, "Not a valid literal serialization: " + text);
     }
 
     /**

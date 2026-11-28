@@ -205,6 +205,21 @@ lost because the statement they belong to is left out.
 A request has the parameters of a link to the publishing form of Nanodash, and is read from and
 written as one with `FillRequest.fromUrl`, `fromJson`, `toQueryString` and `toJson`.
 
+A form can check each value while it is typed, by the rules the filler applies, and start a field
+with the default value of its placeholder:
+
+```java
+PlaceholderMatcher matcher = PlaceholderMatcher.of(template, placeholderIri);
+BindingContext context = BindingContext.forNewNanopub(template, "http://purl.org/nanopub/temp/np001/", creatorIri);
+MatchResult result = matcher.match(new RawValue("10.1234/abc"), context);
+result.violations();            // what is wrong with the value as typed, each with its kind
+Value start = matcher.getDefault(context);     // null if the placeholder has no default
+RawValue shown = matcher.toRaw(start, context);  // the default as it would be typed
+```
+
+A text that cannot be a value at all, such as a name with a colon in it, gives a violation whose
+value is null.
+
 To make a new version of a nanopublication, read its request back, change it, and say what the
 new nanopublication is to the old one:
 

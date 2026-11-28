@@ -702,7 +702,8 @@ class PlaceholderMatcherTest {
         assertBlocked(Violation.Kind.ALREADY_BOUND, m, vf.createLiteral("Bob"), c);
         // Another repetition of the placeholder is another position:
         assertValid(PlaceholderMatcher.of(t, local("name__1")), vf.createLiteral("Bob"), c);
-        assertThrows(NullPointerException.class, () -> m.match(null, c));
+        assertThrows(NullPointerException.class, () -> m.match((Value) null, c));
+        assertThrows(NullPointerException.class, () -> m.match((RawValue) null, c));
     }
 
     @Test
@@ -723,6 +724,154 @@ class PlaceholderMatcherTest {
         // Without a label, the name of the placeholder is taken, without a repetition suffix:
         Violation w = PlaceholderMatcher.of(t, local("code__2")).match(vf.createLiteral("x"), c).violations().get(0);
         assertEquals("Value 'x' of 'code' doesn't match the pattern '[0-9]+'", w.message());
+    }
+
+    // ---------- raw values ----------
+
+    // The raw value cannot stand in the position, for the given reason alone.
+    private static void assertRawBlocked(Violation.Kind kind, PlaceholderMatcher matcher, RawValue raw, BindingContext context) {
+        MatchResult result = matcher.match(raw, context);
+        assertFalse(result.isBindable(), () -> raw + " should not be bindable");
+        assertEquals(List.of(kind), kinds(result), () -> raw + ": " + result.violations());
+    }
+
+    @Test
+    void rawValueIsCheckedAsTheValueItStandsFor() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI p = b.placeholder("paper", NTEMPLATE.URI_PLACEHOLDER);
+        b.add(p, NTEMPLATE.HAS_PREFIX, "https://doi.org/").add(p, NTEMPLATE.HAS_REGEX, "10\\.[0-9]+/\\S+");
+        Template t = b.build();
+        BindingContext c = context(t);
+        PlaceholderMatcher m = PlaceholderMatcher.of(t, p);
+
+        assertTrue(m.match(new RawValue("10.1234/abc"), c).isValid());
+        assertTrue(m.match(new RawValue("https://doi.org/10.1234/abc"), c).isValid());
+        assertRawBlocked(Violation.Kind.REGEX, m, new RawValue("11.1234/abc"), c);
+        // Nothing given, nothing to check:
+        assertTrue(m.match(new RawValue(""), c).isValid());
+        // A check does not bind:
+        assertFalse(c.isBound(p));
+        // The bindings of the context count:
+        c.bind(p, iri("https://doi.org/10.1234/abc"));
+        assertRawBlocked(Violation.Kind.ALREADY_BOUND, m, new RawValue("10.1234/other"), c);
+    }
+
+    @Test
+    void textThatCannotBeAValueIsBlockedWithoutOne() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI paper = b.placeholder("paper", NTEMPLATE.URI_PLACEHOLDER);
+        b.add(paper, NTEMPLATE.HAS_PREFIX, "https://doi.org/");
+        IRI page = b.placeholder("page", NTEMPLATE.URI_PLACEHOLDER);
+        IRI resource = b.placeholder("resource", NTEMPLATE.URI_PLACEHOLDER);
+        b.add(resource, NTEMPLATE.HAS_PREFIX, BindingContext.SPACE_TOKEN + "/r/");
+        IRI value = b.placeholder("value", NTEMPLATE.VALUE_PLACEHOLDER);
+        IRI any = b.placeholder("any", NTEMPLATE.LANGUAGE_TAGGED_LITERAL_PLACEHOLDER);
+        IRI date = b.placeholder("date", NTEMPLATE.DATE_PLACEHOLDER);
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        assertRawBlocked(Violation.Kind.NOT_AN_IRI_OR_NAME, PlaceholderMatcher.of(t, paper), new RawValue("10.1234/a:b"), c);
+        assertRawBlocked(Violation.Kind.NOT_AN_IRI_OR_NAME, PlaceholderMatcher.of(t, page), new RawValue("urn:isbn:0451450523"), c);
+        assertRawBlocked(Violation.Kind.MALFORMED_IRI, PlaceholderMatcher.of(t, page), new RawValue("two words"), c);
+        assertRawBlocked(Violation.Kind.UNRESOLVED_PREFIX, PlaceholderMatcher.of(t, resource), new RawValue("thing"), c);
+        assertRawBlocked(Violation.Kind.MALFORMED_LITERAL, PlaceholderMatcher.of(t, value), new RawValue("\"unterminated"), c);
+        assertRawBlocked(Violation.Kind.LANGUAGE_TAG, PlaceholderMatcher.of(t, any), new RawValue("house"), c);
+        assertRawBlocked(Violation.Kind.LANGUAGE_TAG, PlaceholderMatcher.of(t, any), new RawValue("house", "not a tag"), c);
+        assertRawBlocked(Violation.Kind.DATE_PRECISION, PlaceholderMatcher.of(t, date), new RawValue("yesterday"), c);
+
+        Violation v = PlaceholderMatcher.of(t, page).match(new RawValue("two words"), c).violations().get(0);
+        assertNull(v.value());
+        assertEquals(page, v.templateValue());
+        assertTrue(v.blocking());
+        assertEquals("Not a well-formed IRI: two words", v.message());
+    }
+
+    @Test
+    void reservedNameGivenAsARawValueIsReported() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI p = b.placeholder("item", NTEMPLATE.URI_PLACEHOLDER);
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        MatchResult result = PlaceholderMatcher.of(t, p).match(new RawValue("assertion"), c);
+        assertTrue(result.isBindable());
+        assertEquals(List.of(Violation.Kind.RESERVED_NAME), kinds(result));
+    }
+
+    // ---------- default values ----------
+
+    @Test
+    void defaultIsTheValueTheTemplateGives() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI page = b.placeholder("page", NTEMPLATE.URI_PLACEHOLDER);
+        b.add(page, NTEMPLATE.HAS_DEFAULT_VALUE, iri("https://example.com/start"));
+        IRI name = b.placeholder("name", NTEMPLATE.LITERAL_PLACEHOLDER);
+        b.add(name, NTEMPLATE.HAS_DEFAULT_VALUE, vf.createLiteral("unnamed"));
+        IRI none = b.placeholder("none", NTEMPLATE.LITERAL_PLACEHOLDER);
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        PlaceholderMatcher pageMatcher = PlaceholderMatcher.of(t, page);
+        assertEquals(iri("https://example.com/start"), pageMatcher.getDefault(c));
+        assertEquals(new RawValue("https://example.com/start"), pageMatcher.toRaw(pageMatcher.getDefault(c), c));
+        assertEquals(vf.createLiteral("unnamed"), PlaceholderMatcher.of(t, name).getDefault(c));
+        assertNull(PlaceholderMatcher.of(t, none).getDefault(c));
+        // A position with a fixed value has no default:
+        assertNull(PlaceholderMatcher.of(t, SUBJECT).getDefault(c));
+        assertNull(PlaceholderMatcher.of(t, vf.createLiteral("x")).getDefault(c));
+    }
+
+    @Test
+    void defaultWithinTheTemplateStandsForTheSameNameInTheNanopublication() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI thing = b.placeholder("thing", NTEMPLATE.URI_PLACEHOLDER, NTEMPLATE.LOCAL_RESOURCE);
+        b.add(thing, NTEMPLATE.HAS_DEFAULT_VALUE, local("item"));
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        PlaceholderMatcher m = PlaceholderMatcher.of(t, thing);
+        assertEquals(iri(NS + "item"), m.getDefault(c));
+        assertEquals(new RawValue("item"), m.toRaw(m.getDefault(c), c));
+        // Each repetition gets a name of its own:
+        assertEquals(iri(NS + "item2"), PlaceholderMatcher.of(t, local("thing__1")).getDefault(c));
+    }
+
+    @Test
+    void creatorAsDefaultStandsForTheCreatorOfTheContext() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI author = b.placeholder("author", NTEMPLATE.AGENT_PLACEHOLDER);
+        b.add(author, NTEMPLATE.HAS_DEFAULT_VALUE, NTEMPLATE.CREATOR_PLACEHOLDER);
+        Template t = b.build();
+
+        PlaceholderMatcher m = PlaceholderMatcher.of(t, author);
+        assertEquals(CREATOR, m.getDefault(context(t)));
+        assertNull(m.getDefault(BindingContext.forNewNanopub(t, NS, null)));
+    }
+
+    @Test
+    void defaultThatCannotStandThereIsNone() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI code = b.placeholder("code", NTEMPLATE.LITERAL_PLACEHOLDER);
+        b.add(code, NTEMPLATE.HAS_REGEX, "[0-9]+").add(code, NTEMPLATE.HAS_DEFAULT_VALUE, vf.createLiteral("none"));
+        IRI page = b.placeholder("page", NTEMPLATE.URI_PLACEHOLDER);
+        b.add(page, NTEMPLATE.HAS_DEFAULT_VALUE, vf.createLiteral("not an IRI"));
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        assertNull(PlaceholderMatcher.of(t, code).getDefault(c));
+        assertNull(PlaceholderMatcher.of(t, page).getDefault(c));
+    }
+
+    @Test
+    void defaultOfABoundPositionIsNone() throws Exception {
+        TemplateBuilder b = new TemplateBuilder();
+        IRI title = b.placeholder("title", NTEMPLATE.LITERAL_PLACEHOLDER);
+        b.add(title, NTEMPLATE.HAS_DEFAULT_VALUE, vf.createLiteral("untitled"));
+        Template t = b.build();
+        BindingContext c = context(t);
+
+        c.bind(title, vf.createLiteral("A title"));
+        assertNull(PlaceholderMatcher.of(t, title).getDefault(c));
     }
 
 }
