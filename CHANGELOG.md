@@ -1,3 +1,13 @@
+## [1.101.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.100.0...nanopub-1.101.0) (2026-11-28)
+
+### Features
+
+* **templates:** name the dct:isVersionOf target the version-independent IRI ([ae440b6](https://github.com/Nanopublication/nanopub-java/commit/ae440b6204adae95288c9a5c8e2fd1f502fc411e)), closes [knowledgepixels/nanodash#830](https://github.com/knowledgepixels/nanodash/issues/830)
+
+### General maintenance
+
+* setting next snapshot version [skip ci] ([7ddf368](https://github.com/Nanopublication/nanopub-java/commit/7ddf36833ea324a3477f34fa82937d87e592924e))
+
 ## [1.100.0](https://github.com/Nanopublication/nanopub-java/compare/nanopub-1.99.0...nanopub-1.100.0) (2026-11-27)
 
 ### Features
